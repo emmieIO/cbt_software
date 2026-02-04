@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import { login as studentLogin } from '@/routes/student';
 import { login as staffLogin } from '@/routes/staff';
 import { login as adminLogin } from '@/routes/admin';
+
+const page = usePage();
 </script>
 
 <template>
@@ -17,8 +19,22 @@ import { login as adminLogin } from '@/routes/admin';
                 <p class="text-xl font-medium text-lemon-yellow">Computer Based Testing Portal</p>
             </div>
 
-            <!-- Portal Entry Options -->
-            <div class="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2">
+            <!-- Authenticated View -->
+            <div v-if="page.props.auth.user" class="mt-12 flex flex-col items-center space-y-6">
+                <div class="rounded-2xl bg-white/10 p-8 shadow-2xl backdrop-blur-md">
+                    <h2 class="text-2xl font-bold">Welcome back, {{ page.props.auth.user.name }}!</h2>
+                    <p class="mt-2 text-white/80">You are currently signed in as a <span class="capitalize">{{ page.props.auth.user.roles[0]?.name || 'user' }}</span>.</p>
+                    <Link
+                        :href="page.props.auth.dashboard_url"
+                        class="mt-8 flex items-center justify-center rounded-xl bg-lemon-yellow px-12 py-5 text-xl font-bold text-primary shadow-xl transition-all hover:scale-105 hover:bg-lemon-yellow/90 active:scale-95"
+                    >
+                        Go to your Dashboard &rarr;
+                    </Link>
+                </div>
+            </div>
+
+            <!-- Portal Entry Options (Guest View) -->
+            <div v-else class="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2">
                 <!-- Student Portal Card -->
                 <div
                     class="group relative overflow-hidden rounded-2xl bg-white p-8 text-slate-900 shadow-2xl transition-all hover:-translate-y-1 hover:shadow-lemon-yellow/20"
@@ -80,6 +96,7 @@ import { login as adminLogin } from '@/routes/admin';
             <footer class="mt-16 flex flex-col items-center space-y-4 text-sm text-white/60">
                 <p>&copy; {{ new Date().getFullYear() }} Chrisland Schools. All rights reserved.</p>
                 <Link
+                    v-if="!page.props.auth.user"
                     :href="adminLogin.url()"
                     class="rounded-full border border-white/20 bg-white/5 px-4 py-1 text-xs transition-all hover:border-lemon-yellow/50 hover:bg-white/10 hover:text-lemon-yellow"
                 >

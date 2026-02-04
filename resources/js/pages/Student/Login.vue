@@ -1,19 +1,17 @@
 <script setup lang="ts">
-import { Head, Link, useForm, router } from '@inertiajs/vue3';
-import { dashboard as studentDashboard } from '@/routes/student';
+import { Head, Link, useForm } from '@inertiajs/vue3';
+import { store } from '@/actions/App/Http/Controllers/Student/StudentController';
 
 const form = useForm({
-    student_id: '',
+    login_id: '',
     password: '',
     remember: false,
 });
 
 const submit = () => {
-    // Simulate login for now
-    form.processing = true;
-    setTimeout(() => {
-        router.visit(studentDashboard.url());
-    }, 1000);
+    form.post(store().url, {
+        onFinish: () => form.reset('password'),
+    });
 };
 </script>
 
@@ -42,14 +40,14 @@ const submit = () => {
                         <label for="student_id" class="block text-sm font-semibold text-slate-700">Student ID / Admission No.</label>
                         <input
                             id="student_id"
-                            v-model="form.student_id"
+                            v-model="form.login_id"
                             type="text"
                             required
                             autofocus
                             class="mt-1 block w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 shadow-sm transition-all focus:border-primary focus:ring-primary"
-                            placeholder="e.g. CHS/2024/001"
+                            placeholder="CHS/2026/001"
                         />
-                        <div v-if="form.errors.student_id" class="mt-1 text-xs text-red-600">{{ form.errors.student_id }}</div>
+                        <div v-if="form.errors.login_id" class="mt-1 text-xs text-red-600">{{ form.errors.login_id }}</div>
                     </div>
 
                     <div>

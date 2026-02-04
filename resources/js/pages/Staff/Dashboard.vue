@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
+import { logout } from '@/actions/App/Http/Controllers/Staff/StaffController';
 </script>
 
 <template>
@@ -68,8 +69,10 @@ import { Head, Link } from '@inertiajs/vue3';
             </nav>
             <div class="p-4">
                 <Link
-                    href="/"
-                    class="flex items-center rounded-xl bg-white/5 px-4 py-3 font-medium text-white/70 transition-colors hover:bg-red-500/20 hover:text-red-200"
+                    :href="logout().url"
+                    method="post"
+                    as="button"
+                    class="flex w-full items-center rounded-xl bg-white/5 px-4 py-3 font-medium text-white/70 transition-colors hover:bg-red-500/20 hover:text-red-200"
                 >
                     <svg class="mr-3 h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path

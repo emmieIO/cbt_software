@@ -1,19 +1,17 @@
 <script setup lang="ts">
-import { Head, Link, useForm, router } from '@inertiajs/vue3';
-import { dashboard as staffDashboard } from '@/routes/staff';
+import { Head, Link, useForm } from '@inertiajs/vue3';
+import { store } from '@/actions/App/Http/Controllers/Staff/StaffController';
 
 const form = useForm({
-    staff_id: '',
+    login_id: '',
     password: '',
     remember: false,
 });
 
 const submit = () => {
-    // Simulate login for now
-    form.processing = true;
-    setTimeout(() => {
-        router.visit(staffDashboard.url());
-    }, 1000);
+    form.post(store().action, {
+        onFinish: () => form.reset('password'),
+    });
 };
 </script>
 
@@ -42,14 +40,14 @@ const submit = () => {
                         <label for="staff_id" class="block text-sm font-semibold text-slate-700">Staff ID / Email</label>
                         <input
                             id="staff_id"
-                            v-model="form.staff_id"
+                            v-model="form.login_id"
                             type="text"
                             required
                             autofocus
                             class="mt-1 block w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 shadow-sm transition-all focus:border-primary focus:ring-primary"
-                            placeholder="staff@chrislandschools.org"
+                            placeholder="STAFF/2026/001"
                         />
-                        <div v-if="form.errors.staff_id" class="mt-1 text-xs text-red-600">{{ form.errors.staff_id }}</div>
+                        <div v-if="form.errors.login_id" class="mt-1 text-xs text-red-600">{{ form.errors.login_id }}</div>
                     </div>
 
                     <div>

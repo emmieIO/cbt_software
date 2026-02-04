@@ -1,19 +1,17 @@
 <script setup lang="ts">
-import { Head, Link, useForm, router } from '@inertiajs/vue3';
-import { dashboard as adminDashboard } from '@/routes/admin';
+import { Head, Link, useForm } from '@inertiajs/vue3';
+import { store } from '@/actions/App/Http/Controllers/Admin/AdminController';
 
 const form = useForm({
-    username: '',
+    login_id: '',
     password: '',
     remember: false,
 });
 
 const submit = () => {
-    // Simulate login for now
-    form.processing = true;
-    setTimeout(() => {
-        router.visit(adminDashboard.url());
-    }, 1000);
+    form.post(store().action, {
+        onFinish: () => form.reset('password'),
+    });
 };
 </script>
 
@@ -42,14 +40,14 @@ const submit = () => {
                         <label for="username" class="block text-sm font-semibold text-slate-700">Administrator Username</label>
                         <input
                             id="username"
-                            v-model="form.username"
+                            v-model="form.login_id"
                             type="text"
                             required
                             autofocus
                             class="mt-1 block w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 shadow-sm transition-all focus:border-primary focus:ring-primary"
                             placeholder="admin_root"
                         />
-                        <div v-if="form.errors.username" class="mt-1 text-xs text-red-600">{{ form.errors.username }}</div>
+                        <div v-if="form.errors.login_id" class="mt-1 text-xs text-red-600">{{ form.errors.login_id }}</div>
                     </div>
 
                     <div>
