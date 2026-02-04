@@ -10,5 +10,12 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware(['auth', 'role:staff'])->group(function () {
     Route::get('/dashboard', [StaffController::class, 'dashboard'])->name('dashboard');
+
+    Route::prefix('questions')->name('questions.')->group(function () {
+        Route::get('/', [StaffController::class, 'index'])->name('index');
+        Route::get('/create', [StaffController::class, 'create'])->name('create');
+        Route::post('/', [StaffController::class, 'storeQuestion'])->name('store');
+    });
+
     Route::post('/logout', [StaffController::class, 'logout'])->name('logout');
 });

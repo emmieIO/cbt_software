@@ -48,6 +48,10 @@ class HandleInertiaRequests extends Middleware
                 'user' => $user,
                 'dashboard_url' => $user ? app(\App\Services\AuthService::class)->getRedirectUrl($user) : null,
             ],
+            'flash' => [
+                'success' => $request->session()->get('success'),
+                'error' => $request->session()->get('error'),
+            ],
         ];
     }
 }
