@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm, router } from '@inertiajs/vue3';
+import { dashboard as staffDashboard } from '@/routes/staff';
 
 const form = useForm({
     staff_id: '',
@@ -8,9 +9,11 @@ const form = useForm({
 });
 
 const submit = () => {
-    form.post('#', {
-        onFinish: () => form.reset('password'),
-    });
+    // Simulate login for now
+    form.processing = true;
+    setTimeout(() => {
+        router.visit(staffDashboard.url());
+    }, 1000);
 };
 </script>
 

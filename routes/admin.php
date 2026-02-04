@@ -1,8 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
-Route::get('/login', function () {
-    return Inertia::render('Admin/Login');
-})->name('login');
+Route::get('/login', [AdminController::class, 'login'])->name('login');
+Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');

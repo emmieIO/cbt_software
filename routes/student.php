@@ -1,12 +1,7 @@
 <?php
 
+use App\Http\Controllers\Student\StudentController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
-Route::get('/login', function () {
-    return Inertia::render('Student/Login');
-})->name('login');
-
-Route::get('/dashboard', function () {
-    return Inertia::render('Student/Dashboard');
-})->name('dashboard');
+Route::get('/login', [StudentController::class, 'login'])->name('login');
+Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard');

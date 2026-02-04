@@ -3,7 +3,7 @@ import { Head, Link } from '@inertiajs/vue3';
 </script>
 
 <template>
-    <Head title="Student Dashboard" />
+    <Head title="Staff Dashboard" />
 
     <div class="flex min-h-screen bg-slate-50 font-sans">
         <!-- Sidebar -->
@@ -35,7 +35,7 @@ import { Head, Link } from '@inertiajs/vue3';
                             d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01m-.01 4h.01"
                         />
                     </svg>
-                    Available Exams
+                    My Classes
                 </Link>
                 <Link
                     href="#"
@@ -46,10 +46,24 @@ import { Head, Link } from '@inertiajs/vue3';
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             stroke-width="2"
-                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                         />
                     </svg>
-                    My Results
+                    Exam Schedule
+                </Link>
+                <Link
+                    href="#"
+                    class="flex items-center rounded-xl px-4 py-3 font-medium text-white/70 transition-colors hover:bg-white/5 hover:text-white"
+                >
+                    <svg class="mr-3 h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                        />
+                    </svg>
+                    Question Bank
                 </Link>
             </nav>
             <div class="p-4">
@@ -78,10 +92,10 @@ import { Head, Link } from '@inertiajs/vue3';
                     <img src="/assets/img/chrisland-school-logo.png" alt="Logo" class="h-10 w-auto" />
                 </div>
                 <div class="hidden md:block">
-                    <h2 class="text-xl font-bold text-slate-800">Welcome back, Student!</h2>
+                    <h2 class="text-xl font-bold text-slate-800">Staff Portal Dashboard</h2>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary font-bold text-white">S</div>
+                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-slate-700 font-bold text-white">T</div>
                 </div>
             </header>
 
@@ -90,45 +104,43 @@ import { Head, Link } from '@inertiajs/vue3';
                 <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
                     <!-- Stats Card -->
                     <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-                        <p class="text-sm font-medium tracking-wider text-slate-500 uppercase">Active Exams</p>
-                        <p class="mt-2 text-3xl font-bold text-primary">2</p>
+                        <p class="text-sm font-medium tracking-wider text-slate-500 uppercase">Assigned Classes</p>
+                        <p class="mt-2 text-3xl font-bold text-primary">6</p>
                     </div>
                     <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-                        <p class="text-sm font-medium tracking-wider text-slate-500 uppercase">Completed</p>
-                        <p class="mt-2 text-3xl font-bold text-slate-800">12</p>
+                        <p class="text-sm font-medium tracking-wider text-slate-500 uppercase">Pending Results</p>
+                        <p class="mt-2 text-3xl font-bold text-orange-600">3</p>
                     </div>
                     <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-                        <p class="text-sm font-medium tracking-wider text-slate-500 uppercase">Avg. Score</p>
-                        <p class="mt-2 text-3xl font-bold text-slate-800">84%</p>
+                        <p class="text-sm font-medium tracking-wider text-slate-500 uppercase">Active Invigilations</p>
+                        <p class="mt-2 text-3xl font-bold text-slate-800">1</p>
                     </div>
                 </div>
 
-                <!-- Active Exams Placeholder -->
+                <!-- Recent Activity Placeholder -->
                 <div class="mt-8 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
                     <div class="border-b border-slate-100 bg-slate-50/50 px-6 py-4">
-                        <h3 class="font-bold text-slate-800">Ongoing Exams</h3>
+                        <h3 class="font-bold text-slate-800">Upcoming Exams Invigilation</h3>
                     </div>
                     <div class="p-6">
-                        <div class="flex items-center justify-between rounded-xl border border-primary/20 bg-primary/5 p-4">
+                        <div class="flex items-center justify-between rounded-xl border border-slate-100 p-4">
                             <div class="flex items-center space-x-4">
-                                <div class="rounded-lg bg-primary p-3 text-white">
+                                <div class="rounded-lg bg-slate-100 p-3 text-slate-600">
                                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path
                                             stroke-linecap="round"
                                             stroke-linejoin="round"
                                             stroke-width="2"
-                                            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                                         />
                                     </svg>
                                 </div>
                                 <div>
-                                    <h4 class="font-bold text-slate-900">Mathematics Mock Exam</h4>
-                                    <p class="text-sm text-slate-500">Duration: 60 minutes • 40 Questions</p>
+                                    <h4 class="font-bold text-slate-900">Physics - SS2 Blue</h4>
+                                    <p class="text-sm text-slate-500">Today, 2:00 PM • Hall A</p>
                                 </div>
                             </div>
-                            <button class="rounded-lg bg-primary px-6 py-2 font-bold text-white transition-transform hover:scale-105 active:scale-95">
-                                Start Exam
-                            </button>
+                            <span class="rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700 uppercase">Upcoming</span>
                         </div>
                     </div>
                 </div>

@@ -3,7 +3,7 @@ import { Head, Link } from '@inertiajs/vue3';
 </script>
 
 <template>
-    <Head title="Student Dashboard" />
+    <Head title="Admin Dashboard" />
 
     <div class="flex min-h-screen bg-slate-50 font-sans">
         <!-- Sidebar -->
@@ -32,10 +32,10 @@ import { Head, Link } from '@inertiajs/vue3';
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             stroke-width="2"
-                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01m-.01 4h.01"
+                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
                         />
                     </svg>
-                    Available Exams
+                    Manage Users
                 </Link>
                 <Link
                     href="#"
@@ -46,10 +46,10 @@ import { Head, Link } from '@inertiajs/vue3';
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             stroke-width="2"
-                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01m-.01 4h.01"
                         />
                     </svg>
-                    My Results
+                    Exams List
                 </Link>
             </nav>
             <div class="p-4">
@@ -78,56 +78,83 @@ import { Head, Link } from '@inertiajs/vue3';
                     <img src="/assets/img/chrisland-school-logo.png" alt="Logo" class="h-10 w-auto" />
                 </div>
                 <div class="hidden md:block">
-                    <h2 class="text-xl font-bold text-slate-800">Welcome back, Student!</h2>
+                    <h2 class="text-xl font-bold text-slate-800">Admin Control Panel</h2>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary font-bold text-white">S</div>
+                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-slate-800 font-bold text-white">A</div>
                 </div>
             </header>
 
             <!-- Dashboard Content -->
             <div class="p-8">
-                <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+                <div class="grid grid-cols-1 gap-6 md:grid-cols-4">
                     <!-- Stats Card -->
                     <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+                        <p class="text-sm font-medium tracking-wider text-slate-500 uppercase">Total Students</p>
+                        <p class="mt-2 text-3xl font-bold text-primary">1,240</p>
+                    </div>
+                    <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+                        <p class="text-sm font-medium tracking-wider text-slate-500 uppercase">Total Staff</p>
+                        <p class="mt-2 text-3xl font-bold text-slate-800">86</p>
+                    </div>
+                    <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
                         <p class="text-sm font-medium tracking-wider text-slate-500 uppercase">Active Exams</p>
-                        <p class="mt-2 text-3xl font-bold text-primary">2</p>
+                        <p class="mt-2 text-3xl font-bold text-green-600">4</p>
                     </div>
                     <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-                        <p class="text-sm font-medium tracking-wider text-slate-500 uppercase">Completed</p>
-                        <p class="mt-2 text-3xl font-bold text-slate-800">12</p>
-                    </div>
-                    <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-                        <p class="text-sm font-medium tracking-wider text-slate-500 uppercase">Avg. Score</p>
-                        <p class="mt-2 text-3xl font-bold text-slate-800">84%</p>
+                        <p class="text-sm font-medium tracking-wider text-slate-500 uppercase">System Status</p>
+                        <p class="mt-2 text-3xl font-bold text-blue-600">Healthy</p>
                     </div>
                 </div>
 
-                <!-- Active Exams Placeholder -->
-                <div class="mt-8 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
-                    <div class="border-b border-slate-100 bg-slate-50/50 px-6 py-4">
-                        <h3 class="font-bold text-slate-800">Ongoing Exams</h3>
+                <div class="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
+                    <!-- Recent Activity -->
+                    <div class="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+                        <div class="border-b border-slate-100 bg-slate-50/50 px-6 py-4">
+                            <h3 class="font-bold text-slate-800">Recent System Logs</h3>
+                        </div>
+                        <div class="divide-y divide-slate-50 p-6">
+                            <div class="py-3">
+                                <p class="text-sm text-slate-600"><span class="font-bold">admin_root</span> updated Mathematics exam settings</p>
+                                <p class="text-xs text-slate-400">2 minutes ago</p>
+                            </div>
+                            <div class="py-3">
+                                <p class="text-sm text-slate-600"><span class="font-bold">staff_user</span> uploaded 50 new questions to English Bank</p>
+                                <p class="text-xs text-slate-400">15 minutes ago</p>
+                            </div>
+                            <div class="py-3">
+                                <p class="text-sm text-slate-600">Automated backup completed successfully</p>
+                                <p class="text-xs text-slate-400">1 hour ago</p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="p-6">
-                        <div class="flex items-center justify-between rounded-xl border border-primary/20 bg-primary/5 p-4">
-                            <div class="flex items-center space-x-4">
-                                <div class="rounded-lg bg-primary p-3 text-white">
+
+                    <!-- Quick Actions -->
+                    <div class="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+                        <div class="border-b border-slate-100 bg-slate-50/50 px-6 py-4">
+                            <h3 class="font-bold text-slate-800">Quick Actions</h3>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 p-6">
+                            <button class="rounded-xl bg-slate-50 p-4 text-center transition-colors hover:bg-slate-100">
+                                <div class="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                    </svg>
+                                </div>
+                                <span class="text-sm font-bold text-slate-700">Add Student</span>
+                            </button>
+                            <button class="rounded-xl bg-slate-50 p-4 text-center transition-colors hover:bg-slate-100">
+                                <div class="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-green-100 text-green-600">
                                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path
                                             stroke-linecap="round"
                                             stroke-linejoin="round"
                                             stroke-width="2"
-                                            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                                         />
                                     </svg>
                                 </div>
-                                <div>
-                                    <h4 class="font-bold text-slate-900">Mathematics Mock Exam</h4>
-                                    <p class="text-sm text-slate-500">Duration: 60 minutes • 40 Questions</p>
-                                </div>
-                            </div>
-                            <button class="rounded-lg bg-primary px-6 py-2 font-bold text-white transition-transform hover:scale-105 active:scale-95">
-                                Start Exam
+                                <span class="text-sm font-bold text-slate-700">System Report</span>
                             </button>
                         </div>
                     </div>

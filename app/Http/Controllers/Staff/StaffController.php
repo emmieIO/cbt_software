@@ -12,4 +12,9 @@ class StaffController extends Controller
     {
         return Inertia::render('Staff/Login');
     }
+
+    public function dashboard(): Response
+    {
+        return Inertia::render('Staff/Dashboard');
+    }
 }
