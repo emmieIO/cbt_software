@@ -9,7 +9,7 @@ const form = useForm({
 });
 
 const submit = () => {
-    form.post(store().action, {
+    form.post(store().url, {
         onFinish: () => form.reset('password'),
     });
 };
