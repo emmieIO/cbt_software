@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('options', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('question_id')->constrained()->cascadeOnDelete();
+            $table->ulid('id')->primary();
+            $table->foreignUlid('question_id')->constrained()->cascadeOnDelete();
             $table->text('content');
             $table->boolean('is_correct')->default(false);
             $table->timestamps();

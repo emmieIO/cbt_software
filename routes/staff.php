@@ -15,6 +15,7 @@ Route::middleware(['auth', 'role:staff'])->group(function () {
         Route::get('/', [StaffController::class, 'index'])->name('index');
         Route::get('/create', [StaffController::class, 'create'])->name('create');
         Route::post('/', [StaffController::class, 'storeQuestion'])->name('store');
+        Route::post('/import', [StaffController::class, 'import'])->name('import');
     });
 
     Route::post('/logout', [StaffController::class, 'logout'])->name('logout');

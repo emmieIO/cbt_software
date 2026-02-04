@@ -12,17 +12,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('questions', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('topic_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('school_class_id')->constrained()->cascadeOnDelete();
+            $table->ulid('id')->primary();
+            $table->foreignUlid('topic_id')->constrained()->cascadeOnDelete();
+            $table->foreignUlid('school_class_id')->constrained()->cascadeOnDelete();
             $table->text('content');
             $table->text('explanation')->nullable();
             $table->string('type');
             $table->string('difficulty');
             $table->integer('version')->default(1);
-            $table->foreignId('parent_id')->nullable()->constrained('questions')->nullOnDelete();
+            $table->foreignUlid('parent_id')->nullable()->constrained('questions')->nullOnDelete();
             $table->timestamp('last_used_at')->nullable();
-            $table->foreignId('created_by')->constrained('users')->cascadeOnDelete();
+            $table->foreignUlid('created_by')->constrained('users')->cascadeOnDelete();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });

@@ -11,7 +11,7 @@ class QuestionService
     /**
      * Create a new question with its options.
      */
-    public function createQuestion(QuestionDTO $dto, int $userId): Question
+    public function createQuestion(QuestionDTO $dto, string $userId): Question
     {
         return DB::transaction(function () use ($dto, $userId) {
             $question = Question::create([
@@ -30,7 +30,7 @@ class QuestionService
     /**
      * Update an existing question (creating a new version).
      */
-    public function updateQuestion(Question $question, QuestionDTO $dto, int $userId): Question
+    public function updateQuestion(Question $question, QuestionDTO $dto, string $userId): Question
     {
         return DB::transaction(function () use ($question, $dto, $userId) {
             // Deactivate old version

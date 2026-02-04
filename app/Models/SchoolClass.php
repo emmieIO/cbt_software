@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ClassLevel;
+use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class SchoolClass extends Model
 {
     /** @use HasFactory<\Database\Factories\SchoolClassFactory> */
-    use HasFactory;
+    use HasFactory, HasUlids;
 
     protected $fillable = [
         'name',

@@ -1,18 +1,65 @@
 <script setup lang="ts">
-import { Head, Link, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { Head, Link, usePage, router, useForm } from '@inertiajs/vue3';
+import { computed, ref, watch } from 'vue';
 import StaffLayout from '@/layouts/StaffLayout.vue';
-import { create } from '@/actions/App/Http/Controllers/Staff/StaffController';
+import { create, index as indexAction, importMethod } from '@/actions/App/Http/Controllers/Staff/StaffController';
+import { debounce } from 'lodash';
 
 const props = defineProps<{
     questions: {
         data: any[];
         links: any[];
     };
+    subjects: any[];
+    classes: any[];
+    difficulties: any[];
+    filters: {
+        search?: string;
+        subject_id?: string;
+        school_class_id?: string;
+        difficulty?: string;
+    };
 }>();
 
 const page = usePage();
 const flash = computed(() => page.props.flash as any);
+
+const importForm = useForm({
+    file: null as File | null,
+});
+
+const handleImport = () => {
+    importForm.post(importMethod().url, {
+        onSuccess: () => importForm.reset(),
+    });
+};
+
+const filterForm = ref({
+    search: props.filters.search || '',
+    subject_id: props.filters.subject_id || '',
+    school_class_id: props.filters.school_class_id || '',
+    difficulty: props.filters.difficulty || '',
+});
+
+watch(
+    filterForm,
+    debounce((value) => {
+        router.get(indexAction().url, value, {
+            preserveState: true,
+            replace: true,
+        });
+    }, 300),
+    { deep: true }
+);
+
+const clearFilters = () => {
+    filterForm.value = {
+        search: '',
+        subject_id: '',
+        school_class_id: '',
+        difficulty: '',
+    };
+};
 </script>
 
 <template>
@@ -41,29 +88,112 @@ const flash = computed(() => page.props.flash as any);
                         <h2 class="text-3xl font-bold text-slate-900">Question Bank</h2>
                         <p class="text-slate-500 mt-1">Review and manage the existing question repository.</p>
                     </div>
-                    <Link 
-                        :href="create().url"
-                        class="flex items-center px-6 py-3 rounded-xl font-bold bg-primary text-white shadow-lg hover:bg-primary/90 hover:scale-105 active:scale-95 transition-all"
-                    >
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
-                        Add New Question
-                    </Link>
+                    <div class="flex gap-4">
+                        <form @submit.prevent="handleImport" class="flex items-center gap-2">
+                            <label 
+                                class="flex items-center px-4 py-3 rounded-xl font-bold border-2 border-slate-200 text-slate-600 hover:border-primary hover:text-primary transition-all cursor-pointer"
+                            >
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
+                                {{ importForm.file ? importForm.file.name : 'Choose CSV' }}
+                                <input 
+                                    type="file" 
+                                    class="hidden" 
+                                    accept=".csv"
+                                    @input="importForm.file = $event.target.files[0]"
+                                />
+                            </label>
+                            <button 
+                                v-if="importForm.file"
+                                type="submit"
+                                :disabled="importForm.processing"
+                                class="bg-primary text-white px-4 py-3 rounded-xl font-bold hover:bg-primary/90 transition-all"
+                            >
+                                Import
+                            </button>
+                        </form>
+
+                        <Link 
+                            :href="create().url"
+                            class="flex items-center px-6 py-3 rounded-xl font-bold bg-primary text-white shadow-lg hover:bg-primary/90 hover:scale-105 active:scale-95 transition-all"
+                        >
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                            Add New Question
+                        </Link>
+                    </div>
                 </div>
 
                 <!-- Repository Table -->
-                <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
-                    <div class="flex items-center justify-between mb-8">
-                        <div>
-                            <h3 class="text-xl font-bold text-slate-800">Available Questions</h3>
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                    <div class="p-8 border-b border-slate-100">
+                        <div class="flex items-center justify-between mb-8">
+                            <div>
+                                <h3 class="text-xl font-bold text-slate-800">Available Questions</h3>
+                                <p class="text-sm text-slate-500 mt-1">Review and manage the existing question bank.</p>
+                            </div>
+                            <div class="flex gap-4">
+                                <span class="inline-flex items-center px-4 py-2 rounded-lg bg-slate-100 text-slate-700 text-sm font-bold">
+                                    Total Questions: {{ questions.data.length }}
+                                </span>
+                            </div>
                         </div>
-                        <div class="flex gap-4">
-                            <span class="inline-flex items-center px-4 py-2 rounded-lg bg-slate-100 text-slate-700 text-sm font-bold">
-                                Total Questions: {{ questions.data.length }}
-                            </span>
+
+                        <!-- Filters -->
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                                </span>
+                                <input
+                                    v-model="filterForm.search"
+                                    type="text"
+                                    placeholder="Search questions..."
+                                    class="block w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-primary focus:ring-primary transition-all"
+                                />
+                            </div>
+
+                            <select
+                                v-model="filterForm.subject_id"
+                                class="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-primary focus:ring-primary transition-all"
+                            >
+                                <option value="">All Subjects</option>
+                                <option v-for="subject in subjects" :key="subject.id" :value="subject.id">
+                                    {{ subject.name }}
+                                </option>
+                            </select>
+
+                            <select
+                                v-model="filterForm.school_class_id"
+                                class="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-primary focus:ring-primary transition-all"
+                            >
+                                <option value="">All Classes</option>
+                                <option v-for="cls in classes" :key="cls.id" :value="cls.id">
+                                    {{ cls.name }}
+                                </option>
+                            </select>
+
+                            <select
+                                v-model="filterForm.difficulty"
+                                class="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-primary focus:ring-primary transition-all"
+                            >
+                                <option value="">All Difficulties</option>
+                                <option v-for="diff in difficulties" :key="diff.value" :value="diff.value">
+                                    {{ diff.label }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <div v-if="filterForm.search || filterForm.subject_id || filterForm.school_class_id || filterForm.difficulty" class="mt-4 flex justify-end">
+                            <button 
+                                @click="clearFilters"
+                                class="text-xs font-bold text-slate-400 hover:text-primary transition-colors flex items-center"
+                            >
+                                <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                Clear all filters
+                            </button>
                         </div>
                     </div>
 
-                    <div class="overflow-hidden border border-slate-100 rounded-2xl">
+                    <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse">
                             <thead>
                                 <tr class="bg-slate-50 border-b border-slate-100">

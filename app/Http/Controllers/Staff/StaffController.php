@@ -14,12 +14,30 @@ use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
+use App\Services\BulkImportService;
+use Illuminate\Http\Request;
+
 class StaffController extends Controller
 {
     public function __construct(
         protected AuthService $authService,
-        protected QuestionService $questionService
+        protected QuestionService $questionService,
+        protected BulkImportService $bulkImportService
     ) {}
+
+    /**
+     * Bulk import questions from CSV.
+     */
+    public function import(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:csv,txt'],
+        ]);
+
+        $count = $this->bulkImportService->importFromCsv($request->file('file'), $request->user()->id);
+
+        return redirect()->route('staff.questions.index')->with('success', "$count questions imported successfully.");
+    }
 
     public function login(): Response
     {
@@ -41,12 +59,36 @@ class StaffController extends Controller
     /**
      * Display the question bank repository.
      */
-    public function index(): Response
+    public function index(\Illuminate\Http\Request $request): Response
     {
+        $query = \App\Models\Question::query()
+            ->with(['topic.subject', 'schoolClass', 'options'])
+            ->latest();
+
+        if ($request->filled('search')) {
+            $query->where('content', 'like', '%'.$request->search.'%');
+        }
+
+        if ($request->filled('subject_id')) {
+            $query->whereHas('topic', function ($q) use ($request) {
+                $q->where('subject_id', $request->subject_id);
+            });
+        }
+
+        if ($request->filled('school_class_id')) {
+            $query->where('school_class_id', $request->school_class_id);
+        }
+
+        if ($request->filled('difficulty')) {
+            $query->where('difficulty', $request->difficulty);
+        }
+
         return Inertia::render('Staff/Questions/Index', [
-            'questions' => \App\Models\Question::with(['topic.subject', 'schoolClass', 'options'])
-                ->latest()
-                ->paginate(10),
+            'questions' => $query->paginate(10)->withQueryString(),
+            'subjects' => Subject::all(),
+            'classes' => SchoolClass::all(),
+            'difficulties' => collect(\App\Enums\QuestionDifficulty::cases())->map(fn ($d) => ['value' => $d->value, 'label' => \Illuminate\Support\Str::title($d->value)]),
+            'filters' => $request->only(['search', 'subject_id', 'school_class_id', 'difficulty']),
         ]);
     }
 
