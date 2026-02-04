@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
+import { login as studentLogin } from '@/routes/student';
+import { login as staffLogin } from '@/routes/staff';
+import { login as adminLogin } from '@/routes/admin';
 </script>
 
 <template>
@@ -38,7 +41,7 @@ import { Head, Link } from '@inertiajs/vue3';
                         <h2 class="text-2xl font-bold">Student Portal</h2>
                         <p class="text-slate-600">Access your exams, results, and learning materials here.</p>
                         <Link
-                            href="#"
+                            :href="studentLogin.url()"
                             class="mt-4 flex w-full items-center justify-center rounded-xl bg-lemon-yellow px-6 py-4 text-lg font-bold text-primary transition-all hover:scale-105 hover:bg-lemon-yellow/90 active:scale-95"
                         >
                             Enter Exam Portal
@@ -64,7 +67,7 @@ import { Head, Link } from '@inertiajs/vue3';
                         <h2 class="text-2xl font-bold text-lemon-yellow">Staff & Admin</h2>
                         <p class="text-white/80">Manage students, questions, and view detailed reports.</p>
                         <Link
-                            href="#"
+                            :href="staffLogin.url()"
                             class="mt-4 flex w-full items-center justify-center rounded-xl border-2 border-lemon-yellow bg-transparent px-6 py-4 text-lg font-bold text-lemon-yellow transition-all hover:scale-105 hover:bg-lemon-yellow hover:text-primary active:scale-95"
                         >
                             Administrative Login
@@ -74,8 +77,14 @@ import { Head, Link } from '@inertiajs/vue3';
             </div>
 
             <!-- Footer Section -->
-            <footer class="mt-16 text-sm text-white/60">
+            <footer class="mt-16 flex flex-col items-center space-y-4 text-sm text-white/60">
                 <p>&copy; {{ new Date().getFullYear() }} Chrisland Schools. All rights reserved.</p>
+                <Link
+                    :href="adminLogin.url()"
+                    class="rounded-full border border-white/20 bg-white/5 px-4 py-1 text-xs transition-all hover:border-lemon-yellow/50 hover:bg-white/10 hover:text-lemon-yellow"
+                >
+                    System Administrator
+                </Link>
             </footer>
         </div>
     </div>

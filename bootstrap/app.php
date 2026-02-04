@@ -11,6 +11,22 @@ return Application::configure(basePath: dirname(__DIR__))
         web: __DIR__.'/../routes/web.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
+        then: function () {
+            Route::middleware('web')
+                ->prefix('admin')
+                ->name('admin.')
+                ->group(base_path('routes/admin.php'));
+
+            Route::middleware('web')
+                ->prefix('staff')
+                ->name('staff.')
+                ->group(base_path('routes/staff.php'));
+
+            Route::middleware('web')
+                ->prefix('student')
+                ->name('student.')
+                ->group(base_path('routes/student.php'));
+        },
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
