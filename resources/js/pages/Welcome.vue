@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Head, Link, usePage } from '@inertiajs/vue3';
-import { login as studentLogin } from '@/routes/student';
-import { login as staffLogin } from '@/routes/staff';
 import { login as adminLogin } from '@/routes/admin';
+import { login as staffLogin } from '@/routes/staff';
+import { login as studentLogin } from '@/routes/student';
 
 const page = usePage();
 </script>

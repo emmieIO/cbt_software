@@ -9,7 +9,7 @@ interface NavItem {
     active?: boolean;
 }
 
-const props = defineProps<{
+defineProps<{
     title: string;
     navigation: NavItem[];
     logoutAction: string;

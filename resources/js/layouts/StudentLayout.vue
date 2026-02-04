@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import DashboardLayout from '@/layouts/DashboardLayout.vue';
-import { logout, dashboard } from '@/actions/App/Http/Controllers/Student/StudentController';
 import { usePage } from '@inertiajs/vue3';
 import { h, defineComponent } from 'vue';
+import { logout, dashboard } from '@/actions/App/Http/Controllers/Student/StudentController';
+import DashboardLayout from '@/layouts/DashboardLayout.vue';
 
 const page = usePage();
 

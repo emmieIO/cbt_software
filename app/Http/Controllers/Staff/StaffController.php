@@ -9,34 +9,52 @@ use App\Http\Requests\Question\StoreQuestionRequest;
 use App\Models\SchoolClass;
 use App\Models\Subject;
 use App\Services\AuthService;
+use App\Services\BulkExportService;
+use App\Services\BulkImportService;
 use App\Services\QuestionService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
-
-use App\Services\BulkImportService;
-use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class StaffController extends Controller
 {
     public function __construct(
         protected AuthService $authService,
         protected QuestionService $questionService,
-        protected BulkImportService $bulkImportService
+        protected BulkImportService $bulkImportService,
+        protected BulkExportService $bulkExportService
     ) {}
 
     /**
-     * Bulk import questions from CSV.
+     * Bulk import questions from CSV or Excel.
      */
     public function import(Request $request): RedirectResponse
     {
         $request->validate([
-            'file' => ['required', 'file', 'mimes:csv,txt'],
+            'file' => ['required', 'file', 'mimes:csv,txt,xlsx'],
         ]);
 
-        $count = $this->bulkImportService->importFromCsv($request->file('file'), $request->user()->id);
+        $count = $this->bulkImportService->import($request->file('file'), $request->user()->id);
 
         return redirect()->route('staff.questions.index')->with('success', "$count questions imported successfully.");
+    }
+
+    /**
+     * Export the question bank.
+     */
+    public function export(): StreamedResponse
+    {
+        return $this->bulkExportService->export();
+    }
+
+    /**
+     * Download import template.
+     */
+    public function downloadTemplate(): StreamedResponse
+    {
+        return $this->bulkExportService->downloadTemplate();
     }
 
     public function login(): Response

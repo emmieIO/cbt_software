@@ -16,6 +16,8 @@ Route::middleware(['auth', 'role:staff'])->group(function () {
         Route::get('/create', [StaffController::class, 'create'])->name('create');
         Route::post('/', [StaffController::class, 'storeQuestion'])->name('store');
         Route::post('/import', [StaffController::class, 'import'])->name('import');
+        Route::get('/export', [StaffController::class, 'export'])->name('export');
+        Route::get('/template', [StaffController::class, 'downloadTemplate'])->name('template');
     });
 
     Route::post('/logout', [StaffController::class, 'logout'])->name('logout');

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { Head, Link, usePage, router, useForm } from '@inertiajs/vue3';
-import { computed, ref, watch } from 'vue';
-import StaffLayout from '@/layouts/StaffLayout.vue';
-import { create, index as indexAction, importMethod } from '@/actions/App/Http/Controllers/Staff/StaffController';
 import { debounce } from 'lodash';
+import { computed, ref, watch } from 'vue';
+import { create, index as indexAction, importMethod, exportMethod, downloadTemplate } from '@/actions/App/Http/Controllers/Staff/StaffController';
+import StaffLayout from '@/layouts/StaffLayout.vue';
 
 const props = defineProps<{
     questions: {
@@ -88,17 +88,34 @@ const clearFilters = () => {
                         <h2 class="text-3xl font-bold text-slate-900">Question Bank</h2>
                         <p class="text-slate-500 mt-1">Review and manage the existing question repository.</p>
                     </div>
-                    <div class="flex gap-4">
+                    <div class="flex flex-wrap items-center gap-4">
+                        <div class="flex items-center gap-2 border-r border-slate-200 pr-4">
+                            <a 
+                                :href="downloadTemplate().url"
+                                class="flex items-center px-4 py-3 rounded-xl font-bold border-2 border-slate-200 text-slate-600 hover:border-primary hover:text-primary transition-all"
+                            >
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                Template
+                            </a>
+                            <a 
+                                :href="exportMethod().url"
+                                class="flex items-center px-4 py-3 rounded-xl font-bold border-2 border-slate-200 text-slate-600 hover:border-primary hover:text-primary transition-all"
+                            >
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                                Export All
+                            </a>
+                        </div>
+
                         <form @submit.prevent="handleImport" class="flex items-center gap-2">
                             <label 
                                 class="flex items-center px-4 py-3 rounded-xl font-bold border-2 border-slate-200 text-slate-600 hover:border-primary hover:text-primary transition-all cursor-pointer"
                             >
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
-                                {{ importForm.file ? importForm.file.name : 'Choose CSV' }}
+                                {{ importForm.file ? importForm.file.name : 'Choose Import File' }}
                                 <input 
                                     type="file" 
                                     class="hidden" 
-                                    accept=".csv"
+                                    accept=".csv,.xlsx"
                                     @input="importForm.file = $event.target.files[0]"
                                 />
                             </label>
@@ -250,13 +267,14 @@ const clearFilters = () => {
                             v-for="link in questions.links"
                             :key="link.label"
                             :href="link.url || '#'"
-                            v-html="link.label"
                             class="px-4 py-2 rounded-lg text-sm font-medium transition-all"
                             :class="[
                                 link.active ? 'bg-primary text-white shadow-md' : 'bg-white border border-slate-200 text-slate-600 hover:border-slate-300',
                                 !link.url ? 'opacity-50 cursor-not-allowed' : ''
                             ]"
-                        />
+                        >
+                            <span v-html="link.label" />
+                        </Link>
                     </div>
                 </div>
             </div>
