@@ -1,105 +1,82 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 </script>
 
 <template>
-    <Head title="Welcome" />
-    <div class="flex min-h-screen flex-col items-center bg-primary p-6 text-white lg:justify-center lg:p-8">
-        <div class="flex w-full items-center justify-center opacity-100 transition-opacity duration-750 lg:grow starting:opacity-0">
-            <main class="flex w-full max-w-[335px] flex-col-reverse overflow-hidden rounded-lg lg:max-w-4xl lg:flex-row">
+    <Head title="Welcome to Chrisland CBT Portal" />
+
+    <div class="flex min-h-screen flex-col items-center justify-center bg-primary p-6 font-sans text-white">
+        <div class="w-full max-w-4xl space-y-8 text-center">
+            <!-- Header Section -->
+            <div class="flex flex-col items-center space-y-4">
+                <img src="/assets/img/chrisland-school-logo.png" alt="Chrisland School Logo" class="h-32 w-auto object-contain drop-shadow-lg" />
+                <h1 class="text-4xl font-bold tracking-tight sm:text-5xl">Chrisland Schools</h1>
+                <p class="text-xl font-medium text-lemon-yellow">Computer Based Testing Portal</p>
+            </div>
+
+            <!-- Portal Entry Options -->
+            <div class="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2">
+                <!-- Student Portal Card -->
                 <div
-                    class="flex-1 rounded-br-lg rounded-bl-lg bg-white p-6 pb-12 text-[13px] leading-[20px] text-slate-900 shadow-[inset_0px_0px_0px_1px_rgba(26,26,0,0.16)] lg:rounded-tl-lg lg:rounded-br-none lg:p-20"
+                    class="group relative overflow-hidden rounded-2xl bg-white p-8 text-slate-900 shadow-2xl transition-all hover:-translate-y-1 hover:shadow-lemon-yellow/20"
                 >
-                    <h1 class="mb-1 text-2xl font-bold">Let's get started</h1>
-                    <p class="mb-2 text-slate-600">Laravel has an incredibly rich ecosystem. <br />We suggest starting with the following.</p>
-                    <ul class="mb-4 flex flex-col lg:mb-6">
-                        <li
-                            class="relative flex items-center gap-4 py-2 before:absolute before:top-1/2 before:bottom-0 before:left-[0.4rem] before:border-l before:border-[#e3e3e0]"
-                        >
-                            <span class="relative bg-white py-1">
-                                <span
-                                    class="flex h-3.5 w-3.5 items-center justify-center rounded-full border border-[#e3e3e0] bg-[#FDFDFC] shadow-[0px_0px_1px_0px_rgba(0,0,0,0.03),0px_1px_2px_0px_rgba(0,0,0,0.06)]"
-                                >
-                                    <span class="h-1.5 w-1.5 rounded-full bg-primary" />
-                                </span>
-                            </span>
-                            <span>
-                                Read the
-                                <a
-                                    href="https://laravel.com/docs"
-                                    target="_blank"
-                                    class="ml-1 inline-flex items-center space-x-1 font-medium underline underline-offset-4 transition-opacity hover:opacity-80"
-                                >
-                                    <span>Documentation</span>
-                                    <svg
-                                        width="10"
-                                        height="11"
-                                        viewBox="0 0 10 11"
-                                        fill="none"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        class="h-2.5 w-2.5"
-                                    >
-                                        <path d="M7.70833 6.95834V2.79167H3.54167M2.5 8L7.5 3.00001" stroke="currentColor" stroke-linecap="square" />
-                                    </svg>
-                                </a>
-                            </span>
-                        </li>
-                        <li
-                            class="relative flex items-center gap-4 py-2 before:absolute before:top-0 before:bottom-1/2 before:left-[0.4rem] before:border-l before:border-[#e3e3e0]"
-                        >
-                            <span class="relative bg-white py-1">
-                                <span
-                                    class="flex h-3.5 w-3.5 items-center justify-center rounded-full border border-[#e3e3e0] bg-[#FDFDFC] shadow-[0px_0px_1px_0px_rgba(0,0,0,0.03),0px_1px_2px_0px_rgba(0,0,0,0.06)]"
-                                >
-                                    <span class="h-1.5 w-1.5 rounded-full bg-primary" />
-                                </span>
-                            </span>
-                            <span>
-                                Watch video tutorials at
-                                <a
-                                    href="https://laracasts.com"
-                                    target="_blank"
-                                    class="ml-1 inline-flex items-center space-x-1 font-medium underline underline-offset-4 transition-opacity hover:opacity-80"
-                                >
-                                    <span>Laracasts</span>
-                                    <svg
-                                        width="10"
-                                        height="11"
-                                        viewBox="0 0 10 11"
-                                        fill="none"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        class="h-2.5 w-2.5"
-                                    >
-                                        <path d="M7.70833 6.95834V2.79167H3.54167M2.5 8L7.5 3.00001" stroke="currentColor" stroke-linecap="square" />
-                                    </svg>
-                                </a>
-                            </span>
-                        </li>
-                    </ul>
-                    <ul class="flex gap-3 text-sm leading-normal">
-                        <li>
-                            <a
-                                href="https://cloud.laravel.com"
-                                target="_blank"
-                                class="inline-block rounded-sm bg-primary px-5 py-1.5 text-sm leading-normal text-white transition-opacity hover:opacity-90"
-                            >
-                                Deploy now
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-                <div
-                    class="relative -mb-px aspect-335/376 w-full shrink-0 overflow-hidden rounded-t-lg bg-lemon-yellow lg:mb-0 lg:-ml-px lg:aspect-auto lg:w-[438px] lg:rounded-t-none lg:rounded-r-lg"
-                >
-                    <div class="flex h-full flex-col items-center justify-center p-12">
-                        <img src="/assets/img/chrisland-school-logo.png" alt="Chrisland School Logo" class="mb-6 h-32 w-auto object-contain" />
-                        <h2 class="text-center text-4xl font-bold text-primary">CBT Software</h2>
+                    <div class="absolute top-0 right-0 p-4 opacity-10 transition-opacity group-hover:opacity-20">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path d="M12 14l9-5-9-5-9 5 9 5z" />
+                            <path
+                                d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"
+                            />
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222"
+                            />
+                        </svg>
                     </div>
-                    <div
-                        class="absolute inset-0 rounded-t-lg shadow-[inset_0px_0px_0px_1px_rgba(26,26,0,0.16)] lg:overflow-hidden lg:rounded-t-none lg:rounded-r-lg"
-                    />
+                    <div class="relative z-10 flex flex-col items-center space-y-4">
+                        <h2 class="text-2xl font-bold">Student Portal</h2>
+                        <p class="text-slate-600">Access your exams, results, and learning materials here.</p>
+                        <Link
+                            href="#"
+                            class="mt-4 flex w-full items-center justify-center rounded-xl bg-lemon-yellow px-6 py-4 text-lg font-bold text-primary transition-all hover:scale-105 hover:bg-lemon-yellow/90 active:scale-95"
+                        >
+                            Enter Exam Portal
+                        </Link>
+                    </div>
                 </div>
-            </main>
+
+                <!-- Staff/Admin Portal Card -->
+                <div
+                    class="group relative overflow-hidden rounded-2xl border-2 border-lemon-yellow bg-primary/50 p-8 shadow-2xl backdrop-blur-sm transition-all hover:-translate-y-1"
+                >
+                    <div class="absolute top-0 right-0 p-4 text-lemon-yellow opacity-10 transition-opacity group-hover:opacity-20">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.594-3.741z"
+                            />
+                        </svg>
+                    </div>
+                    <div class="relative z-10 flex flex-col items-center space-y-4">
+                        <h2 class="text-2xl font-bold text-lemon-yellow">Staff & Admin</h2>
+                        <p class="text-white/80">Manage students, questions, and view detailed reports.</p>
+                        <Link
+                            href="#"
+                            class="mt-4 flex w-full items-center justify-center rounded-xl border-2 border-lemon-yellow bg-transparent px-6 py-4 text-lg font-bold text-lemon-yellow transition-all hover:scale-105 hover:bg-lemon-yellow hover:text-primary active:scale-95"
+                        >
+                            Administrative Login
+                        </Link>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Section -->
+            <footer class="mt-16 text-sm text-white/60">
+                <p>&copy; {{ new Date().getFullYear() }} Chrisland Schools. All rights reserved.</p>
+            </footer>
         </div>
     </div>
 </template>
