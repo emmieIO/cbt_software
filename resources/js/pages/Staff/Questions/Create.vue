@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { Head, useForm, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import { storeQuestion, index } from '@/actions/App/Http/Controllers/Staff/StaffController';
+import { store, index } from '@/actions/App/Http/Controllers/Staff/StaffQuestionController';
 import StaffLayout from '@/layouts/StaffLayout.vue';
+import type { Subject } from '@/types/academics';
 
 const props = defineProps<{
-    subjects: any[];
+    subjects: Subject[];
     classes: any[];
     types: any[];
     difficulties: any[];
@@ -29,7 +30,13 @@ const form = useForm({
 });
 
 const selectedSubject = computed(() => {
-    return props.subjects.find((s) => s.id === parseInt(form.subject_id as string));
+    return props.subjects.find((s) => s.id === (form.subject_id as string));
+});
+
+const filteredTopics = computed(() => {
+    if (!selectedSubject.value) return [];
+
+    return selectedSubject.value.topics;
 });
 
 const addOption = () => {
@@ -51,7 +58,7 @@ const setCorrectOption = (index: number) => {
 };
 
 const submit = () => {
-    form.post(storeQuestion().url, {
+    form.post(store().url, {
         onSuccess: () => {
             form.reset();
         },
@@ -67,26 +74,25 @@ const submit = () => {
             <div class="w-full">
                 <!-- Back Button -->
                 <div class="mb-8">
-                    <Link 
-                        :href="index().url" 
-                        class="text-sm font-bold text-slate-500 hover:text-primary flex items-center transition-colors"
-                    >
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                    <Link :href="index().url" class="flex items-center text-sm font-bold text-slate-500 transition-colors hover:text-primary">
+                        <svg class="mr-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
                         Back to Repository
                     </Link>
                 </div>
 
-                <div class="mb-8 bg-white p-8 border-b border-slate-200">
-                    <div class="flex items-center justify-between mb-10">
+                <div class="mb-8 border-b border-slate-200 bg-white p-8">
+                    <div class="mb-10 flex items-center justify-between">
                         <h3 class="text-3xl font-bold text-slate-900">Create New Question</h3>
                         <p class="text-sm text-slate-500">Define your question metadata, content, and options.</p>
                     </div>
 
                     <form @submit.prevent="submit" class="space-y-10">
                         <!-- Metadata Row -->
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+                        <div class="grid grid-cols-1 gap-10 md:grid-cols-3">
                             <div>
-                                <label class="block text-sm font-semibold text-slate-700 mb-2">Subject</label>
+                                <label class="mb-2 block text-sm font-semibold text-slate-700">Subject</label>
                                 <select
                                     v-model="form.subject_id"
                                     required
@@ -100,7 +106,7 @@ const submit = () => {
                             </div>
 
                             <div>
-                                <label class="block text-sm font-semibold text-slate-700 mb-2">Topic</label>
+                                <label class="mb-2 block text-sm font-semibold text-slate-700">Topic</label>
                                 <select
                                     v-model="form.topic_id"
                                     required
@@ -108,31 +114,29 @@ const submit = () => {
                                     class="block w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-3.5 text-sm transition-all focus:border-primary focus:ring-primary disabled:opacity-50"
                                 >
                                     <option value="" disabled>Select Topic</option>
-                                    <option v-for="topic in selectedSubject?.topics" :key="topic.id" :value="topic.id">
+                                    <option v-for="topic in filteredTopics" :key="topic.id" :value="topic.id">
                                         {{ topic.name }}
                                     </option>
                                 </select>
                             </div>
 
                             <div>
-                                <label class="block text-sm font-semibold text-slate-700 mb-2">Target Class</label>
+                                <label class="mb-2 block text-sm font-semibold text-slate-700">Target Class</label>
                                 <select
                                     v-model="form.school_class_id"
                                     required
                                     class="block w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-3.5 text-sm transition-all focus:border-primary focus:ring-primary"
                                 >
                                     <option value="" disabled>Select Class</option>
-                                    <option v-for="cls in classes" :key="cls.id" :value="cls.id">
-                                        {{ cls.name }} ({{ cls.level }})
-                                    </option>
+                                    <option v-for="cls in classes" :key="cls.id" :value="cls.id">{{ cls.name }} ({{ cls.level }})</option>
                                 </select>
                             </div>
                         </div>
 
                         <!-- Type & Difficulty Toggles -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
-                            <div class="p-6 bg-slate-50/50 rounded-2xl border border-slate-100">
-                                <label class="block text-sm font-semibold text-slate-700 mb-4">Question Type</label>
+                        <div class="grid grid-cols-1 gap-10 md:grid-cols-2">
+                            <div class="rounded-2xl border border-slate-100 bg-slate-50/50 p-6">
+                                <label class="mb-4 block text-sm font-semibold text-slate-700">Question Type</label>
                                 <div class="flex gap-4">
                                     <button
                                         v-for="type in types"
@@ -140,10 +144,10 @@ const submit = () => {
                                         type="button"
                                         @click="form.type = type.value"
                                         :class="[
-                                            'flex-1 rounded-xl py-3.5 text-sm font-bold transition-all border-2',
+                                            'flex-1 rounded-xl border-2 py-3.5 text-sm font-bold transition-all',
                                             form.type === type.value
-                                                ? 'bg-primary border-primary text-white shadow-md'
-                                                : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+                                                ? 'border-primary bg-primary text-white shadow-md'
+                                                : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300',
                                         ]"
                                     >
                                         {{ type.label }}
@@ -151,8 +155,8 @@ const submit = () => {
                                 </div>
                             </div>
 
-                            <div class="p-6 bg-slate-50/50 rounded-2xl border border-slate-100">
-                                <label class="block text-sm font-semibold text-slate-700 mb-4">Difficulty Level</label>
+                            <div class="rounded-2xl border border-slate-100 bg-slate-50/50 p-6">
+                                <label class="mb-4 block text-sm font-semibold text-slate-700">Difficulty Level</label>
                                 <div class="flex gap-4">
                                     <button
                                         v-for="diff in difficulties"
@@ -160,10 +164,10 @@ const submit = () => {
                                         type="button"
                                         @click="form.difficulty = diff.value"
                                         :class="[
-                                            'flex-1 rounded-xl py-3.5 text-sm font-bold transition-all border-2',
+                                            'flex-1 rounded-xl border-2 py-3.5 text-sm font-bold transition-all',
                                             form.difficulty === diff.value
-                                                ? 'bg-primary border-primary text-white shadow-md'
-                                                : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+                                                ? 'border-primary bg-primary text-white shadow-md'
+                                                : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300',
                                         ]"
                                     >
                                         {{ diff.label }}
@@ -173,10 +177,10 @@ const submit = () => {
                         </div>
 
                         <!-- Main Content Grid -->
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
+                        <div class="grid grid-cols-1 gap-16 lg:grid-cols-2">
                             <div class="space-y-8">
                                 <div>
-                                    <label class="block text-sm font-semibold text-slate-700 mb-3">Question Content</label>
+                                    <label class="mb-3 block text-sm font-semibold text-slate-700">Question Content</label>
                                     <textarea
                                         v-model="form.content"
                                         rows="10"
@@ -184,11 +188,11 @@ const submit = () => {
                                         class="block w-full rounded-2xl border-slate-200 bg-slate-50 px-5 py-5 text-sm transition-all focus:border-primary focus:ring-primary"
                                         placeholder="Enter your question here..."
                                     ></textarea>
-                                    <div v-if="form.errors.content" class="mt-2 text-xs text-red-600 font-medium">{{ form.errors.content }}</div>
+                                    <div v-if="form.errors.content" class="mt-2 text-xs font-medium text-red-600">{{ form.errors.content }}</div>
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-semibold text-slate-700 mb-3">Explanation (Optional)</label>
+                                    <label class="mb-3 block text-sm font-semibold text-slate-700">Explanation (Optional)</label>
                                     <textarea
                                         v-model="form.explanation"
                                         rows="4"
@@ -204,29 +208,31 @@ const submit = () => {
                                     <button
                                         type="button"
                                         @click="addOption"
-                                        class="text-xs font-bold text-primary hover:underline flex items-center bg-primary/5 px-3 py-1.5 rounded-lg transition-colors hover:bg-primary/10"
+                                        class="flex items-center rounded-lg bg-primary/5 px-3 py-1.5 text-xs font-bold text-primary transition-colors hover:bg-primary/10 hover:underline"
                                     >
-                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                                        <svg class="mr-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                        </svg>
                                         Add Option
                                     </button>
                                 </div>
-                                <div v-if="form.errors.options" class="mt-1 text-xs text-red-600 font-medium">{{ form.errors.options }}</div>
+                                <div v-if="form.errors.options" class="mt-1 text-xs font-medium text-red-600">{{ form.errors.options }}</div>
 
                                 <div class="space-y-5">
-                                    <div v-for="(option, index) in form.options" :key="index" class="flex gap-4 group">
-                                        <div class="flex-1 relative">
+                                    <div v-for="(option, index) in form.options" :key="index" class="group flex gap-4">
+                                        <div class="relative flex-1">
                                             <input
                                                 v-model="option.content"
                                                 type="text"
                                                 required
-                                                class="block w-full rounded-xl border-slate-200 bg-slate-50 px-5 py-4 text-sm pr-12 transition-all focus:border-primary focus:ring-primary"
+                                                class="block w-full rounded-xl border-slate-200 bg-slate-50 px-5 py-4 pr-12 text-sm transition-all focus:border-primary focus:ring-primary"
                                                 :placeholder="`Option ${index + 1}`"
                                             />
                                             <button
                                                 v-if="form.options.length > 2"
                                                 type="button"
                                                 @click="removeOption(index)"
-                                                class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                                                class="absolute top-1/2 right-4 -translate-y-1/2 text-slate-300 opacity-0 transition-colors group-hover:opacity-100 hover:text-red-500"
                                             >
                                                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -237,10 +243,10 @@ const submit = () => {
                                             type="button"
                                             @click="setCorrectOption(index)"
                                             :class="[
-                                                'w-36 rounded-xl text-xs font-bold transition-all border-2 shrink-0',
+                                                'w-36 shrink-0 rounded-xl border-2 text-xs font-bold transition-all',
                                                 option.is_correct
-                                                    ? 'bg-green-500 border-green-500 text-white shadow-md'
-                                                    : 'bg-white border-slate-200 text-slate-400 hover:border-slate-300'
+                                                    ? 'border-green-500 bg-green-500 text-white shadow-md'
+                                                    : 'border-slate-200 bg-white text-slate-400 hover:border-slate-300',
                                             ]"
                                         >
                                             {{ option.is_correct ? 'Correct Answer' : 'Mark Correct' }}
@@ -251,12 +257,9 @@ const submit = () => {
                         </div>
 
                         <!-- Form Actions -->
-                        <div class="flex justify-end pt-10 border-t border-slate-100">
-                            <div class="gap-4 flex">
-                                <Link
-                                    :href="index().url"
-                                    class="px-8 py-4 text-sm font-bold text-slate-500 hover:text-slate-700 transition-colors"
-                                >
+                        <div class="flex justify-end border-t border-slate-100 pt-10">
+                            <div class="flex gap-4">
+                                <Link :href="index().url" class="px-8 py-4 text-sm font-bold text-slate-500 transition-colors hover:text-slate-700">
                                     Cancel
                                 </Link>
                                 <button
@@ -266,8 +269,20 @@ const submit = () => {
                                 >
                                     <span v-if="form.processing" class="mr-2 animate-spin">
                                         <svg class="h-5 w-5" viewBox="0 0 24 24">
-                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
-                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            <circle
+                                                class="opacity-25"
+                                                cx="12"
+                                                cy="12"
+                                                r="10"
+                                                stroke="currentColor"
+                                                stroke-width="4"
+                                                fill="none"
+                                            ></circle>
+                                            <path
+                                                class="opacity-75"
+                                                fill="currentColor"
+                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                            ></path>
                                         </svg>
                                     </span>
                                     Publish to Repository

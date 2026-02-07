@@ -6,9 +6,14 @@ export type User = {
     email_verified_at: string | null;
     created_at: string;
     updated_at: string;
+    roles: Role[];
     [key: string]: unknown;
 };
 
 export type Auth = {
     user: User;
+};
+
+type Role = {
+    name: string;
 };

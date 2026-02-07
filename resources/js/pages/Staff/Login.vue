@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { store } from '@/actions/App/Http/Controllers/Staff/StaffController';
+import { authenticate } from '@/actions/App/Http/Controllers/Staff/StaffAuthController';
 
 const form = useForm({
     login_id: '',
@@ -9,7 +9,7 @@ const form = useForm({
 });
 
 const submit = () => {
-    form.post(store().url, {
+    form.post(authenticate().url, {
         onFinish: () => form.reset('password'),
     });
 };

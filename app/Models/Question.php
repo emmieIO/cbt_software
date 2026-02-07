@@ -9,11 +9,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Question extends Model
 {
     /** @use HasFactory<\Database\Factories\QuestionFactory> */
-    use HasFactory, HasUlids;
+    use HasFactory, HasUlids, SoftDeletes;
 
     protected $fillable = [
         'topic_id',
@@ -90,5 +91,23 @@ class Question extends Model
             'last_used_at' => 'datetime',
             'is_active' => 'boolean',
         ];
+    }
+
+    /**
+     * Scope a query to filter questions.
+     */
+    public function scopeFilter($query, array $filters): void
+    {
+        $query->when($filters['search'] ?? null, function ($query, $search) {
+            $query->where('content', 'like', '%'.$search.'%');
+        })->when($filters['subject_id'] ?? null, function ($query, $subjectId) {
+            $query->whereHas('topic', function ($query) use ($subjectId) {
+                $query->where('subject_id', $subjectId);
+            });
+        })->when($filters['school_class_id'] ?? null, function ($query, $classId) {
+            $query->where('school_class_id', $classId);
+        })->when($filters['difficulty'] ?? null, function ($query, $difficulty) {
+            $query->where('difficulty', $difficulty);
+        });
     }
 }

@@ -13,3 +13,9 @@
         @apply text-lemon-yellow transition-opacity hover:opacity-80;
     }
 }
+
+input[type='text'],
+select,
+textarea {
+    @apply border border-primary ring-1 ring-primary;
+}

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\DTOs\QuestionDTO;
 use App\Models\Question;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
 class QuestionService
@@ -49,6 +50,53 @@ class QuestionService
             }
 
             return $newVersion;
+        });
+    }
+
+    /**
+     * Get filtered and paginated questions.
+     */
+    public function getFilteredQuestions(array $filters): LengthAwarePaginator
+    {
+        return Question::query()
+            ->with(['topic.subject', 'schoolClass', 'options'])
+            ->filter($filters)
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+    }
+
+    /**
+     * Delete a single question and all its versions.
+     */
+    public function deleteQuestion(Question $question): bool
+    {
+        return DB::transaction(function () use ($question) {
+            $parentId = $question->parent_id ?? $question->id;
+
+            return Question::where('id', $parentId)
+                ->orWhere('parent_id', $parentId)
+                ->delete();
+        });
+    }
+
+    /**
+     * Bulk delete questions.
+     */
+    public function bulkDeleteQuestions(array $ids): int
+    {
+        return DB::transaction(function () use ($ids) {
+            // Get all unique parent IDs for the selected questions
+            $parentIds = Question::whereIn('id', $ids)
+                ->pluck('parent_id')
+                ->filter()
+                ->merge($ids)
+                ->unique();
+
+            // Delete the selected questions and all their related versions
+            return Question::whereIn('id', $ids)
+                ->orWhereIn('parent_id', $parentIds)
+                ->delete();
         });
     }
 }
