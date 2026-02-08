@@ -11,7 +11,7 @@ class UpdateQuestionRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('create exams');
+        return $this->user()->can('edit questions');
     }
 
     public function rules(): array

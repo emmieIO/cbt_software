@@ -38,14 +38,18 @@ class HandleInertiaRequests extends Middleware
         $user = $request->user();
 
         if ($user) {
-            $user->loadMissing('roles');
+            $user->loadMissing(['roles', 'permissions']);
         }
 
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
-                'user' => $user,
+                'user' => $user ? [
+                    ...$user->toArray(),
+                    'permissions' => $user->getAllPermissions()->pluck('name'),
+                    'roles' => $user->getRoleNames(),
+                ] : null,
                 'dashboard_url' => $user ? app(\App\Services\AuthService::class)->getRedirectUrl($user) : null,
                 'notifications' => $user ? $user->unreadNotifications()->latest()->take(10)->get() : [],
                 'is_seeding' => $user ? \Illuminate\Support\Facades\Cache::get("user_{$user->id}_seeding_status") : null,

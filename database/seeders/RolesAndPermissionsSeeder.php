@@ -17,37 +17,55 @@ class RolesAndPermissionsSeeder extends Seeder
         // Reset cached roles and permissions
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // Create permissions
-        $permissions = [
-            'manage users',
-            'manage settings',
-            'create exams',
-            'edit exams',
-            'delete exams',
-            'view exams',
-            'take exams',
-            'view results',
-            'grade exams',
-        ];
+        // System Management
+        Permission::findOrCreate('manage users');
+        Permission::findOrCreate('manage settings');
 
-        foreach ($permissions as $permission) {
-            Permission::findOrCreate($permission);
-        }
+        // Question Bank Management
+        Permission::findOrCreate('view questions');
+        Permission::findOrCreate('create questions');
+        Permission::findOrCreate('edit questions');
+        Permission::findOrCreate('delete questions');
+        Permission::findOrCreate('manage question bank'); // Bulk actions, version management
+        Permission::findOrCreate('use ai lab');
+        Permission::findOrCreate('export questions');
 
-        // Create roles and assign created permissions
+        // Exam Management
+        Permission::findOrCreate('create exams');
+        Permission::findOrCreate('edit exams');
+        Permission::findOrCreate('delete exams');
+        Permission::findOrCreate('view exams');
+        Permission::findOrCreate('take exams');
+
+        // Results
+        Permission::findOrCreate('view results');
+        Permission::findOrCreate('grade exams');
 
         // Admin role
         $adminRole = Role::findOrCreate('admin');
         $adminRole->givePermissionTo(Permission::all());
 
-        // Staff role
-        $staffRole = Role::findOrCreate('staff');
-        $staffRole->givePermissionTo([
-            'create exams',
-            'edit exams',
+        // Subject Lead role (Senior Teachers / HODs)
+        $subjectLeadRole = Role::findOrCreate('subject_lead');
+        $subjectLeadRole->givePermissionTo([
+            'view questions',
+            'create questions',
+            'edit questions',
+            'manage question bank',
+            'use ai lab',
+            'export questions',
             'view exams',
             'view results',
             'grade exams',
+        ]);
+
+        // Staff role (Regular Teachers)
+        $staffRole = Role::findOrCreate('staff');
+        $staffRole->givePermissionTo([
+            'view questions',
+            'create questions',
+            'view exams',
+            'view results',
         ]);
 
         // Student role

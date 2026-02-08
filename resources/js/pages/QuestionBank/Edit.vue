@@ -1,32 +1,39 @@
 <script setup lang="ts">
-import { Head, useForm, Link } from '@inertiajs/vue3';
-import { computed, watch } from 'vue';
-import { store, index } from '@/actions/App/Http/Controllers/Staff/StaffQuestionController';
+import { Head, useForm, Link, usePage } from '@inertiajs/vue3';
+import { computed, watch, onMounted } from 'vue';
+import { ref } from 'vue';
+import { update, index } from '@/actions/App/Http/Controllers/Staff/StaffQuestionController';
+import AdminLayout from '@/layouts/AdminLayout.vue';
 import StaffLayout from '@/layouts/StaffLayout.vue';
-import type { Subject } from '@/types/academics';
+import type { AppPageProps } from '@/types';
+import type { Subject, Question } from '@/types/academics';
 
 const props = defineProps<{
+    question: Question;
     subjects: Subject[];
     classes: any[];
     types: any[];
     difficulties: any[];
 }>();
 
+const page = usePage<AppPageProps>();
+const isAdmin = computed(() => page.props.auth.user.roles.includes('admin'));
+const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
+
 const form = useForm({
-    subject_id: '',
-    topic_id: '',
-    school_class_id: '',
-    content: '',
-    explanation: '',
-    type: 'multiple_choice',
-    difficulty: 'medium',
-    is_active: true,
-    options: [
-        { content: '', is_correct: true },
-        { content: '', is_correct: false },
-        { content: '', is_correct: false },
-        { content: '', is_correct: false },
-    ],
+    subject_id: props.question.topic.subject.id,
+    topic_id: props.question.topic_id,
+    school_class_id: props.question.school_class_id,
+    content: props.question.content,
+    explanation: props.question.explanation || '',
+    type: props.question.type,
+    difficulty: props.question.difficulty,
+    is_active: props.question.is_active,
+    options: props.question.options.map((opt) => ({
+        id: opt.id,
+        content: opt.content,
+        is_correct: !!opt.is_correct,
+    })),
 });
 
 const selectedSubject = computed(() => {
@@ -37,11 +44,7 @@ const availableClasses = computed(() => {
     if (!selectedSubject.value) return [];
 
     // Get unique class IDs from the subject's topics
-    const classIds = new Set(
-        (selectedSubject.value as any).topics
-            .filter((t: any) => t.school_class_id)
-            .map((t: any) => t.school_class_id),
-    );
+    const classIds = new Set((selectedSubject.value as any).topics.filter((t: any) => t.school_class_id).map((t: any) => t.school_class_id));
 
     return props.classes.filter((c) => classIds.has(c.id));
 });
@@ -49,28 +52,36 @@ const availableClasses = computed(() => {
 const filteredTopics = computed(() => {
     if (!selectedSubject.value || !form.school_class_id) return [];
 
-    return (selectedSubject.value as any).topics.filter(
-        (topic: any) => !topic.school_class_id || topic.school_class_id === form.school_class_id,
-    );
+    return (selectedSubject.value as any).topics.filter((topic: any) => !topic.school_class_id || topic.school_class_id === form.school_class_id);
+});
+
+// Avoid clearing on mount
+const isMounted = ref(false);
+onMounted(() => {
+    isMounted.value = true;
 });
 
 watch(
     () => form.subject_id,
-    () => {
-        form.school_class_id = '';
-        form.topic_id = '';
+    (newVal, oldVal) => {
+        if (isMounted.value && oldVal !== '') {
+            form.school_class_id = '';
+            form.topic_id = '';
+        }
     },
 );
 
 watch(
     () => form.school_class_id,
-    () => {
-        form.topic_id = '';
+    (newVal, oldVal) => {
+        if (isMounted.value && oldVal !== '') {
+            form.topic_id = '';
+        }
     },
 );
 
 const addOption = () => {
-    form.options.push({ content: '', is_correct: false });
+    form.options.push({ id: undefined, content: '', is_correct: false });
 };
 
 const removeOption = (index: number) => {
@@ -88,17 +99,13 @@ const setCorrectOption = (index: number) => {
 };
 
 const submit = () => {
-    form.post(store().url, {
-        onSuccess: () => {
-            form.reset();
-        },
-    });
+    form.put(update(props.question.id).url);
 };
 </script>
 
 <template>
-    <StaffLayout>
-        <Head title="Create Question" />
+    <component :is="Layout">
+        <Head title="Edit Question" />
 
         <div class="p-8">
             <div class="w-full">
@@ -114,8 +121,19 @@ const submit = () => {
 
                 <div class="mb-8 border-b border-slate-200 bg-white p-8">
                     <div class="mb-10 flex items-center justify-between">
-                        <h3 class="text-3xl font-bold text-slate-900">Create New Question</h3>
-                        <p class="text-sm text-slate-500">Define your question metadata, content, and options.</p>
+                        <div>
+                            <h3 class="text-3xl font-bold text-slate-900">Edit Question</h3>
+                            <p class="mt-1 text-sm font-bold text-amber-600 text-slate-500">
+                                Note: Saving will create a new version (v{{ question.version + 1 }}) and deactivate the current one.
+                            </p>
+                        </div>
+                        <div class="text-right">
+                            <span
+                                class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-black tracking-widest text-slate-500 uppercase"
+                            >
+                                Current Version: v{{ question.version }}
+                            </span>
+                        </div>
                     </div>
 
                     <form @submit.prevent="submit" class="space-y-10">
@@ -136,21 +154,6 @@ const submit = () => {
                             </div>
 
                             <div>
-                                <label class="mb-2 block text-sm font-semibold text-slate-700">Topic</label>
-                                <select
-                                    v-model="form.topic_id"
-                                    required
-                                    :disabled="!selectedSubject"
-                                    class="block w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-3.5 text-sm transition-all focus:border-primary focus:ring-primary disabled:opacity-50"
-                                >
-                                    <option value="" disabled>Select Topic</option>
-                                    <option v-for="topic in filteredTopics" :key="topic.id" :value="topic.id">
-                                        {{ topic.name }}
-                                    </option>
-                                </select>
-                            </div>
-
-                            <div>
                                 <label class="mb-2 block text-sm font-semibold text-slate-700">Target Class</label>
                                 <select
                                     v-model="form.school_class_id"
@@ -160,6 +163,21 @@ const submit = () => {
                                 >
                                     <option value="" disabled>Select Class</option>
                                     <option v-for="cls in availableClasses" :key="cls.id" :value="cls.id">{{ cls.name }} ({{ cls.level }})</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="mb-2 block text-sm font-semibold text-slate-700">Topic</label>
+                                <select
+                                    v-model="form.topic_id"
+                                    required
+                                    :disabled="!selectedSubject || !form.school_class_id"
+                                    class="block w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-3.5 text-sm transition-all focus:border-primary focus:ring-primary disabled:opacity-50"
+                                >
+                                    <option value="" disabled>Select Topic</option>
+                                    <option v-for="topic in filteredTopics" :key="topic.id" :value="topic.id">
+                                        {{ topic.name }}
+                                    </option>
                                 </select>
                             </div>
                         </div>
@@ -316,7 +334,7 @@ const submit = () => {
                                             ></path>
                                         </svg>
                                     </span>
-                                    Publish to Repository
+                                    Update Question
                                 </button>
                             </div>
                         </div>
@@ -324,5 +342,5 @@ const submit = () => {
                 </div>
             </div>
         </div>
-    </StaffLayout>
+    </component>
 </template>

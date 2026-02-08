@@ -11,7 +11,7 @@ export type Topic = {
     name: string;
     slug: string;
     subject: Subject;
-    school_class_id:string
+    school_class_id: string;
 };
 
 export type SchoolClass = {
@@ -22,8 +22,8 @@ export type SchoolClass = {
 };
 
 export type Option = {
-    id: string;
-    question_id: string;
+    id?: string;
+    question_id?: string;
     content: string;
     is_correct: boolean;
 };

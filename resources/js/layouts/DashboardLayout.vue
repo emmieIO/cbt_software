@@ -128,7 +128,7 @@ if (typeof window !== 'undefined') {
             </div>
 
             <!-- Navigation -->
-            <nav class="flex-1 space-y-1.5 overflow-y-auto px-4 py-6">
+            <nav class="sidebar-scrollbar flex-1 space-y-1.5 overflow-y-auto px-4 py-6">
                 <Link
                     v-for="item in navigation"
                     :key="item.name"
@@ -355,7 +355,7 @@ if (typeof window !== 'undefined') {
                     <div class="flex items-center gap-4 border-l border-slate-200 pl-6">
                         <div class="hidden flex-col items-end sm:flex">
                             <span class="text-sm font-black text-slate-800">{{ user?.name }}</span>
-                            <span class="text-[10px] font-bold tracking-wider text-primary uppercase">{{ user?.roles?.[0]?.name }}</span>
+                            <span class="text-[10px] font-bold tracking-wider text-primary uppercase">{{ user?.roles?.[0] }}</span>
                         </div>
                         <div
                             class="group relative flex h-12 w-12 cursor-pointer items-center justify-center rounded-2xl bg-linear-to-r from-primary to-primary/80 p-0.5 shadow-lg ring-4 shadow-primary/20 ring-white transition-all hover:scale-105 active:scale-95"
@@ -393,5 +393,13 @@ if (typeof window !== 'undefined') {
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: #cbd5e1;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.sidebar-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
 </style>

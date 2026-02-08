@@ -35,7 +35,7 @@ class StaffQuestionController extends Controller
      */
     public function index(GetQuestionsRequest $request): Response
     {
-        return Inertia::render('Staff/Questions/Index', [
+        return Inertia::render('QuestionBank/Index', [
             'questions' => $this->questionService->getFilteredQuestions($request->validated()),
             'subjects' => Subject::all(),
             'classes' => SchoolClass::all(),
@@ -47,9 +47,9 @@ class StaffQuestionController extends Controller
     /**
      * Show the AI question generation lab.
      */
-    public function generate(): Response
+    public function generate(Request $request): Response
     {
-        return Inertia::render('Staff/Questions/Generate', [
+        return Inertia::render('QuestionBank/Generate', [
             'subjects' => Subject::with('topics')->get(),
             'classes' => SchoolClass::all(),
             'types' => collect(QuestionType::cases())->map(fn ($t) => ['value' => $t->value, 'label' => str_replace('_', ' ', Str::title($t->value))]),
@@ -87,7 +87,7 @@ class StaffQuestionController extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('Staff/Questions/Create', [
+        return Inertia::render('QuestionBank/Create', [
             'subjects' => Subject::with('topics')->get(),
             'classes' => SchoolClass::all(),
             'types' => collect(QuestionType::cases())->map(fn ($t) => ['value' => $t->value, 'label' => str_replace('_', ' ', Str::title($t->value))]),
@@ -113,7 +113,7 @@ class StaffQuestionController extends Controller
     {
         $question->load(['topic.subject', 'options']);
 
-        return Inertia::render('Staff/Questions/Edit', [
+        return Inertia::render('QuestionBank/Edit', [
             'question' => $question,
             'subjects' => Subject::with('topics')->get(),
             'classes' => SchoolClass::all(),
@@ -176,7 +176,7 @@ class StaffQuestionController extends Controller
     /**
      * Delete a question.
      */
-    public function destroy(Question $question): RedirectResponse
+    public function destroy(Request $request, Question $question): RedirectResponse
     {
         $this->questionService->deleteQuestion($question);
 

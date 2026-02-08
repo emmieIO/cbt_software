@@ -1,19 +1,16 @@
 export type User = {
-    id: number;
+    id: string;
     name: string;
     email: string;
     avatar?: string;
     email_verified_at: string | null;
     created_at: string;
     updated_at: string;
-    roles: Role[];
+    roles: string[];
     [key: string]: unknown;
 };
 
 export type Auth = {
     user: User;
-};
-
-type Role = {
-    name: string;
+    dashboard_url: string | null;
 };

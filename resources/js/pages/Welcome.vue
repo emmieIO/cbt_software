@@ -24,11 +24,11 @@ const page = usePage();
                 <div class="rounded-2xl bg-white/10 p-8 shadow-2xl backdrop-blur-md">
                     <h2 class="text-2xl font-bold">Welcome back, {{ page.props.auth.user.name }}!</h2>
                     <p class="mt-2 text-white/80">
-                        You are currently signed in as a <span class="capitalize">{{ page.props.auth.user.roles[0]?.name || 'user' }}</span
+                        You are currently signed in as a <span class="capitalize">{{ page.props.auth.user.roles[0] || 'user' }}</span
                         >.
                     </p>
                     <Link
-                        :href="page.props.auth.dashboard_url"
+                        :href="page.props.auth.dashboard_url || '#'"
                         class="mt-8 flex items-center justify-center rounded-xl bg-lemon-yellow px-12 py-5 text-xl font-bold text-primary shadow-xl transition-all hover:scale-105 hover:bg-lemon-yellow/90 active:scale-95"
                     >
                         Go to your Dashboard &rarr;

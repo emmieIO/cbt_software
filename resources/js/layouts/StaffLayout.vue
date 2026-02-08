@@ -78,8 +78,9 @@ const navigation = [
     {
         name: 'AI Question Lab',
         href: generate().url,
-        active: page.component === 'Staff/Questions/Generate',
+        active: page.component === 'QuestionBank/Generate',
         icon: IconAI,
+        permission: 'use ai lab',
     },
     {
         name: 'My Classes',
@@ -96,10 +97,10 @@ const navigation = [
     {
         name: 'Question Bank',
         href: index().url,
-        active: page.component === 'Staff/Questions/Index',
+        active: page.component === 'QuestionBank/Index',
         icon: IconBank,
     },
-];
+].filter((item) => !item.permission || (page.props.auth.user as any).permissions.includes(item.permission));
 </script>
 
 <template>
