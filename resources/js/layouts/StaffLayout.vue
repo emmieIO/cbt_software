@@ -3,7 +3,8 @@ import { usePage } from '@inertiajs/vue3';
 import { h, defineComponent } from 'vue';
 import { logout } from '@/actions/App/Http/Controllers/Staff/StaffAuthController';
 import StaffDashboardController from '@/actions/App/Http/Controllers/Staff/StaffDashboardController';
-import { index, generate } from '@/actions/App/Http/Controllers/Staff/StaffQuestionController';
+import { index as examIndex } from '@/actions/App/Http/Controllers/Staff/ExamController';
+import { index as questionIndex, generate as aiLabGenerate } from '@/actions/App/Http/Controllers/Staff/StaffQuestionController';
 import DashboardLayout from '@/layouts/DashboardLayout.vue';
 
 const page = usePage();
@@ -20,7 +21,7 @@ const IconDashboard = defineComponent({
         ]),
 });
 
-const IconClasses = defineComponent({
+const IconExams = defineComponent({
     render: () =>
         h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor' }, [
             h('path', {
@@ -28,18 +29,6 @@ const IconClasses = defineComponent({
                 'stroke-linejoin': 'round',
                 'stroke-width': '2',
                 d: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01m-.01 4h.01',
-            }),
-        ]),
-});
-
-const IconSchedule = defineComponent({
-    render: () =>
-        h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor' }, [
-            h('path', {
-                'stroke-linecap': 'round',
-                'stroke-linejoin': 'round',
-                'stroke-width': '2',
-                d: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
             }),
         ]),
 });
@@ -77,26 +66,20 @@ const navigation = [
     },
     {
         name: 'AI Question Lab',
-        href: generate().url,
+        href: aiLabGenerate().url,
         active: page.component === 'QuestionBank/Generate',
         icon: IconAI,
         permission: 'use ai lab',
     },
     {
-        name: 'My Classes',
-        href: '#',
-        active: false,
-        icon: IconClasses,
-    },
-    {
-        name: 'Exam Schedule',
-        href: '#',
-        active: false,
-        icon: IconSchedule,
+        name: 'Exam Management',
+        href: examIndex().url,
+        active: page.component.startsWith('Staff/Exams/'),
+        icon: IconExams,
     },
     {
         name: 'Question Bank',
-        href: index().url,
+        href: questionIndex().url,
         active: page.component === 'QuestionBank/Index',
         icon: IconBank,
     },

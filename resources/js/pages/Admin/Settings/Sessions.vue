@@ -139,7 +139,7 @@ const handleDelete = () => {
                                         >Current Session</span
                                     >
                                 </div>
-                                <p class="mt-1 text-[10px] font-black tracking-[0.1em] text-slate-400 uppercase">
+                                <p class="mt-1 text-[10px] font-black tracking-widest text-slate-400 uppercase">
                                     {{ formatDate(session.start_date) }} — {{ formatDate(session.end_date) }}
                                 </p>
                             </div>

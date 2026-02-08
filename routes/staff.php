@@ -15,18 +15,39 @@ Route::middleware(['auth'])->group(function () {
 
     Route::prefix('questions')->name('questions.')->middleware('role_or_permission:staff|admin|subject_lead|view questions')->group(function () {
         Route::get('/', [StaffQuestionController::class, 'index'])->name('index');
-        Route::get('/generate', [StaffQuestionController::class, 'generate'])->name('generate')->middleware('permission:use ai lab');
-        Route::post('/generate', [StaffQuestionController::class, 'processGeneration'])->name('generate.process')->middleware('permission:use ai lab');
-        Route::get('/create', [StaffQuestionController::class, 'create'])->name('create')->middleware('permission:create questions');
-        Route::post('/', [StaffQuestionController::class, 'store'])->name('store')->middleware('permission:create questions');
-        Route::get('/{question}/edit', [StaffQuestionController::class, 'edit'])->name('edit')->middleware('permission:edit questions');
-        Route::put('/{question}', [StaffQuestionController::class, 'update'])->name('update')->middleware('permission:edit questions');
-        Route::post('/import', [StaffQuestionController::class, 'import'])->name('import')->middleware('permission:manage question bank');
-        Route::get('/export', [StaffQuestionController::class, 'export'])->name('export')->middleware('permission:export questions');
+        Route::get('/generate', [StaffQuestionController::class, 'generate'])->name('generate');
+        Route::post('/generate', [StaffQuestionController::class, 'processGeneration'])->name('generate.process');
+        Route::get('/create', [StaffQuestionController::class, 'create'])->name('create');
+        Route::post('/', [StaffQuestionController::class, 'store'])->name('store');
+        Route::get('/{question}/edit', [StaffQuestionController::class, 'edit'])->name('edit');
+        Route::put('/{question}', [StaffQuestionController::class, 'update'])->name('update');
+        Route::patch('/{question}/toggle', [StaffQuestionController::class, 'toggleStatus'])->name('toggle-status');
+        Route::delete('/{question}', [StaffQuestionController::class, 'destroy'])->name('destroy');
+
+        Route::post('/import', [StaffQuestionController::class, 'import'])->name('import');
+        Route::get('/export', [StaffQuestionController::class, 'export'])->name('export');
         Route::get('/template', [StaffQuestionController::class, 'downloadTemplate'])->name('template');
-        Route::patch('/{question}/toggle-status', [StaffQuestionController::class, 'toggleStatus'])->name('toggle-status')->middleware('permission:edit questions');
-        Route::delete('/bulk-delete', [StaffQuestionController::class, 'bulkDestroy'])->name('bulk-destroy')->middleware('permission:manage question bank');
-        Route::delete('/{question}', [StaffQuestionController::class, 'destroy'])->name('destroy')->middleware('permission:delete questions');
+        Route::post('/bulk-destroy', [StaffQuestionController::class, 'bulkDestroy'])->name('bulk-destroy');
+    });
+
+    Route::prefix('exams')->name('exams.')->middleware('role_or_permission:staff|admin|subject_lead')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Staff\ExamController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Staff\ExamController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Staff\ExamController::class, 'store'])->name('store');
+        Route::get('/{exam}', [\App\Http\Controllers\Staff\ExamController::class, 'show'])->name('show');
+        
+        // Versions
+        Route::post('/{exam}/versions', [\App\Http\Controllers\Staff\ExamController::class, 'storeVersion'])->name('versions.store');
+        Route::delete('/{exam}/versions/{version}', [\App\Http\Controllers\Staff\ExamController::class, 'destroyVersion'])->name('versions.destroy');
+        
+        // Version Questions
+        Route::get('/{exam}/versions/{version}/questions', [\App\Http\Controllers\Staff\ExamController::class, 'manageQuestions'])->name('versions.questions');
+        Route::post('/{exam}/versions/{version}/questions', [\App\Http\Controllers\Staff\ExamController::class, 'updateQuestions'])->name('versions.questions.update');
+        Route::post('/{exam}/versions/{version}/ai-select', [\App\Http\Controllers\Staff\ExamController::class, 'aiSelectQuestions'])->name('versions.ai-select');
+
+        Route::get('/{exam}/edit', [\App\Http\Controllers\Staff\ExamController::class, 'edit'])->name('edit');
+        Route::put('/{exam}', [\App\Http\Controllers\Staff\ExamController::class, 'update'])->name('update');
+        Route::delete('/{exam}', [\App\Http\Controllers\Staff\ExamController::class, 'destroy'])->name('destroy');
     });
 
     Route::post('/logout', [StaffAuthController::class, 'logout'])->name('logout');

@@ -39,6 +39,23 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the teaching assignments for this user (if staff).
+     */
+    public function assignments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(TeacherAssignment::class, 'user_id');
+    }
+
+    /**
+     * Get the current academic session's assignments for this staff member.
+     */
+    public function currentAssignments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(TeacherAssignment::class, 'user_id')
+            ->whereHas('academicSession', fn ($q) => $q->where('is_current', true));
+    }
+
+    /**
      * The attributes that should be hidden for serialization.
      *
      * @var list<string>

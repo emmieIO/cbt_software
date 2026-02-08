@@ -11,7 +11,9 @@ import { index as classesIndex } from '@/actions/App/Http/Controllers/Admin/Scho
 import { index as staffIndex } from '@/actions/App/Http/Controllers/Admin/StaffController';
 import { index as studentIndex } from '@/actions/App/Http/Controllers/Admin/StudentController';
 import { index as subjectsIndex } from '@/actions/App/Http/Controllers/Admin/SubjectController';
+import { index as teachingLoadsIndex } from '@/actions/App/Http/Controllers/Admin/TeachingLoadController';
 import { index as topicsIndex } from '@/actions/App/Http/Controllers/Admin/TopicController';
+import { index as examsIndex } from '@/actions/App/Http/Controllers/Staff/ExamController';
 import { index as questionsIndex, generate as aiLabGenerate } from '@/actions/App/Http/Controllers/Staff/StaffQuestionController';
 import DashboardLayout from '@/layouts/DashboardLayout.vue';
 
@@ -184,6 +186,13 @@ const navigation = [
         permission: 'manage users',
     },
     {
+        name: 'Teaching Loads',
+        href: teachingLoadsIndex().url,
+        active: page.component === 'Admin/Users/TeachingLoads',
+        icon: IconBank,
+        permission: 'manage users',
+    },
+    {
         name: 'Student Management',
         href: studentIndex().url,
         active: page.component === 'Admin/Users/Students',
@@ -206,8 +215,8 @@ const navigation = [
     },
     {
         name: 'Exams List',
-        href: '#',
-        active: false,
+        href: examsIndex().url,
+        active: page.component.startsWith('Staff/Exams/'),
         icon: IconExams,
         permission: 'view exams',
     },

@@ -70,6 +70,10 @@ Route::middleware(['auth', 'role_or_permission:admin|manage settings|manage scho
         Route::post('/entrance', [\App\Http\Controllers\Admin\EntranceController::class, 'store'])->name('entrance.store');
         Route::post('/entrance/import', [\App\Http\Controllers\Admin\EntranceController::class, 'import'])->name('entrance.import');
         Route::post('/entrance/admit/{candidate}', [\App\Http\Controllers\Admin\EntranceController::class, 'admit'])->name('entrance.admit');
+
+        Route::get('/teaching-loads', [\App\Http\Controllers\Admin\TeachingLoadController::class, 'index'])->name('teaching-loads.index');
+        Route::post('/teaching-loads', [\App\Http\Controllers\Admin\TeachingLoadController::class, 'store'])->name('teaching-loads.store');
+        Route::delete('/teaching-loads/{assignment}', [\App\Http\Controllers\Admin\TeachingLoadController::class, 'destroy'])->name('teaching-loads.destroy');
     });
 
     Route::post('/logout', [AdminController::class, 'logout'])->name('logout');
