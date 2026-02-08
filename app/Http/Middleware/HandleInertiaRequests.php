@@ -47,6 +47,7 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $user,
                 'dashboard_url' => $user ? app(\App\Services\AuthService::class)->getRedirectUrl($user) : null,
+                'notifications' => $user ? $user->unreadNotifications()->latest()->take(10)->get() : [],
             ],
             'flash' => [
                 'success' => $request->session()->get('success'),

@@ -29,6 +29,53 @@ class QuestionService
     }
 
     /**
+     * Create a batch of questions with their options.
+     *
+     * @param  QuestionDTO[]  $dtos
+     */
+    public function createQuestionsBatch(array $dtos, string $userId): void
+    {
+        DB::transaction(function () use ($dtos, $userId) {
+            $now = now();
+
+            foreach ($dtos as $dto) {
+                // Generate ULID manually for the question to link options
+                $questionId = (string) \Illuminate\Support\Str::ulid();
+
+                // Insert the question
+                DB::table('questions')->insert([
+                    'id' => $questionId,
+                    'topic_id' => $dto->topic_id,
+                    'school_class_id' => $dto->school_class_id,
+                    'content' => $dto->content,
+                    'explanation' => $dto->explanation,
+                    'type' => $dto->type instanceof \BackedEnum ? $dto->type->value : $dto->type,
+                    'difficulty' => $dto->difficulty instanceof \BackedEnum ? $dto->difficulty->value : $dto->difficulty,
+                    'is_active' => $dto->is_active,
+                    'created_by' => $userId,
+                    'version' => 1,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ]);
+
+                // Prepare and bulk insert options for this question
+                $options = array_map(fn ($option) => [
+                    'id' => (string) \Illuminate\Support\Str::ulid(),
+                    'question_id' => $questionId,
+                    'content' => $option->content,
+                    'is_correct' => $option->is_correct,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ], $dto->options);
+
+                if (! empty($options)) {
+                    DB::table('options')->insert($options);
+                }
+            }
+        });
+    }
+
+    /**
      * Update an existing question (creating a new version).
      */
     public function updateQuestion(Question $question, QuestionDTO $dto, string $userId): Question

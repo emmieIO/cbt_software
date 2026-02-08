@@ -45,6 +45,44 @@ class StaffQuestionController extends Controller
     }
 
     /**
+     * Show the AI question generation lab.
+     */
+    public function generate(): Response
+    {
+        return Inertia::render('Staff/Questions/Generate', [
+            'subjects' => Subject::with('topics')->get(),
+            'classes' => SchoolClass::all(),
+            'types' => collect(QuestionType::cases())->map(fn ($t) => ['value' => $t->value, 'label' => str_replace('_', ' ', Str::title($t->value))]),
+            'difficulties' => collect(QuestionDifficulty::cases())->map(fn ($d) => ['value' => $d->value, 'label' => Str::title($d->value)]),
+        ]);
+    }
+
+    /**
+     * Process the AI question generation.
+     */
+    public function processGeneration(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'subject_id' => ['required', 'exists:subjects,id'],
+            'topic_id' => ['required', 'exists:topics,id'],
+            'school_class_id' => ['required', 'exists:school_classes,id'],
+            'count' => ['required', 'integer', 'min:1', 'max:20'],
+            'difficulty' => ['required', 'string'],
+        ]);
+
+        \App\Jobs\GenerateQuestionsJob::dispatch(
+            $request->user()->id,
+            $request->subject_id,
+            $request->topic_id,
+            $request->school_class_id,
+            $request->count,
+            $request->difficulty
+        );
+
+        return redirect()->route('staff.questions.index')->with('success', 'AI generation has started in the background. Your questions will appear in the bank shortly.');
+    }
+
+    /**
      * Show the form for creating a new question.
      */
     public function create(): Response
