@@ -12,3 +12,4 @@ Route::middleware('auth')->group(function () {
     Route::post('/notifications/{id}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
     Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-as-read');
 });
+Route::get('/debug-exception', function() { throw new \Exception('Debug Exception'); });

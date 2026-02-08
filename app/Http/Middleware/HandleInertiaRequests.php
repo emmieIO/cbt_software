@@ -48,6 +48,7 @@ class HandleInertiaRequests extends Middleware
                 'user' => $user,
                 'dashboard_url' => $user ? app(\App\Services\AuthService::class)->getRedirectUrl($user) : null,
                 'notifications' => $user ? $user->unreadNotifications()->latest()->take(10)->get() : [],
+                'is_seeding' => $user ? \Illuminate\Support\Facades\Cache::get("user_{$user->id}_seeding_status") : null,
             ],
             'flash' => [
                 'success' => $request->session()->get('success'),

@@ -66,7 +66,7 @@ class StaffQuestionController extends Controller
             'subject_id' => ['required', 'exists:subjects,id'],
             'topic_id' => ['required', 'exists:topics,id'],
             'school_class_id' => ['required', 'exists:school_classes,id'],
-            'count' => ['required', 'integer', 'min:1', 'max:20'],
+            'count' => ['required', 'integer', 'min:1', 'max:10'],
             'difficulty' => ['required', 'string'],
         ]);
 
@@ -104,6 +104,33 @@ class StaffQuestionController extends Controller
         $this->questionService->createQuestion($dto, $request->user()->id);
 
         return redirect()->route('staff.questions.index')->with('success', 'Question created successfully.');
+    }
+
+    /**
+     * Show the form for editing the specified question.
+     */
+    public function edit(Question $question): Response
+    {
+        $question->load(['topic.subject', 'options']);
+
+        return Inertia::render('Staff/Questions/Edit', [
+            'question' => $question,
+            'subjects' => Subject::with('topics')->get(),
+            'classes' => SchoolClass::all(),
+            'types' => collect(QuestionType::cases())->map(fn ($t) => ['value' => $t->value, 'label' => str_replace('_', ' ', Str::title($t->value))]),
+            'difficulties' => collect(QuestionDifficulty::cases())->map(fn ($d) => ['value' => $d->value, 'label' => Str::title($d->value)]),
+        ]);
+    }
+
+    /**
+     * Update the specified question in storage.
+     */
+    public function update(\App\Http\Requests\Question\UpdateQuestionRequest $request, Question $question): RedirectResponse
+    {
+        $dto = QuestionDTO::fromRequest($request);
+        $this->questionService->updateQuestion($question, $dto, $request->user()->id);
+
+        return redirect()->route('staff.questions.index')->with('success', 'Question updated (new version created) successfully.');
     }
 
     /**

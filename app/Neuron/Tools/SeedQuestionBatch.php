@@ -46,15 +46,15 @@ class SeedQuestionBatch extends Tool
     {
         try {
             $inputs = $this->getInputs();
-            \Illuminate\Support\Facades\Log::debug('AI Raw Tool Inputs:', [
-                'has_questions_key' => array_key_exists('questions', $inputs),
-                'input_keys' => array_keys($inputs),
-                'full_inputs' => $inputs
+            
+            \Illuminate\Support\Facades\Log::debug('AI Tool Call: seed_question_batch', [
+                'has_questions_param' => !is_null($questions),
+                'questions_count' => $questions ? count($questions) : 0,
+                'raw_inputs' => $inputs
             ]);
 
-            if (!$questions && isset($inputs['questions'])) {
-                // Manually try to deserialize if logic failed
-                \Illuminate\Support\Facades\Log::warning('Manual deserialization attempt...');
+            if (!$questions) {
+                return 'Error: No questions were provided. Please provide an array of questions in the "questions" parameter.';
             }
 
             // Find a staff user to associate with the creation
@@ -64,18 +64,15 @@ class SeedQuestionBatch extends Tool
                 return 'Error: No staff user found to associate with the question creation.';
             }
 
-            $count = $questions ? count($questions) : 0;
-            
-            if ($count === 0) {
-                return 'Warning: No questions were provided in the valid format.';
-            }
-
             $this->questionService->createQuestionsBatch($questions, $staff->id);
 
+            $count = count($questions);
             return "Successfully seeded a batch of {$count} questions into the bank.";
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error('AI Batch Seeding Error:', [
                 'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString(),
             ]);
 

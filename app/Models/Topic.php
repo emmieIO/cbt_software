@@ -15,6 +15,7 @@ class Topic extends Model
 
     protected $fillable = [
         'subject_id',
+        'school_class_id',
         'name',
         'slug',
         'description',
@@ -26,6 +27,14 @@ class Topic extends Model
     public function subject(): BelongsTo
     {
         return $this->belongsTo(Subject::class);
+    }
+
+    /**
+     * Get the class that owns the topic.
+     */
+    public function schoolClass(): BelongsTo
+    {
+        return $this->belongsTo(SchoolClass::class);
     }
 
     /**

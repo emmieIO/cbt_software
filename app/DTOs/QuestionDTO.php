@@ -41,8 +41,8 @@ class QuestionDTO
         string $school_class_id,
         string $content,
         ?string $explanation,
-        QuestionType $type,
-        QuestionDifficulty $difficulty,
+        QuestionType|string $type,
+        QuestionDifficulty|string $difficulty,
         array $options = [],
         bool $is_active = true
     ) {
@@ -50,8 +50,8 @@ class QuestionDTO
         $this->school_class_id = $school_class_id;
         $this->content = $content;
         $this->explanation = $explanation;
-        $this->type = $type;
-        $this->difficulty = $difficulty;
+        $this->type = is_string($type) ? QuestionType::from($type) : $type;
+        $this->difficulty = is_string($difficulty) ? QuestionDifficulty::from($difficulty) : $difficulty;
         $this->options = $options;
         $this->is_active = $is_active;
     }

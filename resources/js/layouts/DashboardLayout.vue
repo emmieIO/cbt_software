@@ -46,6 +46,22 @@ watch(
     { immediate: true, deep: true },
 );
 
+// Watch for new notifications to trigger toasts
+watch(
+    notifications,
+    (newVal, oldVal) => {
+        if (newVal.length > oldVal.length) {
+            const newNotif = newVal[0]; // Get the latest one
+            if (newNotif.data?.type === 'success' || newNotif.data?.title?.includes('Completed')) {
+                toastStore.add(newNotif.data.message, 'success');
+            } else if (newNotif.data?.type === 'error') {
+                toastStore.add(newNotif.data.message, 'error');
+            }
+        }
+    },
+    { deep: true },
+);
+
 const isMobileMenuOpen = ref(false);
 const isNotificationsOpen = ref(false);
 
@@ -242,13 +258,29 @@ if (typeof window !== 'undefined') {
                         >
                             <div class="flex items-center justify-between bg-slate-50 px-6 py-4">
                                 <h3 class="text-sm font-black tracking-wider text-slate-800 uppercase">Notifications</h3>
-                                <button
-                                    v-if="notifications.length > 0"
-                                    @click="handleMarkAllAsRead"
-                                    class="text-[10px] font-black tracking-widest text-primary uppercase hover:underline"
-                                >
-                                    Clear All
-                                </button>
+                                <div class="flex items-center gap-4">
+                                    <button
+                                        @click="router.reload({ only: ['auth'] })"
+                                        class="text-slate-400 transition-colors hover:text-primary"
+                                        title="Refresh Notifications"
+                                    >
+                                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="3"
+                                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                            />
+                                        </svg>
+                                    </button>
+                                    <button
+                                        v-if="notifications.length > 0"
+                                        @click="handleMarkAllAsRead"
+                                        class="text-[10px] font-black tracking-widest text-primary uppercase hover:underline"
+                                    >
+                                        Clear All
+                                    </button>
+                                </div>
                             </div>
 
                             <div class="custom-scrollbar max-h-100 overflow-y-auto">

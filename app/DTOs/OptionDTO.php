@@ -12,10 +12,10 @@ class OptionDTO
     #[SchemaProperty('Whether this option is the correct answer.', required: true)]
     public bool $is_correct;
 
-    public function __construct(string $content, bool $is_correct = false)
+    public function __construct(string $content, bool|string $is_correct = false)
     {
         $this->content = $content;
-        $this->is_correct = $is_correct;
+        $this->is_correct = is_string($is_correct) ? filter_var($is_correct, FILTER_VALIDATE_BOOLEAN) : $is_correct;
     }
 
     public static function fromArray(array $data): self

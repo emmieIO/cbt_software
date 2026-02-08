@@ -11,13 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('notifications', function (Blueprint $table) {
-            $table->ulid('id')->primary();
-            $table->string('type');
-            $table->ulidMorphs('notifiable');
-            $table->text('data');
-            $table->timestamp('read_at')->nullable();
-            $table->timestamps();
+        Schema::table('topics', function (Blueprint $table) {
+            $table->foreignUlid('school_class_id')->nullable()->after('subject_id')->constrained()->cascadeOnDelete();
         });
     }
 
@@ -26,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('notifications');
+        Schema::table('topics', function (Blueprint $table) {
+            $table->dropConstrainedForeignId('school_class_id');
+        });
     }
 };

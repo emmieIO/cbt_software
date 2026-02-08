@@ -19,6 +19,8 @@ Route::middleware(['auth', 'role:staff'])->group(function () {
         Route::post('/generate', [StaffQuestionController::class, 'processGeneration'])->name('generate.process');
         Route::get('/create', [StaffQuestionController::class, 'create'])->name('create');
         Route::post('/', [StaffQuestionController::class, 'store'])->name('store');
+        Route::get('/{question}/edit', [StaffQuestionController::class, 'edit'])->name('edit');
+        Route::put('/{question}', [StaffQuestionController::class, 'update'])->name('update');
         Route::post('/import', [StaffQuestionController::class, 'import'])->name('import');
         Route::get('/export', [StaffQuestionController::class, 'export'])->name('export');
         Route::get('/template', [StaffQuestionController::class, 'downloadTemplate'])->name('template');

@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { debounce } from 'lodash';
 import { computed, ref, watch } from 'vue';
 import {
     create,
+    edit,
     index as indexAction,
     importMethod,
     exportMethod,
@@ -28,6 +29,9 @@ const props = defineProps<{
         difficulty?: string;
     };
 }>();
+
+const page = usePage();
+const isSeeding = computed(() => (page.props.auth as any).is_seeding);
 
 // Bulk Selection
 const selectedIds = ref<string[]>([]);
@@ -149,6 +153,42 @@ const clearFilters = () => {
         <Head title="Question Repository" />
 
         <div class="w-full space-y-10">
+            <!-- AI Processing Banner -->
+            <div
+                v-if="isSeeding"
+                class="animate-in fade-in slide-in-from-top-4 relative overflow-hidden rounded-3xl border border-primary/20 bg-primary px-8 py-6 shadow-xl shadow-primary/10"
+            >
+                <div class="relative z-10 flex flex-col items-center justify-between gap-6 sm:flex-row">
+                    <div class="flex items-start gap-5">
+                        <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-lemon-yellow backdrop-blur-xl">
+                            <svg class="h-8 w-8 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                                />
+                            </svg>
+                        </div>
+                        <div class="space-y-1">
+                            <h4 class="text-lg font-black tracking-tight text-white">AI Seeding in Progress</h4>
+                            <p class="text-sm font-medium text-white/70">
+                                The agent is currently generating questions for <span class="font-black text-lemon-yellow">{{ isSeeding.topic }}</span>.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-center gap-3 sm:items-end">
+                        <div class="flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-[10px] font-black tracking-widest text-white uppercase backdrop-blur-md">
+                            <div class="h-1.5 w-1.5 animate-ping rounded-full bg-lemon-yellow"></div>
+                            Estimated: ~5-10 Minutes
+                        </div>
+                        <p class="text-[10px] font-bold text-white/40 italic">Check back shortly or refresh to see results.</p>
+                    </div>
+                </div>
+                <!-- Decorative BG -->
+                <div class="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-white/5 blur-2xl"></div>
+            </div>
+
             <div class="w-full space-y-8">
                 <div>
                     <h2 class="text-3xl font-black tracking-tight text-slate-900">Question Bank</h2>
@@ -156,6 +196,22 @@ const clearFilters = () => {
                 </div>
 
                 <div class="flex flex-wrap items-center gap-3">
+                    <!-- Refresh Button -->
+                    <button
+                        @click="router.reload({ only: ['questions', 'auth', 'flash'] })"
+                        class="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-100 text-slate-500 transition-all hover:bg-slate-200 hover:text-primary active:scale-95"
+                        title="Refresh Data"
+                    >
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2.5"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                            />
+                        </svg>
+                    </button>
+
                     <!-- Tools Group -->
                     <div class="flex items-center gap-2 rounded-2xl bg-slate-100 p-1.5">
                         <a
@@ -238,7 +294,7 @@ const clearFilters = () => {
                         <div class="flex items-center gap-4">
                             <div>
                                 <h3 class="text-xl font-black tracking-tight text-slate-800">Questions</h3>
-                                <p class="text-xs font-bold text-slate-400">Total Available: {{ questions.meta?.total || 0 }}</p>
+                                <p class="text-xs font-bold text-slate-400">Total Available: {{ questions.total || 0 }}</p>
                             </div>
                             <div v-if="selectedIds.length > 0" class="flex items-center gap-3 rounded-2xl border border-red-100 bg-red-50 px-4 py-2">
                                 <span class="text-xs font-black tracking-wider text-red-600 uppercase">{{ selectedIds.length }} Selected</span>
@@ -430,7 +486,7 @@ const clearFilters = () => {
                                                     {{ question.is_active ? 'Deactivate' : 'Activate' }}
                                                 </button>
                                                 <Link
-                                                    :href="'#'"
+                                                    :href="edit(question.id).url"
                                                     class="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-left text-xs font-black tracking-wider text-slate-600 uppercase transition-colors hover:bg-slate-50"
                                                 >
                                                     <svg class="h-4 w-4 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -527,9 +583,9 @@ const clearFilters = () => {
                 <!-- Pagination -->
                 <div class="flex items-center justify-between border-t border-slate-100 p-8">
                     <p class="text-sm text-slate-500">
-                        Showing <span class="font-bold text-slate-700">{{ questions.meta?.from || 0 }}</span> to
-                        <span class="font-bold text-slate-700">{{ questions.meta?.to || 0 }}</span> of
-                        <span class="font-bold text-slate-700">{{ questions.meta?.total || 0 }}</span> questions
+                        Showing <span class="font-bold text-slate-700">{{ questions.from || 0 }}</span> to
+                        <span class="font-bold text-slate-700">{{ questions.to || 0 }}</span> of
+                        <span class="font-bold text-slate-700">{{ questions.total || 0 }}</span> questions
                     </p>
                     <div class="flex gap-2">
                         <Link

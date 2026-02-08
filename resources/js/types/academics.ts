@@ -11,6 +11,7 @@ export type Topic = {
     name: string;
     slug: string;
     subject: Subject;
+    school_class_id:string
 };
 
 export type SchoolClass = {
@@ -51,13 +52,11 @@ export type PaginatedData<T> = {
         label: string;
         active: boolean;
     }[];
-    meta?: {
-        current_page: number;
-        from: number;
-        last_page: number;
-        path: string;
-        per_page: number;
-        to: number;
-        total: number;
-    };
+    current_page: number;
+    from: number | null;
+    last_page: number;
+    path: string;
+    per_page: number;
+    to: number | null;
+    total: number;
 };
