@@ -54,6 +54,7 @@ class HandleInertiaRequests extends Middleware
                 'notifications' => $user ? $user->unreadNotifications()->latest()->take(10)->get() : [],
                 'is_seeding' => $user ? \Illuminate\Support\Facades\Cache::get("user_{$user->id}_seeding_status") : null,
             ],
+            'academic_session' => \App\Models\AcademicSession::current()->first(),
             'flash' => [
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),

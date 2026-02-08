@@ -24,7 +24,19 @@ class User extends Authenticatable
         'username',
         'email',
         'password',
+        'school_id',
+        'school_class_id',
+        'status',
+        'is_active',
     ];
+
+    /**
+     * Get the class the user (student) belongs to.
+     */
+    public function schoolClass(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(SchoolClass::class);
+    }
 
     /**
      * The attributes that should be hidden for serialization.
@@ -46,6 +58,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean',
         ];
     }
 }

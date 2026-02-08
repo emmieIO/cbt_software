@@ -20,6 +20,9 @@ class RolesAndPermissionsSeeder extends Seeder
         // System Management
         Permission::findOrCreate('manage users');
         Permission::findOrCreate('manage settings');
+        Permission::findOrCreate('manage school setup');
+        Permission::findOrCreate('manage curriculum');
+        Permission::findOrCreate('manage enrollment');
 
         // Question Bank Management
         Permission::findOrCreate('view questions');
@@ -74,6 +77,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'view exams',
             'take exams',
             'view results',
+        ]);
+
+        // Candidate role (Prospective Students)
+        $candidateRole = Role::findOrCreate('candidate');
+        $candidateRole->givePermissionTo([
+            'take exams',
         ]);
     }
 }

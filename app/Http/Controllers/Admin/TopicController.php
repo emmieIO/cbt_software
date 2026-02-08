@@ -20,33 +20,22 @@ class TopicController extends Controller
      */
     public function index(Request $request): Response
     {
-
         $query = Topic::with(['subject', 'schoolClass'])->withCount('questions');
 
-        if ($request->has('subject_id')) {
-
+        if ($request->filled('subject_id')) {
             $query->where('subject_id', $request->subject_id);
-
         }
 
-        if ($request->has('school_class_id')) {
-
+        if ($request->filled('school_class_id')) {
             $query->where('school_class_id', $request->school_class_id);
-
         }
 
         return Inertia::render('Admin/Topics/Index', [
-
-            'topics' => $query->latest()->get(),
-
+            'topics' => $query->latest()->paginate(10)->withQueryString(),
             'subjects' => Subject::all(),
-
             'classes' => SchoolClass::all(),
-
             'filters' => $request->only(['subject_id', 'school_class_id']),
-
         ]);
-
     }
 
     /**

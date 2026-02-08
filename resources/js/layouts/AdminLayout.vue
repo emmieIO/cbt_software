@@ -1,10 +1,15 @@
 <script setup lang="ts">
 import { usePage } from '@inertiajs/vue3';
 import { h, defineComponent, computed } from 'vue';
+import { index as sessionsIndex } from '@/actions/App/Http/Controllers/Admin/AcademicSessionController';
 import { logout, dashboard } from '@/actions/App/Http/Controllers/Admin/AdminController';
+import { index as entranceIndex } from '@/actions/App/Http/Controllers/Admin/EntranceController';
 import { index as permissionsIndex } from '@/actions/App/Http/Controllers/Admin/PermissionController';
+import { index as promotionIndex } from '@/actions/App/Http/Controllers/Admin/PromotionController';
 import { index as rolesIndex } from '@/actions/App/Http/Controllers/Admin/RoleController';
 import { index as classesIndex } from '@/actions/App/Http/Controllers/Admin/SchoolClassController';
+import { index as staffIndex } from '@/actions/App/Http/Controllers/Admin/StaffController';
+import { index as studentIndex } from '@/actions/App/Http/Controllers/Admin/StudentController';
 import { index as subjectsIndex } from '@/actions/App/Http/Controllers/Admin/SubjectController';
 import { index as topicsIndex } from '@/actions/App/Http/Controllers/Admin/TopicController';
 import { index as questionsIndex, generate as aiLabGenerate } from '@/actions/App/Http/Controllers/Staff/StaffQuestionController';
@@ -120,18 +125,28 @@ const navigation = [
         href: classesIndex().url,
         active: page.component === 'Admin/Classes/Index',
         icon: IconSchool,
+        permission: 'manage school setup',
     },
     {
         name: 'Academic Subjects',
         href: subjectsIndex().url,
         active: page.component === 'Admin/Subjects/Index',
         icon: IconSubject,
+        permission: 'manage curriculum',
     },
     {
         name: 'Curriculum Topics',
         href: topicsIndex().url,
         active: page.component === 'Admin/Topics/Index',
         icon: IconTopic,
+        permission: 'manage curriculum',
+    },
+    {
+        name: 'Academic Sessions',
+        href: sessionsIndex().url,
+        active: page.component === 'Admin/Settings/Sessions',
+        icon: IconDashboard,
+        permission: 'manage school setup',
     },
     {
         name: 'Question Bank',
@@ -162,10 +177,31 @@ const navigation = [
         permission: 'manage settings',
     },
     {
-        name: 'Manage Users',
-        href: '#',
-        active: false,
+        name: 'Staff Management',
+        href: staffIndex().url,
+        active: page.component === 'Admin/Users/Staff',
         icon: IconUsers,
+        permission: 'manage users',
+    },
+    {
+        name: 'Student Management',
+        href: studentIndex().url,
+        active: page.component === 'Admin/Users/Students',
+        icon: IconUsers,
+        permission: 'manage users',
+    },
+    {
+        name: 'Student Promotion',
+        href: promotionIndex().url,
+        active: page.component === 'Admin/Users/Promotion',
+        icon: IconSchool,
+        permission: 'manage enrollment',
+    },
+    {
+        name: 'Entrance Examination',
+        href: entranceIndex().url,
+        active: page.component === 'Admin/Users/Candidates',
+        icon: IconExams,
         permission: 'manage users',
     },
     {

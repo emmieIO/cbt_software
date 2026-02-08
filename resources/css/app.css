@@ -15,6 +15,7 @@
 }
 
 input[type='text'],
+input[type='email'],
 select,
 textarea {
     @apply border border-primary ring-1 ring-primary;

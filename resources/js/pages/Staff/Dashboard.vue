@@ -24,7 +24,7 @@ import StaffLayout from '@/layouts/StaffLayout.vue';
 
             <div class="grid grid-cols-1 gap-8 md:grid-cols-3">
                 <!-- Stats Card: Assigned Classes -->
-                <div class="group relative overflow-hidden rounded-[2rem] bg-white p-8 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl">
+                <div class="group relative overflow-hidden rounded-4xl bg-white p-8 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl">
                     <div class="flex items-start justify-between">
                         <div>
                             <p class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase">Assigned Classes</p>
@@ -52,7 +52,7 @@ import StaffLayout from '@/layouts/StaffLayout.vue';
                 </div>
 
                 <!-- Stats Card: Pending Results -->
-                <div class="group relative overflow-hidden rounded-[2rem] bg-white p-8 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl">
+                <div class="group relative overflow-hidden rounded-4xl bg-white p-8 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl">
                     <div class="flex items-start justify-between">
                         <div>
                             <p class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase">Pending Results</p>
@@ -80,7 +80,7 @@ import StaffLayout from '@/layouts/StaffLayout.vue';
                 </div>
 
                 <!-- Stats Card: Questions -->
-                <div class="group relative overflow-hidden rounded-[2rem] bg-white p-8 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl">
+                <div class="group relative overflow-hidden rounded-4xl bg-white p-8 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl">
                     <div class="flex items-start justify-between">
                         <div>
                             <p class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase">Question Bank</p>
@@ -124,7 +124,7 @@ import StaffLayout from '@/layouts/StaffLayout.vue';
 
                 <div class="space-y-4">
                     <div
-                        class="group flex items-center justify-between rounded-3xl border border-slate-100 p-6 transition-all hover:border-primary/20 hover:bg-primary/[0.02]"
+                        class="group flex items-center justify-between rounded-3xl border border-slate-100 p-6 transition-all hover:border-primary/20 hover:bg-primary/2"
                     >
                         <div class="flex items-center gap-6">
                             <div
@@ -163,7 +163,7 @@ import StaffLayout from '@/layouts/StaffLayout.vue';
                     </div>
 
                     <div
-                        class="group flex items-center justify-between rounded-3xl border border-slate-100 p-6 transition-all hover:border-primary/20 hover:bg-primary/[0.02]"
+                        class="group flex items-center justify-between rounded-3xl border border-slate-100 p-6 transition-all hover:border-primary/20 hover:bg-primary/2"
                     >
                         <div class="flex items-center gap-6">
                             <div

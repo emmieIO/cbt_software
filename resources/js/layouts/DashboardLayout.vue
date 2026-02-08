@@ -21,6 +21,7 @@ defineProps<{
 
 const page = usePage();
 const user = computed<User>(() => page.props.auth.user);
+const currentSession = computed(() => (page.props as any).academic_session);
 const notifications = computed(() => (page.props.auth as any).notifications || []);
 const userInitials = computed(() => {
     if (!user.value?.name) return '?';
@@ -203,32 +204,16 @@ if (typeof window !== 'undefined') {
                         <div class="flex items-center gap-3">
                             <h2 class="text-xl font-black tracking-tight text-slate-800">{{ title }}</h2>
                             <div class="h-1.5 w-1.5 rounded-full bg-slate-300"></div>
-                            <span class="text-xs font-bold tracking-widest text-slate-400 uppercase">Overview</span>
+                            <div v-if="currentSession" class="flex items-center gap-2">
+                                <span class="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Session:</span>
+                                <span class="rounded-lg bg-primary/5 px-2 py-1 text-xs font-black text-primary">{{ currentSession.name }}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Header Actions -->
                 <div class="flex items-center gap-6">
-                    <!-- Search Bar (UI Only) -->
-                    <div class="hidden lg:relative lg:block">
-                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                            <svg class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                                />
-                            </svg>
-                        </div>
-                        <input
-                            type="text"
-                            placeholder="Search everything..."
-                            class="h-11 w-72 rounded-2xl border-none bg-slate-100 pl-11 text-sm font-medium transition-all placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-primary/20"
-                        />
-                    </div>
-
                     <!-- Notifications -->
                     <div class="relative" @click.stop>
                         <button

@@ -38,4 +38,9 @@ class SchoolClass extends Model
     {
         return $this->hasMany(Question::class);
     }
+
+    public function users()
+    {
+        return $this->hasMany(User::class);
+    }
 }

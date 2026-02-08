@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { Head, useForm, router } from '@inertiajs/vue3';
+import { Head, useForm, router, Link } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { store, update, destroy, index as topicsIndex } from '@/actions/App/Http/Controllers/Admin/TopicController';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
-import type { Subject, SchoolClass } from '@/types/academics';
+import type { Subject, SchoolClass, PaginatedData } from '@/types/academics';
 
 interface Topic {
     id: string;
@@ -18,7 +18,7 @@ interface Topic {
 }
 
 const props = defineProps<{
-    topics: Topic[];
+    topics: PaginatedData<Topic>;
     subjects: Subject[];
     classes: SchoolClass[];
     filters: {
@@ -184,7 +184,7 @@ const handleDelete = () => {
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">
-                            <tr v-for="topic in topics" :key="topic.id" class="group transition-all hover:bg-slate-50/80">
+                            <tr v-for="topic in topics.data" :key="topic.id" class="group transition-all hover:bg-slate-50/80">
                                 <td class="px-8 py-6">
                                     <h4 class="text-sm font-black text-slate-800">{{ topic.name }}</h4>
                                     <p class="mt-1 line-clamp-1 text-xs font-medium text-slate-400 italic">
@@ -235,13 +235,33 @@ const handleDelete = () => {
                                     </div>
                                 </td>
                             </tr>
-                            <tr v-if="topics.length === 0">
+                            <tr v-if="topics.data.length === 0">
                                 <td colspan="5" class="px-8 py-12 text-center text-sm font-bold text-slate-400 italic">
                                     No topics found for the selected filters.
                                 </td>
                             </tr>
                         </tbody>
                     </table>
+                </div>
+
+                <div class="flex items-center justify-between border-t border-slate-50 px-8 py-6">
+                    <p class="text-xs font-bold text-slate-400 italic">Showing {{ topics.from }} to {{ topics.to }} of {{ topics.total }} results.</p>
+                    <div class="flex gap-2">
+                        <Link
+                            v-for="link in topics.links"
+                            :key="link.label"
+                            :href="link.url || '#'"
+                            class="flex h-9 items-center justify-center rounded-xl border px-4 text-xs font-black transition-all"
+                            :class="[
+                                link.active
+                                    ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20'
+                                    : 'border-slate-100 bg-white text-slate-400 hover:bg-slate-50',
+                                !link.url ? 'pointer-events-none opacity-50' : '',
+                            ]"
+                        >
+                            <span v-html="link.label" />
+                        </Link>
+                    </div>
                 </div>
             </div>
 
