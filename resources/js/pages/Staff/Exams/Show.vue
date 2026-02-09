@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { Head, Link, useForm, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { Head, Link, useForm, router, usePage } from '@inertiajs/vue3';
+import { ref, computed } from 'vue';
 import { 
     show, 
     storeVersion, 
     destroyVersion,
     manageQuestions
 } from '@/actions/App/Http/Controllers/Staff/ExamController';
+import AdminLayout from '@/layouts/AdminLayout.vue';
 import StaffLayout from '@/layouts/StaffLayout.vue';
 
 interface Version {
@@ -28,6 +29,10 @@ interface Exam {
 const props = defineProps<{
     exam: Exam;
 }>();
+
+const page = usePage();
+const isAdmin = computed(() => (page.props.auth.user as any).roles.includes('admin'));
+const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
 
 const isVersionModalOpen = ref(false);
 const versionForm = useForm({
@@ -51,7 +56,7 @@ const handleDeleteVersion = (versionId: string) => {
 </script>
 
 <template>
-    <StaffLayout>
+    <component :is="Layout">
         <Head :title="exam.title" />
 
         <div class="space-y-10">
@@ -173,5 +178,5 @@ const handleDeleteVersion = (versionId: string) => {
                 </form>
             </div>
         </div>
-    </StaffLayout>
+    </component>
 </template>

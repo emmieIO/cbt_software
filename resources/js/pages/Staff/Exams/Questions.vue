@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import { updateQuestions, aiSelectQuestions } from '@/actions/App/Http/Controllers/Staff/ExamController';
+import AdminLayout from '@/layouts/AdminLayout.vue';
 import StaffLayout from '@/layouts/StaffLayout.vue';
 
 interface Question {
@@ -31,6 +32,10 @@ const props = defineProps<{
     availableQuestions: Question[];
     selectedQuestionIds: string[];
 }>();
+
+const page = usePage();
+const isAdmin = computed(() => (page.props.auth.user as any).roles.includes('admin'));
+const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
 
 const searchQuery = ref('');
 const selectedIds = ref<string[]>([...props.selectedQuestionIds]);
@@ -81,7 +86,7 @@ const runAiSelection = () => {
 </script>
 
 <template>
-    <StaffLayout>
+    <component :is="Layout">
         <Head :title="`Select Questions - ${version.name}`" />
 
         <div class="space-y-8">
@@ -252,7 +257,7 @@ const runAiSelection = () => {
                 </form>
             </div>
         </div>
-    </StaffLayout>
+    </component>
 </template>
 
 <style scoped>

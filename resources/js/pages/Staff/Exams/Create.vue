@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import { store as storeExamAction } from '@/actions/App/Http/Controllers/Staff/ExamController';
+import AdminLayout from '@/layouts/AdminLayout.vue';
 import StaffLayout from '@/layouts/StaffLayout.vue';
 
 interface Assignment {
@@ -12,6 +14,10 @@ interface Assignment {
 const props = defineProps<{
     assignments: Assignment[];
 }>();
+
+const page = usePage();
+const isAdmin = computed(() => (page.props.auth.user as any).roles.includes('admin'));
+const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
 
 const form = useForm({
     title: '',
@@ -38,7 +44,7 @@ const submit = () => {
 </script>
 
 <template>
-    <StaffLayout>
+    <component :is="Layout">
         <Head title="Configure New Examination" />
 
         <div class="mx-auto max-w-3xl space-y-10">
@@ -149,5 +155,5 @@ const submit = () => {
                 </form>
             </div>
         </div>
-    </StaffLayout>
+    </component>
 </template>

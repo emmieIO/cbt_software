@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import { 
     index as examsIndex, 
     create as createExamAction,
     show as showExamAction
 } from '@/actions/App/Http/Controllers/Staff/ExamController';
+import AdminLayout from '@/layouts/AdminLayout.vue';
 import StaffLayout from '@/layouts/StaffLayout.vue';
 import type { PaginatedData } from '@/types/academics';
 
@@ -26,6 +28,10 @@ defineProps<{
     filters: any;
 }>();
 
+const page = usePage();
+const isAdmin = computed(() => (page.props.auth.user as any).roles.includes('admin'));
+const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
+
 const getStatusColor = (status: string) => {
     switch (status) {
         case 'live': return 'bg-green-500 text-white';
@@ -37,7 +43,7 @@ const getStatusColor = (status: string) => {
 </script>
 
 <template>
-    <StaffLayout>
+    <component :is="Layout">
         <Head title="My Examinations" />
 
         <div class="space-y-8">
@@ -113,5 +119,5 @@ const getStatusColor = (status: string) => {
                 </div>
             </div>
         </div>
-    </StaffLayout>
+    </component>
 </template>
