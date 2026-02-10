@@ -19,7 +19,7 @@ class TopicDTO
             subject_id: $request->string('subject_id'),
             school_class_id: $request->string('school_class_id'),
             name: $request->string('name'),
-            description: $request->string('description')
+            description: $request->input('description')
         );
     }
 

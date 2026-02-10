@@ -5,6 +5,7 @@ import { index, store, destroy } from '@/actions/App/Http/Controllers/Admin/Teac
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import type { PaginatedData, Subject, SchoolClass } from '@/types/academics';
+import { computed, watch } from 'vue';
 
 interface Teacher {
     id: string;
@@ -23,7 +24,7 @@ interface Assignment {
 const props = defineProps<{
     assignments: PaginatedData<Assignment>;
     teachers: Teacher[];
-    subjects: Subject[];
+    subjects: any[]; // Changed to any to handle topics
     classes: SchoolClass[];
     filters: {
         user_id?: string;
@@ -37,6 +38,20 @@ const form = useForm({
     user_id: '',
     subject_id: '',
     school_class_id: '',
+});
+
+const filteredClasses = computed(() => {
+    if (!form.subject_id) return [];
+
+    const selectedSubject = props.subjects.find((s) => s.id === form.subject_id);
+    if (!selectedSubject || !selectedSubject.topics) return [];
+
+    const eligibleClassIds = new Set(selectedSubject.topics.map((t: any) => t.school_class_id));
+    return props.classes.filter((c) => eligibleClassIds.has(c.id));
+});
+
+watch(() => form.subject_id, () => {
+    form.school_class_id = '';
 });
 
 const submit = () => {
@@ -254,10 +269,11 @@ const handleDelete = () => {
                             <select
                                 v-model="form.school_class_id"
                                 required
-                                class="w-full rounded-2xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
+                                :disabled="!form.subject_id"
+                                class="w-full rounded-2xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <option value="" disabled>Select Class Level</option>
-                                <option v-for="cls in classes" :key="cls.id" :value="cls.id">{{ cls.name }}</option>
+                                <option v-for="cls in filteredClasses" :key="cls.id" :value="cls.id">{{ cls.name }}</option>
                             </select>
                         </div>
 

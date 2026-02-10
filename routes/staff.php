@@ -11,7 +11,7 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('/dashboard', StaffDashboardController::class)->name('dashboard')->middleware('role:staff');
+    Route::get('/dashboard', StaffDashboardController::class)->name('dashboard')->middleware('role_or_permission:staff|admin');
 
     Route::prefix('questions')->name('questions.')->middleware('role_or_permission:staff|admin|subject_lead|view questions')->group(function () {
         Route::get('/', [StaffQuestionController::class, 'index'])->name('index');
@@ -21,7 +21,6 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/', [StaffQuestionController::class, 'store'])->name('store');
         Route::get('/{question}/edit', [StaffQuestionController::class, 'edit'])->name('edit');
         Route::put('/{question}', [StaffQuestionController::class, 'update'])->name('update');
-        Route::patch('/{question}/toggle', [StaffQuestionController::class, 'toggleStatus'])->name('toggle-status');
         Route::delete('/{question}', [StaffQuestionController::class, 'destroy'])->name('destroy');
 
         Route::post('/import', [StaffQuestionController::class, 'import'])->name('import');
@@ -36,14 +35,10 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/', [\App\Http\Controllers\Staff\ExamController::class, 'store'])->name('store');
         Route::get('/{exam}', [\App\Http\Controllers\Staff\ExamController::class, 'show'])->name('show');
         
-        // Versions
-        Route::post('/{exam}/versions', [\App\Http\Controllers\Staff\ExamController::class, 'storeVersion'])->name('versions.store');
-        Route::delete('/{exam}/versions/{version}', [\App\Http\Controllers\Staff\ExamController::class, 'destroyVersion'])->name('versions.destroy');
-        
-        // Version Questions
-        Route::get('/{exam}/versions/{version}/questions', [\App\Http\Controllers\Staff\ExamController::class, 'manageQuestions'])->name('versions.questions');
-        Route::post('/{exam}/versions/{version}/questions', [\App\Http\Controllers\Staff\ExamController::class, 'updateQuestions'])->name('versions.questions.update');
-        Route::post('/{exam}/versions/{version}/ai-select', [\App\Http\Controllers\Staff\ExamController::class, 'aiSelectQuestions'])->name('versions.ai-select');
+        // Question Management (Directly on Exam)
+        Route::get('/{exam}/questions', [\App\Http\Controllers\Staff\ExamController::class, 'manageQuestions'])->name('questions');
+        Route::post('/{exam}/questions', [\App\Http\Controllers\Staff\ExamController::class, 'updateQuestions'])->name('questions.update');
+        Route::post('/{exam}/ai-select', [\App\Http\Controllers\Staff\ExamController::class, 'aiSelectQuestions'])->name('ai-select');
 
         Route::get('/{exam}/edit', [\App\Http\Controllers\Staff\ExamController::class, 'edit'])->name('edit');
         Route::put('/{exam}', [\App\Http\Controllers\Staff\ExamController::class, 'update'])->name('update');

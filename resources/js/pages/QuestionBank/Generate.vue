@@ -198,7 +198,7 @@ const addLog = (type: 'info' | 'success' | 'error', message: string) => {
                                     v-model="form.count"
                                     type="range"
                                     min="1"
-                                    max="10"
+                                    max="20"
                                     class="h-2 w-full cursor-pointer appearance-none rounded-lg bg-slate-100 accent-primary"
                                 />
 

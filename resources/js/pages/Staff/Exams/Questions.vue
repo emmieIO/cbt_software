@@ -14,11 +14,6 @@ interface Question {
     options: any[];
 }
 
-interface Version {
-    id: string;
-    name: string;
-}
-
 interface Exam {
     id: string;
     title: string;
@@ -28,7 +23,6 @@ interface Exam {
 
 const props = defineProps<{
     exam: Exam;
-    version: Version;
     availableQuestions: Question[];
     selectedQuestionIds: string[];
 }>();
@@ -67,7 +61,7 @@ const form = useForm({
 
 const saveSelection = () => {
     form.question_ids = selectedIds.value;
-    form.post(updateQuestions({ exam: props.exam.id, version: props.version.id }).url);
+    form.post(updateQuestions(props.exam.id).url);
 };
 
 // AI Selection
@@ -77,7 +71,7 @@ const aiForm = useForm({
 });
 
 const runAiSelection = () => {
-    aiForm.post(aiSelectQuestions({ exam: props.exam.id, version: props.version.id }).url, {
+    aiForm.post(aiSelectQuestions(props.exam.id).url, {
         onSuccess: () => {
             isAiModalOpen.value = false;
         }
@@ -87,7 +81,7 @@ const runAiSelection = () => {
 
 <template>
     <component :is="Layout">
-        <Head :title="`Select Questions - ${version.name}`" />
+        <Head title="Select Exam Questions" />
 
         <div class="space-y-8">
             <div class="flex items-center justify-between">
@@ -97,9 +91,9 @@ const runAiSelection = () => {
                         <span>/</span>
                         <Link :href="`/staff/exams/${exam.id}`" class="hover:text-primary">{{ exam.title }}</Link>
                         <span>/</span>
-                        <span class="text-slate-600">{{ version.name }}</span>
+                        <span class="text-slate-600">Allocation</span>
                     </nav>
-                    <h1 class="text-3xl font-black text-slate-900 italic">Select Questions</h1>
+                    <h1 class="text-3xl font-black text-slate-900 italic">Manage Questions</h1>
                     <p class="mt-1 text-sm font-bold text-slate-500">Allocating questions for {{ exam.subject.name }} ({{ exam.school_class.name }})</p>
                 </div>
 
@@ -181,7 +175,7 @@ const runAiSelection = () => {
                 <div class="lg:col-span-4">
                     <div class="sticky top-8 space-y-6">
                         <div class="rounded-[2.5rem] bg-slate-900 p-8 text-white shadow-2xl">
-                            <h3 class="mb-6 text-xl font-black italic">Selected Paper ({{ selectedIds.length }})</h3>
+                            <h3 class="mb-6 text-xl font-black italic">Selected Pool ({{ selectedIds.length }})</h3>
                             <div class="space-y-4 max-h-125 overflow-y-auto pr-2 custom-scrollbar">
                                 <div 
                                     v-for="id in selectedIds" 
@@ -214,7 +208,7 @@ const runAiSelection = () => {
                             </div>
                             <p class="text-[10px] font-black tracking-widest text-slate-400 uppercase">Pro Tip</p>
                             <p class="mt-2 text-xs font-bold leading-relaxed text-slate-500 italic">
-                                You can use the AI Shuffler to quickly build a balanced paper, then refine it manually.
+                                You can use the AI Shuffler to quickly build a balanced pool, then refine it manually.
                             </p>
                         </div>
                     </div>
@@ -234,7 +228,7 @@ const runAiSelection = () => {
                     </div>
                     <div>
                         <h3 class="text-2xl font-black text-slate-900">AI Shuffler</h3>
-                        <p class="text-xs font-bold text-slate-400 italic">Auto-pick questions for this version</p>
+                        <p class="text-xs font-bold text-slate-400 italic">Auto-pick compliant questions</p>
                     </div>
                 </div>
 
@@ -252,7 +246,7 @@ const runAiSelection = () => {
                     </div>
                     <div class="flex gap-3 pt-4 border-t border-slate-50">
                         <button type="button" @click="isAiModalOpen = false" class="flex-1 rounded-2xl border border-slate-100 py-4 text-sm font-black tracking-widest text-slate-400 uppercase">Cancel</button>
-                        <button type="submit" :disabled="aiForm.processing" class="flex-1 rounded-2xl bg-primary py-4 text-sm font-black tracking-widest text-white uppercase shadow-lg shadow-primary/20">Generate Paper</button>
+                        <button type="submit" :disabled="aiForm.processing" class="flex-1 rounded-2xl bg-primary py-4 text-sm font-black tracking-widest text-white uppercase shadow-lg shadow-primary/20">Generate Selection</button>
                     </div>
                 </form>
             </div>

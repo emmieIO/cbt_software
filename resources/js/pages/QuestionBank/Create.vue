@@ -26,7 +26,6 @@ const form = useForm({
     explanation: '',
     type: 'multiple_choice',
     difficulty: 'medium',
-    is_active: true,
     options: [
         { content: '', is_correct: true },
         { content: '', is_correct: false },

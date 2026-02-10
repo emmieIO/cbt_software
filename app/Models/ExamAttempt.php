@@ -15,7 +15,6 @@ class ExamAttempt extends Model
     protected $fillable = [
         'exam_id',
         'user_id',
-        'exam_version_id',
         'started_at',
         'submitted_at',
         'score',
@@ -41,11 +40,6 @@ class ExamAttempt extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
-    }
-
-    public function version(): BelongsTo
-    {
-        return $this->belongsTo(ExamVersion::class, 'exam_version_id');
     }
 
     public function answers(): HasMany

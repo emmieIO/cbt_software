@@ -10,7 +10,6 @@ import {
     importMethod,
     exportMethod,
     downloadTemplate,
-    toggleStatus,
     destroy,
     bulkDestroy,
 } from '@/actions/App/Http/Controllers/Staff/StaffQuestionController';
@@ -92,17 +91,6 @@ const handleImport = () => {
     importForm.post(importMethod().url, {
         onSuccess: () => importForm.reset(),
     });
-};
-
-// Status Toggle
-const handleToggleStatus = (question: Question) => {
-    router.patch(
-        toggleStatus(question.id).url,
-        {},
-        {
-            preserveScroll: true,
-        },
-    );
 };
 
 // Single Delete
@@ -200,7 +188,7 @@ const clearFilters = () => {
 
             <div class="w-full space-y-8">
                 <div>
-                    <h2 class="text-3xl font-black tracking-tight text-slate-900">Question Bank</h2>
+                    <h2 class="text-3xl font-black tracking-tight text-slate-900 italic">Question Bank</h2>
                     <p class="mt-1 text-sm font-bold text-slate-500">Review and manage the existing question repository.</p>
                 </div>
 
@@ -505,19 +493,6 @@ const clearFilters = () => {
                                                 v-if="activeDropdown === question.id"
                                                 class="absolute right-0 z-30 mt-2 w-64 origin-top-right rounded-2xl bg-white p-2 shadow-2xl ring-1 ring-black/5"
                                             >
-                                                <button
-                                                    @click="handleToggleStatus(question)"
-                                                    class="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-left text-xs font-black tracking-wider uppercase transition-colors hover:bg-slate-50"
-                                                    :class="question.is_active ? 'text-green-600' : 'text-slate-400'"
-                                                >
-                                                    <div
-                                                        class="h-2 w-2 rounded-full"
-                                                        :class="
-                                                            question.is_active ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-slate-300'
-                                                        "
-                                                    ></div>
-                                                    {{ question.is_active ? 'Deactivate' : 'Activate' }}
-                                                </button>
                                                 <Link
                                                     :href="edit(question.id).url"
                                                     class="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-left text-xs font-black tracking-wider text-slate-600 uppercase transition-colors hover:bg-slate-50"

@@ -1,6 +1,21 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
 import AdminLayout from '@/layouts/AdminLayout.vue';
+import { Head } from '@inertiajs/vue3';
+
+defineProps<{
+    stats: {
+        totalStudents: number;
+        totalStaff: number;
+        activeExams: number;
+        systemStatus: string;
+    };
+    recentActivity: Array<{
+        id: number;
+        user: string;
+        action: string;
+        time: string;
+    }>;
+}>();
 </script>
 
 <template>
@@ -12,19 +27,19 @@ import AdminLayout from '@/layouts/AdminLayout.vue';
                 <!-- Stats Card -->
                 <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
                     <p class="text-sm font-medium tracking-wider text-slate-500 uppercase">Total Students</p>
-                    <p class="mt-2 text-3xl font-bold text-primary">1,240</p>
+                    <p class="mt-2 text-3xl font-bold text-primary">{{ stats.totalStudents.toLocaleString() }}</p>
                 </div>
                 <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
                     <p class="text-sm font-medium tracking-wider text-slate-500 uppercase">Total Staff</p>
-                    <p class="mt-2 text-3xl font-bold text-slate-800">86</p>
+                    <p class="mt-2 text-3xl font-bold text-slate-800">{{ stats.totalStaff.toLocaleString() }}</p>
                 </div>
                 <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
                     <p class="text-sm font-medium tracking-wider text-slate-500 uppercase">Active Exams</p>
-                    <p class="mt-2 text-3xl font-bold text-green-600">4</p>
+                    <p class="mt-2 text-3xl font-bold text-green-600">{{ stats.activeExams }}</p>
                 </div>
                 <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
                     <p class="text-sm font-medium tracking-wider text-slate-500 uppercase">System Status</p>
-                    <p class="mt-2 text-3xl font-bold text-blue-600">Healthy</p>
+                    <p class="mt-2 text-3xl font-bold text-blue-600">{{ stats.systemStatus }}</p>
                 </div>
             </div>
 
@@ -35,17 +50,11 @@ import AdminLayout from '@/layouts/AdminLayout.vue';
                         <h3 class="font-bold text-slate-800">Recent System Logs</h3>
                     </div>
                     <div class="divide-y divide-slate-50 p-6">
-                        <div class="py-3">
-                            <p class="text-sm text-slate-600"><span class="font-bold">admin_root</span> updated Mathematics exam settings</p>
-                            <p class="text-xs text-slate-400">2 minutes ago</p>
-                        </div>
-                        <div class="py-3">
-                            <p class="text-sm text-slate-600"><span class="font-bold">staff_user</span> uploaded 50 new questions to English Bank</p>
-                            <p class="text-xs text-slate-400">15 minutes ago</p>
-                        </div>
-                        <div class="py-3">
-                            <p class="text-sm text-slate-600">Automated backup completed successfully</p>
-                            <p class="text-xs text-slate-400">1 hour ago</p>
+                        <div v-for="activity in recentActivity" :key="activity.id" class="py-3">
+                            <p class="text-sm text-slate-600">
+                                <span class="font-bold">{{ activity.user }}</span> {{ activity.action }}
+                            </p>
+                            <p class="text-xs text-slate-400">{{ activity.time }}</p>
                         </div>
                     </div>
                 </div>

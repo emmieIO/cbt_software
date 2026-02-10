@@ -28,10 +28,10 @@ class ExamDTO
             academic_session_id: $academicSessionId,
             duration: $request->integer('duration'),
             type: $request->string('type'),
-            start_time: $request->string('start_time'),
-            end_time: $request->string('end_time'),
-            description: $request->string('description'),
-            instructions: $request->string('instructions'),
+            start_time: $request->input('start_time'),
+            end_time: $request->input('end_time'),
+            description: $request->input('description'),
+            instructions: $request->input('instructions'),
         );
     }
 

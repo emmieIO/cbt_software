@@ -28,7 +28,6 @@ const form = useForm({
     explanation: props.question.explanation || '',
     type: props.question.type,
     difficulty: props.question.difficulty,
-    is_active: props.question.is_active,
     options: props.question.options.map((opt) => ({
         id: opt.id,
         content: opt.content,
@@ -123,16 +122,7 @@ const submit = () => {
                     <div class="mb-10 flex items-center justify-between">
                         <div>
                             <h3 class="text-3xl font-bold text-slate-900">Edit Question</h3>
-                            <p class="mt-1 text-sm font-bold text-amber-600 text-slate-500">
-                                Note: Saving will create a new version (v{{ question.version + 1 }}) and deactivate the current one.
-                            </p>
-                        </div>
-                        <div class="text-right">
-                            <span
-                                class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-black tracking-widest text-slate-500 uppercase"
-                            >
-                                Current Version: v{{ question.version }}
-                            </span>
+                            <p class="mt-1 text-sm text-slate-500">Update the question content, metadata, or options.</p>
                         </div>
                     </div>
 

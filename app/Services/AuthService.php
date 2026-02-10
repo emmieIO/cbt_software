@@ -13,7 +13,7 @@ class AuthService
      *
      * @throws ValidationException
      */
-    public function login(array $credentials, bool $remember = false): string
+    public function login(array $credentials, bool $remember = false, ?string $requiredRole = null): string
     {
         if (! Auth::attempt($credentials, $remember)) {
             throw ValidationException::withMessages([
@@ -21,9 +21,22 @@ class AuthService
             ]);
         }
 
+        $user = Auth::user();
+
+        // Portal-specific security: Ensure the user belongs to this portal
+        if ($requiredRole && ! $user->hasRole($requiredRole)) {
+            Auth::logout();
+            request()->session()->invalidate();
+            request()->session()->regenerateToken();
+
+            throw ValidationException::withMessages([
+                'login_id' => [trans('auth.failed')],
+            ]);
+        }
+
         request()->session()->regenerate();
 
-        return $this->getRedirectUrl(Auth::user());
+        return $this->getRedirectUrl($user);
     }
 
     /**

@@ -1,6 +1,26 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
 import StaffLayout from '@/layouts/StaffLayout.vue';
+import { Head, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
+
+const props = defineProps<{
+    stats: {
+        assignedClasses: number;
+        pendingResults: number;
+        questionBankCount: number;
+    };
+    schedule: Array<{
+        id: number;
+        title: string;
+        time: string;
+        location: string;
+        type: string;
+        color: string;
+    }>;
+}>();
+
+const page = usePage();
+const userName = computed(() => page.props.auth?.user?.name || 'Staff');
 </script>
 
 <template>
@@ -11,7 +31,7 @@ import StaffLayout from '@/layouts/StaffLayout.vue';
             <!-- Welcome Header -->
             <div class="relative overflow-hidden rounded-[2.5rem] bg-primary px-10 py-12 shadow-2xl shadow-primary/20">
                 <div class="relative z-10">
-                    <h1 class="text-3xl font-black text-white md:text-4xl">Welcome back, Staff</h1>
+                    <h1 class="text-3xl font-black text-white md:text-4xl">Welcome back, {{ userName }}</h1>
                     <p class="mt-2 max-w-xl text-lg font-medium text-white/60">
                         Manage your classes, questions, and monitor real-time exam performance from your command center.
                     </p>
@@ -28,7 +48,7 @@ import StaffLayout from '@/layouts/StaffLayout.vue';
                     <div class="flex items-start justify-between">
                         <div>
                             <p class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase">Assigned Classes</p>
-                            <h3 class="mt-4 text-5xl font-black tracking-tight text-slate-800">06</h3>
+                            <h3 class="mt-4 text-5xl font-black tracking-tight text-slate-800">{{ stats.assignedClasses.toString().padStart(2, '0') }}</h3>
                         </div>
                         <div
                             class="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/5 text-primary transition-colors group-hover:bg-primary group-hover:text-white"
@@ -56,7 +76,7 @@ import StaffLayout from '@/layouts/StaffLayout.vue';
                     <div class="flex items-start justify-between">
                         <div>
                             <p class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase">Pending Results</p>
-                            <h3 class="mt-4 text-5xl font-black tracking-tight text-orange-600">03</h3>
+                            <h3 class="mt-4 text-5xl font-black tracking-tight text-orange-600">{{ stats.pendingResults.toString().padStart(2, '0') }}</h3>
                         </div>
                         <div
                             class="flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-50 text-orange-600 transition-colors group-hover:bg-orange-600 group-hover:text-white"
@@ -84,7 +104,7 @@ import StaffLayout from '@/layouts/StaffLayout.vue';
                     <div class="flex items-start justify-between">
                         <div>
                             <p class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase">Question Bank</p>
-                            <h3 class="mt-4 text-5xl font-black tracking-tight text-indigo-600">124</h3>
+                            <h3 class="mt-4 text-5xl font-black tracking-tight text-indigo-600">{{ stats.questionBankCount }}</h3>
                         </div>
                         <div
                             class="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 transition-colors group-hover:bg-indigo-600 group-hover:text-white"
@@ -124,13 +144,18 @@ import StaffLayout from '@/layouts/StaffLayout.vue';
 
                 <div class="space-y-4">
                     <div
+                        v-for="item in schedule"
+                        :key="item.id"
                         class="group flex items-center justify-between rounded-3xl border border-slate-100 p-6 transition-all hover:border-primary/20 hover:bg-primary/2"
                     >
                         <div class="flex items-center gap-6">
                             <div
-                                class="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 transition-transform group-hover:scale-110"
+                                :class="[
+                                    'flex h-16 w-16 items-center justify-center rounded-2xl transition-transform group-hover:scale-110',
+                                    item.color === 'blue' ? 'bg-blue-50 text-blue-600' : 'bg-purple-50 text-purple-600',
+                                ]"
                             >
-                                <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg v-if="item.color === 'blue'" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path
                                         stroke-linecap="round"
                                         stroke-linejoin="round"
@@ -138,38 +163,7 @@ import StaffLayout from '@/layouts/StaffLayout.vue';
                                         d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                                     />
                                 </svg>
-                            </div>
-                            <div>
-                                <h4 class="text-xl font-black text-slate-900">Physics - SS2 Blue</h4>
-                                <div class="mt-1 flex items-center gap-2 text-sm font-bold text-slate-400">
-                                    <span>Today, 2:00 PM</span>
-                                    <div class="h-1 w-1 rounded-full bg-slate-300"></div>
-                                    <span>Examination Hall A</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-4">
-                            <span class="rounded-full bg-blue-100 px-5 py-2 text-[10px] font-black tracking-widest text-blue-700 uppercase"
-                                >Invigilation</span
-                            >
-                            <button
-                                class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-400 transition-all hover:bg-primary hover:text-white"
-                            >
-                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div
-                        class="group flex items-center justify-between rounded-3xl border border-slate-100 p-6 transition-all hover:border-primary/20 hover:bg-primary/2"
-                    >
-                        <div class="flex items-center gap-6">
-                            <div
-                                class="flex h-16 w-16 items-center justify-center rounded-2xl bg-purple-50 text-purple-600 transition-transform group-hover:scale-110"
-                            >
-                                <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg v-else class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path
                                         stroke-linecap="round"
                                         stroke-linejoin="round"
@@ -179,17 +173,21 @@ import StaffLayout from '@/layouts/StaffLayout.vue';
                                 </svg>
                             </div>
                             <div>
-                                <h4 class="text-xl font-black text-slate-900">General Math - SS1 Green</h4>
+                                <h4 class="text-xl font-black text-slate-900">{{ item.title }}</h4>
                                 <div class="mt-1 flex items-center gap-2 text-sm font-bold text-slate-400">
-                                    <span>Today, 4:30 PM</span>
+                                    <span>{{ item.time }}</span>
                                     <div class="h-1 w-1 rounded-full bg-slate-300"></div>
-                                    <span>Classroom 4B</span>
+                                    <span>{{ item.location }}</span>
                                 </div>
                             </div>
                         </div>
                         <div class="flex items-center gap-4">
-                            <span class="rounded-full bg-purple-100 px-5 py-2 text-[10px] font-black tracking-widest text-purple-700 uppercase"
-                                >Class Session</span
+                            <span
+                                :class="[
+                                    'rounded-full px-5 py-2 text-[10px] font-black tracking-widest uppercase',
+                                    item.color === 'blue' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700',
+                                ]"
+                                >{{ item.type }}</span
                             >
                             <button
                                 class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-400 transition-all hover:bg-primary hover:text-white"

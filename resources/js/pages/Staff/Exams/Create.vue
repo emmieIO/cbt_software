@@ -146,7 +146,7 @@ const submit = () => {
                             :disabled="form.processing"
                             class="flex flex-1 items-center justify-center gap-3 rounded-2xl bg-primary py-5 text-sm font-black tracking-[0.2em] text-white uppercase shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
                         >
-                            Next: Configure Paper Types
+                            Next: Allocate Questions
                             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                             </svg>

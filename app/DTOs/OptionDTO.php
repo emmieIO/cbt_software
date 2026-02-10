@@ -2,14 +2,10 @@
 
 namespace App\DTOs;
 
-use NeuronAI\StructuredOutput\SchemaProperty;
-
 class OptionDTO
 {
-    #[SchemaProperty('The textual content of the option.', required: true)]
     public string $content;
 
-    #[SchemaProperty('Whether this option is the correct answer.', required: true)]
     public bool $is_correct;
 
     public function __construct(string $content, bool|string $is_correct = false)

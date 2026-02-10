@@ -60,9 +60,12 @@ class Exam extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function versions(): HasMany
+    public function questions(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
-        return $this->hasMany(ExamVersion::class);
+        return $this->belongsToMany(Question::class, 'exam_questions')
+            ->using(ExamQuestion::class)
+            ->withPivot(['id', 'marks', 'order'])
+            ->withTimestamps();
     }
 
     public function attempts(): HasMany

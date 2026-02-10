@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Question\BulkDestroyQuestionRequest;
 use App\Http\Requests\Question\GetQuestionsRequest;
 use App\Http\Requests\Question\StoreQuestionRequest;
+use App\Http\Requests\Question\UpdateQuestionRequest;
 use App\Models\Question;
 use App\Models\SchoolClass;
 use App\Models\Subject;
@@ -66,7 +67,7 @@ class StaffQuestionController extends Controller
             'subject_id' => ['required', 'exists:subjects,id'],
             'topic_id' => ['required', 'exists:topics,id'],
             'school_class_id' => ['required', 'exists:school_classes,id'],
-            'count' => ['required', 'integer', 'min:1', 'max:10'],
+            'count' => ['required', 'integer', 'min:1', 'max:20'],
             'difficulty' => ['required', 'string'],
         ]);
 
@@ -125,12 +126,12 @@ class StaffQuestionController extends Controller
     /**
      * Update the specified question in storage.
      */
-    public function update(\App\Http\Requests\Question\UpdateQuestionRequest $request, Question $question): RedirectResponse
+    public function update(UpdateQuestionRequest $request, Question $question): RedirectResponse
     {
         $dto = QuestionDTO::fromRequest($request);
         $this->questionService->updateQuestion($question, $dto, $request->user()->id);
 
-        return redirect()->route('staff.questions.index')->with('success', 'Question updated (new version created) successfully.');
+        return redirect()->route('staff.questions.index')->with('success', 'Question updated successfully.');
     }
 
     /**
@@ -161,16 +162,6 @@ class StaffQuestionController extends Controller
     public function downloadTemplate(): StreamedResponse
     {
         return $this->bulkExportService->downloadTemplate();
-    }
-
-    /**
-     * Toggle question status.
-     */
-    public function toggleStatus(Question $question): RedirectResponse
-    {
-        $question->update(['is_active' => ! $question->is_active]);
-
-        return back()->with('success', 'Question status updated successfully.');
     }
 
     /**

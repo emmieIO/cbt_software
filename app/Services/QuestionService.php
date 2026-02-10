@@ -51,9 +51,7 @@ class QuestionService
                     'explanation' => $dto->explanation,
                     'type' => $dto->type instanceof \BackedEnum ? $dto->type->value : $dto->type,
                     'difficulty' => $dto->difficulty instanceof \BackedEnum ? $dto->difficulty->value : $dto->difficulty,
-                    'is_active' => $dto->is_active,
                     'created_by' => $userId,
-                    'version' => 1,
                     'created_at' => $now,
                     'updated_at' => $now,
                 ]);
@@ -76,27 +74,34 @@ class QuestionService
     }
 
     /**
-     * Update an existing question (creating a new version).
+     * Update an existing question.
      */
     public function updateQuestion(Question $question, QuestionDTO $dto, string $userId): Question
     {
         return DB::transaction(function () use ($question, $dto, $userId) {
-            // Deactivate old version
-            $question->update(['is_active' => false]);
+            $question->update($dto->toArray());
 
-            // Create new version
-            $newVersion = Question::create([
-                ...$dto->toArray(),
-                'version' => $question->version + 1,
-                'parent_id' => $question->parent_id ?? $question->id,
-                'created_by' => $userId,
-            ]);
-
-            foreach ($dto->options as $optionDto) {
-                $newVersion->options()->create($optionDto->toArray());
+            $existingOptions = $question->options;
+            
+            // Standard CBT Pattern: If the number of options is the same, 
+            // update them in place to keep the IDs (and student sessions) stable.
+            if ($existingOptions->count() === count($dto->options)) {
+                foreach ($existingOptions as $index => $option) {
+                    $option->update([
+                        'content' => $dto->options[$index]->content,
+                        'is_correct' => $dto->options[$index]->is_correct,
+                    ]);
+                }
+            } else {
+                // If the count changed, we have to recreate. 
+                // Note: This is rare but will invalidate active shuffles for this specific question.
+                $question->options()->delete();
+                foreach ($dto->options as $optionDto) {
+                    $question->options()->create($optionDto->toArray());
+                }
             }
 
-            return $newVersion;
+            return $question;
         });
     }
 
@@ -114,17 +119,11 @@ class QuestionService
     }
 
     /**
-     * Delete a single question and all its versions.
+     * Delete a single question.
      */
     public function deleteQuestion(Question $question): bool
     {
-        return DB::transaction(function () use ($question) {
-            $parentId = $question->parent_id ?? $question->id;
-
-            return Question::where('id', $parentId)
-                ->orWhere('parent_id', $parentId)
-                ->delete();
-        });
+        return $question->delete();
     }
 
     /**
@@ -132,18 +131,6 @@ class QuestionService
      */
     public function bulkDeleteQuestions(array $ids): int
     {
-        return DB::transaction(function () use ($ids) {
-            // Get all unique parent IDs for the selected questions
-            $parentIds = Question::whereIn('id', $ids)
-                ->pluck('parent_id')
-                ->filter()
-                ->merge($ids)
-                ->unique();
-
-            // Delete the selected questions and all their related versions
-            return Question::whereIn('id', $ids)
-                ->orWhereIn('parent_id', $parentIds)
-                ->delete();
-        });
+        return Question::whereIn('id', $ids)->delete();
     }
 }

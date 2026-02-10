@@ -19,7 +19,7 @@ interface Exam {
     status: string;
     type: string;
     duration: number;
-    versions_count: number;
+    questions_count: number;
     start_time: string | null;
 }
 
@@ -50,7 +50,7 @@ const getStatusColor = (status: string) => {
             <div class="flex items-center justify-between">
                 <div>
                     <h2 class="text-3xl font-black tracking-tight text-slate-900 italic">Examination Vault</h2>
-                    <p class="mt-1 text-sm font-bold text-slate-500">Manage your papers, versions, and student schedules.</p>
+                    <p class="mt-1 text-sm font-bold text-slate-500">Manage your papers and student schedules.</p>
                 </div>
                 <Link
                     :href="createExamAction().url"
@@ -72,7 +72,7 @@ const getStatusColor = (status: string) => {
                     <div class="relative z-10">
                         <div class="mb-6 flex items-start justify-between">
                             <span 
-                                class="rounded-full px-3 py-1 text-[9px] font-black tracking-widest uppercase"
+                                class="rounded-full px-3 py-1 text-[9px] font-black tracking-widest uppercase text-slate-900"
                                 :class="getStatusColor(exam.status)"
                             >
                                 {{ exam.status }}
@@ -93,8 +93,8 @@ const getStatusColor = (status: string) => {
                                 <span class="text-xs font-bold text-slate-700">{{ exam.duration }} Mins</span>
                             </div>
                             <div class="rounded-2xl bg-slate-50 p-4">
-                                <span class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Versions</span>
-                                <span class="text-xs font-bold text-slate-700">{{ exam.versions_count }} Papers</span>
+                                <span class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Pool</span>
+                                <span class="text-xs font-bold text-slate-700">{{ exam.questions_count }} Questions</span>
                             </div>
                         </div>
 

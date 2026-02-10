@@ -35,7 +35,7 @@ class TeachingLoadController extends Controller
         return Inertia::render('Admin/Users/TeachingLoads', [
             'assignments' => $query->latest()->paginate(15)->withQueryString(),
             'teachers' => User::role(['staff', 'subject_lead'])->get(['id', 'name', 'school_id']),
-            'subjects' => Subject::all(['id', 'name']),
+            'subjects' => Subject::with(['topics' => fn ($q) => $q->select('id', 'subject_id', 'school_class_id')])->get(['id', 'name']),
             'classes' => SchoolClass::all(['id', 'name']),
             'filters' => $request->only(['user_id', 'school_class_id']),
             'current_session' => $currentSession,

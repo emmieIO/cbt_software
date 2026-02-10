@@ -8,7 +8,7 @@ use App\DTOs\ExamVersionDTO;
 use App\Models\AcademicSession;
 use App\Models\Exam;
 use App\Models\ExamVersion;
-use App\Services\ExamServiceInterface;
+use App\Services\ExamService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -17,7 +17,7 @@ use Inertia\Response;
 class ExamController extends Controller
 {
     public function __construct(
-        protected ExamServiceInterface $examService
+        protected ExamService $examService
     ) {}
 
     /**
@@ -27,7 +27,7 @@ class ExamController extends Controller
     {
         $user = $request->user();
         $query = Exam::with(['subject', 'schoolClass', 'academicSession'])
-            ->withCount('versions');
+            ->withCount('questions');
 
         // Scoping: Staff only see their own exams or exams for their assigned loads
         if (! $user->hasRole('admin')) {
@@ -83,15 +83,15 @@ class ExamController extends Controller
         $exam = $this->examService->createExam($dto, $request->user()->id);
 
         return redirect()->route('staff.exams.show', $exam->id)
-            ->with('success', 'Exam configuration saved. Now add your paper types (versions).');
+            ->with('success', 'Exam configuration saved. Now allocate your questions.');
     }
 
     /**
-     * Show exam details and versions.
+     * Show exam details.
      */
     public function show(Exam $exam): Response
     {
-        $exam->load(['subject', 'schoolClass', 'versions.questions']);
+        $exam->load(['subject', 'schoolClass', 'questions']);
 
         return Inertia::render('Staff/Exams/Show', [
             'exam' => $exam,
@@ -99,74 +99,47 @@ class ExamController extends Controller
     }
 
     /**
-     * Add a new version (Paper Type) to the exam.
+     * Show the question management page for an exam.
      */
-    public function storeVersion(Request $request, Exam $exam): RedirectResponse
+    public function manageQuestions(Exam $exam): Response
     {
-        $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-        ]);
-
-        $dto = ExamVersionDTO::fromRequest($request);
-        $this->examService->createVersion($exam, $dto);
-
-        return back()->with('success', 'Paper version added.');
-    }
-
-    /**
-     * Delete an exam version.
-     */
-    public function destroyVersion(Exam $exam, ExamVersion $version): RedirectResponse
-    {
-        $this->examService->deleteVersion($version);
-
-        return back()->with('success', 'Paper version removed.');
-    }
-
-    /**
-     * Show the question management page for a version.
-     */
-    public function manageQuestions(Exam $exam, ExamVersion $version): Response
-    {
-        $exam->load(['subject', 'schoolClass']);
-        $version->load('questions');
+        $exam->load(['subject', 'schoolClass', 'questions']);
 
         $availableQuestions = $this->examService->getAvailableQuestions($exam);
 
         return Inertia::render('Staff/Exams/Questions', [
             'exam' => $exam,
-            'version' => $version,
             'availableQuestions' => $availableQuestions,
-            'selectedQuestionIds' => $version->questions->pluck('id'),
+            'selectedQuestionIds' => $exam->questions->pluck('id'),
         ]);
     }
 
     /**
-     * Update questions for a version.
+     * Update questions for an exam.
      */
-    public function updateQuestions(Request $request, Exam $exam, ExamVersion $version): RedirectResponse
+    public function updateQuestions(Request $request, Exam $exam): RedirectResponse
     {
         $request->validate([
             'question_ids' => ['required', 'array'],
             'question_ids.*' => ['exists:questions,id'],
         ]);
 
-        $this->examService->updateVersionQuestions($version, $request->question_ids);
+        $this->examService->updateExamQuestions($exam, $request->question_ids);
 
         return redirect()->route('staff.exams.show', $exam->id)
-            ->with('success', 'Questions allocated to ' . $version->name);
+            ->with('success', 'Questions allocated to the exam successfully.');
     }
 
     /**
      * Auto-select questions using AI/Random logic.
      */
-    public function aiSelectQuestions(Request $request, Exam $exam, ExamVersion $version): RedirectResponse
+    public function aiSelectQuestions(Request $request, Exam $exam): RedirectResponse
     {
         $request->validate([
             'count' => ['required', 'integer', 'min:1', 'max:100'],
         ]);
 
-        $count = $this->examService->autoSelectQuestions($exam, $version, $request->count);
+        $count = $this->examService->autoSelectQuestions($exam, $request->count);
 
         return back()->with('success', 'AI has balanced and selected ' . $count . ' questions following the biennial rotation policy.');
     }

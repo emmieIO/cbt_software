@@ -20,14 +20,29 @@ class AdminController extends Controller
 
     public function store(LoginRequest $request): RedirectResponse
     {
-        $redirectUrl = $this->authService->login($request->credentials(), $request->boolean('remember'));
+        $redirectUrl = $this->authService->login($request->credentials(), $request->boolean('remember'), 'admin');
 
         return redirect()->intended($redirectUrl);
     }
 
     public function dashboard(): Response
     {
-        return Inertia::render('Admin/Dashboard');
+        return Inertia::render('Admin/Dashboard', [
+            'stats' => [
+                'totalStudents' => \App\Models\User::role('student')->count(),
+                'totalStaff' => \App\Models\User::role('staff')->count(),
+                'activeExams' => \App\Models\Exam::where('status', \App\Enums\ExamStatus::LIVE)->count(),
+                'systemStatus' => 'Healthy',
+            ],
+            'recentActivity' => [
+                [
+                    'id' => 1,
+                    'user' => 'System',
+                    'action' => 'Activity logging feature pending implementation',
+                    'time' => 'N/A',
+                ],
+            ],
+        ]);
     }
 
     public function logout(): RedirectResponse

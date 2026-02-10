@@ -67,7 +67,14 @@ class RolesAndPermissionsSeeder extends Seeder
         $staffRole->givePermissionTo([
             'view questions',
             'create questions',
+            'edit questions',
+            'delete questions',
+            'use ai lab',
+            'export questions',
             'view exams',
+            'create exams',
+            'edit exams',
+            'delete exams',
             'view results',
         ]);
 

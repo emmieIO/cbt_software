@@ -23,11 +23,8 @@ class Question extends Model
         'explanation',
         'type',
         'difficulty',
-        'version',
-        'parent_id',
         'last_used_at',
         'created_by',
-        'is_active',
     ];
 
     /**
@@ -63,22 +60,6 @@ class Question extends Model
     }
 
     /**
-     * Get the parent question (for versioning).
-     */
-    public function parent(): BelongsTo
-    {
-        return $this->belongsTo(Question::class, 'parent_id');
-    }
-
-    /**
-     * Get the child versions of the question.
-     */
-    public function children(): HasMany
-    {
-        return $this->hasMany(Question::class, 'parent_id');
-    }
-
-    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -89,7 +70,6 @@ class Question extends Model
             'type' => QuestionType::class,
             'difficulty' => QuestionDifficulty::class,
             'last_used_at' => 'datetime',
-            'is_active' => 'boolean',
         ];
     }
 
