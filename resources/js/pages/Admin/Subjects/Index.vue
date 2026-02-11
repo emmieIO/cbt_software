@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Head, useForm, router } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
+import { useForm } from 'laravel-precognition-vue';
 import { ref } from 'vue';
 import { store, update, destroy } from '@/actions/App/Http/Controllers/Admin/SubjectController';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
@@ -12,7 +13,7 @@ interface Subject {
     topics_count: number;
 }
 
-defineProps<{
+const props = defineProps<{
     subjects: Subject[];
 }>();
 
@@ -20,7 +21,7 @@ const isModalOpen = ref(false);
 const isEditing = ref(false);
 const editingSubject = ref<Subject | null>(null);
 
-const form = useForm({
+const form = useForm('post', store().url, {
     name: '',
     description: '',
 });
@@ -35,18 +36,22 @@ const openCreateModal = () => {
 const openEditModal = (subject: Subject) => {
     isEditing.value = true;
     editingSubject.value = subject;
-    form.name = subject.name;
-    form.description = subject.description || '';
+    form.setData({
+        name: subject.name,
+        description: subject.description || '',
+    });
     isModalOpen.value = true;
 };
 
 const submit = () => {
     if (isEditing.value && editingSubject.value) {
-        form.put(update(editingSubject.value.id).url, {
+        form.submit({
+            method: 'put',
+            url: update(editingSubject.value.id).url,
             onSuccess: () => closeModal(),
         });
     } else {
-        form.post(store().url, {
+        form.submit({
             onSuccess: () => closeModal(),
         });
     }
@@ -89,7 +94,7 @@ const handleDelete = () => {
                 </div>
                 <button
                     @click="openCreateModal"
-                    class="flex h-12 items-center gap-3 rounded-2xl bg-primary px-6 text-sm font-black tracking-wider text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
+                    class="flex h-12 items-center gap-3 rounded-xl bg-primary px-6 text-sm font-black tracking-wider text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
                 >
                     <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -102,12 +107,12 @@ const handleDelete = () => {
                 <div
                     v-for="subject in subjects"
                     :key="subject.id"
-                    class="group relative overflow-hidden rounded-[2.5rem] border border-slate-100 bg-white p-8 shadow-sm transition-all hover:shadow-xl hover:shadow-primary/5"
+                    class="group relative overflow-hidden rounded-xl border border-slate-100 bg-white p-8 shadow-sm transition-all hover:shadow-xl hover:shadow-primary/5"
                 >
                     <div class="relative z-10 flex h-full flex-col justify-between">
                         <div class="space-y-4">
                             <div class="flex items-center justify-between">
-                                <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/5 text-primary">
+                                <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/5 text-primary">
                                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path
                                             stroke-linecap="round"
@@ -168,8 +173,8 @@ const handleDelete = () => {
 
             <!-- Modal -->
             <div v-if="isModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-                <div @click="closeModal" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
-                <div class="animate-in zoom-in-95 relative w-full max-w-md overflow-hidden rounded-[2.5rem] bg-white p-10 shadow-2xl">
+                <div @click="closeModal" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"></div>
+                <div class="animate-in zoom-in-95 relative w-full max-w-md overflow-hidden rounded-xl bg-white p-10 shadow-2xl">
                     <h3 class="mb-8 text-2xl font-black text-slate-900">{{ isEditing ? 'Edit Subject' : 'Create New Subject' }}</h3>
 
                     <form @submit.prevent="submit" class="space-y-6">
@@ -177,10 +182,12 @@ const handleDelete = () => {
                             <label class="mb-2 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Subject Name</label>
                             <input
                                 v-model="form.name"
+                                @change="form.validate('name')"
                                 type="text"
                                 required
                                 placeholder="e.g. Further Mathematics"
-                                class="w-full rounded-2xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
+                                :class="{'border-red-500': form.invalid('name')}"
+                                class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                             />
                             <div v-if="form.errors.name" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.name }}</div>
                         </div>
@@ -189,9 +196,11 @@ const handleDelete = () => {
                             <label class="mb-2 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Description (Optional)</label>
                             <textarea
                                 v-model="form.description"
+                                @change="form.validate('description')"
                                 rows="4"
                                 placeholder="Provide a brief overview of the subject curriculum..."
-                                class="w-full rounded-2xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
+                                :class="{'border-red-500': form.invalid('description')}"
+                                class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                             ></textarea>
                             <div v-if="form.errors.description" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.description }}</div>
                         </div>
@@ -200,14 +209,14 @@ const handleDelete = () => {
                             <button
                                 type="button"
                                 @click="closeModal"
-                                class="flex-1 rounded-2xl border border-slate-100 py-4 text-sm font-black tracking-widest text-slate-400 uppercase transition-all hover:bg-slate-50"
+                                class="flex-1 rounded-xl border border-slate-100 py-4 text-sm font-black tracking-widest text-slate-400 uppercase transition-all hover:bg-slate-50"
                             >
                                 Cancel
                             </button>
                             <button
                                 type="submit"
                                 :disabled="form.processing"
-                                class="flex-1 rounded-2xl bg-primary py-4 text-sm font-black tracking-widest text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+                                class="flex-1 rounded-xl bg-primary py-4 text-sm font-black tracking-widest text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
                             >
                                 {{ isEditing ? 'Update' : 'Create' }}
                             </button>

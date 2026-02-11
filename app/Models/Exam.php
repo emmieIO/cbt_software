@@ -16,6 +16,7 @@ class Exam extends Model
     protected $fillable = [
         'subject_id',
         'school_class_id',
+        'prospective_class_id',
         'academic_session_id',
         'created_by',
         'title',
@@ -48,6 +49,11 @@ class Exam extends Model
     public function schoolClass(): BelongsTo
     {
         return $this->belongsTo(SchoolClass::class);
+    }
+
+    public function prospectiveClass(): BelongsTo
+    {
+        return $this->belongsTo(ProspectiveClass::class);
     }
 
     public function academicSession(): BelongsTo

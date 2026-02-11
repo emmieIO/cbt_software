@@ -36,10 +36,20 @@ class StaffQuestionController extends Controller
      */
     public function index(GetQuestionsRequest $request): Response
     {
+        $user = $request->user();
+        
+        $subjects = $user->hasRole('admin') 
+            ? Subject::all() 
+            : Subject::whereIn('id', $user->currentAssignments()->pluck('subject_id'))->get();
+
+        $classes = $user->hasRole('admin') 
+            ? SchoolClass::all() 
+            : SchoolClass::whereIn('id', $user->currentAssignments()->pluck('school_class_id'))->get();
+
         return Inertia::render('QuestionBank/Index', [
-            'questions' => $this->questionService->getFilteredQuestions($request->validated()),
-            'subjects' => Subject::all(),
-            'classes' => SchoolClass::all(),
+            'questions' => $this->questionService->getFilteredQuestions($request->validated(), $user),
+            'subjects' => $subjects,
+            'classes' => $classes,
             'difficulties' => collect(QuestionDifficulty::cases())->map(fn ($d) => ['value' => $d->value, 'label' => Str::title($d->value)]),
             'filters' => $request->only(['search', 'subject_id', 'school_class_id', 'difficulty']),
         ]);
@@ -50,9 +60,21 @@ class StaffQuestionController extends Controller
      */
     public function generate(Request $request): Response
     {
+        $user = $request->user();
+
+        $subjects = $user->hasRole('admin')
+            ? Subject::with('topics')->get()
+            : Subject::with('topics')
+                ->whereIn('id', $user->currentAssignments()->pluck('subject_id'))
+                ->get();
+
+        $classes = $user->hasRole('admin')
+            ? SchoolClass::all()
+            : SchoolClass::whereIn('id', $user->currentAssignments()->pluck('school_class_id'))->get();
+
         return Inertia::render('QuestionBank/Generate', [
-            'subjects' => Subject::with('topics')->get(),
-            'classes' => SchoolClass::all(),
+            'subjects' => $subjects,
+            'classes' => $classes,
             'types' => collect(QuestionType::cases())->map(fn ($t) => ['value' => $t->value, 'label' => str_replace('_', ' ', Str::title($t->value))]),
             'difficulties' => collect(QuestionDifficulty::cases())->map(fn ($d) => ['value' => $d->value, 'label' => Str::title($d->value)]),
         ]);
@@ -86,11 +108,23 @@ class StaffQuestionController extends Controller
     /**
      * Show the form for creating a new question.
      */
-    public function create(): Response
+    public function create(Request $request): Response
     {
+        $user = $request->user();
+
+        $subjects = $user->hasRole('admin')
+            ? Subject::with('topics')->get()
+            : Subject::with('topics')
+                ->whereIn('id', $user->currentAssignments()->pluck('subject_id'))
+                ->get();
+
+        $classes = $user->hasRole('admin')
+            ? SchoolClass::all()
+            : SchoolClass::whereIn('id', $user->currentAssignments()->pluck('school_class_id'))->get();
+
         return Inertia::render('QuestionBank/Create', [
-            'subjects' => Subject::with('topics')->get(),
-            'classes' => SchoolClass::all(),
+            'subjects' => $subjects,
+            'classes' => $classes,
             'types' => collect(QuestionType::cases())->map(fn ($t) => ['value' => $t->value, 'label' => str_replace('_', ' ', Str::title($t->value))]),
             'difficulties' => collect(QuestionDifficulty::cases())->map(fn ($d) => ['value' => $d->value, 'label' => Str::title($d->value)]),
         ]);
@@ -110,14 +144,27 @@ class StaffQuestionController extends Controller
     /**
      * Show the form for editing the specified question.
      */
-    public function edit(Question $question): Response
+    public function edit(Request $request, Question $question): Response
     {
+        $this->authorize('update', $question);
+
+        $user = $request->user();
         $question->load(['topic.subject', 'options']);
+
+        $subjects = $user->hasRole('admin')
+            ? Subject::with('topics')->get()
+            : Subject::with('topics')
+                ->whereIn('id', $user->currentAssignments()->pluck('subject_id'))
+                ->get();
+
+        $classes = $user->hasRole('admin')
+            ? SchoolClass::all()
+            : SchoolClass::whereIn('id', $user->currentAssignments()->pluck('school_class_id'))->get();
 
         return Inertia::render('QuestionBank/Edit', [
             'question' => $question,
-            'subjects' => Subject::with('topics')->get(),
-            'classes' => SchoolClass::all(),
+            'subjects' => $subjects,
+            'classes' => $classes,
             'types' => collect(QuestionType::cases())->map(fn ($t) => ['value' => $t->value, 'label' => str_replace('_', ' ', Str::title($t->value))]),
             'difficulties' => collect(QuestionDifficulty::cases())->map(fn ($d) => ['value' => $d->value, 'label' => Str::title($d->value)]),
         ]);
@@ -128,6 +175,8 @@ class StaffQuestionController extends Controller
      */
     public function update(UpdateQuestionRequest $request, Question $question): RedirectResponse
     {
+        $this->authorize('update', $question);
+
         $dto = QuestionDTO::fromRequest($request);
         $this->questionService->updateQuestion($question, $dto, $request->user()->id);
 
@@ -169,6 +218,8 @@ class StaffQuestionController extends Controller
      */
     public function destroy(Request $request, Question $question): RedirectResponse
     {
+        $this->authorize('delete', $question);
+
         $this->questionService->deleteQuestion($question);
 
         return redirect()->route('staff.questions.index')->with('success', 'Question deleted successfully.');
@@ -179,7 +230,16 @@ class StaffQuestionController extends Controller
      */
     public function bulkDestroy(BulkDestroyQuestionRequest $request): RedirectResponse
     {
-        $count = $this->questionService->bulkDeleteQuestions($request->ids);
+        $user = $request->user();
+        
+        // Filter IDs to only those the user is authorized to delete
+        $authorizedIds = Question::whereIn('id', $request->ids)
+            ->get()
+            ->filter(fn ($question) => $user->can('delete', $question))
+            ->pluck('id')
+            ->toArray();
+
+        $count = $this->questionService->bulkDeleteQuestions($authorizedIds);
 
         return redirect()->route('staff.questions.index')->with('success', "$count questions deleted successfully.");
     }

@@ -52,7 +52,7 @@ class AuthService
             return route('staff.dashboard');
         }
 
-        if ($user->hasRole('student')) {
+        if ($user->hasRole('student') || $user->hasRole('candidate')) {
             return route('student.dashboard');
         }
 

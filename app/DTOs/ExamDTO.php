@@ -9,7 +9,8 @@ class ExamDTO
     public function __construct(
         public string $title,
         public string $subject_id,
-        public string $school_class_id,
+        public ?string $school_class_id,
+        public ?string $prospective_class_id,
         public string $academic_session_id,
         public int $duration,
         public string $type,
@@ -24,7 +25,8 @@ class ExamDTO
         return new self(
             title: $request->string('title'),
             subject_id: $request->string('subject_id'),
-            school_class_id: $request->string('school_class_id'),
+            school_class_id: $request->input('school_class_id'),
+            prospective_class_id: $request->input('prospective_class_id'),
             academic_session_id: $academicSessionId,
             duration: $request->integer('duration'),
             type: $request->string('type'),
@@ -41,6 +43,7 @@ class ExamDTO
             'title' => $this->title,
             'subject_id' => $this->subject_id,
             'school_class_id' => $this->school_class_id,
+            'prospective_class_id' => $this->prospective_class_id,
             'academic_session_id' => $this->academic_session_id,
             'duration' => $this->duration,
             'type' => $this->type,

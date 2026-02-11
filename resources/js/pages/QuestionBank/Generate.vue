@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
+import { useForm } from 'laravel-precognition-vue';
 import { usePage } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import { processGeneration } from '@/actions/App/Http/Controllers/Staff/StaffQuestionController';
@@ -19,7 +20,7 @@ const page = usePage<AppPageProps>();
 const isAdmin = computed(() => page.props.auth.user.roles.includes('admin'));
 const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
 
-const form = useForm({
+const form = useForm('post', processGeneration().url, {
     subject_id: '',
     topic_id: '',
     school_class_id: '',
@@ -48,15 +49,21 @@ const filteredTopics = computed(() => {
 watch(
     () => form.subject_id,
     () => {
-        form.school_class_id = '';
-        form.topic_id = '';
+        form.setData({
+            ...form.data(),
+            school_class_id: '',
+            topic_id: '',
+        });
     },
 );
 
 watch(
     () => form.school_class_id,
     () => {
-        form.topic_id = '';
+        form.setData({
+            ...form.data(),
+            topic_id: '',
+        });
     },
 );
 
@@ -71,18 +78,15 @@ const startGeneration = () => {
     addLog('info', 'Analyzing curriculum requirements and class level...');
     addLog('info', `Requesting ${form.count} ${form.difficulty} questions from the agent...`);
 
-    form.post(processGeneration().url, {
+    form.submit({
         onSuccess: () => {
             isGenerating.value = false;
             addLog('success', 'AI Agent successfully initialized in the background.');
         },
-        onFinish: () => {
-            // isGenerating handled in onSuccess/onError for better UX
-        },
-        onError: (errors) => {
+        onValidationError: () => {
             isGenerating.value = false;
-            addLog('error', 'Failed to initialize AI Agent.');
-            Object.values(errors).forEach((err) => addLog('error', err as string));
+            addLog('error', 'Validation failed.');
+            Object.values(form.errors).forEach((err) => addLog('error', err));
         },
     });
 };
@@ -98,11 +102,11 @@ const addLog = (type: 'info' | 'success' | 'error', message: string) => {
 
         <div class="space-y-10">
             <!-- Header Section -->
-            <div class="relative overflow-hidden rounded-[2.5rem] bg-primary px-10 py-12 shadow-2xl shadow-primary/20">
+            <div class="relative overflow-hidden rounded-xl bg-primary px-10 py-12 shadow-2xl shadow-primary/20">
                 <div class="relative z-10">
                     <div class="mb-4 flex items-center gap-4">
                         <div
-                            class="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/20 bg-white/10 text-lemon-yellow backdrop-blur-xl"
+                            class="flex h-12 w-12 items-center justify-center rounded-xl border border-white/20 bg-white/10 text-lemon-yellow backdrop-blur-xl"
                         >
                             <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path
@@ -129,7 +133,7 @@ const addLog = (type: 'info' | 'success' | 'error', message: string) => {
             <div class="grid grid-cols-1 gap-10 lg:grid-cols-12">
                 <!-- Configuration Panel -->
                 <div class="space-y-8 lg:col-span-5">
-                    <div class="rounded-[2.5rem] border border-slate-100 bg-white p-10 shadow-sm">
+                    <div class="rounded-xl border border-slate-100 bg-white p-10 shadow-sm">
                         <h3 class="mb-8 flex items-center gap-3 text-xl font-black text-slate-800">
                             <div class="h-2 w-2 rounded-full bg-primary"></div>
                             Lab Configuration
@@ -144,14 +148,17 @@ const addLog = (type: 'info' | 'success' | 'error', message: string) => {
                                     >
                                     <select
                                         v-model="form.subject_id"
+                                        @change="form.validate('subject_id')"
                                         required
-                                        class="w-full rounded-2xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
+                                        :class="{'border-red-500': form.invalid('subject_id')}"
+                                        class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                                     >
                                         <option value="" disabled>Select Subject</option>
                                         <option v-for="subject in subjects" :key="subject.id" :value="subject.id">
                                             {{ subject.name }}
                                         </option>
                                     </select>
+                                    <div v-if="form.errors.subject_id" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.subject_id }}</div>
                                 </div>
                                 <div>
                                     <label class="mb-3 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase"
@@ -159,15 +166,18 @@ const addLog = (type: 'info' | 'success' | 'error', message: string) => {
                                     >
                                     <select
                                         v-model="form.school_class_id"
+                                        @change="form.validate('school_class_id')"
                                         required
                                         :disabled="!selectedSubject"
-                                        class="w-full rounded-2xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary disabled:opacity-50"
+                                        :class="{'border-red-500': form.invalid('school_class_id')}"
+                                        class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary disabled:opacity-50"
                                     >
                                         <option value="" disabled>Select Class</option>
                                         <option v-for="cls in availableClasses" :key="cls.id" :value="cls.id">
                                             {{ cls.name }}
                                         </option>
                                     </select>
+                                    <div v-if="form.errors.school_class_id" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.school_class_id }}</div>
                                 </div>
 
                                 <div>
@@ -176,15 +186,18 @@ const addLog = (type: 'info' | 'success' | 'error', message: string) => {
                                     >
                                     <select
                                         v-model="form.topic_id"
+                                        @change="form.validate('topic_id')"
                                         required
                                         :disabled="!selectedSubject || !form.school_class_id"
-                                        class="w-full rounded-2xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary disabled:opacity-50"
+                                        :class="{'border-red-500': form.invalid('topic_id')}"
+                                        class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary disabled:opacity-50"
                                     >
                                         <option value="" disabled>Select Topic</option>
                                         <option v-for="topic in filteredTopics" :key="topic.id" :value="topic.id">
                                             {{ topic.name }}
                                         </option>
                                     </select>
+                                    <div v-if="form.errors.topic_id" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.topic_id }}</div>
                                 </div>
                             </div>
 
@@ -192,26 +205,28 @@ const addLog = (type: 'info' | 'success' | 'error', message: string) => {
                             <div class="space-y-6 border-t border-slate-50 pt-6">
                                 <div class="flex items-center justify-between">
                                     <label class="ml-1 text-[10px] font-black tracking-widest text-slate-400 uppercase">Generation Count</label>
-                                    <span class="rounded-lg bg-primary/5 px-3 py-1 text-xs font-black text-primary">{{ form.count }} Questions</span>
+                                    <span class="rounded-xl bg-primary/5 px-3 py-1 text-xs font-black text-primary">{{ form.count }} Questions</span>
                                 </div>
                                 <input
                                     v-model="form.count"
+                                    @change="form.validate('count')"
                                     type="range"
                                     min="1"
                                     max="20"
-                                    class="h-2 w-full cursor-pointer appearance-none rounded-lg bg-slate-100 accent-primary"
+                                    class="h-2 w-full cursor-pointer appearance-none rounded-xl bg-slate-100 accent-primary"
                                 />
+                                <div v-if="form.errors.count" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.count }}</div>
 
                                 <div>
                                     <label class="mb-4 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase"
                                         >Target Difficulty</label
                                     >
-                                    <div class="flex gap-2 rounded-2xl border border-slate-100 bg-slate-50 p-1">
+                                    <div class="flex gap-2 rounded-xl border border-slate-100 bg-slate-50 p-1" :class="{'ring-1 ring-red-500': form.invalid('difficulty')}">
                                         <button
                                             v-for="diff in difficulties"
                                             :key="diff.value"
                                             type="button"
-                                            @click="form.difficulty = diff.value"
+                                            @click="form.difficulty = diff.value; form.validate('difficulty')"
                                             :class="[
                                                 'flex-1 rounded-xl py-3 text-[10px] font-black tracking-wider uppercase transition-all',
                                                 form.difficulty === diff.value
@@ -222,13 +237,14 @@ const addLog = (type: 'info' | 'success' | 'error', message: string) => {
                                             {{ diff.label }}
                                         </button>
                                     </div>
+                                    <div v-if="form.errors.difficulty" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.difficulty }}</div>
                                 </div>
                             </div>
 
                             <button
                                 type="submit"
-                                :disabled="isGenerating"
-                                class="flex w-full items-center justify-center gap-3 rounded-2xl bg-primary py-5 text-sm font-black tracking-[0.2em] text-white uppercase shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+                                :disabled="isGenerating || form.processing"
+                                class="flex w-full items-center justify-center gap-3 rounded-xl bg-primary py-5 text-sm font-black tracking-[0.2em] text-white uppercase shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
                             >
                                 <span v-if="isGenerating" class="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white"></span>
                                 <svg v-else class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -243,7 +259,7 @@ const addLog = (type: 'info' | 'success' | 'error', message: string) => {
                 <!-- Workspace / Results -->
                 <div class="space-y-8 lg:col-span-7">
                     <!-- Generation Logs -->
-                    <div class="flex min-h-100 flex-col rounded-[2.5rem] border border-white/5 bg-slate-900 p-8 shadow-2xl shadow-slate-900/30">
+                    <div class="flex min-h-100 flex-col rounded-xl border border-white/5 bg-slate-900 p-8 shadow-2xl shadow-slate-900/30">
                         <div class="mb-6 flex items-center justify-between">
                             <h3 class="text-xs font-black tracking-[0.3em] text-slate-500 uppercase">Live Workspace Log</h3>
                             <div v-if="isGenerating" class="flex items-center gap-2">
@@ -254,7 +270,7 @@ const addLog = (type: 'info' | 'success' | 'error', message: string) => {
 
                         <div class="custom-scrollbar flex-1 space-y-4 overflow-y-auto pr-2">
                             <div v-if="generationLogs.length === 0" class="flex h-full flex-col items-center justify-center p-10 text-center">
-                                <div class="mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-white/5 text-slate-700">
+                                <div class="mb-6 flex h-20 w-20 items-center justify-center rounded-xl bg-white/5 text-slate-700">
                                     <svg class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path
                                             stroke-linecap="round"
@@ -272,7 +288,7 @@ const addLog = (type: 'info' | 'success' | 'error', message: string) => {
                             <div
                                 v-for="(log, idx) in generationLogs"
                                 :key="idx"
-                                class="animate-in slide-in-from-right-4 rounded-2xl border p-4 transition-all duration-500"
+                                class="animate-in slide-in-from-right-4 rounded-xl border p-4 transition-all duration-500"
                                 :class="[
                                     log.type === 'info'
                                         ? 'border-white/5 bg-white/5 text-slate-300'
@@ -290,7 +306,7 @@ const addLog = (type: 'info' | 'success' | 'error', message: string) => {
                     </div>
 
                     <!-- Tip Card -->
-                    <div class="rounded-3xl border border-primary/10 bg-primary/5 p-8">
+                    <div class="rounded-xl border border-primary/10 bg-primary/5 p-8">
                         <div class="flex gap-4">
                             <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-white">
                                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">

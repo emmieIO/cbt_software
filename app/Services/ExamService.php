@@ -15,11 +15,11 @@ class ExamService
     /**
      * Create a new exam.
      */
-    public function createExam(ExamDTO $dto, string $creatorId): Exam
+    public function createExam(array $data, string $creatorId): Exam
     {
-        return DB::transaction(function () use ($dto, $creatorId) {
+        return DB::transaction(function () use ($data, $creatorId) {
             return Exam::create([
-                ...$dto->toArray(),
+                ...$data,
                 'created_by' => $creatorId,
                 'status' => 'draft',
             ]);

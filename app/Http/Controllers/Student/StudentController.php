@@ -27,7 +27,14 @@ class StudentController extends Controller
 
     public function store(LoginRequest $request): RedirectResponse
     {
-        $redirectUrl = $this->authService->login($request->credentials(), $request->boolean('remember'), 'student');
+        // Allow both regular students and entrance candidates to login via this portal
+        $redirectUrl = $this->authService->login($request->credentials(), $request->boolean('remember'));
+
+        $user = auth()->user();
+        if (! $user->hasRole('student') && ! $user->hasRole('candidate')) {
+            $this->authService->logout();
+            return back()->withErrors(['login_id' => 'Access denied. This portal is for students only.']);
+        }
 
         return redirect()->intended($redirectUrl);
     }
@@ -39,12 +46,21 @@ class StudentController extends Controller
 
         $exams = [];
         if ($currentSession) {
-            $exams = Exam::where('academic_session_id', $currentSession->id)
-                ->where('school_class_id', $user->school_class_id)
+            $query = Exam::where('academic_session_id', $currentSession->id)
                 ->where('status', \App\Enums\ExamStatus::LIVE)
                 ->with(['subject'])
-                ->withCount('questions')
-                ->get();
+                ->withCount('questions');
+
+            if ($user->hasRole('candidate')) {
+                // Candidates see Entrance Exams for their assigned batch
+                $query->where('type', \App\Enums\ExamType::ENTRANCE)
+                      ->where('prospective_class_id', $user->prospective_class_id);
+            } else {
+                // Regular students see exams for their current class
+                $query->where('school_class_id', $user->school_class_id);
+            }
+
+            $exams = $query->get();
         }
 
         return Inertia::render('Student/Dashboard', [

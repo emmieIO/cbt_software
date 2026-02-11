@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Head, useForm, router, Link } from '@inertiajs/vue3';
+import { Head, router, Link } from '@inertiajs/vue3';
+import { useForm } from 'laravel-precognition-vue';
 import { ref } from 'vue';
 import { index, store, destroy } from '@/actions/App/Http/Controllers/Admin/TeachingLoadController';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
@@ -34,7 +35,7 @@ const props = defineProps<{
 }>();
 
 const isModalOpen = ref(false);
-const form = useForm({
+const form = useForm('post', store().url, {
     user_id: '',
     subject_id: '',
     school_class_id: '',
@@ -51,20 +52,21 @@ const filteredClasses = computed(() => {
 });
 
 watch(() => form.subject_id, () => {
-    form.school_class_id = '';
+    form.setData({ ...form.data(), school_class_id: '' });
 });
 
 const submit = () => {
-    form.post(store().url, {
+    form.submit({
         onSuccess: () => {
             isModalOpen.value = false;
-            form.reset('subject_id', 'school_class_id');
+            form.setData({ user_id: '', subject_id: '', school_class_id: '' });
         },
     });
 };
 
 // Filters
-const filterForm = useForm({
+import { useForm as useInertiaForm } from '@inertiajs/vue3';
+const filterForm = useInertiaForm({
     user_id: props.filters.user_id || '',
     school_class_id: props.filters.school_class_id || '',
 });
@@ -72,10 +74,7 @@ const filterForm = useForm({
 const applyFilters = () => {
     router.get(
         index().url,
-        {
-            user_id: filterForm.user_id,
-            school_class_id: filterForm.school_class_id,
-        },
+        filterForm.data(),
         { preserveState: true },
     );
 };
@@ -112,7 +111,7 @@ const handleDelete = () => {
                 </div>
                 <button
                     @click="isModalOpen = true"
-                    class="flex h-12 items-center gap-3 rounded-2xl bg-primary px-6 text-sm font-black tracking-wider text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
+                    class="flex h-12 items-center gap-3 rounded-xl bg-primary px-6 text-sm font-black tracking-wider text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
                 >
                     <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -121,7 +120,7 @@ const handleDelete = () => {
                 </button>
             </div>
 
-            <div class="flex flex-wrap items-center gap-4 rounded-4xl border border-slate-100 bg-white p-6 shadow-sm">
+            <div class="flex flex-wrap items-center gap-4 rounded-xl border border-slate-100 bg-white p-6 shadow-sm">
                 <div class="flex flex-1 gap-4">
                     <div class="flex-1">
                         <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Filter by Teacher</label>
@@ -152,7 +151,7 @@ const handleDelete = () => {
                 </div>
             </div>
 
-            <div class="overflow-hidden rounded-[2.5rem] border border-slate-100 bg-white shadow-sm">
+            <div class="overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm">
                 <div class="overflow-x-auto">
                     <table class="w-full border-collapse text-left">
                         <thead>
@@ -175,7 +174,7 @@ const handleDelete = () => {
                                 </td>
                                 <td class="px-6 py-6">
                                     <span
-                                        class="inline-flex items-center rounded-lg bg-primary/5 px-2.5 py-1 text-[10px] font-black text-primary uppercase"
+                                        class="inline-flex items-center rounded-xl bg-primary/5 px-2.5 py-1 text-[10px] font-black text-primary uppercase"
                                     >
                                         {{ assignment.subject.name }}
                                     </span>
@@ -200,7 +199,7 @@ const handleDelete = () => {
                                 </td>
                             </tr>
                             <tr v-if="assignments.data.length === 0">
-                                <td colspan="4" class="px-8 py-12 text-center text-sm font-bold text-slate-400 italic">
+                                <td colspan="4" class="px-8 py-12 text-center text-sm font-bold text-slate-400">
                                     No teaching assignments found.
                                 </td>
                             </tr>
@@ -209,7 +208,7 @@ const handleDelete = () => {
                 </div>
 
                 <div class="flex items-center justify-between border-t border-slate-50 px-8 py-6">
-                    <p class="text-xs font-bold text-slate-400 italic">
+                    <p class="text-xs font-bold text-slate-400">
                         Showing {{ assignments.from }} to {{ assignments.to }} of {{ assignments.total }} results.
                     </p>
                     <div class="flex gap-2">
@@ -234,7 +233,7 @@ const handleDelete = () => {
             <!-- Create Modal -->
             <div v-if="isModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
                 <div @click="isModalOpen = false" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
-                <div class="animate-in zoom-in-95 relative w-full max-w-md overflow-hidden rounded-[2.5rem] bg-white p-10 shadow-2xl">
+                <div class="animate-in zoom-in-95 relative w-full max-w-md overflow-hidden rounded-xl bg-white p-10 shadow-2xl">
                     <h3 class="mb-8 text-2xl font-black text-slate-900">Assign Teaching Load</h3>
 
                     <form @submit.prevent="submit" class="space-y-6">
@@ -242,53 +241,62 @@ const handleDelete = () => {
                             <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Select Teacher</label>
                             <select
                                 v-model="form.user_id"
+                                @change="form.validate('user_id')"
                                 required
-                                class="w-full rounded-2xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
+                                :class="{'border-red-500': form.invalid('user_id')}"
+                                class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                             >
                                 <option value="" disabled>Choose Personnel</option>
                                 <option v-for="teacher in teachers" :key="teacher.id" :value="teacher.id">
                                     {{ teacher.name }} ({{ teacher.school_id }})
                                 </option>
                             </select>
+                            <div v-if="form.errors.user_id" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.user_id }}</div>
                         </div>
 
                         <div>
                             <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Subject</label>
                             <select
                                 v-model="form.subject_id"
+                                @change="form.validate('subject_id')"
                                 required
-                                class="w-full rounded-2xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
+                                :class="{'border-red-500': form.invalid('subject_id')}"
+                                class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                             >
                                 <option value="" disabled>Select Subject</option>
                                 <option v-for="subject in subjects" :key="subject.id" :value="subject.id">{{ subject.name }}</option>
                             </select>
+                            <div v-if="form.errors.subject_id" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.subject_id }}</div>
                         </div>
 
                         <div>
                             <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Assign to Class</label>
                             <select
                                 v-model="form.school_class_id"
+                                @change="form.validate('school_class_id')"
                                 required
                                 :disabled="!form.subject_id"
-                                class="w-full rounded-2xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                                :class="{'border-red-500': form.invalid('school_class_id')}"
+                                class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <option value="" disabled>Select Class Level</option>
                                 <option v-for="cls in filteredClasses" :key="cls.id" :value="cls.id">{{ cls.name }}</option>
                             </select>
+                            <div v-if="form.errors.school_class_id" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.school_class_id }}</div>
                         </div>
 
                         <div class="flex gap-3 border-t border-slate-50 pt-4">
                             <button
                                 type="button"
                                 @click="isModalOpen = false"
-                                class="flex-1 rounded-2xl border border-slate-100 py-4 text-sm font-black tracking-widest text-slate-400 uppercase transition-all hover:bg-slate-50"
+                                class="flex-1 rounded-xl border border-slate-100 py-4 text-sm font-black tracking-widest text-slate-400 uppercase transition-all hover:bg-slate-50"
                             >
                                 Cancel
                             </button>
                             <button
                                 type="submit"
                                 :disabled="form.processing"
-                                class="flex-1 rounded-2xl bg-primary py-4 text-sm font-black tracking-widest text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+                                class="flex-1 rounded-xl bg-primary py-4 text-sm font-black tracking-widest text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
                             >
                                 Confirm Assignment
                             </button>

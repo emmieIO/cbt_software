@@ -45,6 +45,14 @@ export type Question = {
     updated_at: string;
 };
 
+export type Batch = {
+    id: string;
+    name: string;
+    slug: string;
+    description?: string;
+    is_active:boolean
+};
+
 export type PaginatedData<T> = {
     data: T[];
     links: {

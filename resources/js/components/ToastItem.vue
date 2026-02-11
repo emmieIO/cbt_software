@@ -15,13 +15,13 @@ onMounted(() => {
 
 <template>
     <div
-        class="rounded-1.5rem pointer-events-auto relative flex w-full max-w-sm overflow-hidden border border-slate-100 bg-white p-4 shadow-2xl shadow-slate-900/10 transition-all hover:scale-[1.02]"
+        class="rounded-lg-1.5rem pointer-events-auto relative flex w-full max-w-sm overflow-hidden border border-slate-100 bg-white p-4 shadow-2xl shadow-slate-900/10 transition-all hover:scale-[1.02]"
     >
         <div class="flex items-center gap-4">
             <!-- Icon -->
             <div
                 :class="[
-                    'flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl shadow-lg',
+                    'flex h-12 w-12 shrink-0 items-center justify-center rounded-xl shadow-lg',
                     type === 'success'
                         ? 'bg-green-500 text-white shadow-green-500/20'
                         : type === 'error'

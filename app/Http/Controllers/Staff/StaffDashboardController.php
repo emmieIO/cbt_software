@@ -11,15 +11,25 @@ class StaffDashboardController extends Controller
     public function __invoke(): Response
     {
         $user = auth()->user();
+        $currentSession = \App\Models\AcademicSession::current()->first();
+
+        $assignments = $user->currentAssignments()->with(['subject', 'schoolClass'])->get();
+        $assignedSubjectIds = $assignments->pluck('subject_id');
 
         return Inertia::render('Staff/Dashboard', [
             'stats' => [
-                'assignedClasses' => \App\Models\TeacherAssignment::where('user_id', $user->id)->count(),
+                'assignedClasses' => $assignments->count(),
                 'pendingResults' => \App\Models\Exam::where('status', \App\Enums\ExamStatus::CLOSED)
+                    ->whereIn('subject_id', $assignedSubjectIds)
                     ->whereHas('attempts')
                     ->count(),
-                'questionBankCount' => \App\Models\Question::count(),
+                'questionBankCount' => \App\Models\Question::whereHas('topic', fn($q) => $q->whereIn('subject_id', $assignedSubjectIds))->count(),
             ],
+            'assignments' => $assignments->map(fn($a) => [
+                'id' => $a->id,
+                'subject' => $a->subject->name,
+                'class' => $a->schoolClass->name,
+            ]),
             'schedule' => [
                 // Mock schedule for now as we don't have a dedicated schedule/timetable table
                 [

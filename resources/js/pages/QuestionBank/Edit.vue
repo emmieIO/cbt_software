@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Head, useForm, Link, usePage } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
+import { useForm } from 'laravel-precognition-vue';
 import { computed, watch, onMounted } from 'vue';
 import { ref } from 'vue';
 import { update, index } from '@/actions/App/Http/Controllers/Staff/StaffQuestionController';
@@ -20,7 +21,7 @@ const page = usePage<AppPageProps>();
 const isAdmin = computed(() => page.props.auth.user.roles.includes('admin'));
 const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
 
-const form = useForm({
+const form = useForm('put', update(props.question.id).url, {
     subject_id: props.question.topic.subject.id,
     topic_id: props.question.topic_id,
     school_class_id: props.question.school_class_id,
@@ -64,8 +65,11 @@ watch(
     () => form.subject_id,
     (newVal, oldVal) => {
         if (isMounted.value && oldVal !== '') {
-            form.school_class_id = '';
-            form.topic_id = '';
+            form.setData({
+                ...form.data(),
+                school_class_id: '',
+                topic_id: '',
+            });
         }
     },
 );
@@ -74,31 +78,40 @@ watch(
     () => form.school_class_id,
     (newVal, oldVal) => {
         if (isMounted.value && oldVal !== '') {
-            form.topic_id = '';
+            form.setData({
+                ...form.data(),
+                topic_id: '',
+            });
         }
     },
 );
 
 const addOption = () => {
-    form.options.push({ id: undefined, content: '', is_correct: false });
+    const options = [...form.options];
+    options.push({ id: undefined as any, content: '', is_correct: false });
+    form.setData({ ...form.data(), options });
 };
 
-const removeOption = (index: number) => {
+const removeOption = (idx: number) => {
     if (form.options.length > 2) {
-        form.options.splice(index, 1);
+        const options = [...form.options];
+        options.splice(idx, 1);
+        form.setData({ ...form.data(), options });
     }
 };
 
-const setCorrectOption = (index: number) => {
+const setCorrectOption = (idx: number) => {
     if (form.type === 'multiple_choice') {
-        form.options.forEach((opt, i) => {
-            opt.is_correct = i === index;
-        });
+        const options = form.options.map((opt, i) => ({
+            ...opt,
+            is_correct: i === idx,
+        }));
+        form.setData({ ...form.data(), options });
     }
 };
 
 const submit = () => {
-    form.put(update(props.question.id).url);
+    form.submit();
 };
 </script>
 
@@ -133,7 +146,9 @@ const submit = () => {
                                 <label class="mb-2 block text-sm font-semibold text-slate-700">Subject</label>
                                 <select
                                     v-model="form.subject_id"
+                                    @change="form.validate('subject_id')"
                                     required
+                                    :class="{'border-red-500': form.invalid('subject_id')}"
                                     class="block w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-3.5 text-sm transition-all focus:border-primary focus:ring-primary"
                                 >
                                     <option value="" disabled>Select Subject</option>
@@ -141,27 +156,33 @@ const submit = () => {
                                         {{ subject.name }}
                                     </option>
                                 </select>
+                                <div v-if="form.errors.subject_id" class="mt-1 text-xs text-red-600">{{ form.errors.subject_id }}</div>
                             </div>
 
                             <div>
                                 <label class="mb-2 block text-sm font-semibold text-slate-700">Target Class</label>
                                 <select
                                     v-model="form.school_class_id"
+                                    @change="form.validate('school_class_id')"
                                     required
                                     :disabled="!selectedSubject"
+                                    :class="{'border-red-500': form.invalid('school_class_id')}"
                                     class="block w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-3.5 text-sm transition-all focus:border-primary focus:ring-primary disabled:opacity-50"
                                 >
                                     <option value="" disabled>Select Class</option>
                                     <option v-for="cls in availableClasses" :key="cls.id" :value="cls.id">{{ cls.name }} ({{ cls.level }})</option>
                                 </select>
+                                <div v-if="form.errors.school_class_id" class="mt-1 text-xs text-red-600">{{ form.errors.school_class_id }}</div>
                             </div>
 
                             <div>
                                 <label class="mb-2 block text-sm font-semibold text-slate-700">Topic</label>
                                 <select
                                     v-model="form.topic_id"
+                                    @change="form.validate('topic_id')"
                                     required
                                     :disabled="!selectedSubject || !form.school_class_id"
+                                    :class="{'border-red-500': form.invalid('topic_id')}"
                                     class="block w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-3.5 text-sm transition-all focus:border-primary focus:ring-primary disabled:opacity-50"
                                 >
                                     <option value="" disabled>Select Topic</option>
@@ -169,19 +190,20 @@ const submit = () => {
                                         {{ topic.name }}
                                     </option>
                                 </select>
+                                <div v-if="form.errors.topic_id" class="mt-1 text-xs text-red-600">{{ form.errors.topic_id }}</div>
                             </div>
                         </div>
 
                         <!-- Type & Difficulty Toggles -->
                         <div class="grid grid-cols-1 gap-10 md:grid-cols-2">
-                            <div class="rounded-2xl border border-slate-100 bg-slate-50/50 p-6">
+                            <div class="rounded-xl border border-slate-100 bg-slate-50/50 p-6">
                                 <label class="mb-4 block text-sm font-semibold text-slate-700">Question Type</label>
-                                <div class="flex gap-4">
+                                <div class="flex gap-4" :class="{'ring-1 ring-red-500': form.invalid('type')}">
                                     <button
                                         v-for="type in types"
                                         :key="type.value"
                                         type="button"
-                                        @click="form.type = type.value"
+                                        @click="form.type = type.value; form.validate('type')"
                                         :class="[
                                             'flex-1 rounded-xl border-2 py-3.5 text-sm font-bold transition-all',
                                             form.type === type.value
@@ -192,16 +214,17 @@ const submit = () => {
                                         {{ type.label }}
                                     </button>
                                 </div>
+                                <div v-if="form.errors.type" class="mt-2 text-xs text-red-600">{{ form.errors.type }}</div>
                             </div>
 
-                            <div class="rounded-2xl border border-slate-100 bg-slate-50/50 p-6">
+                            <div class="rounded-xl border border-slate-100 bg-slate-50/50 p-6">
                                 <label class="mb-4 block text-sm font-semibold text-slate-700">Difficulty Level</label>
-                                <div class="flex gap-4">
+                                <div class="flex gap-4" :class="{'ring-1 ring-red-500': form.invalid('difficulty')}">
                                     <button
                                         v-for="diff in difficulties"
                                         :key="diff.value"
                                         type="button"
-                                        @click="form.difficulty = diff.value"
+                                        @click="form.difficulty = diff.value; form.validate('difficulty')"
                                         :class="[
                                             'flex-1 rounded-xl border-2 py-3.5 text-sm font-bold transition-all',
                                             form.difficulty === diff.value
@@ -212,6 +235,7 @@ const submit = () => {
                                         {{ diff.label }}
                                     </button>
                                 </div>
+                                <div v-if="form.errors.difficulty" class="mt-2 text-xs text-red-600">{{ form.errors.difficulty }}</div>
                             </div>
                         </div>
 
@@ -222,9 +246,11 @@ const submit = () => {
                                     <label class="mb-3 block text-sm font-semibold text-slate-700">Question Content</label>
                                     <textarea
                                         v-model="form.content"
+                                        @change="form.validate('content')"
                                         rows="10"
                                         required
-                                        class="block w-full rounded-2xl border-slate-200 bg-slate-50 px-5 py-5 text-sm transition-all focus:border-primary focus:ring-primary"
+                                        :class="{'border-red-500': form.invalid('content')}"
+                                        class="block w-full rounded-xl border-slate-200 bg-slate-50 px-5 py-5 text-sm transition-all focus:border-primary focus:ring-primary"
                                         placeholder="Enter your question here..."
                                     ></textarea>
                                     <div v-if="form.errors.content" class="mt-2 text-xs font-medium text-red-600">{{ form.errors.content }}</div>
@@ -234,10 +260,13 @@ const submit = () => {
                                     <label class="mb-3 block text-sm font-semibold text-slate-700">Explanation (Optional)</label>
                                     <textarea
                                         v-model="form.explanation"
+                                        @change="form.validate('explanation')"
                                         rows="4"
-                                        class="block w-full rounded-2xl border-slate-200 bg-slate-50 px-5 py-5 text-sm transition-all focus:border-primary focus:ring-primary"
+                                        :class="{'border-red-500': form.invalid('explanation')}"
+                                        class="block w-full rounded-xl border-slate-200 bg-slate-50 px-5 py-5 text-sm transition-all focus:border-primary focus:ring-primary"
                                         placeholder="Explain why the correct answer is right..."
                                     ></textarea>
+                                    <div v-if="form.errors.explanation" class="mt-2 text-xs text-red-600">{{ form.errors.explanation }}</div>
                                 </div>
                             </div>
 
@@ -247,7 +276,7 @@ const submit = () => {
                                     <button
                                         type="button"
                                         @click="addOption"
-                                        class="flex items-center rounded-lg bg-primary/5 px-3 py-1.5 text-xs font-bold text-primary transition-colors hover:bg-primary/10 hover:underline"
+                                        class="flex items-center rounded-xl bg-primary/5 px-3 py-1.5 text-xs font-bold text-primary transition-colors hover:bg-primary/10 hover:underline"
                                     >
                                         <svg class="mr-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -255,15 +284,17 @@ const submit = () => {
                                         Add Option
                                     </button>
                                 </div>
-                                <div v-if="form.errors.options" class="mt-1 text-xs font-medium text-red-600">{{ form.errors.options }}</div>
+                                <div v-if="form.errors.options" class="mt-1 text-xs font-medium text-red-600">{{ (form.errors as any).options }}</div>
 
                                 <div class="space-y-5">
                                     <div v-for="(option, index) in form.options" :key="index" class="group flex gap-4">
                                         <div class="relative flex-1">
                                             <input
                                                 v-model="option.content"
+                                                @change="form.validate(`options.${index}.content`)"
                                                 type="text"
                                                 required
+                                                :class="{'border-red-500': form.invalid(`options.${index}.content`)}"
                                                 class="block w-full rounded-xl border-slate-200 bg-slate-50 px-5 py-4 pr-12 text-sm transition-all focus:border-primary focus:ring-primary"
                                                 :placeholder="`Option ${index + 1}`"
                                             />
@@ -277,10 +308,11 @@ const submit = () => {
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                                 </svg>
                                             </button>
+                                            <div v-if="form.errors[`options.${index}.content`]" class="mt-1 text-xs text-red-600">{{ form.errors[`options.${index}.content`] }}</div>
                                         </div>
                                         <button
                                             type="button"
-                                            @click="setCorrectOption(index)"
+                                            @click="setCorrectOption(index); form.validate(`options.${index}.is_correct`)"
                                             :class="[
                                                 'w-36 shrink-0 rounded-xl border-2 text-xs font-bold transition-all',
                                                 option.is_correct
@@ -311,8 +343,7 @@ const submit = () => {
                                             <circle
                                                 class="opacity-25"
                                                 cx="12"
-                                                cy="12"
-                                                r="10"
+                                                cy="12" r="10"
                                                 stroke="currentColor"
                                                 stroke-width="4"
                                                 fill="none"

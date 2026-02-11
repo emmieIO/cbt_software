@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Head, useForm, router } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
+import { useForm } from 'laravel-precognition-vue';
 import { ref } from 'vue';
 import { store, update, destroy } from '@/actions/App/Http/Controllers/Admin/RoleController';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
@@ -16,7 +17,7 @@ interface Role {
     permissions: Permission[];
 }
 
-defineProps<{
+const props = defineProps<{
     roles: Role[];
     permissions: Permission[];
 }>();
@@ -25,7 +26,7 @@ const isModalOpen = ref(false);
 const isEditing = ref(false);
 const editingRole = ref<Role | null>(null);
 
-const form = useForm({
+const form = useForm('post', store().url, {
     name: '',
     permissions: [] as string[],
 });
@@ -40,18 +41,22 @@ const openCreateModal = () => {
 const openEditModal = (role: Role) => {
     isEditing.value = true;
     editingRole.value = role;
-    form.name = role.name;
-    form.permissions = role.permissions.map((p) => p.name);
+    form.setData({
+        name: role.name,
+        permissions: role.permissions.map((p) => p.name),
+    });
     isModalOpen.value = true;
 };
 
 const submit = () => {
     if (isEditing.value && editingRole.value) {
-        form.put(update(editingRole.value.id).url, {
+        form.submit({
+            method: 'put',
+            url: update(editingRole.value.id).url,
             onSuccess: () => closeModal(),
         });
     } else {
-        form.post(store().url, {
+        form.submit({
             onSuccess: () => closeModal(),
         });
     }
@@ -82,12 +87,15 @@ const handleDelete = () => {
 };
 
 const togglePermission = (permissionName: string) => {
-    const index = form.permissions.indexOf(permissionName);
+    const permissions = [...form.permissions];
+    const index = permissions.indexOf(permissionName);
     if (index > -1) {
-        form.permissions.splice(index, 1);
+        permissions.splice(index, 1);
     } else {
-        form.permissions.push(permissionName);
+        permissions.push(permissionName);
     }
+    form.setData({ ...form.data(), permissions });
+    form.validate('permissions');
 };
 </script>
 
@@ -103,7 +111,7 @@ const togglePermission = (permissionName: string) => {
                 </div>
                 <button
                     @click="openCreateModal"
-                    class="flex h-12 items-center gap-3 rounded-2xl bg-primary px-6 text-sm font-black tracking-wider text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
+                    class="flex h-12 items-center gap-3 rounded-xl bg-primary px-6 text-sm font-black tracking-wider text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
                 >
                     <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -116,7 +124,7 @@ const togglePermission = (permissionName: string) => {
                 <div
                     v-for="role in roles"
                     :key="role.id"
-                    class="group relative overflow-hidden rounded-[2.5rem] border border-slate-100 bg-white p-8 shadow-sm transition-all hover:shadow-xl hover:shadow-primary/5"
+                    class="group relative overflow-hidden rounded-xl border border-slate-100 bg-white p-8 shadow-sm transition-all hover:shadow-xl hover:shadow-primary/5"
                 >
                     <div class="relative z-10 flex h-full flex-col">
                         <div class="mb-6 flex items-start justify-between">
@@ -173,11 +181,11 @@ const togglePermission = (permissionName: string) => {
                             <span
                                 v-for="permission in role.permissions"
                                 :key="permission.id"
-                                class="rounded-lg border border-slate-100 bg-slate-50 px-3 py-1.5 text-[10px] font-bold text-slate-500 uppercase"
+                                class="rounded-xl border border-slate-100 bg-slate-50 px-3 py-1.5 text-[10px] font-bold text-slate-500 uppercase"
                             >
                                 {{ permission.name }}
                             </span>
-                            <span v-if="role.permissions.length === 0" class="text-xs font-medium text-slate-400 italic"
+                            <span v-if="role.permissions.length === 0" class="text-xs font-medium text-slate-400"
                                 >No permissions assigned.</span
                             >
                         </div>
@@ -187,8 +195,8 @@ const togglePermission = (permissionName: string) => {
 
             <!-- Modal -->
             <div v-if="isModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-                <div @click="closeModal" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
-                <div class="animate-in zoom-in-95 relative w-full max-w-2xl overflow-hidden rounded-[2.5rem] bg-white p-10 shadow-2xl">
+                <div @click="closeModal" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"></div>
+                <div class="animate-in zoom-in-95 relative w-full max-w-2xl overflow-hidden rounded-xl bg-white p-10 shadow-2xl">
                     <h3 class="mb-8 text-2xl font-black text-slate-900">{{ isEditing ? 'Edit Role' : 'Create New Role' }}</h3>
 
                     <form @submit.prevent="submit" class="space-y-8">
@@ -196,10 +204,12 @@ const togglePermission = (permissionName: string) => {
                             <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Role Name</label>
                             <input
                                 v-model="form.name"
+                                @change="form.validate('name')"
                                 type="text"
                                 required
                                 placeholder="e.g. subject_lead"
-                                class="w-full rounded-2xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
+                                :class="{'border-red-500': form.invalid('name')}"
+                                class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                             />
                             <div v-if="form.errors.name" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.name }}</div>
                         </div>
@@ -219,25 +229,27 @@ const togglePermission = (permissionName: string) => {
                                         form.permissions.includes(permission.name)
                                             ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20'
                                             : 'border-slate-100 bg-white text-slate-400 hover:border-primary hover:text-primary',
+                                        form.invalid('permissions') ? 'border-red-500' : ''
                                     ]"
                                 >
                                     {{ permission.name }}
                                 </button>
                             </div>
+                            <div v-if="form.errors.permissions" class="mt-2 text-center text-xs font-bold text-red-500">{{ form.errors.permissions }}</div>
                         </div>
 
                         <div class="flex gap-3 border-t border-slate-50 pt-4">
                             <button
                                 type="button"
                                 @click="closeModal"
-                                class="flex-1 rounded-2xl border border-slate-100 py-4 text-sm font-black tracking-widest text-slate-400 uppercase transition-all hover:bg-slate-50"
+                                class="flex-1 rounded-xl border border-slate-100 py-4 text-sm font-black tracking-widest text-slate-400 uppercase transition-all hover:bg-slate-50"
                             >
                                 Cancel
                             </button>
                             <button
                                 type="submit"
                                 :disabled="form.processing"
-                                class="flex-1 rounded-2xl bg-primary py-4 text-sm font-black tracking-widest text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+                                class="flex-1 rounded-xl bg-primary py-4 text-sm font-black tracking-widest text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
                             >
                                 {{ isEditing ? 'Update Role' : 'Create Role' }}
                             </button>

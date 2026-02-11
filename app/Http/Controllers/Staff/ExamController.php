@@ -26,7 +26,7 @@ class ExamController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user();
-        $query = Exam::with(['subject', 'schoolClass', 'academicSession'])
+        $query = Exam::with(['subject', 'schoolClass', 'academicSession', 'prospectiveClass'])
             ->withCount('questions');
 
         // Scoping: Staff only see their own exams or exams for their assigned loads
@@ -34,8 +34,11 @@ class ExamController extends Controller
             $assignedClassIds = $user->currentAssignments()->pluck('school_class_id')->unique();
             $assignedSubjectIds = $user->currentAssignments()->pluck('subject_id')->unique();
 
-            $query->whereIn('school_class_id', $assignedClassIds)
-                  ->whereIn('subject_id', $assignedSubjectIds);
+            $query->where(function ($q) use ($assignedClassIds, $assignedSubjectIds) {
+                $q->whereIn('school_class_id', $assignedClassIds)
+                  ->whereIn('subject_id', $assignedSubjectIds)
+                  ->orWhere('type', \App\Enums\ExamType::ENTRANCE); // Staff can see all entrance exams for setup
+            });
         }
 
         return Inertia::render('Staff/Exams/Index', [
@@ -56,9 +59,13 @@ class ExamController extends Controller
             ->with(['schoolClass', 'subject'])
             ->get();
 
+        // Get prospective batches for entrance exams
+        $batches = \App\Models\ProspectiveClass::where('is_active', true)->get();
+
         return Inertia::render('Staff/Exams/Create', [
             'assignments' => $assignments,
             'sessions' => AcademicSession::current()->get(),
+            'batches' => $batches,
         ]);
     }
 
@@ -70,17 +77,27 @@ class ExamController extends Controller
         $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'subject_id' => ['required', 'exists:subjects,id'],
-            'school_class_id' => ['required', 'exists:school_classes,id'],
+            'school_class_id' => ['nullable', 'exists:school_classes,id'],
+            'prospective_class_id' => ['nullable', 'exists:prospective_classes,id'],
             'duration' => ['required', 'integer', 'min:1'],
             'type' => ['required', 'string'], // ExamType enum
             'start_time' => ['nullable', 'date'],
             'end_time' => ['nullable', 'date', 'after:start_time'],
         ]);
 
+        if (!$request->school_class_id && !$request->prospective_class_id) {
+            return back()->withErrors(['school_class_id' => 'Please select a target class or batch.']);
+        }
+
         $currentSession = AcademicSession::current()->firstOrFail();
         
+        // If it's an entrance exam, ensure prospective_class_id is set
+        if ($request->type === 'entrance' && !$request->prospective_class_id) {
+             return back()->withErrors(['prospective_class_id' => 'Entrance exams must be assigned to a prospective batch.']);
+        }
+
         $dto = ExamDTO::fromRequest($request, $currentSession->id);
-        $exam = $this->examService->createExam($dto, $request->user()->id);
+        $exam = $this->examService->createExam($dto->toArray(), $request->user()->id);
 
         return redirect()->route('staff.exams.show', $exam->id)
             ->with('success', 'Exam configuration saved. Now allocate your questions.');
@@ -91,7 +108,7 @@ class ExamController extends Controller
      */
     public function show(Exam $exam): Response
     {
-        $exam->load(['subject', 'schoolClass', 'questions']);
+        $exam->load(['subject', 'schoolClass', 'prospectiveClass', 'questions']);
 
         return Inertia::render('Staff/Exams/Show', [
             'exam' => $exam,

@@ -14,7 +14,8 @@ interface Exam {
     id: string;
     title: string;
     subject: { name: string };
-    school_class: { name: string };
+    school_class?: { name: string };
+    prospective_class?: { name: string };
     academic_session: { name: string };
     status: string;
     type: string;
@@ -49,12 +50,12 @@ const getStatusColor = (status: string) => {
         <div class="space-y-8">
             <div class="flex items-center justify-between">
                 <div>
-                    <h2 class="text-3xl font-black tracking-tight text-slate-900 italic">Examination Vault</h2>
+                    <h2 class="text-3xl font-black tracking-tight text-slate-900">Examination Vault</h2>
                     <p class="mt-1 text-sm font-bold text-slate-500">Manage your papers and student schedules.</p>
                 </div>
                 <Link
                     :href="createExamAction().url"
-                    class="flex h-12 items-center gap-3 rounded-2xl bg-primary px-6 text-sm font-black tracking-wider text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
+                    class="flex h-12 items-center gap-3 rounded-xl bg-primary px-6 text-sm font-black tracking-wider text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
                 >
                     <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -67,12 +68,12 @@ const getStatusColor = (status: string) => {
                 <div 
                     v-for="exam in exams.data" 
                     :key="exam.id"
-                    class="group relative overflow-hidden rounded-[2.5rem] border border-slate-100 bg-white p-8 shadow-sm transition-all hover:shadow-xl"
+                    class="group relative overflow-hidden rounded-xl border border-slate-100 bg-white p-8 shadow-sm transition-all hover:shadow-xl"
                 >
                     <div class="relative z-10">
                         <div class="mb-6 flex items-start justify-between">
                             <span 
-                                class="rounded-full px-3 py-1 text-[9px] font-black tracking-widest uppercase text-slate-900"
+                                class="rounded-lg-full px-3 py-1 text-[9px] font-black tracking-widest uppercase text-slate-900"
                                 :class="getStatusColor(exam.status)"
                             >
                                 {{ exam.status }}
@@ -80,19 +81,21 @@ const getStatusColor = (status: string) => {
                             <span class="text-[10px] font-black text-slate-300 uppercase tracking-tighter">{{ exam.type }}</span>
                         </div>
 
-                        <h3 class="mb-2 text-xl font-black text-slate-800 line-clamp-1 italic">{{ exam.title }}</h3>
+                        <h3 class="mb-2 text-xl font-black text-slate-800 line-clamp-1">{{ exam.title }}</h3>
                         <div class="mb-6 flex items-center gap-2">
-                            <span class="rounded-lg bg-primary/5 px-2 py-1 text-[10px] font-black text-primary uppercase">{{ exam.subject.name }}</span>
-                            <div class="h-1 w-1 rounded-full bg-slate-200"></div>
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ exam.school_class.name }}</span>
+                            <span class="rounded-xl bg-primary/5 px-2 py-1 text-[10px] font-black text-primary uppercase">{{ exam.subject.name }}</span>
+                            <div class="h-1 w-1 rounded-lg-full bg-slate-200"></div>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                {{ exam.type === 'entrance' ? exam.prospective_class?.name : exam.school_class?.name }}
+                            </span>
                         </div>
 
                         <div class="mb-8 grid grid-cols-2 gap-4">
-                            <div class="rounded-2xl bg-slate-50 p-4">
+                            <div class="rounded-xl bg-slate-50 p-4">
                                 <span class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Time</span>
                                 <span class="text-xs font-bold text-slate-700">{{ exam.duration }} Mins</span>
                             </div>
-                            <div class="rounded-2xl bg-slate-50 p-4">
+                            <div class="rounded-xl bg-slate-50 p-4">
                                 <span class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Pool</span>
                                 <span class="text-xs font-bold text-slate-700">{{ exam.questions_count }} Questions</span>
                             </div>
@@ -100,7 +103,7 @@ const getStatusColor = (status: string) => {
 
                         <Link 
                             :href="showExamAction(exam.id).url"
-                            class="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-slate-100 py-4 text-xs font-black tracking-widest text-slate-600 uppercase transition-all hover:border-primary hover:text-primary"
+                            class="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-slate-100 py-4 text-xs font-black tracking-widest text-slate-600 uppercase transition-all hover:border-primary hover:text-primary"
                         >
                             Configure Paper
                             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -115,7 +118,7 @@ const getStatusColor = (status: string) => {
                     <svg class="mb-4 h-20 w-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
-                    <p class="text-lg font-bold italic uppercase tracking-widest">No Examinations Drafted</p>
+                    <p class="text-lg font-bold uppercase tracking-widest">No Examinations Drafted</p>
                 </div>
             </div>
         </div>

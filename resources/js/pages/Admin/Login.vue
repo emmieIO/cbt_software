@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
+import { useForm } from 'laravel-precognition-vue';
 import { store } from '@/actions/App/Http/Controllers/Admin/AdminController';
 
-const form = useForm({
+const form = useForm('post', store().url, {
     login_id: '',
     password: '',
     remember: false,
 });
 
 const submit = () => {
-    form.post(store().url, {
+    form.submit({
         onFinish: () => form.reset('password'),
     });
 };
@@ -19,7 +20,7 @@ const submit = () => {
     <Head title="Admin Login" />
 
     <div class="flex min-h-screen items-center justify-center bg-primary p-6 font-sans">
-        <div class="w-full max-w-md space-y-8 rounded-2xl border-t-4 border-lemon-yellow bg-white p-8 shadow-2xl md:p-12">
+        <div class="w-full max-w-md space-y-8 rounded-xl border-t-4 border-lemon-yellow bg-white p-8 shadow-2xl md:p-12">
             <!-- Header -->
             <div class="flex flex-col items-center text-center">
                 <Link href="/">
@@ -41,9 +42,11 @@ const submit = () => {
                         <input
                             id="username"
                             v-model="form.login_id"
+                            @change="form.validate('login_id')"
                             type="text"
                             required
                             autofocus
+                            :class="{'border-red-500': form.invalid('login_id')}"
                             class="mt-1 block w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 shadow-sm transition-all focus:border-primary focus:ring-primary"
                             placeholder="admin_root"
                         />
@@ -55,8 +58,10 @@ const submit = () => {
                         <input
                             id="password"
                             v-model="form.password"
+                            @change="form.validate('password')"
                             type="password"
                             required
+                            :class="{'border-red-500': form.invalid('password')}"
                             class="mt-1 block w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 shadow-sm transition-all focus:border-primary focus:ring-primary"
                             placeholder="••••••••"
                         />
@@ -70,7 +75,7 @@ const submit = () => {
                             id="remember"
                             v-model="form.remember"
                             type="checkbox"
-                            class="h-4 w-4 rounded border-slate-300 text-primary transition-all focus:ring-primary"
+                            class="h-4 w-4 rounded-xl border-slate-300 text-primary transition-all focus:ring-primary"
                         />
                         <label for="remember" class="ml-2 block text-sm text-slate-600">Remember me</label>
                     </div>

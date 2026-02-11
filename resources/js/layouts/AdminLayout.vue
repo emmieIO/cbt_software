@@ -8,6 +8,7 @@ import { index as permissionsIndex } from '@/actions/App/Http/Controllers/Admin/
 import { index as promotionIndex } from '@/actions/App/Http/Controllers/Admin/PromotionController';
 import { index as rolesIndex } from '@/actions/App/Http/Controllers/Admin/RoleController';
 import { index as classesIndex } from '@/actions/App/Http/Controllers/Admin/SchoolClassController';
+import { index as prospectiveIndex } from '@/actions/App/Http/Controllers/Admin/ProspectiveClassController';
 import { index as staffIndex } from '@/actions/App/Http/Controllers/Admin/StaffController';
 import { index as studentIndex } from '@/actions/App/Http/Controllers/Admin/StudentController';
 import { index as subjectsIndex } from '@/actions/App/Http/Controllers/Admin/SubjectController';
@@ -115,119 +116,161 @@ const IconAI = defineComponent({
         ]),
 });
 
+const IconProfile = defineComponent({
+    render: () =>
+        h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor' }, [
+            h('path', {
+                'stroke-linecap': 'round',
+                'stroke-linejoin': 'round',
+                'stroke-width': '2',
+                d: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
+            }),
+        ]),
+});
+
 const navigation = [
     {
-        name: 'Dashboard',
-        href: dashboard().url,
-        active: page.component === 'Admin/Dashboard',
-        icon: IconDashboard,
+        section: 'Main',
+        items: [
+            {
+                name: 'Dashboard',
+                href: dashboard().url,
+                active: page.component === 'Admin/Dashboard',
+                icon: IconDashboard,
+            },
+            {
+                name: 'Question Bank',
+                href: questionsIndex().url,
+                active: page.component.startsWith('QuestionBank/'),
+                icon: IconBank,
+                permission: 'manage question bank',
+            },
+            {
+                name: 'Examinations',
+                href: examsIndex().url,
+                active: page.component.startsWith('Staff/Exams/'),
+                icon: IconExams,
+                permission: 'view exams',
+            },
+        ]
     },
     {
-        name: 'School Classes',
-        href: classesIndex().url,
-        active: page.component === 'Admin/Classes/Index',
-        icon: IconSchool,
-        permission: 'manage school setup',
+        section: 'Academic Setup',
+        items: [
+            {
+                name: 'School Classes',
+                href: classesIndex().url,
+                active: page.component === 'Admin/Classes/Index',
+                icon: IconSchool,
+                permission: 'manage school setup',
+            },
+            {
+                name: 'Entrance Batches',
+                href: prospectiveIndex().url,
+                active: page.component === 'Admin/Classes/Prospective',
+                icon: IconSchool,
+                permission: 'manage prospective batches',
+            },
+            {
+                name: 'Subjects',
+                href: subjectsIndex().url,
+                active: page.component === 'Admin/Subjects/Index',
+                icon: IconSubject,
+                permission: 'manage curriculum',
+            },
+            {
+                name: 'Topics',
+                href: topicsIndex().url,
+                active: page.component === 'Admin/Topics/Index',
+                icon: IconTopic,
+                permission: 'manage curriculum',
+            },
+            {
+                name: 'AI Question Lab',
+                href: aiLabGenerate().url,
+                active: page.component === 'QuestionBank/Generate',
+                icon: IconAI,
+                permission: 'use ai lab',
+            },
+        ]
     },
     {
-        name: 'Academic Subjects',
-        href: subjectsIndex().url,
-        active: page.component === 'Admin/Subjects/Index',
-        icon: IconSubject,
-        permission: 'manage curriculum',
+        section: 'Personnel & Enrollment',
+        items: [
+            {
+                name: 'Staff Management',
+                href: staffIndex().url,
+                active: page.component === 'Admin/Users/Staff',
+                icon: IconUsers,
+                permission: 'manage users',
+            },
+            {
+                name: 'Student Records',
+                href: studentIndex().url,
+                active: page.component === 'Admin/Users/Students',
+                icon: IconUsers,
+                permission: 'manage users',
+            },
+            {
+                name: 'Teaching Loads',
+                href: teachingLoadsIndex().url,
+                active: page.component === 'Admin/Users/TeachingLoads',
+                icon: IconBank,
+                permission: 'manage users',
+            },
+            {
+                name: 'Admissions',
+                href: entranceIndex().url,
+                active: page.component === 'Admin/Users/Candidates',
+                icon: IconExams,
+                permission: 'manage admissions',
+            },
+            {
+                name: 'Promotions',
+                href: promotionIndex().url,
+                active: page.component === 'Admin/Users/Promotion',
+                icon: IconSchool,
+                permission: 'manage enrollment',
+            },
+        ]
     },
     {
-        name: 'Curriculum Topics',
-        href: topicsIndex().url,
-        active: page.component === 'Admin/Topics/Index',
-        icon: IconTopic,
-        permission: 'manage curriculum',
-    },
-    {
-        name: 'Academic Sessions',
-        href: sessionsIndex().url,
-        active: page.component === 'Admin/Settings/Sessions',
-        icon: IconDashboard,
-        permission: 'manage school setup',
-    },
-    {
-        name: 'Question Bank',
-        href: questionsIndex().url,
-        active: page.component === 'QuestionBank/Index',
-        icon: IconBank,
-        permission: 'manage question bank',
-    },
-    {
-        name: 'AI Question Lab',
-        href: aiLabGenerate().url,
-        active: page.component === 'QuestionBank/Generate',
-        icon: IconAI,
-        permission: 'use ai lab',
-    },
-    {
-        name: 'System Roles',
-        href: rolesIndex().url,
-        active: page.component === 'Admin/RBAC/Roles',
-        icon: IconUsers,
-        permission: 'manage settings',
-    },
-    {
-        name: 'Permissions',
-        href: permissionsIndex().url,
-        active: page.component === 'Admin/RBAC/Permissions',
-        icon: IconDashboard,
-        permission: 'manage settings',
-    },
-    {
-        name: 'Staff Management',
-        href: staffIndex().url,
-        active: page.component === 'Admin/Users/Staff',
-        icon: IconUsers,
-        permission: 'manage users',
-    },
-    {
-        name: 'Teaching Loads',
-        href: teachingLoadsIndex().url,
-        active: page.component === 'Admin/Users/TeachingLoads',
-        icon: IconBank,
-        permission: 'manage users',
-    },
-    {
-        name: 'Student Management',
-        href: studentIndex().url,
-        active: page.component === 'Admin/Users/Students',
-        icon: IconUsers,
-        permission: 'manage users',
-    },
-    {
-        name: 'Student Promotion',
-        href: promotionIndex().url,
-        active: page.component === 'Admin/Users/Promotion',
-        icon: IconSchool,
-        permission: 'manage enrollment',
-    },
-    {
-        name: 'Entrance Examination',
-        href: entranceIndex().url,
-        active: page.component === 'Admin/Users/Candidates',
-        icon: IconExams,
-        permission: 'manage users',
-    },
-    {
-        name: 'Exams List',
-        href: examsIndex().url,
-        active: page.component.startsWith('Staff/Exams/'),
-        icon: IconExams,
-        permission: 'view exams',
-    },
+        section: 'System Controls',
+        items: [
+            {
+                name: 'Academic Sessions',
+                href: sessionsIndex().url,
+                active: page.component === 'Admin/Settings/Sessions',
+                icon: IconDashboard,
+                permission: 'manage school setup',
+            },
+            {
+                name: 'System Roles',
+                href: rolesIndex().url,
+                active: page.component === 'Admin/RBAC/Roles',
+                icon: IconUsers,
+                permission: 'manage settings',
+            },
+            {
+                name: 'Permissions',
+                href: permissionsIndex().url,
+                active: page.component === 'Admin/RBAC/Permissions',
+                icon: IconDashboard,
+                permission: 'manage settings',
+            },
+        ]
+    }
 ];
 
 const filteredNavigation = computed(() => {
-    return navigation.filter((item) => {
-        if (!item.permission) return true;
-        const userPermissions = (page.props.auth.user as any).permissions || [];
-        return userPermissions.includes(item.permission);
-    });
+    return navigation.map(section => ({
+        ...section,
+        items: section.items.filter((item) => {
+            if (!item.permission) return true;
+            const userPermissions = (page.props.auth.user as any).permissions || [];
+            return userPermissions.includes(item.permission);
+        })
+    })).filter(section => section.items.length > 0);
 });
 </script>
 

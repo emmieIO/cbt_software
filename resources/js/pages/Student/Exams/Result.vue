@@ -37,10 +37,10 @@ const getColorClass = computed(() => {
         <Head title="Exam Result" />
 
         <div class="w-full max-w-2xl">
-            <div class="rounded-[3rem] bg-white p-12 shadow-2xl shadow-slate-200 border border-slate-100 text-center space-y-10">
+            <div class="rounded-xl bg-white p-12 shadow-2xl shadow-slate-200 border border-slate-100 text-center space-y-10">
                 
                 <div class="space-y-2">
-                    <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-primary/10 text-primary mb-6">
+                    <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-xl bg-primary/10 text-primary mb-6">
                         <svg class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
@@ -74,7 +74,7 @@ const getColorClass = computed(() => {
                 </div>
 
                 <div class="space-y-6">
-                    <div class="p-6 rounded-3xl bg-slate-50 border border-slate-100 text-left">
+                    <div class="p-6 rounded-xl bg-slate-50 border border-slate-100 text-left">
                         <h4 class="text-xs font-black tracking-widest text-slate-900 uppercase mb-2">Exam Summary</h4>
                         <p class="text-sm font-bold text-slate-500 leading-relaxed">
                             Title: {{ attempt.exam.title }} <br>
@@ -84,7 +84,7 @@ const getColorClass = computed(() => {
 
                     <Link 
                         href="/student/dashboard"
-                        class="block w-full rounded-2xl bg-slate-900 py-5 text-sm font-black tracking-widest text-white uppercase shadow-xl transition-all hover:scale-[1.02] active:scale-95"
+                        class="block w-full rounded-xl bg-slate-900 py-5 text-sm font-black tracking-widest text-white uppercase shadow-xl transition-all hover:scale-[1.02] active:scale-95"
                     >
                         Back to Dashboard
                     </Link>

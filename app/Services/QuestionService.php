@@ -108,11 +108,24 @@ class QuestionService
     /**
      * Get filtered and paginated questions.
      */
-    public function getFilteredQuestions(array $filters): LengthAwarePaginator
+    public function getFilteredQuestions(array $filters, \App\Models\User $user): LengthAwarePaginator
     {
-        return Question::query()
-            ->with(['topic.subject', 'schoolClass', 'options'])
-            ->filter($filters)
+        $query = Question::query()
+            ->with(['topic.subject', 'schoolClass', 'options']);
+
+        // Scope to teacher's assignments if they aren't an admin
+        if (! $user->hasRole('admin')) {
+            $assignments = $user->currentAssignments();
+            
+            $query->where(function ($q) use ($assignments) {
+                $q->whereIn('school_class_id', $assignments->pluck('school_class_id'))
+                  ->whereHas('topic', function ($q) use ($assignments) {
+                      $q->whereIn('subject_id', $assignments->pluck('subject_id'));
+                  });
+            });
+        }
+
+        return $query->filter($filters)
             ->latest()
             ->paginate(10)
             ->withQueryString();

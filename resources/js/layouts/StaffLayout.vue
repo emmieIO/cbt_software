@@ -57,37 +57,70 @@ const IconAI = defineComponent({
         ]),
 });
 
+const IconProfile = defineComponent({
+    render: () =>
+        h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor' }, [
+            h('path', {
+                'stroke-linecap': 'round',
+                'stroke-linejoin': 'round',
+                'stroke-width': '2',
+                d: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
+            }),
+        ]),
+});
+
 const navigation = [
     {
-        name: 'Dashboard',
-        href: StaffDashboardController().url,
-        active: page.component === 'Staff/Dashboard',
-        icon: IconDashboard,
+        section: 'Main',
+        items: [
+            {
+                name: 'Dashboard',
+                href: StaffDashboardController().url,
+                active: page.component === 'Staff/Dashboard',
+                icon: IconDashboard,
+            },
+        ]
     },
     {
-        name: 'AI Question Lab',
-        href: aiLabGenerate().url,
-        active: page.component === 'QuestionBank/Generate',
-        icon: IconAI,
-        permission: 'use ai lab',
-    },
-    {
-        name: 'Exam Management',
-        href: examIndex().url,
-        active: page.component.startsWith('Staff/Exams/'),
-        icon: IconExams,
-    },
-    {
-        name: 'Question Bank',
-        href: questionIndex().url,
-        active: page.component === 'QuestionBank/Index',
-        icon: IconBank,
-    },
-].filter((item) => !item.permission || (page.props.auth.user as any).permissions.includes(item.permission));
+        section: 'Academic Operations',
+        items: [
+            {
+                name: 'AI Question Lab',
+                href: aiLabGenerate().url,
+                active: page.component === 'QuestionBank/Generate',
+                icon: IconAI,
+                permission: 'use ai lab',
+            },
+            {
+                name: 'Exam Management',
+                href: examIndex().url,
+                active: page.component.startsWith('Staff/Exams/'),
+                icon: IconExams,
+            },
+            {
+                name: 'Question Bank',
+                href: questionIndex().url,
+                active: page.component === 'QuestionBank/Index',
+                icon: IconBank,
+            },
+        ]
+    }
+];
+
+const filteredNavigation = computed(() => {
+    return navigation.map(section => ({
+        ...section,
+        items: section.items.filter((item) => {
+            if (!item.permission) return true;
+            const userPermissions = (page.props.auth.user as any).permissions || [];
+            return userPermissions.includes(item.permission);
+        })
+    })).filter(section => section.items.length > 0);
+});
 </script>
 
 <template>
-    <DashboardLayout title="Staff Portal" :navigation="navigation" :logout-action="logout().url">
+    <DashboardLayout title="Staff Portal" :navigation="filteredNavigation" :logout-action="logout().url">
         <slot />
     </DashboardLayout>
 </template>

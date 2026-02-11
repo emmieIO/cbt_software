@@ -83,13 +83,13 @@ watch(
                 >
                     <div
                         v-if="show"
-                        class="relative w-full max-w-md overflow-hidden rounded-[2.5rem] bg-white p-8 shadow-2xl shadow-slate-900/20 md:p-10"
+                        class="relative w-full max-w-md overflow-hidden rounded-xl bg-white p-8 shadow-2xl shadow-slate-900/20 md:p-10"
                     >
                         <!-- Icon Header -->
                         <div class="mb-8 flex flex-col items-center text-center">
                             <div
                                 :class="[
-                                    'mb-6 flex h-20 w-20 items-center justify-center rounded-3xl shadow-lg transition-transform hover:scale-110',
+                                    'mb-6 flex h-20 w-20 items-center justify-center rounded-xl shadow-lg transition-transform hover:scale-110',
                                     variant === 'danger' ? 'bg-red-50 text-red-500 shadow-red-500/20' : 'bg-primary/5 text-primary shadow-primary/20',
                                 ]"
                             >
@@ -122,19 +122,19 @@ watch(
                                 @click="confirm"
                                 :disabled="loading"
                                 :class="[
-                                    'flex h-14 w-full items-center justify-center rounded-2xl text-sm font-black tracking-widest text-white uppercase shadow-lg transition-all active:scale-95 disabled:opacity-50',
+                                    'flex h-14 w-full items-center justify-center rounded-xl text-sm font-black tracking-widest text-white uppercase shadow-lg transition-all active:scale-95 disabled:opacity-50',
                                     variant === 'danger'
                                         ? 'bg-red-600 shadow-red-600/20 hover:bg-red-700'
                                         : 'bg-primary shadow-primary/20 hover:bg-primary/90',
                                 ]"
                             >
-                                <span v-if="loading" class="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"></span>
+                                <span v-if="loading" class="mr-2 h-4 w-4 animate-spin rounded-lg-full border-2 border-white/30 border-t-white"></span>
                                 {{ confirmLabel }}
                             </button>
                             <button
                                 @click="close"
                                 :disabled="loading"
-                                class="flex h-14 w-full items-center justify-center rounded-2xl bg-slate-50 text-sm font-black tracking-widest text-slate-400 uppercase transition-all hover:bg-slate-100 hover:text-slate-600 active:scale-95 disabled:opacity-50"
+                                class="flex h-14 w-full items-center justify-center rounded-xl bg-slate-50 text-sm font-black tracking-widest text-slate-400 uppercase transition-all hover:bg-slate-100 hover:text-slate-600 active:scale-95 disabled:opacity-50"
                             >
                                 {{ cancelLabel }}
                             </button>

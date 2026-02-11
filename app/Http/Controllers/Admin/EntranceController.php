@@ -25,7 +25,7 @@ class EntranceController extends Controller
      */
     public function index(Request $request): Response
     {
-        $query = User::role('candidate')->with(['schoolClass']);
+        $query = User::role('candidate')->with(['schoolClass', 'prospectiveClass']);
 
         if ($request->search) {
             $query->where(function ($q) use ($request) {
@@ -37,7 +37,8 @@ class EntranceController extends Controller
 
         return Inertia::render('Admin/Users/Candidates', [
             'candidates' => $query->latest()->paginate(10)->withQueryString(),
-            'classes' => SchoolClass::all(), // Used for targeting the entry class
+            'classes' => SchoolClass::all(), // Target Admission Classes
+            'batches' => \App\Models\ProspectiveClass::where('is_active', true)->get(),
             'filters' => $request->only(['search']),
         ]);
     }
@@ -52,11 +53,16 @@ class EntranceController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'username' => ['required', 'string', 'max:255', 'unique:users'],
             'school_id' => ['required', 'string', 'max:255', 'unique:users'], // App Number
-            'school_class_id' => ['nullable', 'exists:school_classes,id'], // Target Entry Class
+            'school_class_id' => ['required', 'exists:school_classes,id'], // Target Admission Class
+            'prospective_class_id' => ['required', 'exists:prospective_classes,id'], // Exam Batch
         ]);
 
         $dto = UserDTO::fromRequest($request);
-        $this->userService->createUser($dto, 'candidate');
+        $user = $this->userService->createUser($dto, 'candidate');
+        
+        $user->update([
+            'prospective_class_id' => $request->prospective_class_id,
+        ]);
 
         return back()->with('success', 'Candidate enrolled for entrance exam.');
     }

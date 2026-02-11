@@ -35,8 +35,9 @@ class UserImportService
         $importedCount = 0;
         $rowNumber = 0;
 
-        // Cache classes for lookups
+        // Cache lookups
         $classes = SchoolClass::all()->pluck('id', 'name')->mapWithKeys(fn ($id, $name) => [strtolower(trim($name)) => $id]);
+        $batches = \App\Models\ProspectiveClass::all()->pluck('id', 'name')->mapWithKeys(fn ($id, $name) => [strtolower(trim($name)) => $id]);
 
         DB::beginTransaction();
         try {
@@ -51,17 +52,23 @@ class UserImportService
 
                     $data = $row->toArray();
 
-                    // Expected columns: Name, Email, Username, School_ID, Class_Name (for students)
+                    // Expected columns: Name, Email, Username, School_ID, Class_Name (Target/Current), Batch_Name (for candidates)
                     if (count($data) < 4) {
                         continue;
                     }
 
                     [$name, $email, $username, $schoolId] = $data;
                     $className = $data[4] ?? null;
+                    $batchName = $data[5] ?? null;
 
                     $classId = null;
-                    if ($role === 'student' && $className) {
+                    if ($className) {
                         $classId = $classes[strtolower(trim((string) $className))] ?? null;
+                    }
+
+                    $batchId = null;
+                    if ($role === 'candidate' && $batchName) {
+                        $batchId = $batches[strtolower(trim((string) $batchName))] ?? null;
                     }
 
                     $dto = new UserDTO(
@@ -77,7 +84,12 @@ class UserImportService
                         continue;
                     }
 
-                    $this->userService->createUser($dto, $role);
+                    $user = $this->userService->createUser($dto, $role);
+                    
+                    if ($batchId) {
+                        $user->update(['prospective_class_id' => $batchId]);
+                    }
+
                     $importedCount++;
                 }
             }

@@ -26,6 +26,7 @@ class User extends Authenticatable
         'password',
         'school_id',
         'school_class_id',
+        'prospective_class_id',
         'status',
         'is_active',
     ];
@@ -36,6 +37,14 @@ class User extends Authenticatable
     public function schoolClass(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(SchoolClass::class);
+    }
+
+    /**
+     * Get the prospective batch the user (candidate) belongs to.
+     */
+    public function prospectiveClass(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(ProspectiveClass::class);
     }
 
     /**

@@ -24,7 +24,7 @@ defineProps<{
                     <p class="mt-1 text-sm font-bold text-slate-500">A read-only repository of permissions hard-coded into the application logic.</p>
                 </div>
                 <div
-                    class="flex items-center gap-2 rounded-2xl border border-amber-100 bg-amber-50 px-4 py-2 text-[10px] font-black tracking-widest text-amber-600 uppercase"
+                    class="flex items-center gap-2 rounded-xl border border-amber-100 bg-amber-50 px-4 py-2 text-[10px] font-black tracking-widest text-amber-600 uppercase"
                 >
                     <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                         <path
@@ -41,16 +41,16 @@ defineProps<{
                 <div
                     v-for="permission in permissions"
                     :key="permission.id"
-                    class="group relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-5 shadow-sm transition-all hover:border-primary/20"
+                    class="group relative overflow-hidden rounded-xl border border-slate-100 bg-white p-5 shadow-sm transition-all hover:border-primary/20"
                 >
                     <div class="flex items-center gap-3">
-                        <div class="h-2 w-2 rounded-full bg-slate-200 transition-colors group-hover:bg-primary"></div>
+                        <div class="h-2 w-2 rounded-lg-full bg-slate-200 transition-colors group-hover:bg-primary"></div>
                         <span class="text-[11px] font-black tracking-widest text-slate-700 uppercase">{{ permission.name }}</span>
                     </div>
                 </div>
             </div>
 
-            <div class="rounded-3xl border border-dashed border-slate-200 bg-slate-50 p-8">
+            <div class="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-8">
                 <div class="flex items-start gap-4">
                     <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-slate-400 shadow-sm">
                         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

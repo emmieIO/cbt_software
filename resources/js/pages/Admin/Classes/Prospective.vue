@@ -2,23 +2,30 @@
 import { Head, router } from '@inertiajs/vue3';
 import { useForm } from 'laravel-precognition-vue';
 import { ref } from 'vue';
-import { store as storeAction, update as updateAction, destroy as destroyAction } from '@/actions/App/Http/Controllers/Admin/SchoolClassController';
+import ProspectiveClassController from '@/actions/App/Http/Controllers/Admin/ProspectiveClassController';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
-import type { SchoolClass } from '@/types/academics';
+
+interface ProspectiveClass {
+    id: string;
+    name: string;
+    slug: string;
+    description: string | null;
+    is_active: boolean;
+}
 
 const props = defineProps<{
-    classes: SchoolClass[];
-    levels: { value: string; label: string }[];
+    classes: ProspectiveClass[];
 }>();
 
 const isModalOpen = ref(false);
 const isEditing = ref(false);
-const editingClass = ref<SchoolClass | null>(null);
+const editingClass = ref<ProspectiveClass | null>(null);
 
-const form = useForm('post', storeAction().url, {
+const form = useForm('post', ProspectiveClassController.store().url, {
     name: '',
-    level: 'primary' as any,
+    description: '',
+    is_active: true,
 });
 
 const openCreateModal = () => {
@@ -28,13 +35,13 @@ const openCreateModal = () => {
     isModalOpen.value = true;
 };
 
-const openEditModal = (cls: SchoolClass) => {
+const openEditModal = (cls: ProspectiveClass) => {
     isEditing.value = true;
     editingClass.value = cls;
-    const levelValue = typeof cls.level === 'object' ? (cls.level as any).value : cls.level;
     form.setData({
         name: cls.name,
-        level: levelValue,
+        description: cls.description || '',
+        is_active: cls.is_active,
     });
     isModalOpen.value = true;
 };
@@ -43,7 +50,7 @@ const submit = () => {
     if (isEditing.value && editingClass.value) {
         form.submit({
             method: 'put',
-            url: updateAction(editingClass.value.id).url,
+            url: ProspectiveClassController.update(editingClass.value.id).url,
             onSuccess: () => closeModal(),
         });
     } else {
@@ -59,17 +66,16 @@ const closeModal = () => {
 };
 
 const isDeleteModalOpen = ref(false);
-const classToDelete = ref<SchoolClass | null>(null);
+const classToDelete = ref<ProspectiveClass | null>(null);
 
-const confirmDelete = (cls: SchoolClass) => {
+const confirmDelete = (cls: ProspectiveClass) => {
     classToDelete.value = cls;
     isDeleteModalOpen.value = true;
 };
 
 const handleDelete = () => {
     if (classToDelete.value) {
-        const action = destroyAction(classToDelete.value.id);
-        router.delete(action.url, {
+        router.delete(ProspectiveClassController.destroy(classToDelete.value.id).url, {
             onSuccess: () => {
                 isDeleteModalOpen.value = false;
                 classToDelete.value = null;
@@ -77,22 +83,18 @@ const handleDelete = () => {
         });
     }
 };
-
-const getRawLevel = (cls: SchoolClass): string => {
-    return typeof cls.level === 'object' ? (cls.level as any).value : cls.level;
-};
 </script>
 
 <template>
     <AdminLayout>
-        <Head title="Class Management" />
+        <Head title="Entrance Batches" />
 
         <div class="space-y-10">
             <!-- Page Header -->
             <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 class="text-3xl font-black text-slate-900 tracking-tight">School Classes</h1>
-                    <p class="mt-1 text-sm font-bold text-slate-400 uppercase tracking-widest">Grade Levels • {{ classes.length }} Active Sections</p>
+                    <h1 class="text-3xl font-black text-slate-900 tracking-tight">Entrance Batches</h1>
+                    <p class="mt-1 text-sm font-bold text-slate-400 uppercase tracking-widest">Prospective Students • {{ classes.length }} Batches</p>
                 </div>
                 <button
                     @click="openCreateModal"
@@ -101,7 +103,7 @@ const getRawLevel = (cls: SchoolClass): string => {
                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" />
                     </svg>
-                    Create Class
+                    New Entrance Batch
                 </button>
             </div>
 
@@ -111,20 +113,21 @@ const getRawLevel = (cls: SchoolClass): string => {
                     :key="cls.id"
                     class="group relative overflow-hidden rounded-xl border border-slate-100 bg-white p-8 shadow-sm transition-all hover:shadow-xl hover:shadow-primary/5"
                 >
-                    <div class="relative z-10 flex items-start justify-between">
-                        <div class="space-y-4">
+                    <div class="relative z-10 flex items-start justify-between gap-4">
+                        <div class="min-w-0 flex-1 space-y-4">
                             <div
-                                class="inline-flex items-center rounded-full bg-slate-50 border border-slate-100 px-3 py-1 text-[9px] font-black tracking-widest uppercase"
-                                :class="{
-                                    'text-blue-600': getRawLevel(cls) === 'primary',
-                                    'text-purple-600': getRawLevel(cls) === 'secondary'
-                                }"
+                                class="inline-flex items-center whitespace-nowrap rounded-full bg-primary/5 border border-primary/10 px-3 py-1 text-[9px] font-black tracking-widest uppercase text-primary"
                             >
-                                {{ typeof cls.level === 'object' ? (cls.level as any).label : cls.level }}
+                                Prospective Batch
                             </div>
-                            <h3 class="text-2xl font-black text-slate-800 leading-none group-hover:text-primary transition-colors">{{ cls.name }}</h3>
+                            <h3 class="truncate text-2xl font-black text-slate-800 leading-tight group-hover:text-primary transition-colors" :title="cls.name">
+                                {{ cls.name }}
+                            </h3>
+                            <p class="truncate text-xs font-bold text-slate-400" :title="cls.description || ''">
+                                {{ cls.description || 'No description provided.' }}
+                            </p>
                         </div>
-                        <div class="flex gap-2">
+                        <div class="flex shrink-0 gap-2">
                             <button
                                 @click="openEditModal(cls)"
                                 class="flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 active:scale-90 transition-all"
@@ -149,8 +152,7 @@ const getRawLevel = (cls: SchoolClass): string => {
                         class="pointer-events-none absolute -right-4 -bottom-4 opacity-[0.02] transition-transform duration-500 group-hover:scale-110 group-hover:rotate-12"
                     >
                         <svg class="h-32 w-32" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3z" />
-                            <path d="M3.88 12.88L12 17l8.12-4.12V17.12L12 21.24l-8.12-4.12V12.88z" />
+                            <path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                         </svg>
                     </div>
                 </div>
@@ -160,43 +162,44 @@ const getRawLevel = (cls: SchoolClass): string => {
             <div v-if="isModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
                 <div @click="closeModal" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"></div>
                 <div class="animate-in zoom-in-95 relative w-full max-w-md overflow-hidden rounded-xl bg-white p-10 shadow-2xl">
-                    <h3 class="mb-8 text-2xl font-black text-slate-900">{{ isEditing ? 'Edit Class' : 'Create New Class' }}</h3>
+                    <h3 class="mb-8 text-2xl font-black text-slate-900 italic">{{ isEditing ? 'Edit Batch' : 'New Entrance Batch' }}</h3>
 
                     <form @submit.prevent="submit" class="space-y-6">
                         <div>
-                            <label class="mb-2 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Class Name</label>
+                            <label class="mb-2 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Batch Name</label>
                             <input
                                 v-model="form.name"
                                 @change="form.validate('name')"
                                 type="text"
                                 required
-                                placeholder="e.g. JSS 1"
+                                placeholder="e.g. 2026 Batch A - Morning"
                                 :class="{'border-red-500': form.invalid('name')}"
-                                class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
+                                class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary/10"
                             />
                             <div v-if="form.errors.name" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.name }}</div>
                         </div>
 
                         <div>
-                            <label class="mb-2 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Academic Level</label>
-                            <div class="grid grid-cols-3 gap-3">
-                                <button
-                                    v-for="level in levels"
-                                    :key="level.value"
-                                    type="button"
-                                    @click="form.level = level.value; form.validate('level')"
-                                    :class="[
-                                        'rounded-xl py-3.5 text-[10px] font-black tracking-widest uppercase transition-all',
-                                        form.level === level.value
-                                            ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                                            : 'bg-slate-50 text-slate-400 hover:bg-slate-100',
-                                        form.invalid('level') ? 'border-2 border-red-500' : ''
-                                    ]"
-                                >
-                                    {{ level.label }}
-                                </button>
-                            </div>
-                            <div v-if="form.errors.level" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.level }}</div>
+                            <label class="mb-2 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Description</label>
+                            <textarea
+                                v-model="form.description"
+                                @change="form.validate('description')"
+                                rows="3"
+                                placeholder="Additional details about this batch..."
+                                :class="{'border-red-500': form.invalid('description')}"
+                                class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary/10"
+                            ></textarea>
+                            <div v-if="form.errors.description" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.description }}</div>
+                        </div>
+
+                        <div v-if="isEditing" class="flex items-center gap-3">
+                            <input
+                                v-model="form.is_active"
+                                type="checkbox"
+                                id="is_active"
+                                class="h-5 w-5 rounded border-slate-300 text-primary focus:ring-primary/10"
+                            />
+                            <label for="is_active" class="text-sm font-bold text-slate-700">Batch is Active</label>
                         </div>
 
                         <div class="flex gap-3 pt-4">
@@ -212,7 +215,7 @@ const getRawLevel = (cls: SchoolClass): string => {
                                 :disabled="form.processing"
                                 class="flex-1 rounded-xl bg-primary py-4 text-sm font-black tracking-widest text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
                             >
-                                {{ isEditing ? 'Update' : 'Create' }}
+                                {{ isEditing ? 'Update Batch' : 'Create Batch' }}
                             </button>
                         </div>
                     </form>
@@ -222,8 +225,8 @@ const getRawLevel = (cls: SchoolClass): string => {
 
         <ConfirmationModal
             :show="isDeleteModalOpen"
-            title="Delete Class?"
-            :message="`Are you sure you want to delete ${classToDelete?.name}? This action cannot be undone.`"
+            title="Remove Batch?"
+            :message="`Are you sure you want to delete ${classToDelete?.name}? This action cannot be undone and will only work if no candidates are assigned.`"
             confirm-label="Delete Permanent"
             variant="danger"
             @close="isDeleteModalOpen = false"

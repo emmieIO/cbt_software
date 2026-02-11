@@ -99,7 +99,7 @@ const submitExam = (isAuto = false) => {
 
                 <div class="flex items-center gap-8">
                     <!-- Timer -->
-                    <div class="flex items-center gap-3 rounded-2xl bg-slate-900 px-6 py-3 text-white shadow-xl shadow-slate-200">
+                    <div class="flex items-center gap-3 rounded-xl bg-slate-900 px-6 py-3 text-white shadow-xl shadow-slate-200">
                         <svg class="h-5 w-5 text-lemon-yellow" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
@@ -122,13 +122,13 @@ const submitExam = (isAuto = false) => {
                 <!-- Main Question Area -->
                 <div class="lg:col-span-2 space-y-8">
                     <!-- Question Card -->
-                    <div class="rounded-[2.5rem] bg-white p-10 shadow-sm border border-slate-100">
+                    <div class="rounded-xl bg-white p-10 shadow-sm border border-slate-100">
                         <div class="mb-8 flex items-center justify-between">
                             <span class="rounded-full bg-slate-100 px-4 py-1.5 text-[10px] font-black tracking-widest text-slate-500 uppercase">
                                 Question {{ currentQuestionIndex + 1 }} of {{ questions.length }}
                             </span>
                             <span :class="[
-                                'rounded-lg px-3 py-1 text-[10px] font-black tracking-widest uppercase',
+                                'rounded-xl px-3 py-1 text-[10px] font-black tracking-widest uppercase',
                                 currentQuestion.difficulty === 'easy' ? 'bg-green-100 text-green-700' : 
                                 currentQuestion.difficulty === 'medium' ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'
                             ]">
@@ -147,14 +147,14 @@ const submitExam = (isAuto = false) => {
                                 :key="option.id"
                                 @click="selectOption(option.id)"
                                 :class="[
-                                    'group flex w-full items-center gap-6 rounded-3xl border-2 p-6 text-left transition-all duration-200',
+                                    'group flex w-full items-center gap-6 rounded-xl border-2 p-6 text-left transition-all duration-200',
                                     selectedAnswers[currentQuestion.id] === option.id
                                         ? 'border-primary bg-primary/2 ring-4 ring-primary/5'
                                         : 'border-slate-100 bg-white hover:border-slate-300 hover:bg-slate-50'
                                 ]"
                             >
                                 <div :class="[
-                                    'flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-lg font-black transition-all',
+                                    'flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-lg font-black transition-all',
                                     selectedAnswers[currentQuestion.id] === option.id
                                         ? 'bg-primary text-white'
                                         : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200 group-hover:text-slate-600'
@@ -176,7 +176,7 @@ const submitExam = (isAuto = false) => {
                         <button 
                             @click="prevQuestion"
                             :disabled="currentQuestionIndex === 0"
-                            class="flex items-center gap-3 rounded-2xl bg-white px-8 py-4 text-sm font-black tracking-widest text-slate-600 uppercase shadow-sm border border-slate-100 transition-all hover:bg-slate-50 active:scale-95 disabled:opacity-30 disabled:pointer-events-none"
+                            class="flex items-center gap-3 rounded-xl bg-white px-8 py-4 text-sm font-black tracking-widest text-slate-600 uppercase shadow-sm border border-slate-100 transition-all hover:bg-slate-50 active:scale-95 disabled:opacity-30 disabled:pointer-events-none"
                         >
                             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
@@ -187,7 +187,7 @@ const submitExam = (isAuto = false) => {
                         <button 
                             @click="nextQuestion"
                             v-if="currentQuestionIndex < questions.length - 1"
-                            class="flex items-center gap-3 rounded-2xl bg-white px-8 py-4 text-sm font-black tracking-widest text-slate-600 uppercase shadow-sm border border-slate-100 transition-all hover:bg-slate-50 active:scale-95"
+                            class="flex items-center gap-3 rounded-xl bg-white px-8 py-4 text-sm font-black tracking-widest text-slate-600 uppercase shadow-sm border border-slate-100 transition-all hover:bg-slate-50 active:scale-95"
                         >
                             Next Question
                             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -198,7 +198,7 @@ const submitExam = (isAuto = false) => {
                         <button 
                             @click="submitExam(false)"
                             v-else
-                            class="rounded-2xl bg-primary px-12 py-4 text-sm font-black tracking-widest text-white uppercase shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95"
+                            class="rounded-xl bg-primary px-12 py-4 text-sm font-black tracking-widest text-white uppercase shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95"
                         >
                             Final Submission
                         </button>
@@ -207,7 +207,7 @@ const submitExam = (isAuto = false) => {
 
                 <!-- Sidebar / Question Grid -->
                 <div class="space-y-8">
-                    <div class="rounded-[2rem] bg-white p-8 shadow-sm border border-slate-100">
+                    <div class="rounded-xl bg-white p-8 shadow-sm border border-slate-100">
                         <h3 class="mb-6 text-sm font-black tracking-widest text-slate-400 uppercase">Question Navigator</h3>
                         
                         <div class="grid grid-cols-5 gap-3">
@@ -242,7 +242,7 @@ const submitExam = (isAuto = false) => {
                     </div>
 
                     <!-- Instructions -->
-                    <div class="rounded-[2rem] bg-lemon-yellow/5 p-8 border border-lemon-yellow/10">
+                    <div class="rounded-xl bg-lemon-yellow/5 p-8 border border-lemon-yellow/10">
                         <h4 class="mb-4 text-xs font-black tracking-widest text-slate-900 uppercase flex items-center gap-2">
                             <svg class="h-4 w-4 text-lemon-yellow" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />

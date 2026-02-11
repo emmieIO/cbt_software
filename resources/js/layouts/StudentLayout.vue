@@ -42,25 +42,47 @@ const IconResults = defineComponent({
         ]),
 });
 
+const IconProfile = defineComponent({
+    render: () =>
+        h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor' }, [
+            h('path', {
+                'stroke-linecap': 'round',
+                'stroke-linejoin': 'round',
+                'stroke-width': '2',
+                d: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
+            }),
+        ]),
+});
+
 const navigation = [
     {
-        name: 'Dashboard',
-        href: dashboard().url,
-        active: page.component === 'Student/Dashboard',
-        icon: IconDashboard,
+        section: 'Main',
+        items: [
+            {
+                name: 'Dashboard',
+                href: dashboard().url,
+                active: page.component === 'Student/Dashboard',
+                icon: IconDashboard,
+            },
+        ]
     },
     {
-        name: 'Available Exams',
-        href: '#',
-        active: false,
-        icon: IconExams,
-    },
-    {
-        name: 'My Results',
-        href: '#',
-        active: false,
-        icon: IconResults,
-    },
+        section: 'Academic',
+        items: [
+            {
+                name: 'Available Exams',
+                href: '#',
+                active: false,
+                icon: IconExams,
+            },
+            {
+                name: 'My Results',
+                href: '#',
+                active: false,
+                icon: IconResults,
+            },
+        ]
+    }
 ];
 </script>
 

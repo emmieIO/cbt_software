@@ -14,14 +14,14 @@ const page = usePage();
         <div class="w-full max-w-4xl space-y-8 text-center">
             <!-- Header Section -->
             <div class="flex flex-col items-center space-y-4">
-                <img src="/assets/img/chrisland-school-logo.png" alt="Chrisland School Logo" class="h-32 w-auto object-contain drop-shadow-lg" />
-                <h1 class="text-4xl font-bold tracking-tight sm:text-5xl">Chrisland Schools</h1>
-                <p class="text-xl font-medium text-lemon-yellow">Computer Based Testing Portal</p>
+                <img src="/assets/img/chrisland-school-logo.png" alt="Chrisland School Logo" class="h-32 w-auto object-contain drop-shadow-2xl" />
+                <h1 class="text-5xl font-black tracking-tighter sm:text-6xl">Chrisland Schools</h1>
+                <p class="text-xl font-bold tracking-[0.2em] text-lemon-yellow uppercase">CBT INFRASTRUCTURE</p>
             </div>
 
             <!-- Authenticated View -->
             <div v-if="page.props.auth.user" class="mt-12 flex flex-col items-center space-y-6">
-                <div class="rounded-2xl bg-white/10 p-8 shadow-2xl backdrop-blur-md">
+                <div class="rounded-xl bg-white/10 p-8 shadow-2xl backdrop-blur-md">
                     <h2 class="text-2xl font-bold">Welcome back, {{ page.props.auth.user.name }}!</h2>
                     <p class="mt-2 text-white/80">
                         You are currently signed in as a <span class="capitalize">{{ page.props.auth.user.roles[0] || 'user' }}</span
@@ -40,7 +40,7 @@ const page = usePage();
             <div v-else class="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2">
                 <!-- Student Portal Card -->
                 <div
-                    class="group relative overflow-hidden rounded-2xl bg-white p-8 text-slate-900 shadow-2xl transition-all hover:-translate-y-1 hover:shadow-lemon-yellow/20"
+                    class="group relative overflow-hidden rounded-xl bg-white p-8 text-slate-900 shadow-2xl transition-all hover:-translate-y-1 hover:shadow-lemon-yellow/20"
                 >
                     <div class="absolute top-0 right-0 p-4 opacity-10 transition-opacity group-hover:opacity-20">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -70,7 +70,7 @@ const page = usePage();
 
                 <!-- Staff/Admin Portal Card -->
                 <div
-                    class="group relative overflow-hidden rounded-2xl border-2 border-lemon-yellow bg-primary/50 p-8 shadow-2xl backdrop-blur-sm transition-all hover:-translate-y-1"
+                    class="group relative overflow-hidden rounded-xl border-2 border-lemon-yellow bg-primary/50 p-8 shadow-2xl backdrop-blur-sm transition-all hover:-translate-y-1"
                 >
                     <div class="absolute top-0 right-0 p-4 text-lemon-yellow opacity-10 transition-opacity group-hover:opacity-20">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -101,7 +101,7 @@ const page = usePage();
                 <Link
                     v-if="!page.props.auth.user"
                     :href="adminLogin.url()"
-                    class="rounded-full border border-white/20 bg-white/5 px-4 py-1 text-xs transition-all hover:border-lemon-yellow/50 hover:bg-white/10 hover:text-lemon-yellow"
+                    class="rounded-lg-full border border-white/20 bg-white/5 px-4 py-1 text-xs transition-all hover:border-lemon-yellow/50 hover:bg-white/10 hover:text-lemon-yellow"
                 >
                     System Administrator
                 </Link>

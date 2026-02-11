@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
+import { useForm } from 'laravel-precognition-vue';
 import { ref, computed } from 'vue';
 import { promote as processPromote, students as fetchStudentsAction } from '@/actions/App/Http/Controllers/Admin/PromotionController';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
@@ -58,7 +59,7 @@ const toggleSelectAll = () => {
     }
 };
 
-const form = useForm({
+const form = useForm('post', processPromote().url, {
     from_class_id: '',
     to_class_id: '',
     student_ids: [] as string[],
@@ -67,14 +68,16 @@ const form = useForm({
 const isConfirmModalOpen = ref(false);
 
 const startPromotion = () => {
-    form.from_class_id = selectedSourceClassId.value;
-    form.to_class_id = selectedTargetClassId.value;
-    form.student_ids = selectedStudentIds.value;
+    form.setData({
+        from_class_id: selectedSourceClassId.value,
+        to_class_id: selectedTargetClassId.value,
+        student_ids: selectedStudentIds.value,
+    });
     isConfirmModalOpen.value = true;
 };
 
 const submitPromotion = () => {
-    form.post(processPromote().url, {
+    form.submit({
         onSuccess: () => {
             isConfirmModalOpen.value = false;
             selectedSourceClassId.value = '';
@@ -90,15 +93,15 @@ const submitPromotion = () => {
         <Head title="Student Promotion Wizard" />
 
         <div class="space-y-10">
-            <div class="relative overflow-hidden rounded-[2.5rem] bg-slate-900 px-10 py-12 text-white shadow-2xl">
+            <div class="relative overflow-hidden rounded-xl bg-slate-900 px-10 py-12 text-white shadow-2xl">
                 <div class="relative z-10">
                     <div class="mb-4 flex items-center gap-4">
-                        <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-lemon-yellow backdrop-blur-xl">
+                        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 text-lemon-yellow backdrop-blur-xl">
                             <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                             </svg>
                         </div>
-                        <h1 class="text-3xl font-black italic">Promotion Control Center</h1>
+                        <h1 class="text-3xl font-black">Promotion Control Center</h1>
                     </div>
                     <p class="max-w-2xl text-lg font-medium text-slate-400">
                         Execute top-down promotions to transition students between academic years. Ensure target classes are emptied before promoting
@@ -120,7 +123,7 @@ const submitPromotion = () => {
                         <div
                             v-for="cls in classes"
                             :key="cls.id"
-                            class="flex items-center justify-between rounded-3xl border border-slate-100 bg-white p-5 shadow-sm transition-all hover:shadow-md"
+                            class="flex items-center justify-between rounded-xl border border-slate-100 bg-white p-5 shadow-sm transition-all hover:shadow-md"
                         >
                             <div>
                                 <h4 class="text-sm font-black text-slate-800">{{ cls.name }}</h4>
@@ -141,7 +144,7 @@ const submitPromotion = () => {
 
                 <!-- Wizard Panel -->
                 <div class="space-y-8 lg:col-span-8">
-                    <div class="rounded-[2.5rem] border border-slate-100 bg-white p-10 shadow-xl">
+                    <div class="rounded-xl border border-slate-100 bg-white p-10 shadow-xl">
                         <div class="mb-10 grid grid-cols-1 gap-8 md:grid-cols-2">
                             <!-- Source -->
                             <div>
@@ -151,13 +154,14 @@ const submitPromotion = () => {
                                 <select
                                     v-model="selectedSourceClassId"
                                     @change="fetchStudents"
-                                    class="w-full rounded-2xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
+                                    class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                                 >
                                     <option value="">Select Class to Promote From</option>
                                     <option v-for="cls in classes" :key="cls.id" :value="cls.id" :disabled="cls.is_empty">
                                         {{ cls.name }} ({{ cls.student_count }} students)
                                     </option>
                                 </select>
+                                <div v-if="form.errors.from_class_id" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.from_class_id }}</div>
                             </div>
 
                             <!-- Target -->
@@ -167,13 +171,14 @@ const submitPromotion = () => {
                                 >
                                 <select
                                     v-model="selectedTargetClassId"
-                                    class="w-full rounded-2xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
+                                    class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                                 >
                                     <option value="">Graduate / Alumni Path</option>
                                     <option v-for="cls in classes" :key="cls.id" :value="cls.id" :disabled="cls.id === selectedSourceClassId">
                                         Promote to {{ cls.name }} {{ !cls.is_empty ? '(Warning: Occupied)' : '' }}
                                     </option>
                                 </select>
+                                <div v-if="form.errors.to_class_id" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.to_class_id }}</div>
                             </div>
                         </div>
 
@@ -199,14 +204,14 @@ const submitPromotion = () => {
                                 <label
                                     v-for="student in students"
                                     :key="student.id"
-                                    class="relative flex cursor-pointer items-center gap-3 rounded-2xl border border-slate-50 p-4 transition-all hover:bg-slate-50"
+                                    class="relative flex cursor-pointer items-center gap-3 rounded-xl border border-slate-50 p-4 transition-all hover:bg-slate-50"
                                     :class="selectedStudentIds.includes(student.id) ? 'border-primary/20 bg-primary/5' : 'bg-white'"
                                 >
                                     <input
                                         type="checkbox"
                                         v-model="selectedStudentIds"
                                         :value="student.id"
-                                        class="h-5 w-5 rounded-lg border-slate-200 text-primary focus:ring-primary/20"
+                                        class="h-5 w-5 rounded border-slate-200 text-primary focus:ring-primary/20"
                                     />
                                     <div class="overflow-hidden">
                                         <p class="truncate text-xs font-black text-slate-800">{{ student.name }}</p>
@@ -214,12 +219,13 @@ const submitPromotion = () => {
                                     </div>
                                 </label>
                             </div>
+                            <div v-if="form.errors.student_ids" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.student_ids }}</div>
 
                             <div class="pt-6">
                                 <button
                                     @click="startPromotion"
                                     :disabled="selectedStudentIds.length === 0"
-                                    class="flex w-full items-center justify-center gap-3 rounded-2xl bg-primary py-5 text-sm font-black tracking-[0.2em] text-white uppercase shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+                                    class="flex w-full items-center justify-center gap-3 rounded-xl bg-primary py-5 text-sm font-black tracking-[0.2em] text-white uppercase shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
                                 >
                                     <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />

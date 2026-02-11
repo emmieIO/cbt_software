@@ -3,7 +3,7 @@
 @source "../../node_modules/preline/dist/*.js";
 
 @theme inline {
-    --font-sans: 'Raleway', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: "Google Sans",ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
 @import './themes/theme.css';
@@ -14,9 +14,9 @@
     }
 }
 
-input[type='text'],
+/* input[type='text'],
 input[type='email'],
 select,
 textarea {
     @apply border border-primary ring-1 ring-primary;
-}
+} */

@@ -25,27 +25,27 @@ const startExam = (examId: string) => {
         <div class="p-8">
             <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
                 <!-- Stats Card -->
-                <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+                <div class="rounded-xl border border-slate-100 bg-white p-6 shadow-sm">
                     <p class="text-sm font-medium tracking-wider text-slate-500 uppercase">Available Exams</p>
                     <p class="mt-2 text-3xl font-bold text-primary">{{ availableExams.length }}</p>
                 </div>
-                <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+                <div class="rounded-xl border border-slate-100 bg-white p-6 shadow-sm">
                     <p class="text-sm font-medium tracking-wider text-slate-500 uppercase">Completed</p>
                     <p class="mt-2 text-3xl font-bold text-slate-800">--</p>
                 </div>
-                <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+                <div class="rounded-xl border border-slate-100 bg-white p-6 shadow-sm">
                     <p class="text-sm font-medium tracking-wider text-slate-500 uppercase">Avg. Score</p>
                     <p class="mt-2 text-3xl font-bold text-slate-800">--%</p>
                 </div>
             </div>
 
             <!-- Active Exams -->
-            <div class="mt-8 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+            <div class="mt-8 overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm">
                 <div class="border-b border-slate-100 bg-slate-50/50 px-6 py-4">
                     <h3 class="font-bold text-slate-800">Ongoing Exams</h3>
                 </div>
                 <div class="p-6 space-y-4">
-                    <div v-if="availableExams.length === 0" class="py-12 text-center text-slate-400 italic">
+                    <div v-if="availableExams.length === 0" class="py-12 text-center text-slate-400">
                         No live exams available for your class at this moment.
                     </div>
                     
@@ -55,7 +55,7 @@ const startExam = (examId: string) => {
                         class="flex items-center justify-between rounded-xl border border-primary/20 bg-primary/5 p-4"
                     >
                         <div class="flex items-center space-x-4">
-                            <div class="rounded-lg bg-primary p-3 text-white">
+                            <div class="rounded-xl bg-primary p-3 text-white">
                                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path
                                         stroke-linecap="round"
@@ -72,7 +72,7 @@ const startExam = (examId: string) => {
                         </div>
                         <button 
                             @click="startExam(exam.id)"
-                            class="rounded-lg bg-primary px-6 py-2 font-bold text-white transition-transform hover:scale-105 active:scale-95"
+                            class="rounded-xl bg-primary px-6 py-2 font-bold text-white transition-transform hover:scale-105 active:scale-95"
                         >
                             Start Exam
                         </button>

@@ -23,6 +23,8 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::findOrCreate('manage school setup');
         Permission::findOrCreate('manage curriculum');
         Permission::findOrCreate('manage enrollment');
+        Permission::findOrCreate('manage prospective batches');
+        Permission::findOrCreate('manage admissions');
 
         // Question Bank Management
         Permission::findOrCreate('view questions');

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AdminLayout from '@/layouts/AdminLayout.vue';
-import { Head } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 
 defineProps<{
     stats: {
@@ -22,70 +22,74 @@ defineProps<{
     <AdminLayout>
         <Head title="Admin Dashboard" />
 
-        <div class="p-8">
-            <div class="grid grid-cols-1 gap-6 md:grid-cols-4">
-                <!-- Stats Card -->
-                <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-                    <p class="text-sm font-medium tracking-wider text-slate-500 uppercase">Total Students</p>
-                    <p class="mt-2 text-3xl font-bold text-primary">{{ stats.totalStudents.toLocaleString() }}</p>
+        <div class="space-y-10">
+            <!-- Page Header (From UI Concept) -->
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-black text-slate-900 tracking-tight">Admin Hub</h1>
+                    <p class="mt-1 text-sm font-bold text-slate-400">Managing Chrisland CBT Infrastructure</p>
                 </div>
-                <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-                    <p class="text-sm font-medium tracking-wider text-slate-500 uppercase">Total Staff</p>
-                    <p class="mt-2 text-3xl font-bold text-slate-800">{{ stats.totalStaff.toLocaleString() }}</p>
-                </div>
-                <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-                    <p class="text-sm font-medium tracking-wider text-slate-500 uppercase">Active Exams</p>
-                    <p class="mt-2 text-3xl font-bold text-green-600">{{ stats.activeExams }}</p>
-                </div>
-                <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-                    <p class="text-sm font-medium tracking-wider text-slate-500 uppercase">System Status</p>
-                    <p class="mt-2 text-3xl font-bold text-blue-600">{{ stats.systemStatus }}</p>
+                <div class="flex items-center gap-3">
+                    <button class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-black text-slate-600 uppercase shadow-sm transition-all hover:bg-slate-50 active:scale-95">
+                        <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        System Export
+                    </button>
+                    <Link href="/admin/users/students" class="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-xs font-black text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Quick Enroll
+                    </Link>
                 </div>
             </div>
 
-            <div class="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
-                <!-- Recent Activity -->
-                <div class="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
-                    <div class="border-b border-slate-100 bg-slate-50/50 px-6 py-4">
-                        <h3 class="font-bold text-slate-800">Recent System Logs</h3>
-                    </div>
-                    <div class="divide-y divide-slate-50 p-6">
-                        <div v-for="activity in recentActivity" :key="activity.id" class="py-3">
-                            <p class="text-sm text-slate-600">
-                                <span class="font-bold">{{ activity.user }}</span> {{ activity.action }}
-                            </p>
-                            <p class="text-xs text-slate-400">{{ activity.time }}</p>
-                        </div>
+            <!-- Hero Stats Section -->
+            <div class="grid grid-cols-1 gap-6 md:grid-cols-4">
+                <div class="rounded-xl bg-slate-900 p-8 text-white shadow-2xl transition-all hover:-translate-y-1">
+                    <p class="text-[10px] font-black tracking-widest text-slate-400 uppercase">Total Students</p>
+                    <p class="mt-4 text-4xl font-black tracking-tighter text-primary">
+                        {{ stats.totalStudents.toLocaleString() }}
+                    </p>
+                </div>
+                <div class="rounded-xl bg-white p-8 shadow-sm border border-slate-100 transition-all hover:-translate-y-1 hover:shadow-xl">
+                    <p class="text-[10px] font-black tracking-widest text-slate-400 uppercase">Staff Strength</p>
+                    <p class="mt-4 text-4xl font-black tracking-tighter text-slate-800">
+                        {{ stats.totalStaff.toLocaleString() }}
+                    </p>
+                </div>
+                <div class="rounded-xl bg-white p-8 shadow-sm border border-slate-100 transition-all hover:-translate-y-1 hover:shadow-xl">
+                    <p class="text-[10px] font-black tracking-widest text-slate-400 uppercase">Live Exams</p>
+                    <p class="mt-4 text-4xl font-black tracking-tighter text-green-600">
+                        {{ stats.activeExams }}
+                    </p>
+                </div>
+                <div class="rounded-xl bg-white p-8 shadow-sm border border-slate-100 transition-all hover:-translate-y-1 hover:shadow-xl">
+                    <p class="text-[10px] font-black tracking-widest text-slate-400 uppercase">System Status</p>
+                    <div class="mt-4 flex items-center gap-3">
+                        <div class="h-3 w-3 rounded-lg-full bg-blue-500 animate-pulse"></div>
+                        <p class="text-3xl font-black text-blue-600 tracking-tighter uppercase">{{ stats.systemStatus }}</p>
                     </div>
                 </div>
+            </div>
 
-                <!-- Quick Actions -->
-                <div class="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
-                    <div class="border-b border-slate-100 bg-slate-50/50 px-6 py-4">
-                        <h3 class="font-bold text-slate-800">Quick Actions</h3>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4 p-6">
-                        <button class="rounded-xl bg-slate-50 p-4 text-center transition-colors hover:bg-slate-100">
-                            <div class="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                </svg>
-                            </div>
-                            <span class="text-sm font-bold text-slate-700">Add Student</span>
-                        </button>
-                        <button class="rounded-xl bg-slate-50 p-4 text-center transition-colors hover:bg-slate-100">
-                            <div class="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-green-100 text-green-600">
-                                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                                    />
-                                </svg>
-                            </div>
-                            <span class="text-sm font-bold text-slate-700">System Report</span>
-                        </button>
+            <!-- Activity Log -->
+            <div class="rounded-xl border border-slate-100 bg-white p-10 shadow-sm overflow-hidden">
+                <div class="mb-8 flex items-center justify-between">
+                    <h3 class="text-xl font-black tracking-tight text-slate-900">Recent System Logs</h3>
+                    <span class="rounded-lg-full bg-slate-50 px-4 py-1.5 text-[10px] font-black tracking-widest text-slate-400 uppercase">Live Monitor</span>
+                </div>
+                <div class="divide-y divide-slate-50">
+                    <div v-for="activity in recentActivity" :key="activity.id" class="flex items-center justify-between py-5 group cursor-pointer hover:bg-slate-50/50 rounded-xl px-4 transition-colors">
+                        <div class="flex items-center gap-4">
+                            <div class="h-2 w-2 rounded-lg-full bg-slate-300 group-hover:bg-primary transition-colors"></div>
+                            <p class="text-sm font-bold text-slate-600">
+                                <span class="text-slate-900 font-black">{{ activity.user }}</span> 
+                                {{ activity.action }}
+                            </p>
+                        </div>
+                        <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">{{ activity.time }}</span>
                     </div>
                 </div>
             </div>
