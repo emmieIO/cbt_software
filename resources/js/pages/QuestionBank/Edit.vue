@@ -283,7 +283,9 @@ const submit = () => {
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                                 </svg>
                                             </button>
-                                            <div v-if="form.errors[`options.${index}.content`]" class="mt-1 text-xs text-red-600">{{ form.errors[`options.${index}.content`] }}</div>
+                                            <div v-if="form.errors[`options.${index}.content`]" class="mt-1 text-xs text-red-600">
+                                                {{ form.errors[`options.${index}.content`] }}
+                                            </div>
                                         </div>
                                         <button
                                             type="button"
@@ -318,46 +320,8 @@ const submit = () => {
                                             <circle
                                                 class="opacity-25"
                                                 cx="12"
-                                                cy="12" r="10"
-                                                stroke="currentColor"
-                                                stroke-width="4"
-                                                fill="none"
-                                            ></circle>
-                                            <path
-                                                class="opacity-75"
-                                                fill="currentColor"
-                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                            ></path>
-                                        </svg>
-                                    </span>
-                                    Update Question
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </component>
-</template>
-
-                        <!-- Form Actions -->
-                        <div class="flex justify-end border-t border-slate-100 pt-10">
-                            <div class="flex gap-4">
-                                <Link :href="index().url" class="px-8 py-4 text-sm font-bold text-slate-500 transition-colors hover:text-slate-700">
-                                    Cancel
-                                </Link>
-                                <button
-                                    type="submit"
-                                    :disabled="form.processing"
-                                    class="flex items-center justify-center rounded-xl bg-primary px-16 py-4 text-lg font-bold text-white shadow-xl transition-all hover:scale-105 hover:bg-primary/90 active:scale-95 disabled:opacity-50"
-                                >
-                                    <span v-if="form.processing" class="mr-2 animate-spin">
-                                        <svg class="h-5 w-5" viewBox="0 0 24 24">
-                                            <circle
-                                                class="opacity-25"
-                                                cx="12"
-                                                cy="12" r="10"
+                                                cy="12"
+                                                r="10"
                                                 stroke="currentColor"
                                                 stroke-width="4"
                                                 fill="none"

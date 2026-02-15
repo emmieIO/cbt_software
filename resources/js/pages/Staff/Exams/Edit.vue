@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { Head, usePage, useForm } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { update as updateExamAction, destroy as deleteExamAction } from '@/actions/App/Http/Controllers/Staff/ExamController';
+import ConfirmationModal from '@/components/ConfirmationModal.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import StaffLayout from '@/layouts/StaffLayout.vue';
-import ConfirmationModal from '@/components/ConfirmationModal.vue';
-import type { Batch, Subject, SchoolClass } from '@/types/academics';
+import type { Batch } from '@/types/academics';
 
 interface Assignment {
     id: string;
@@ -37,11 +37,11 @@ const props = defineProps<{
 
 const page = usePage();
 const isAdmin = computed(() => (page.props.auth.user as any).roles.includes('admin'));
-const canManageEntrance = computed(() => (page.props.auth.user as any).permissions.includes('manage entrance exams'));
 const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
 
-import { ref, watch } from 'vue';
-const useGlobalSelection = ref(isAdmin.value && !props.exam.school_class_id && !props.exam.prospective_class_id ? true : isAdmin.value);
+const useGlobalSelection = ref(
+    isAdmin.value && !props.exam.school_class_id && !props.exam.prospective_class_id ? true : isAdmin.value
+);
 
 // Helper to format date for datetime-local input
 const formatDateForInput = (dateString: string | null) => {
@@ -52,10 +52,12 @@ const formatDateForInput = (dateString: string | null) => {
 
 const form = useForm({
     title: props.exam.title,
-    assignment_id: props.assignments.find(a => 
-        a.subject.id === props.exam.subject_id && 
-        (a.school_class?.id === props.exam.school_class_id || a.prospective_class?.id === props.exam.prospective_class_id)
-    )?.id || '',
+    assignment_id:
+        props.assignments.find(
+            (a) =>
+                a.subject.id === props.exam.subject_id &&
+                (a.school_class?.id === props.exam.school_class_id || a.prospective_class?.id === props.exam.prospective_class_id),
+        )?.id || '',
     subject_id: props.exam.subject_id,
     school_class_id: props.exam.school_class_id || '',
     prospective_class_id: props.exam.prospective_class_id || '',
@@ -75,6 +77,16 @@ const handleAssignmentChange = () => {
     }
 };
 
+watch(useGlobalSelection, (val) => {
+    if (val) {
+        form.assignment_id = '';
+    } else {
+        form.subject_id = '';
+        form.school_class_id = '';
+        form.prospective_class_id = '';
+    }
+});
+
 const submit = () => {
     form.put(updateExamAction(props.exam.id).url);
 };
@@ -89,7 +101,7 @@ const handleDelete = () => {
     form.delete(deleteExamAction(props.exam.id).url, {
         onSuccess: () => {
             isDeleteModalOpen.value = false;
-        }
+        },
     });
 };
 </script>
@@ -102,9 +114,9 @@ const handleDelete = () => {
             <div class="flex items-center justify-between">
                 <div>
                     <h2 class="text-4xl font-black tracking-tight text-slate-900 italic">Edit Examination</h2>
-                    <p class="mt-2 text-sm font-bold text-slate-500 uppercase tracking-widest">Update configuration for {{ exam.title }}</p>
+                    <p class="mt-2 text-sm font-bold tracking-widest text-slate-500 uppercase">Update configuration for {{ exam.title }}</p>
                 </div>
-                <button 
+                <button
                     @click="confirmDelete"
                     class="rounded-xl border-2 border-red-100 bg-red-50 px-6 py-3 text-[10px] font-black tracking-widest text-red-600 uppercase transition-all hover:bg-red-600 hover:text-white"
                 >
@@ -114,19 +126,19 @@ const handleDelete = () => {
 
             <!-- Global Selection Toggle for Admins -->
             <div v-if="isAdmin && assignments.length > 0" class="flex items-center justify-center gap-4">
-                <button 
+                <button
                     type="button"
                     @click="useGlobalSelection = false"
-                    :class="!useGlobalSelection ? 'bg-primary text-white' : 'bg-white text-slate-400 border border-slate-100'"
-                    class="rounded-xl px-6 py-3 text-[10px] font-black uppercase tracking-widest transition-all"
+                    :class="!useGlobalSelection ? 'bg-primary text-white' : 'border border-slate-100 bg-white text-slate-400'"
+                    class="rounded-xl px-6 py-3 text-[10px] font-black tracking-widest uppercase transition-all"
                 >
                     Assigned Loads
                 </button>
-                <button 
+                <button
                     type="button"
                     @click="useGlobalSelection = true"
-                    :class="useGlobalSelection ? 'bg-slate-900 text-white shadow-xl' : 'bg-white text-slate-400 border border-slate-100'"
-                    class="rounded-xl px-6 py-3 text-[10px] font-black uppercase tracking-widest transition-all"
+                    :class="useGlobalSelection ? 'bg-slate-900 text-white shadow-xl' : 'border border-slate-100 bg-white text-slate-400'"
+                    class="rounded-xl px-6 py-3 text-[10px] font-black tracking-widest uppercase transition-all"
                 >
                     Global Management (Admin)
                 </button>
@@ -149,7 +161,9 @@ const handleDelete = () => {
 
                         <div class="grid grid-cols-2 gap-6">
                             <div>
-                                <label class="mb-3 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Duration (Minutes)</label>
+                                <label class="mb-3 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase"
+                                    >Duration (Minutes)</label
+                                >
                                 <input
                                     v-model="form.duration"
                                     type="number"
@@ -176,7 +190,9 @@ const handleDelete = () => {
 
                         <div class="grid grid-cols-2 gap-6">
                             <div>
-                                <label class="mb-3 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Examination Type</label>
+                                <label class="mb-3 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase"
+                                    >Examination Type</label
+                                >
                                 <select
                                     v-model="form.type"
                                     required
@@ -194,7 +210,9 @@ const handleDelete = () => {
                         <div v-if="useGlobalSelection" class="space-y-6">
                             <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                                 <div>
-                                    <label class="mb-3 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Academic Subject</label>
+                                    <label class="mb-3 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase"
+                                        >Academic Subject</label
+                                    >
                                     <select
                                         v-model="form.subject_id"
                                         required
@@ -206,7 +224,9 @@ const handleDelete = () => {
                                     <div v-if="form.errors.subject_id" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.subject_id }}</div>
                                 </div>
                                 <div v-if="form.type === 'entrance'">
-                                    <label class="mb-3 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Entrance Batch</label>
+                                    <label class="mb-3 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase"
+                                        >Entrance Batch</label
+                                    >
                                     <select
                                         v-model="form.prospective_class_id"
                                         required
@@ -215,10 +235,14 @@ const handleDelete = () => {
                                         <option value="" disabled>Select Batch</option>
                                         <option v-for="batch in batches" :key="batch.id" :value="batch.id">{{ batch.name }}</option>
                                     </select>
-                                    <div v-if="form.errors.prospective_class_id" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.prospective_class_id }}</div>
+                                    <div v-if="form.errors.prospective_class_id" class="mt-2 text-xs font-bold text-red-500">
+                                        {{ form.errors.prospective_class_id }}
+                                    </div>
                                 </div>
                                 <div v-else>
-                                    <label class="mb-3 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Target Class</label>
+                                    <label class="mb-3 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase"
+                                        >Target Class</label
+                                    >
                                     <select
                                         v-model="form.school_class_id"
                                         required
@@ -227,7 +251,9 @@ const handleDelete = () => {
                                         <option value="" disabled>Select Class</option>
                                         <option v-for="cls in classes" :key="cls.id" :value="cls.id">{{ cls.name }}</option>
                                     </select>
-                                    <div v-if="form.errors.school_class_id" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.school_class_id }}</div>
+                                    <div v-if="form.errors.school_class_id" class="mt-2 text-xs font-bold text-red-500">
+                                        {{ form.errors.school_class_id }}
+                                    </div>
                                 </div>
                             </div>
                         </div>

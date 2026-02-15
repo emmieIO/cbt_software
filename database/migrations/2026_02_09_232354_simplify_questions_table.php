@@ -26,7 +26,7 @@ return new class extends Migration
             $table->ulid('parent_id')->nullable();
             $table->integer('version')->default(1);
             $table->boolean('is_active')->default(true);
-            
+
             $table->foreign('parent_id')
                 ->references('id')
                 ->on('questions')

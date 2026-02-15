@@ -37,13 +37,13 @@ class StaffQuestionController extends Controller
     public function index(GetQuestionsRequest $request): Response
     {
         $user = $request->user();
-        
-        $subjects = $user->hasRole('admin') 
-            ? Subject::all() 
+
+        $subjects = $user->hasRole('admin')
+            ? Subject::all()
             : Subject::whereIn('id', $user->currentAssignments()->pluck('subject_id'))->get();
 
-        $classes = $user->hasRole('admin') 
-            ? SchoolClass::all() 
+        $classes = $user->hasRole('admin')
+            ? SchoolClass::all()
             : SchoolClass::whereIn('id', $user->currentAssignments()->pluck('school_class_id'))->get();
 
         return Inertia::render('QuestionBank/Index', [
@@ -231,7 +231,7 @@ class StaffQuestionController extends Controller
     public function bulkDestroy(BulkDestroyQuestionRequest $request): RedirectResponse
     {
         $user = $request->user();
-        
+
         // Filter IDs to only those the user is authorized to delete
         $authorizedIds = Question::whereIn('id', $request->ids)
             ->get()

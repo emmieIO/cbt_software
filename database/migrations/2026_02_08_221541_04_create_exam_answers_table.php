@@ -15,13 +15,13 @@ return new class extends Migration
             $table->ulid('id')->primary();
             $table->foreignUlid('exam_attempt_id')->constrained()->onDelete('cascade');
             $table->foreignUlid('question_id')->constrained()->onDelete('cascade');
-            
+
             $table->text('answer_text')->nullable();
             $table->json('selected_options')->nullable()->comment('For multiple choice/checkbox');
-            
+
             $table->decimal('score', 5, 2)->default(0.00);
             $table->boolean('is_correct')->default(false);
-            
+
             $table->timestamps();
         });
     }

@@ -23,9 +23,9 @@ class StaffDashboardController extends Controller
                     ->whereIn('subject_id', $assignedSubjectIds)
                     ->whereHas('attempts')
                     ->count(),
-                'questionBankCount' => \App\Models\Question::whereHas('topic', fn($q) => $q->whereIn('subject_id', $assignedSubjectIds))->count(),
+                'questionBankCount' => \App\Models\Question::whereHas('topic', fn ($q) => $q->whereIn('subject_id', $assignedSubjectIds))->count(),
             ],
-            'assignments' => $assignments->map(fn($a) => [
+            'assignments' => $assignments->map(fn ($a) => [
                 'id' => $a->id,
                 'subject' => $a->subject->name,
                 'class' => $a->schoolClass->name,

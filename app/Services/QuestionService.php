@@ -78,12 +78,12 @@ class QuestionService
      */
     public function updateQuestion(Question $question, QuestionDTO $dto, string $userId): Question
     {
-        return DB::transaction(function () use ($question, $dto, $userId) {
+        return DB::transaction(function () use ($question, $dto) {
             $question->update($dto->toArray());
 
             $existingOptions = $question->options;
-            
-            // Standard CBT Pattern: If the number of options is the same, 
+
+            // Standard CBT Pattern: If the number of options is the same,
             // update them in place to keep the IDs (and student sessions) stable.
             if ($existingOptions->count() === count($dto->options)) {
                 foreach ($existingOptions as $index => $option) {
@@ -93,7 +93,7 @@ class QuestionService
                     ]);
                 }
             } else {
-                // If the count changed, we have to recreate. 
+                // If the count changed, we have to recreate.
                 // Note: This is rare but will invalidate active shuffles for this specific question.
                 $question->options()->delete();
                 foreach ($dto->options as $optionDto) {
@@ -116,12 +116,12 @@ class QuestionService
         // Scope to teacher's assignments if they aren't an admin
         if (! $user->hasRole('admin')) {
             $assignments = $user->currentAssignments();
-            
+
             $query->where(function ($q) use ($assignments) {
                 $q->whereIn('school_class_id', $assignments->pluck('school_class_id'))
-                  ->whereHas('topic', function ($q) use ($assignments) {
-                      $q->whereIn('subject_id', $assignments->pluck('subject_id'));
-                  });
+                    ->whereHas('topic', function ($q) use ($assignments) {
+                        $q->whereIn('subject_id', $assignments->pluck('subject_id'));
+                    });
             });
         }
 

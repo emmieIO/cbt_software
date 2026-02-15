@@ -1,9 +1,7 @@
 <script setup lang="ts">
-import { Head, usePage } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
-
-const page = usePage();
 
 interface Option {
     id: string;
@@ -87,12 +85,12 @@ const enterFullscreen = () => {
 
 const logViolation = (type: string) => {
     if (isSubmitting.value) return;
-    
+
     violations.value++;
-    
+
     // Auto-submit immediately on violation
     isSubmitting.value = true;
-    
+
     if (document.fullscreenElement) {
         document.exitFullscreen();
     }
@@ -124,14 +122,18 @@ const selectOption = (questionId: string, optionId: string) => {
 
     // Auto-save to backend
     import('@inertiajs/vue3').then(({ router }) => {
-        router.patch(`/student/exams/${props.attempt.id}/answer`, {
-            question_id: questionId,
-            option_id: optionId,
-        }, {
-            preserveScroll: true,
-            preserveState: true,
-            only: [],
-        });
+        router.patch(
+            `/student/exams/${props.attempt.id}/answer`,
+            {
+                question_id: questionId,
+                option_id: optionId,
+            },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                only: [],
+            },
+        );
     });
 };
 
@@ -145,15 +147,15 @@ const confirmSubmit = () => {
 
 const handleFinalSubmit = () => {
     if (isSubmitting.value) return;
-    
+
     isSubmitting.value = true;
     isSubmitModalOpen.value = false;
-    
+
     // Exit fullscreen on submit
     if (document.fullscreenElement) {
         document.exitFullscreen();
     }
-    
+
     // Using Inertia router directly
     import('@inertiajs/vue3').then(({ router }) => {
         router.post(`/student/exams/${props.attempt.id}/submit`, {
@@ -167,7 +169,7 @@ const submitExam = () => {
     if (isSubmitting.value) return;
 
     isSubmitting.value = true;
-    
+
     if (document.fullscreenElement) {
         document.exitFullscreen();
     }
@@ -186,12 +188,12 @@ onMounted(() => {
     // Security Listeners
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('blur', () => logViolation('window_blur'));
-    
+
     // Prevent right-click
     document.addEventListener('contextmenu', (e) => e.preventDefault());
 
     // Prevent accidental back navigation
-    window.onbeforeunload = () => "Examination in progress. Are you sure you want to leave?";
+    window.onbeforeunload = () => 'Examination in progress. Are you sure you want to leave?';
 });
 
 onBeforeUnmount(() => {
@@ -212,24 +214,26 @@ onBeforeUnmount(() => {
                     <img src="/assets/img/chrisland-school-logo.png" alt="Logo" class="h-10 w-auto" />
                     <div>
                         <h1 class="text-lg font-black tracking-tight text-slate-900">{{ attempt.exam.title }}</h1>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ attempt.exam.subject.name }} • {{ questions.length }} Questions</p>
+                        <p class="text-[10px] font-bold tracking-widest text-slate-400 uppercase">
+                            {{ attempt.exam.subject.name }} • {{ questions.length }} Questions
+                        </p>
                     </div>
                 </div>
 
                 <!-- Timer -->
-                <div 
+                <div
                     class="flex items-center space-x-3 rounded-xl px-6 py-3 transition-all"
-                    :class="isTimeLow ? 'bg-red-50 text-red-600 animate-pulse' : 'bg-slate-900 text-white'"
+                    :class="isTimeLow ? 'animate-pulse bg-red-50 text-red-600' : 'bg-slate-900 text-white'"
                 >
                     <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span class="text-xl font-black tabular-nums tracking-tighter">{{ formattedTime }}</span>
+                    <span class="text-xl font-black tracking-tighter tabular-nums">{{ formattedTime }}</span>
                 </div>
 
-                <button 
+                <button
                     @click="confirmSubmit"
-                    class="rounded-xl bg-primary px-8 py-3 text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
+                    class="rounded-xl bg-primary px-8 py-3 text-xs font-black tracking-widest text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
                 >
                     Submit Test
                 </button>
@@ -238,16 +242,17 @@ onBeforeUnmount(() => {
 
         <main class="mx-auto max-w-7xl px-6 py-10">
             <div class="grid grid-cols-1 gap-10 lg:grid-cols-12">
-                
                 <!-- Main Question Display -->
                 <div class="lg:col-span-8">
                     <div class="rounded-2xl border border-slate-100 bg-white p-10 shadow-xl">
                         <!-- Question Progress -->
                         <div class="mb-8 flex items-center justify-between">
-                            <span class="text-xs font-black text-primary uppercase tracking-widest">Question {{ currentQuestionIndex + 1 }} of {{ questions.length }}</span>
-                            <div class="h-1.5 w-48 rounded-full bg-slate-100 overflow-hidden">
-                                <div 
-                                    class="h-full bg-primary transition-all duration-500" 
+                            <span class="text-xs font-black tracking-widest text-primary uppercase"
+                                >Question {{ currentQuestionIndex + 1 }} of {{ questions.length }}</span
+                            >
+                            <div class="h-1.5 w-48 overflow-hidden rounded-full bg-slate-100">
+                                <div
+                                    class="h-full bg-primary transition-all duration-500"
                                     :style="{ width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` }"
                                 ></div>
                             </div>
@@ -255,7 +260,7 @@ onBeforeUnmount(() => {
 
                         <!-- Question Content -->
                         <div class="mb-12">
-                            <h2 class="text-2xl font-black leading-snug text-slate-800">
+                            <h2 class="text-2xl leading-snug font-black text-slate-800">
                                 {{ currentQuestion.content }}
                             </h2>
                         </div>
@@ -266,16 +271,20 @@ onBeforeUnmount(() => {
                                 v-for="(option, idx) in currentQuestion.options"
                                 :key="option.id"
                                 @click="selectOption(currentQuestion.id, option.id)"
-                                class="flex w-full items-center space-x-4 rounded-2xl border-2 p-6 text-left transition-all group"
-                                :class="answers[currentQuestion.id] === option.id 
-                                    ? 'border-primary bg-primary/5' 
-                                    : 'border-slate-100 hover:border-slate-200 hover:bg-slate-50'"
+                                class="group flex w-full items-center space-x-4 rounded-2xl border-2 p-6 text-left transition-all"
+                                :class="
+                                    answers[currentQuestion.id] === option.id
+                                        ? 'border-primary bg-primary/5'
+                                        : 'border-slate-100 hover:border-slate-200 hover:bg-slate-50'
+                                "
                             >
-                                <div 
+                                <div
                                     class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 font-black transition-all"
-                                    :class="answers[currentQuestion.id] === option.id 
-                                        ? 'border-primary bg-primary text-white' 
-                                        : 'border-slate-200 text-slate-400 group-hover:border-primary group-hover:text-primary'"
+                                    :class="
+                                        answers[currentQuestion.id] === option.id
+                                            ? 'border-primary bg-primary text-white'
+                                            : 'border-slate-200 text-slate-400 group-hover:border-primary group-hover:text-primary'
+                                    "
                                 >
                                     {{ String.fromCharCode(65 + idx) }}
                                 </div>
@@ -285,10 +294,10 @@ onBeforeUnmount(() => {
 
                         <!-- Footer Navigation -->
                         <div class="mt-12 flex items-center justify-between border-t border-slate-50 pt-8">
-                            <button 
+                            <button
                                 @click="goToQuestion(currentQuestionIndex - 1)"
                                 :disabled="currentQuestionIndex === 0"
-                                class="flex items-center space-x-2 text-sm font-black text-slate-400 uppercase tracking-widest transition-all hover:text-slate-900 disabled:opacity-30"
+                                class="flex items-center space-x-2 text-sm font-black tracking-widest text-slate-400 uppercase transition-all hover:text-slate-900 disabled:opacity-30"
                             >
                                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7" />
@@ -297,24 +306,26 @@ onBeforeUnmount(() => {
                             </button>
 
                             <div class="flex items-center gap-2">
-                                <span v-if="answers[currentQuestion.id]" class="text-[10px] font-black text-green-500 uppercase tracking-widest">Answered</span>
-                                <span v-else class="text-[10px] font-black text-amber-500 uppercase tracking-widest">Not Answered</span>
+                                <span v-if="answers[currentQuestion.id]" class="text-[10px] font-black tracking-widest text-green-500 uppercase"
+                                    >Answered</span
+                                >
+                                <span v-else class="text-[10px] font-black tracking-widest text-amber-500 uppercase">Not Answered</span>
                             </div>
 
-                            <button 
+                            <button
                                 v-if="currentQuestionIndex < questions.length - 1"
                                 @click="goToQuestion(currentQuestionIndex + 1)"
-                                class="flex items-center space-x-2 text-sm font-black text-primary uppercase tracking-widest transition-all hover:translate-x-1"
+                                class="flex items-center space-x-2 text-sm font-black tracking-widest text-primary uppercase transition-all hover:translate-x-1"
                             >
                                 <span>Next Question</span>
                                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7" />
                                 </svg>
                             </button>
-                            <button 
+                            <button
                                 v-else
                                 @click="confirmSubmit"
-                                class="flex items-center space-x-2 text-sm font-black text-green-600 uppercase tracking-widest transition-all hover:scale-105"
+                                class="flex items-center space-x-2 text-sm font-black tracking-widest text-green-600 uppercase transition-all hover:scale-105"
                             >
                                 <span>Finish Test</span>
                                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -329,7 +340,7 @@ onBeforeUnmount(() => {
                 <div class="lg:col-span-4">
                     <div class="sticky top-32 space-y-6">
                         <div class="rounded-2xl border border-slate-100 bg-white p-8 shadow-xl">
-                            <h3 class="mb-6 text-sm font-black uppercase tracking-widest text-slate-400">Question Navigator</h3>
+                            <h3 class="mb-6 text-sm font-black tracking-widest text-slate-400 uppercase">Question Navigator</h3>
                             <div class="grid grid-cols-5 gap-3">
                                 <button
                                     v-for="(q, idx) in questions"
@@ -338,9 +349,9 @@ onBeforeUnmount(() => {
                                     class="flex h-10 w-full items-center justify-center rounded-lg text-xs font-black transition-all"
                                     :class="[
                                         currentQuestionIndex === idx ? 'ring-2 ring-primary ring-offset-2' : '',
-                                        answers[q.id] 
-                                            ? 'bg-primary text-white shadow-lg shadow-primary/20' 
-                                            : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
+                                        answers[q.id]
+                                            ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                                            : 'bg-slate-100 text-slate-400 hover:bg-slate-200',
                                     ]"
                                 >
                                     {{ idx + 1 }}
@@ -348,7 +359,7 @@ onBeforeUnmount(() => {
                             </div>
 
                             <div class="mt-8 border-t border-slate-50 pt-6">
-                                <div class="flex items-center justify-between text-[10px] font-black uppercase tracking-widest">
+                                <div class="flex items-center justify-between text-[10px] font-black tracking-widest uppercase">
                                     <div class="flex items-center gap-2">
                                         <div class="h-2 w-2 rounded-full bg-primary"></div>
                                         <span class="text-slate-400">Answered</span>
@@ -365,15 +376,21 @@ onBeforeUnmount(() => {
                         <div class="rounded-2xl border-2 border-dashed border-slate-200 p-8 text-center">
                             <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-slate-400">
                                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                                    />
                                 </svg>
                             </div>
-                            <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Security Mode Active</p>
-                            <p class="mt-2 text-xs font-bold leading-relaxed text-slate-500">Leaving this page or switching tabs may be flagged as a security violation.</p>
+                            <p class="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Security Mode Active</p>
+                            <p class="mt-2 text-xs leading-relaxed font-bold text-slate-500">
+                                Leaving this page or switching tabs may be flagged as a security violation.
+                            </p>
                         </div>
                     </div>
                 </div>
-
             </div>
         </main>
 
@@ -395,7 +412,12 @@ onBeforeUnmount(() => {
             confirm-label="Return to Exam"
             variant="danger"
             @close="showViolationWarning = false"
-            @confirm="() => { showViolationWarning = false; enterFullscreen(); }"
+            @confirm="
+                () => {
+                    showViolationWarning = false;
+                    enterFullscreen();
+                }
+            "
         />
     </div>
 </template>

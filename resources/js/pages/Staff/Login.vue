@@ -30,7 +30,7 @@ const submit = () => {
                     />
                 </Link>
                 <h1 class="mt-6 text-2xl font-black tracking-tight text-slate-900 uppercase">Staff Portal</h1>
-                <p class="mt-2 text-sm font-bold text-slate-400 uppercase tracking-widest">Educators & Academic Admin</p>
+                <p class="mt-2 text-sm font-bold tracking-widest text-slate-400 uppercase">Educators & Academic Admin</p>
             </div>
 
             <!-- Login Form -->
@@ -87,7 +87,10 @@ const submit = () => {
             </form>
 
             <div class="mt-8 text-center">
-                <Link href="/" class="text-[10px] font-black tracking-widest text-slate-400 uppercase transition-colors hover:text-primary underline underline-offset-8">
+                <Link
+                    href="/"
+                    class="text-[10px] font-black tracking-widest text-slate-400 uppercase underline underline-offset-8 transition-colors hover:text-primary"
+                >
                     &larr; Return to main site
                 </Link>
             </div>

@@ -6,7 +6,7 @@ import ConfirmationModal from '@/components/ConfirmationModal.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import type { SchoolClass } from '@/types/academics';
 
-const props = defineProps<{
+defineProps<{
     classes: SchoolClass[];
     levels: { value: string; label: string }[];
 }>();
@@ -31,10 +31,10 @@ const openEditModal = (cls: SchoolClass) => {
     isEditing.value = true;
     editingClass.value = cls;
     const levelValue = typeof cls.level === 'object' ? (cls.level as any).value : cls.level;
-    
+
     form.name = cls.name;
     form.level = levelValue;
-    
+
     isModalOpen.value = true;
 };
 
@@ -88,8 +88,8 @@ const getRawLevel = (cls: SchoolClass): string => {
             <!-- Page Header -->
             <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 class="text-3xl font-black text-slate-900 tracking-tight">School Classes</h1>
-                    <p class="mt-1 text-sm font-bold text-slate-400 uppercase tracking-widest">Grade Levels • {{ classes.length }} Active Sections</p>
+                    <h1 class="text-3xl font-black tracking-tight text-slate-900">School Classes</h1>
+                    <p class="mt-1 text-sm font-bold tracking-widest text-slate-400 uppercase">Grade Levels • {{ classes.length }} Active Sections</p>
                 </div>
                 <button
                     @click="openCreateModal"
@@ -111,31 +111,41 @@ const getRawLevel = (cls: SchoolClass): string => {
                     <div class="relative z-10 flex items-start justify-between">
                         <div class="space-y-4">
                             <div
-                                class="inline-flex items-center rounded-full bg-slate-50 border border-slate-100 px-3 py-1 text-[9px] font-black tracking-widest uppercase"
+                                class="inline-flex items-center rounded-full border border-slate-100 bg-slate-50 px-3 py-1 text-[9px] font-black tracking-widest uppercase"
                                 :class="{
                                     'text-blue-600': getRawLevel(cls) === 'primary',
-                                    'text-purple-600': getRawLevel(cls) === 'secondary'
+                                    'text-purple-600': getRawLevel(cls) === 'secondary',
                                 }"
                             >
                                 {{ typeof cls.level === 'object' ? (cls.level as any).label : cls.level }}
                             </div>
-                            <h3 class="text-2xl font-black text-slate-800 leading-none group-hover:text-primary transition-colors">{{ cls.name }}</h3>
+                            <h3 class="text-2xl leading-none font-black text-slate-800 transition-colors group-hover:text-primary">{{ cls.name }}</h3>
                         </div>
                         <div class="flex gap-2">
                             <button
                                 @click="openEditModal(cls)"
-                                class="flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 active:scale-90 transition-all"
+                                class="flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-600 active:scale-90"
                             >
                                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2.5"
+                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                    />
                                 </svg>
                             </button>
                             <button
                                 @click="confirmDelete(cls)"
-                                class="flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600 active:scale-90 transition-all"
+                                class="flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 transition-all hover:bg-red-50 hover:text-red-600 active:scale-90"
                             >
                                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2.5"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                    />
                                 </svg>
                             </button>
                         </div>

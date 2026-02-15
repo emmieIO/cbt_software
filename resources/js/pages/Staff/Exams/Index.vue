@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import { 
-    index as examsIndex, 
+import {
     create as createExamAction,
     show as showExamAction,
-    edit as editExamAction
+    edit as editExamAction,
 } from '@/actions/App/Http/Controllers/Staff/ExamController';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import StaffLayout from '@/layouts/StaffLayout.vue';
@@ -36,10 +35,14 @@ const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
 
 const getStatusColor = (status: string) => {
     switch (status) {
-        case 'live': return 'bg-green-500 text-white';
-        case 'scheduled': return 'bg-blue-500 text-white';
-        case 'closed': return 'bg-slate-500 text-white';
-        default: return 'bg-slate-100 text-slate-600';
+        case 'live':
+            return 'bg-green-500 text-white';
+        case 'scheduled':
+            return 'bg-blue-500 text-white';
+        case 'closed':
+            return 'bg-slate-500 text-white';
+        default:
+            return 'bg-slate-100 text-slate-600';
     }
 };
 </script>
@@ -66,52 +69,59 @@ const getStatusColor = (status: string) => {
             </div>
 
             <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                <div 
-                    v-for="exam in exams.data" 
+                <div
+                    v-for="exam in exams.data"
                     :key="exam.id"
                     class="group relative overflow-hidden rounded-xl border border-slate-100 bg-white p-8 shadow-sm transition-all hover:shadow-xl"
                 >
                     <div class="relative z-10">
                         <div class="mb-6 flex items-start justify-between">
-                            <span 
-                                class="rounded-lg-full px-3 py-1 text-[9px] font-black tracking-widest uppercase text-slate-900"
+                            <span
+                                class="rounded-lg-full px-3 py-1 text-[9px] font-black tracking-widest text-slate-900 uppercase"
                                 :class="getStatusColor(exam.status)"
                             >
                                 {{ exam.status }}
                             </span>
-                            <span class="text-[10px] font-black text-slate-300 uppercase tracking-tighter">{{ exam.type }}</span>
+                            <span class="text-[10px] font-black tracking-tighter text-slate-300 uppercase">{{ exam.type }}</span>
                         </div>
 
-                        <h3 class="mb-2 text-xl font-black text-slate-800 line-clamp-1">{{ exam.title }}</h3>
+                        <h3 class="mb-2 line-clamp-1 text-xl font-black text-slate-800">{{ exam.title }}</h3>
                         <div class="mb-6 flex items-center gap-2">
-                            <span class="rounded-xl bg-primary/5 px-2 py-1 text-[10px] font-black text-primary uppercase">{{ exam.subject.name }}</span>
-                            <div class="h-1 w-1 rounded-lg-full bg-slate-200"></div>
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            <span class="rounded-xl bg-primary/5 px-2 py-1 text-[10px] font-black text-primary uppercase">{{
+                                exam.subject.name
+                            }}</span>
+                            <div class="rounded-lg-full h-1 w-1 bg-slate-200"></div>
+                            <span class="text-[10px] font-bold tracking-widest text-slate-400 uppercase">
                                 {{ exam.type === 'entrance' ? exam.prospective_class?.name : exam.school_class?.name }}
                             </span>
                         </div>
 
                         <div class="mb-8 grid grid-cols-2 gap-4">
                             <div class="rounded-xl bg-slate-50 p-4">
-                                <span class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Time</span>
+                                <span class="mb-1 block text-[9px] font-black tracking-widest text-slate-400 uppercase">Time</span>
                                 <span class="text-xs font-bold text-slate-700">{{ exam.duration }} Mins</span>
                             </div>
                             <div class="rounded-xl bg-slate-50 p-4">
-                                <span class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Pool</span>
+                                <span class="mb-1 block text-[9px] font-black tracking-widest text-slate-400 uppercase">Pool</span>
                                 <span class="text-xs font-bold text-slate-700">{{ exam.questions_count }} Questions</span>
                             </div>
                         </div>
 
                         <div class="flex gap-3">
-                            <Link 
+                            <Link
                                 :href="editExamAction(exam.id).url"
                                 class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border-2 border-slate-100 text-slate-400 transition-all hover:border-primary hover:text-primary active:scale-90"
                             >
                                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2.5"
+                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                    />
                                 </svg>
                             </Link>
-                            <Link 
+                            <Link
                                 :href="showExamAction(exam.id).url"
                                 class="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-slate-100 py-4 text-xs font-black tracking-widest text-slate-600 uppercase transition-all hover:border-primary hover:text-primary"
                             >
@@ -127,9 +137,14 @@ const getStatusColor = (status: string) => {
                 <!-- Empty State -->
                 <div v-if="exams.data.length === 0" class="col-span-full flex flex-col items-center justify-center py-20 opacity-30">
                     <svg class="mb-4 h-20 w-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="1"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
                     </svg>
-                    <p class="text-lg font-bold uppercase tracking-widest">No Examinations Drafted</p>
+                    <p class="text-lg font-bold tracking-widest uppercase">No Examinations Drafted</p>
                 </div>
             </div>
         </div>

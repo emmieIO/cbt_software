@@ -13,7 +13,7 @@ interface ProspectiveClass {
     is_active: boolean;
 }
 
-const props = defineProps<{
+defineProps<{
     classes: ProspectiveClass[];
 }>();
 
@@ -37,11 +37,11 @@ const openCreateModal = () => {
 const openEditModal = (cls: ProspectiveClass) => {
     isEditing.value = true;
     editingClass.value = cls;
-    
+
     form.name = cls.name;
     form.description = cls.description || '';
     form.is_active = cls.is_active;
-    
+
     isModalOpen.value = true;
 };
 
@@ -90,8 +90,8 @@ const handleDelete = () => {
             <!-- Page Header -->
             <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 class="text-3xl font-black text-slate-900 tracking-tight">Entrance Batches</h1>
-                    <p class="mt-1 text-sm font-bold text-slate-400 uppercase tracking-widest">Prospective Students • {{ classes.length }} Batches</p>
+                    <h1 class="text-3xl font-black tracking-tight text-slate-900">Entrance Batches</h1>
+                    <p class="mt-1 text-sm font-bold tracking-widest text-slate-400 uppercase">Prospective Students • {{ classes.length }} Batches</p>
                 </div>
                 <button
                     @click="openCreateModal"
@@ -113,11 +113,14 @@ const handleDelete = () => {
                     <div class="relative z-10 flex items-start justify-between gap-4">
                         <div class="min-w-0 flex-1 space-y-4">
                             <div
-                                class="inline-flex items-center whitespace-nowrap rounded-full bg-primary/5 border border-primary/10 px-3 py-1 text-[9px] font-black tracking-widest uppercase text-primary"
+                                class="inline-flex items-center rounded-full border border-primary/10 bg-primary/5 px-3 py-1 text-[9px] font-black tracking-widest whitespace-nowrap text-primary uppercase"
                             >
                                 Prospective Batch
                             </div>
-                            <h3 class="truncate text-2xl font-black text-slate-800 leading-tight group-hover:text-primary transition-colors" :title="cls.name">
+                            <h3
+                                class="truncate text-2xl leading-tight font-black text-slate-800 transition-colors group-hover:text-primary"
+                                :title="cls.name"
+                            >
                                 {{ cls.name }}
                             </h3>
                             <p class="truncate text-xs font-bold text-slate-400" :title="cls.description || ''">
@@ -127,18 +130,28 @@ const handleDelete = () => {
                         <div class="flex shrink-0 gap-2">
                             <button
                                 @click="openEditModal(cls)"
-                                class="flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 active:scale-90 transition-all"
+                                class="flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-600 active:scale-90"
                             >
                                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2.5"
+                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                    />
                                 </svg>
                             </button>
                             <button
                                 @click="confirmDelete(cls)"
-                                class="flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600 active:scale-90 transition-all"
+                                class="flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 transition-all hover:bg-red-50 hover:text-red-600 active:scale-90"
                             >
                                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2.5"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                    />
                                 </svg>
                             </button>
                         </div>

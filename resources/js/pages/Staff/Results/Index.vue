@@ -30,32 +30,38 @@ const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
 
         <div class="space-y-10">
             <div>
-                <h1 class="text-2xl font-black text-slate-900 tracking-tight italic">Results & Analytics</h1>
-                <p class="mt-1 text-sm font-bold text-slate-400 uppercase tracking-widest">Select an examination to review student performance and security logs.</p>
+                <h1 class="text-2xl font-black tracking-tight text-slate-900 italic">Results & Analytics</h1>
+                <p class="mt-1 text-sm font-bold tracking-widest text-slate-400 uppercase">
+                    Select an examination to review student performance and security logs.
+                </p>
             </div>
 
             <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                <div 
-                    v-for="exam in exams.data" 
+                <div
+                    v-for="exam in exams.data"
                     :key="exam.id"
                     class="group relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-8 shadow-sm transition-all hover:border-primary/20 hover:shadow-2xl"
                 >
-                    <div class="relative z-10 flex flex-col h-full">
+                    <div class="relative z-10 flex h-full flex-col">
                         <div class="mb-6">
-                            <span class="rounded-xl bg-primary/5 px-2 py-1 text-[9px] font-black text-primary uppercase tracking-widest">{{ exam.subject.name }}</span>
-                            <h3 class="mt-3 text-xl font-black text-slate-800 line-clamp-2 leading-tight group-hover:text-primary transition-colors">{{ exam.title }}</h3>
-                            <p class="mt-2 text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
+                            <span class="rounded-xl bg-primary/5 px-2 py-1 text-[9px] font-black tracking-widest text-primary uppercase">{{
+                                exam.subject.name
+                            }}</span>
+                            <h3 class="mt-3 line-clamp-2 text-xl leading-tight font-black text-slate-800 transition-colors group-hover:text-primary">
+                                {{ exam.title }}
+                            </h3>
+                            <p class="mt-2 text-[10px] font-bold tracking-tighter text-slate-400 uppercase">
                                 {{ exam.type === 'entrance' ? exam.prospective_class?.name : exam.school_class?.name }}
                             </p>
                         </div>
 
-                        <div class="mt-auto pt-6 border-t border-slate-50 flex items-center justify-between">
+                        <div class="mt-auto flex items-center justify-between border-t border-slate-50 pt-6">
                             <div class="flex flex-col">
-                                <span class="text-2xl font-black text-slate-900 tracking-tighter">{{ exam.attempts_count }}</span>
-                                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Submissions</span>
+                                <span class="text-2xl font-black tracking-tighter text-slate-900">{{ exam.attempts_count }}</span>
+                                <span class="text-[9px] font-black tracking-widest text-slate-400 uppercase">Submissions</span>
                             </div>
-                            
-                            <Link 
+
+                            <Link
                                 :href="`/staff/exams/${exam.id}/results`"
                                 class="rounded-xl bg-slate-900 px-6 py-3 text-[10px] font-black tracking-widest text-white uppercase shadow-lg transition-all hover:bg-black active:scale-95"
                             >
@@ -66,7 +72,7 @@ const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
                 </div>
 
                 <div v-if="exams.data.length === 0" class="col-span-full py-24 text-center opacity-30">
-                    <p class="text-lg font-bold uppercase tracking-widest">No Examinations Found</p>
+                    <p class="text-lg font-bold tracking-widest uppercase">No Examinations Found</p>
                 </div>
             </div>
         </div>

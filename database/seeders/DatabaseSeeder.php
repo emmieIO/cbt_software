@@ -177,7 +177,7 @@ class DatabaseSeeder extends Seeder
                     'subject_id' => $subject->id,
                     'school_class_id' => $topicData['class']->id,
                     'name' => $topicData['name'],
-                    'slug' => Str::slug($topicData['name'] . '-' . $topicData['class']->name),
+                    'slug' => Str::slug($topicData['name'].'-'.$topicData['class']->name),
                 ]);
             }
         }

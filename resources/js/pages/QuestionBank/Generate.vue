@@ -165,7 +165,9 @@ const addLog = (type: 'info' | 'success' | 'error', message: string) => {
                                             {{ cls.name }}
                                         </option>
                                     </select>
-                                    <div v-if="form.errors.school_class_id" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.school_class_id }}</div>
+                                    <div v-if="form.errors.school_class_id" class="mt-1 text-xs font-bold text-red-500">
+                                        {{ form.errors.school_class_id }}
+                                    </div>
                                 </div>
 
                                 <div>

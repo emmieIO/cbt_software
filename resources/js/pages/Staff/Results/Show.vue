@@ -48,13 +48,17 @@ const getPercentage = (score: number) => {
         <div class="space-y-10">
             <div class="flex items-center justify-between">
                 <div>
-                    <Link href="/staff/exams/results" class="text-[10px] font-black text-primary uppercase tracking-widest hover:underline mb-2 block">&larr; Back to Results</Link>
-                    <h1 class="text-3xl font-black text-slate-900 tracking-tight">{{ exam.title }}</h1>
-                    <p class="mt-1 text-sm font-bold text-slate-400 uppercase tracking-widest">{{ exam.subject.name }} • Performance Breakdown</p>
+                    <Link href="/staff/exams/results" class="mb-2 block text-[10px] font-black tracking-widest text-primary uppercase hover:underline"
+                        >&larr; Back to Results</Link
+                    >
+                    <h1 class="text-3xl font-black tracking-tight text-slate-900">{{ exam.title }}</h1>
+                    <p class="mt-1 text-sm font-bold tracking-widest text-slate-400 uppercase">{{ exam.subject.name }} • Performance Breakdown</p>
                 </div>
-                
+
                 <div class="flex items-center gap-4">
-                    <button class="rounded-xl border border-slate-200 bg-white px-6 py-3 text-[10px] font-black uppercase tracking-widest text-slate-600 shadow-sm transition-all hover:bg-slate-50">
+                    <button
+                        class="rounded-xl border border-slate-200 bg-white px-6 py-3 text-[10px] font-black tracking-widest text-slate-600 uppercase shadow-sm transition-all hover:bg-slate-50"
+                    >
                         Export Excel
                     </button>
                 </div>
@@ -66,8 +70,8 @@ const getPercentage = (score: number) => {
                         <thead>
                             <tr class="bg-slate-50/50">
                                 <th class="px-8 py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase">Student Personnel</th>
-                                <th class="px-6 py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase text-center">Score</th>
-                                <th class="px-6 py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase text-center">Percentage</th>
+                                <th class="px-6 py-5 text-center text-[10px] font-black tracking-widest text-slate-400 uppercase">Score</th>
+                                <th class="px-6 py-5 text-center text-[10px] font-black tracking-widest text-slate-400 uppercase">Percentage</th>
                                 <th class="px-6 py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase">Security Status</th>
                                 <th class="px-8 py-5 text-right text-[10px] font-black tracking-widest text-slate-400 uppercase">Timestamp</th>
                             </tr>
@@ -77,7 +81,7 @@ const getPercentage = (score: number) => {
                                 <td class="px-8 py-6">
                                     <div class="flex flex-col">
                                         <span class="text-sm font-black text-slate-800">{{ attempt.user.name }}</span>
-                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
+                                        <span class="text-[10px] font-bold tracking-tighter text-slate-400 uppercase">
                                             {{ attempt.user.school_id || 'N/A' }} • {{ attempt.user.school_class?.name || 'Candidate' }}
                                         </span>
                                     </div>
@@ -88,14 +92,17 @@ const getPercentage = (score: number) => {
                                 </td>
                                 <td class="px-6 py-6 text-center">
                                     <div class="flex items-center justify-center gap-3">
-                                        <div class="h-1.5 w-16 rounded-full bg-slate-100 overflow-hidden">
-                                            <div 
+                                        <div class="h-1.5 w-16 overflow-hidden rounded-full bg-slate-100">
+                                            <div
                                                 class="h-full transition-all"
                                                 :class="getPercentage(attempt.score) >= 50 ? 'bg-primary' : 'bg-orange-400'"
                                                 :style="{ width: `${getPercentage(attempt.score)}%` }"
                                             ></div>
                                         </div>
-                                        <span class="text-xs font-black" :class="getPercentage(attempt.score) >= 50 ? 'text-primary' : 'text-orange-500'">
+                                        <span
+                                            class="text-xs font-black"
+                                            :class="getPercentage(attempt.score) >= 50 ? 'text-primary' : 'text-orange-500'"
+                                        >
                                             {{ getPercentage(attempt.score) }}%
                                         </span>
                                     </div>
@@ -103,10 +110,10 @@ const getPercentage = (score: number) => {
                                 <td class="px-6 py-6">
                                     <div v-if="attempt.metadata?.termination_reason" class="flex flex-col">
                                         <span class="inline-flex items-center gap-1.5 text-[9px] font-black text-red-600 uppercase">
-                                            <div class="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse"></div>
+                                            <div class="h-1.5 w-1.5 animate-pulse rounded-full bg-red-500"></div>
                                             Violation Detected
                                         </span>
-                                        <span class="text-[9px] font-bold text-red-400 uppercase tracking-tighter leading-tight mt-0.5">
+                                        <span class="mt-0.5 text-[9px] leading-tight font-bold tracking-tighter text-red-400 uppercase">
                                             {{ attempt.metadata.termination_reason }}
                                         </span>
                                     </div>
@@ -118,13 +125,22 @@ const getPercentage = (score: number) => {
                                     </span>
                                 </td>
                                 <td class="px-8 py-6 text-right">
-                                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                        {{ new Date(attempt.submitted_at).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) }}
+                                    <span class="text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                                        {{
+                                            new Date(attempt.submitted_at).toLocaleString('en-GB', {
+                                                day: '2-digit',
+                                                month: 'short',
+                                                hour: '2-digit',
+                                                minute: '2-digit',
+                                            })
+                                        }}
                                     </span>
                                 </td>
                             </tr>
                             <tr v-if="attempts.length === 0">
-                                <td colspan="5" class="px-8 py-20 text-center opacity-30 italic font-bold">No students have submitted this assessment yet.</td>
+                                <td colspan="5" class="px-8 py-20 text-center font-bold italic opacity-30">
+                                    No students have submitted this assessment yet.
+                                </td>
                             </tr>
                         </tbody>
                     </table>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, usePage, useForm } from '@inertiajs/vue3';
 import { computed } from 'vue';
+import { ref, watch } from 'vue';
 import { store as storeExamAction } from '@/actions/App/Http/Controllers/Staff/ExamController';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import StaffLayout from '@/layouts/StaffLayout.vue';
@@ -22,10 +23,8 @@ const props = defineProps<{
 
 const page = usePage();
 const isAdmin = computed(() => (page.props.auth.user as any).roles.includes('admin'));
-const canManageEntrance = computed(() => (page.props.auth.user as any).permissions.includes('manage entrance exams'));
 const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
 
-import { ref, watch } from 'vue';
 const useGlobalSelection = ref(isAdmin.value);
 
 const form = useForm({
@@ -76,22 +75,22 @@ const submit = () => {
         <div class="mx-auto max-w-3xl space-y-10">
             <div class="text-center">
                 <h2 class="text-4xl font-black tracking-tight text-slate-900 italic">New Examination</h2>
-                <p class="mt-2 text-sm font-bold text-slate-500 uppercase tracking-widest">Stage 1: Base Configuration</p>
+                <p class="mt-2 text-sm font-bold tracking-widest text-slate-500 uppercase">Stage 1: Base Configuration</p>
             </div>
 
             <!-- Global Selection Toggle for Admins -->
             <div v-if="isAdmin && assignments.length > 0" class="flex items-center justify-center gap-4">
-                <button 
+                <button
                     @click="useGlobalSelection = false"
-                    :class="!useGlobalSelection ? 'bg-primary text-white' : 'bg-white text-slate-400 border border-slate-100'"
-                    class="rounded-xl px-6 py-3 text-[10px] font-black uppercase tracking-widest transition-all"
+                    :class="!useGlobalSelection ? 'bg-primary text-white' : 'border border-slate-100 bg-white text-slate-400'"
+                    class="rounded-xl px-6 py-3 text-[10px] font-black tracking-widest uppercase transition-all"
                 >
                     Assigned Loads
                 </button>
-                <button 
+                <button
                     @click="useGlobalSelection = true"
-                    :class="useGlobalSelection ? 'bg-slate-900 text-white shadow-xl' : 'bg-white text-slate-400 border border-slate-100'"
-                    class="rounded-xl px-6 py-3 text-[10px] font-black uppercase tracking-widest transition-all"
+                    :class="useGlobalSelection ? 'bg-slate-900 text-white shadow-xl' : 'border border-slate-100 bg-white text-slate-400'"
+                    class="rounded-xl px-6 py-3 text-[10px] font-black tracking-widest uppercase transition-all"
                 >
                     Global Management (Admin)
                 </button>
@@ -148,7 +147,9 @@ const submit = () => {
                         <div v-if="useGlobalSelection" class="space-y-6">
                             <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                                 <div>
-                                    <label class="mb-3 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Academic Subject</label>
+                                    <label class="mb-3 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase"
+                                        >Academic Subject</label
+                                    >
                                     <select
                                         v-model="form.subject_id"
                                         required
@@ -160,7 +161,9 @@ const submit = () => {
                                     <div v-if="form.errors.subject_id" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.subject_id }}</div>
                                 </div>
                                 <div v-if="form.type === 'entrance'">
-                                    <label class="mb-3 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Entrance Batch</label>
+                                    <label class="mb-3 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase"
+                                        >Entrance Batch</label
+                                    >
                                     <select
                                         v-model="form.prospective_class_id"
                                         required
@@ -169,10 +172,14 @@ const submit = () => {
                                         <option value="" disabled>Select Batch</option>
                                         <option v-for="batch in batches" :key="batch.id" :value="batch.id">{{ batch.name }}</option>
                                     </select>
-                                    <div v-if="form.errors.prospective_class_id" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.prospective_class_id }}</div>
+                                    <div v-if="form.errors.prospective_class_id" class="mt-2 text-xs font-bold text-red-500">
+                                        {{ form.errors.prospective_class_id }}
+                                    </div>
                                 </div>
                                 <div v-else>
-                                    <label class="mb-3 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Target Class</label>
+                                    <label class="mb-3 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase"
+                                        >Target Class</label
+                                    >
                                     <select
                                         v-model="form.school_class_id"
                                         required
@@ -181,7 +188,9 @@ const submit = () => {
                                         <option value="" disabled>Select Class</option>
                                         <option v-for="cls in classes" :key="cls.id" :value="cls.id">{{ cls.name }}</option>
                                     </select>
-                                    <div v-if="form.errors.school_class_id" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.school_class_id }}</div>
+                                    <div v-if="form.errors.school_class_id" class="mt-2 text-xs font-bold text-red-500">
+                                        {{ form.errors.school_class_id }}
+                                    </div>
                                 </div>
                             </div>
                         </div>

@@ -16,7 +16,7 @@ interface Role {
     permissions: Permission[];
 }
 
-const props = defineProps<{
+defineProps<{
     roles: Role[];
     permissions: Permission[];
 }>();
@@ -40,10 +40,10 @@ const openCreateModal = () => {
 const openEditModal = (role: Role) => {
     isEditing.value = true;
     editingRole.value = role;
-    
+
     form.name = role.name;
     form.permissions = role.permissions.map((p) => p.name);
-    
+
     isModalOpen.value = true;
 };
 
@@ -181,9 +181,7 @@ const togglePermission = (permissionName: string) => {
                             >
                                 {{ permission.name }}
                             </span>
-                            <span v-if="role.permissions.length === 0" class="text-xs font-medium text-slate-400"
-                                >No permissions assigned.</span
-                            >
+                            <span v-if="role.permissions.length === 0" class="text-xs font-medium text-slate-400">No permissions assigned.</span>
                         </div>
                     </div>
                 </div>
@@ -228,7 +226,9 @@ const togglePermission = (permissionName: string) => {
                                     {{ permission.name }}
                                 </button>
                             </div>
-                            <div v-if="form.errors.permissions" class="mt-2 text-center text-xs font-bold text-red-500">{{ form.errors.permissions }}</div>
+                            <div v-if="form.errors.permissions" class="mt-2 text-center text-xs font-bold text-red-500">
+                                {{ form.errors.permissions }}
+                            </div>
                         </div>
 
                         <div class="flex gap-3 border-t border-slate-50 pt-4">

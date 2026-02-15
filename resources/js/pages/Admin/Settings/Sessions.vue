@@ -51,12 +51,12 @@ const openCreateModal = () => {
 const openEditModal = (session: AcademicSession) => {
     isEditing.value = true;
     editingId.value = session.id;
-    
+
     form.name = session.name;
     form.start_date = session.start_date;
     form.end_date = session.end_date;
     form.is_current = session.is_current;
-    
+
     isModalOpen.value = true;
 };
 

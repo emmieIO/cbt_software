@@ -70,7 +70,7 @@ const startPromotion = () => {
     form.from_class_id = selectedSourceClassId.value;
     form.to_class_id = selectedTargetClassId.value;
     form.student_ids = selectedStudentIds.value;
-    
+
     isConfirmModalOpen.value = true;
 };
 
@@ -159,7 +159,9 @@ const submitPromotion = () => {
                                         {{ cls.name }} ({{ cls.student_count }} students)
                                     </option>
                                 </select>
-                                <div v-if="form.errors.from_class_id" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.from_class_id }}</div>
+                                <div v-if="form.errors.from_class_id" class="mt-1 text-xs font-bold text-red-500">
+                                    {{ form.errors.from_class_id }}
+                                </div>
                             </div>
 
                             <!-- Target -->

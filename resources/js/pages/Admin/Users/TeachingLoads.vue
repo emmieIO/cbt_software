@@ -52,19 +52,28 @@ const filteredClasses = computed(() => {
     return props.classes.filter((c) => eligibleClassIds.has(c.id));
 });
 
-watch(() => form.subject_id, () => {
-    form.school_class_id = '';
-    form.prospective_class_id = '';
-});
+watch(
+    () => form.subject_id,
+    () => {
+        form.school_class_id = '';
+        form.prospective_class_id = '';
+    },
+);
 
 // Clear opposite field when one is selected
-watch(() => form.school_class_id, (val) => {
-    if (val) form.prospective_class_id = '';
-});
+watch(
+    () => form.school_class_id,
+    (val) => {
+        if (val) form.prospective_class_id = '';
+    },
+);
 
-watch(() => form.prospective_class_id, (val) => {
-    if (val) form.school_class_id = '';
-});
+watch(
+    () => form.prospective_class_id,
+    (val) => {
+        if (val) form.school_class_id = '';
+    },
+);
 
 const submit = () => {
     form.post(store().url, {
@@ -82,11 +91,7 @@ const filterForm = useForm({
 });
 
 const applyFilters = () => {
-    router.get(
-        index().url,
-        filterForm.data(),
-        { preserveState: true },
-    );
+    router.get(index().url, filterForm.data(), { preserveState: true });
 };
 
 const isDeleteModalOpen = ref(false);
@@ -192,11 +197,11 @@ const handleDelete = () => {
                                 <td class="px-6 py-6">
                                     <div v-if="assignment.school_class">
                                         <span class="text-xs font-bold text-slate-600">{{ assignment.school_class.name }}</span>
-                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Regular Class</p>
+                                        <p class="text-[9px] font-black tracking-widest text-slate-400 uppercase">Regular Class</p>
                                     </div>
                                     <div v-else-if="assignment.prospective_class">
                                         <span class="text-xs font-bold text-slate-600">{{ assignment.prospective_class.name }}</span>
-                                        <p class="text-[9px] font-black text-primary uppercase tracking-widest">Entrance Batch</p>
+                                        <p class="text-[9px] font-black tracking-widest text-primary uppercase">Entrance Batch</p>
                                     </div>
                                 </td>
                                 <td class="px-8 py-6 text-right">
@@ -216,9 +221,7 @@ const handleDelete = () => {
                                 </td>
                             </tr>
                             <tr v-if="assignments.data.length === 0">
-                                <td colspan="4" class="px-8 py-12 text-center text-sm font-bold text-slate-400">
-                                    No teaching assignments found.
-                                </td>
+                                <td colspan="4" class="px-8 py-12 text-center text-sm font-bold text-slate-400">No teaching assignments found.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -284,11 +287,13 @@ const handleDelete = () => {
 
                         <div class="grid grid-cols-1 gap-6">
                             <div>
-                                <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Assign to Regular Class</label>
+                                <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase"
+                                    >Assign to Regular Class</label
+                                >
                                 <select
                                     v-model="form.school_class_id"
                                     :disabled="!form.subject_id || form.prospective_class_id !== ''"
-                                    class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                                    class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     <option value="">None (Select Batch Instead)</option>
                                     <option v-for="cls in filteredClasses" :key="cls.id" :value="cls.id">{{ cls.name }}</option>
@@ -296,21 +301,27 @@ const handleDelete = () => {
                             </div>
 
                             <div class="relative">
-                                <div class="absolute inset-y-0 left-1/2 -top-3 flex h-6 -translate-x-1/2 items-center bg-white px-3 text-[8px] font-black text-slate-300 uppercase tracking-[0.3em]">OR</div>
-                                <div class="h-px bg-slate-100 w-full mb-6"></div>
-                                
-                                <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Assign to Entrance Batch</label>
+                                <div
+                                    class="absolute inset-y-0 -top-3 left-1/2 flex h-6 -translate-x-1/2 items-center bg-white px-3 text-[8px] font-black tracking-[0.3em] text-slate-300 uppercase"
+                                >
+                                    OR
+                                </div>
+                                <div class="mb-6 h-px w-full bg-slate-100"></div>
+
+                                <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase"
+                                    >Assign to Entrance Batch</label
+                                >
                                 <select
                                     v-model="form.prospective_class_id"
                                     :disabled="!form.subject_id || form.school_class_id !== ''"
-                                    class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                                    class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     <option value="">None (Select Class Instead)</option>
                                     <option v-for="batch in batches" :key="batch.id" :value="batch.id">{{ batch.name }}</option>
                                 </select>
                             </div>
                         </div>
-                        
+
                         <div v-if="form.errors.school_class_id" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.school_class_id }}</div>
 
                         <div class="flex gap-3 border-t border-slate-50 pt-4">

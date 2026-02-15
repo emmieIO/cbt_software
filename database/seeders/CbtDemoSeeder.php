@@ -2,18 +2,17 @@
 
 namespace Database\Seeders;
 
+use App\Enums\ExamStatus;
+use App\Enums\ExamType;
+use App\Enums\QuestionDifficulty;
+use App\Enums\QuestionType;
 use App\Models\AcademicSession;
 use App\Models\Exam;
-use App\Models\ExamVersion;
 use App\Models\Question;
 use App\Models\SchoolClass;
 use App\Models\Subject;
 use App\Models\Topic;
 use App\Models\User;
-use App\Enums\ExamStatus;
-use App\Enums\ExamType;
-use App\Enums\QuestionDifficulty;
-use App\Enums\QuestionType;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -58,7 +57,7 @@ class CbtDemoSeeder extends Seeder
                 'password' => Hash::make('password'),
             ]
         );
-        if (!$staff->hasRole('staff')) {
+        if (! $staff->hasRole('staff')) {
             $staff->assignRole('staff');
         }
 
@@ -72,7 +71,7 @@ class CbtDemoSeeder extends Seeder
                 'school_class_id' => $class->id,
             ]
         );
-        if (!$student->hasRole('student')) {
+        if (! $student->hasRole('student')) {
             $student->assignRole('student');
         }
 

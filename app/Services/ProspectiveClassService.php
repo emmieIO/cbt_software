@@ -22,7 +22,7 @@ class ProspectiveClassService
         if (isset($data['name'])) {
             $data['slug'] = Str::slug($data['name']);
         }
-        
+
         return $prospectiveClass->update($data);
     }
 

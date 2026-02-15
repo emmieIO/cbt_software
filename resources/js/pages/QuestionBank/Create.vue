@@ -274,7 +274,9 @@ const submit = () => {
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                                 </svg>
                                             </button>
-                                            <div v-if="form.errors[`options.${index}.content`]" class="mt-1 text-xs text-red-600">{{ form.errors[`options.${index}.content`] }}</div>
+                                            <div v-if="form.errors[`options.${index}.content`]" class="mt-1 text-xs text-red-600">
+                                                {{ form.errors[`options.${index}.content`] }}
+                                            </div>
                                         </div>
                                         <button
                                             type="button"
@@ -309,7 +311,8 @@ const submit = () => {
                                             <circle
                                                 class="opacity-25"
                                                 cx="12"
-                                                cy="12" r="10"
+                                                cy="12"
+                                                r="10"
                                                 stroke="currentColor"
                                                 stroke-width="4"
                                                 fill="none"

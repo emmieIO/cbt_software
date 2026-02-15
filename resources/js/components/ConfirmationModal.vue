@@ -81,10 +81,7 @@ watch(
                     leave-from-class="opacity-100 scale-100 translate-y-0"
                     leave-to-class="opacity-0 scale-95 translate-y-4"
                 >
-                    <div
-                        v-if="show"
-                        class="relative w-full max-w-md overflow-hidden rounded-xl bg-white p-8 shadow-2xl shadow-slate-900/20 md:p-10"
-                    >
+                    <div v-if="show" class="relative w-full max-w-md overflow-hidden rounded-xl bg-white p-8 shadow-2xl shadow-slate-900/20 md:p-10">
                         <!-- Icon Header -->
                         <div class="mb-8 flex flex-col items-center text-center">
                             <div
@@ -128,7 +125,7 @@ watch(
                                         : 'bg-primary shadow-primary/20 hover:bg-primary/90',
                                 ]"
                             >
-                                <span v-if="loading" class="mr-2 h-4 w-4 animate-spin rounded-lg-full border-2 border-white/30 border-t-white"></span>
+                                <span v-if="loading" class="rounded-lg-full mr-2 h-4 w-4 animate-spin border-2 border-white/30 border-t-white"></span>
                                 {{ confirmLabel }}
                             </button>
                             <button

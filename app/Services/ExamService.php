@@ -109,6 +109,7 @@ class ExamService
                 if ($existingAttempt->status === \App\Enums\AttemptStatus::SUBMITTED) {
                     throw new \Exception('You have already completed this examination. Only one attempt is permitted.');
                 }
+
                 return $existingAttempt; // Return ongoing attempt
             }
 

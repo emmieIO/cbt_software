@@ -12,7 +12,7 @@ interface Subject {
     topics_count: number;
 }
 
-const props = defineProps<{
+defineProps<{
     subjects: Subject[];
 }>();
 
@@ -35,10 +35,10 @@ const openCreateModal = () => {
 const openEditModal = (subject: Subject) => {
     isEditing.value = true;
     editingSubject.value = subject;
-    
+
     form.name = subject.name;
     form.description = subject.description || '';
-    
+
     isModalOpen.value = true;
 };
 

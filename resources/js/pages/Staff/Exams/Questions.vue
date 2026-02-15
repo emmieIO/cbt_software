@@ -3,7 +3,6 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import { updateQuestions, aiSelectQuestions } from '@/actions/App/Http/Controllers/Staff/ExamController';
 import AdminLayout from '@/layouts/AdminLayout.vue';
-import StaffLayout from '@/layouts/StaffLayout.vue';
 
 interface Question {
     id: string;
@@ -27,25 +26,22 @@ const props = defineProps<{
     selectedQuestionIds: string[];
 }>();
 
-const page = (window as any).Inertia?.page || { props: { auth: { user: { roles: [] } } } };
-const isAdmin = computed(() => {
-    // Basic fallback if page helper is not directly available in this context
-    return true; // We can assume admin layout context if needed, but let's be safe
-});
-const Layout = AdminLayout; // Simplified for this specific view which is shared
-
 const searchQuery = ref('');
 const selectedIds = ref<string[]>([...props.selectedQuestionIds]);
 
 // Keep local state in sync with server state (needed after AI shuffle)
-watch(() => props.selectedQuestionIds, (newIds) => {
-    selectedIds.value = [...newIds];
-}, { deep: true });
+watch(
+    () => props.selectedQuestionIds,
+    (newIds) => {
+        selectedIds.value = [...newIds];
+    },
+    { deep: true },
+);
 
 const filteredQuestions = computed(() => {
-    return props.availableQuestions.filter(q => 
-        q.content.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-        q.topic.name.toLowerCase().includes(searchQuery.value.toLowerCase())
+    return props.availableQuestions.filter(
+        (q) =>
+            q.content.toLowerCase().includes(searchQuery.value.toLowerCase()) || q.topic.name.toLowerCase().includes(searchQuery.value.toLowerCase()),
     );
 });
 
@@ -77,7 +73,7 @@ const runAiSelection = () => {
     aiForm.post(aiSelectQuestions(props.exam.id).url, {
         onSuccess: () => {
             isAiModalOpen.value = false;
-        }
+        },
     });
 };
 </script>
@@ -97,11 +93,13 @@ const runAiSelection = () => {
                         <span class="text-slate-600">Allocation</span>
                     </nav>
                     <h1 class="text-3xl font-black text-slate-900">Manage Questions</h1>
-                    <p class="mt-1 text-sm font-bold text-slate-500">Allocating questions for {{ exam.subject.name }} ({{ exam.school_class.name }})</p>
+                    <p class="mt-1 text-sm font-bold text-slate-500">
+                        Allocating questions for {{ exam.subject.name }} ({{ exam.school_class.name }})
+                    </p>
                 </div>
 
                 <div class="flex items-center gap-3">
-                    <button 
+                    <button
                         @click="isAiModalOpen = true"
                         class="flex h-12 items-center gap-2 rounded-xl border-2 border-primary/20 bg-primary/5 px-6 text-[10px] font-black tracking-widest text-primary uppercase transition-all hover:bg-primary hover:text-white active:scale-95"
                     >
@@ -110,7 +108,7 @@ const runAiSelection = () => {
                         </svg>
                         AI Shuffler
                     </button>
-                    <button 
+                    <button
                         @click="saveSelection"
                         :disabled="form.processing"
                         class="flex h-12 items-center gap-3 rounded-xl bg-slate-900 px-8 text-[10px] font-black tracking-widest text-white uppercase shadow-xl transition-all hover:bg-black active:scale-95 disabled:opacity-50"
@@ -129,45 +127,68 @@ const runAiSelection = () => {
                     <div class="relative">
                         <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-5 text-slate-400">
                             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2.5"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                                />
                             </svg>
                         </div>
-                        <input 
+                        <input
                             v-model="searchQuery"
-                            type="text" 
+                            type="text"
                             placeholder="Search by content or topic..."
                             class="h-16 w-full rounded-xl border-none bg-white px-14 text-sm font-bold shadow-sm transition-all focus:ring-2 focus:ring-primary/20"
                         />
                     </div>
 
                     <div class="space-y-4">
-                        <div 
-                            v-for="question in filteredQuestions" 
+                        <div
+                            v-for="question in filteredQuestions"
                             :key="question.id"
                             @click="toggleQuestion(question.id)"
                             class="group relative cursor-pointer overflow-hidden rounded-xl border-2 bg-white p-8 transition-all hover:shadow-xl"
                             :class="selectedIds.includes(question.id) ? 'border-primary bg-primary/5' : 'border-slate-100'"
                         >
                             <div class="flex items-start gap-6">
-                                <div 
+                                <div
                                     class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all"
-                                    :class="selectedIds.includes(question.id) ? 'bg-primary text-white' : 'bg-slate-100 text-slate-300 group-hover:bg-slate-200'"
+                                    :class="
+                                        selectedIds.includes(question.id)
+                                            ? 'bg-primary text-white'
+                                            : 'bg-slate-100 text-slate-300 group-hover:bg-slate-200'
+                                    "
                                 >
                                     <svg v-if="selectedIds.includes(question.id)" class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                        <path
+                                            fill-rule="evenodd"
+                                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                            clip-rule="evenodd"
+                                        />
                                     </svg>
                                     <span v-else class="text-xs font-black">+</span>
                                 </div>
                                 <div class="space-y-3">
                                     <div class="flex flex-wrap items-center gap-2">
-                                        <span class="rounded-xl bg-slate-100 px-2 py-0.5 text-[9px] font-black tracking-widest text-slate-500 uppercase">{{ question.topic.name }}</span>
-                                        <span :class="['rounded-xl px-2 py-0.5 text-[9px] font-black tracking-widest uppercase', 
-                                            question.difficulty === 'easy' ? 'bg-green-100 text-green-700' : 
-                                            question.difficulty === 'medium' ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700']">
+                                        <span
+                                            class="rounded-xl bg-slate-100 px-2 py-0.5 text-[9px] font-black tracking-widest text-slate-500 uppercase"
+                                            >{{ question.topic.name }}</span
+                                        >
+                                        <span
+                                            :class="[
+                                                'rounded-xl px-2 py-0.5 text-[9px] font-black tracking-widest uppercase',
+                                                question.difficulty === 'easy'
+                                                    ? 'bg-green-100 text-green-700'
+                                                    : question.difficulty === 'medium'
+                                                      ? 'bg-blue-100 text-blue-700'
+                                                      : 'bg-red-100 text-red-700',
+                                            ]"
+                                        >
                                             {{ question.difficulty }}
                                         </span>
                                     </div>
-                                    <p class="text-base font-black leading-relaxed text-slate-800">{{ question.content }}</p>
+                                    <p class="text-base leading-relaxed font-black text-slate-800">{{ question.content }}</p>
                                 </div>
                             </div>
                         </div>
@@ -179,19 +200,16 @@ const runAiSelection = () => {
                     <div class="sticky top-8 space-y-6">
                         <div class="rounded-xl bg-slate-900 p-8 text-white shadow-2xl">
                             <h3 class="mb-6 text-xl font-black">Selected Pool ({{ selectedIds.length }})</h3>
-                            <div class="space-y-4 max-h-125 overflow-y-auto pr-2 custom-scrollbar">
-                                <div 
-                                    v-for="id in selectedIds" 
+                            <div class="custom-scrollbar max-h-125 space-y-4 overflow-y-auto pr-2">
+                                <div
+                                    v-for="id in selectedIds"
                                     :key="id"
                                     class="group flex items-center justify-between gap-3 rounded-xl bg-white/5 p-4 transition-all hover:bg-white/10"
                                 >
                                     <p class="line-clamp-1 text-xs font-bold text-slate-300">
-                                        {{ availableQuestions.find(q => q.id === id)?.content }}
+                                        {{ availableQuestions.find((q) => q.id === id)?.content }}
                                     </p>
-                                    <button 
-                                        @click="toggleQuestion(id)"
-                                        class="shrink-0 text-slate-500 hover:text-red-400"
-                                    >
+                                    <button @click="toggleQuestion(id)" class="shrink-0 text-slate-500 hover:text-red-400">
                                         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
                                         </svg>
@@ -204,13 +222,18 @@ const runAiSelection = () => {
                         </div>
 
                         <div class="rounded-xl border-2 border-dashed border-slate-200 p-8 text-center">
-                            <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-slate-50 text-slate-400 mx-auto">
+                            <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-slate-50 text-slate-400">
                                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                    />
                                 </svg>
                             </div>
                             <p class="text-[10px] font-black tracking-widest text-slate-400 uppercase">Pro Tip</p>
-                            <p class="mt-2 text-xs font-bold leading-relaxed text-slate-500">
+                            <p class="mt-2 text-xs leading-relaxed font-bold text-slate-500">
                                 You can use the AI Shuffler to quickly build a balanced pool, then refine it manually.
                             </p>
                         </div>
@@ -237,7 +260,7 @@ const runAiSelection = () => {
 
                 <form @submit.prevent="runAiSelection" class="space-y-6">
                     <div>
-                        <label class="mb-2 block text-[10px] font-black tracking-widest text-slate-400 uppercase ml-1">Number of Questions</label>
+                        <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Number of Questions</label>
                         <input
                             v-model="aiForm.count"
                             type="number"
@@ -248,9 +271,21 @@ const runAiSelection = () => {
                         />
                         <div v-if="aiForm.errors.count" class="mt-1 text-xs text-red-600">{{ aiForm.errors.count }}</div>
                     </div>
-                    <div class="flex gap-3 pt-4 border-t border-slate-50">
-                        <button type="button" @click="isAiModalOpen = false" class="flex-1 rounded-xl border border-slate-100 py-4 text-sm font-black tracking-widest text-slate-400 uppercase">Cancel</button>
-                        <button type="submit" :disabled="aiForm.processing" class="flex-1 rounded-xl bg-primary py-4 text-sm font-black tracking-widest text-white uppercase shadow-lg shadow-primary/20">Generate Selection</button>
+                    <div class="flex gap-3 border-t border-slate-50 pt-4">
+                        <button
+                            type="button"
+                            @click="isAiModalOpen = false"
+                            class="flex-1 rounded-xl border border-slate-100 py-4 text-sm font-black tracking-widest text-slate-400 uppercase"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            :disabled="aiForm.processing"
+                            class="flex-1 rounded-xl bg-primary py-4 text-sm font-black tracking-widest text-white uppercase shadow-lg shadow-primary/20"
+                        >
+                            Generate Selection
+                        </button>
                     </div>
                 </form>
             </div>

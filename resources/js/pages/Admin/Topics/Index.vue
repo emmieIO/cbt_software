@@ -41,24 +41,24 @@ const form = useForm({
 const openCreateModal = () => {
     isEditing.value = false;
     editingTopic.value = null;
-    
+
     form.subject_id = props.filters.subject_id || '';
     form.school_class_id = props.filters.school_class_id || '';
     form.name = '';
     form.description = '';
-    
+
     isModalOpen.value = true;
 };
 
 const openEditModal = (topic: Topic) => {
     isEditing.value = true;
     editingTopic.value = topic;
-    
+
     form.subject_id = topic.subject_id;
     form.school_class_id = topic.school_class_id;
     form.name = topic.name;
     form.description = topic.description || '';
-    
+
     isModalOpen.value = true;
 };
 
@@ -302,7 +302,9 @@ const handleDelete = () => {
                                     <option value="" disabled>Select Class</option>
                                     <option v-for="cls in classes" :key="cls.id" :value="cls.id">{{ cls.name }}</option>
                                 </select>
-                                <div v-if="form.errors.school_class_id" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.school_class_id }}</div>
+                                <div v-if="form.errors.school_class_id" class="mt-1 text-xs font-bold text-red-500">
+                                    {{ form.errors.school_class_id }}
+                                </div>
                             </div>
                         </div>
 

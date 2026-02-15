@@ -85,7 +85,7 @@ class UserImportService
                     }
 
                     $user = $this->userService->createUser($dto, $role);
-                    
+
                     if ($batchId) {
                         $user->update(['prospective_class_id' => $batchId]);
                     }

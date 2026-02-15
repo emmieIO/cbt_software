@@ -45,7 +45,7 @@ class StudentController extends Controller
             $query = Exam::where('academic_session_id', $currentSession->id)
                 ->where('status', ExamStatus::LIVE)
                 ->with(['subject'])
-                ->with(['attempts' => fn($q) => $q->where('user_id', $user->id)])
+                ->with(['attempts' => fn ($q) => $q->where('user_id', $user->id)])
                 ->withCount('questions');
 
             if ($user->hasRole('candidate')) {
@@ -78,7 +78,7 @@ class StudentController extends Controller
             $query = Exam::where('academic_session_id', $currentSession->id)
                 ->where('status', ExamStatus::LIVE)
                 ->with(['subject'])
-                ->with(['attempts' => fn($q) => $q->where('user_id', $user->id)])
+                ->with(['attempts' => fn ($q) => $q->where('user_id', $user->id)])
                 ->withCount('questions');
 
             if ($user->hasRole('candidate')) {
@@ -188,7 +188,7 @@ class StudentController extends Controller
         }
 
         $this->examService->submitAttempt(
-            $attempt, 
+            $attempt,
             $request->array('answers'),
             $request->only(['termination_reason', 'violation_count'])
         );

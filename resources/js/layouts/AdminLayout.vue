@@ -6,9 +6,9 @@ import { logout, dashboard } from '@/actions/App/Http/Controllers/Admin/AdminCon
 import { index as entranceIndex } from '@/actions/App/Http/Controllers/Admin/EntranceController';
 import { index as permissionsIndex } from '@/actions/App/Http/Controllers/Admin/PermissionController';
 import { index as promotionIndex } from '@/actions/App/Http/Controllers/Admin/PromotionController';
+import { index as prospectiveIndex } from '@/actions/App/Http/Controllers/Admin/ProspectiveClassController';
 import { index as rolesIndex } from '@/actions/App/Http/Controllers/Admin/RoleController';
 import { index as classesIndex } from '@/actions/App/Http/Controllers/Admin/SchoolClassController';
-import { index as prospectiveIndex } from '@/actions/App/Http/Controllers/Admin/ProspectiveClassController';
 import { index as staffIndex } from '@/actions/App/Http/Controllers/Admin/StaffController';
 import { index as studentIndex } from '@/actions/App/Http/Controllers/Admin/StudentController';
 import { index as subjectsIndex } from '@/actions/App/Http/Controllers/Admin/SubjectController';
@@ -116,18 +116,6 @@ const IconAI = defineComponent({
         ]),
 });
 
-const IconProfile = defineComponent({
-    render: () =>
-        h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor' }, [
-            h('path', {
-                'stroke-linecap': 'round',
-                'stroke-linejoin': 'round',
-                'stroke-width': '2',
-                d: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
-            }),
-        ]),
-});
-
 const navigation = [
     {
         section: 'Main',
@@ -152,7 +140,7 @@ const navigation = [
                 icon: IconExams,
                 permission: 'view exams',
             },
-        ]
+        ],
     },
     {
         section: 'Academic Setup',
@@ -192,7 +180,7 @@ const navigation = [
                 icon: IconAI,
                 permission: 'use ai lab',
             },
-        ]
+        ],
     },
     {
         section: 'Personnel & Enrollment',
@@ -232,7 +220,7 @@ const navigation = [
                 icon: IconSchool,
                 permission: 'manage enrollment',
             },
-        ]
+        ],
     },
     {
         section: 'System Controls',
@@ -258,19 +246,21 @@ const navigation = [
                 icon: IconDashboard,
                 permission: 'manage settings',
             },
-        ]
-    }
+        ],
+    },
 ];
 
 const filteredNavigation = computed(() => {
-    return navigation.map(section => ({
-        ...section,
-        items: section.items.filter((item) => {
-            if (!item.permission) return true;
-            const userPermissions = (page.props.auth.user as any).permissions || [];
-            return userPermissions.includes(item.permission);
-        })
-    })).filter(section => section.items.length > 0);
+    return navigation
+        .map((section) => ({
+            ...section,
+            items: section.items.filter((item) => {
+                if (!item.permission) return true;
+                const userPermissions = (page.props.auth.user as any).permissions || [];
+                return userPermissions.includes(item.permission);
+            }),
+        }))
+        .filter((section) => section.items.length > 0);
 });
 </script>
 

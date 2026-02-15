@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import { 
-    manageQuestions,
-    edit as editExamAction
-} from '@/actions/App/Http/Controllers/Staff/ExamController';
+import { manageQuestions, edit as editExamAction } from '@/actions/App/Http/Controllers/Staff/ExamController';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import StaffLayout from '@/layouts/StaffLayout.vue';
 
@@ -20,7 +17,7 @@ interface Exam {
     questions: any[];
 }
 
-const props = defineProps<{
+defineProps<{
     exam: Exam;
 }>();
 
@@ -38,7 +35,9 @@ const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
                 <div class="relative z-10 flex items-center justify-between">
                     <div>
                         <div class="mb-4 flex items-center gap-4">
-                            <span class="rounded-lg-full bg-primary px-3 py-1 text-[9px] font-black tracking-widest uppercase text-slate-900">{{ exam.status }}</span>
+                            <span class="rounded-lg-full bg-primary px-3 py-1 text-[9px] font-black tracking-widest text-slate-900 uppercase">{{
+                                exam.status
+                            }}</span>
                             <h1 class="text-3xl font-black">{{ exam.title }}</h1>
                         </div>
                         <div class="flex items-center gap-6">
@@ -61,18 +60,23 @@ const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
                         </div>
                     </div>
                     <div class="flex gap-4">
-                        <Link 
+                        <Link
                             :href="editExamAction(exam.id).url"
                             class="flex items-center gap-3 rounded-xl border-2 border-white/20 bg-white/10 px-8 py-4 text-xs font-black tracking-widest text-white uppercase transition-all hover:bg-white hover:text-slate-900 active:scale-95"
                         >
                             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2.5"
+                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                />
                             </svg>
                             Edit Configuration
                         </Link>
-                        <Link 
+                        <Link
                             :href="manageQuestions(exam.id).url"
-                            class="flex items-center gap-3 rounded-xl bg-primary px-8 py-4 text-xs font-black tracking-widest text-slate-900 uppercase transition-all hover:scale-105 active:scale-95 shadow-xl shadow-primary/20"
+                            class="flex items-center gap-3 rounded-xl bg-primary px-8 py-4 text-xs font-black tracking-widest text-slate-900 uppercase shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95"
                         >
                             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -81,32 +85,32 @@ const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
                         </Link>
                     </div>
                 </div>
-                <div class="absolute -top-24 -right-24 h-64 w-64 rounded-lg-full bg-primary/20 blur-3xl"></div>
+                <div class="rounded-lg-full absolute -top-24 -right-24 h-64 w-64 bg-primary/20 blur-3xl"></div>
             </div>
 
             <div class="space-y-6">
-                <div class="flex items-center justify-between ml-2">
+                <div class="ml-2 flex items-center justify-between">
                     <h3 class="flex items-center gap-3 text-sm font-black tracking-[0.2em] text-slate-400 uppercase">
-                        <div class="h-2 w-2 rounded-lg-full bg-primary"></div>
+                        <div class="rounded-lg-full h-2 w-2 bg-primary"></div>
                         Allocated Questions ({{ exam.questions.length }})
                     </h3>
                 </div>
 
                 <div v-if="exam.questions.length > 0" class="grid grid-cols-1 gap-4">
-                    <div 
-                        v-for="(question, index) in exam.questions" 
+                    <div
+                        v-for="(question, index) in exam.questions"
                         :key="question.id"
-                        class="group rounded-xl border border-slate-100 bg-white p-6 transition-all hover:border-primary/20 hover:shadow-lg flex items-center justify-between"
+                        class="group flex items-center justify-between rounded-xl border border-slate-100 bg-white p-6 transition-all hover:border-primary/20 hover:shadow-lg"
                     >
                         <div class="flex items-start gap-6">
                             <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-xs font-black text-slate-400">
                                 {{ index + 1 }}
                             </div>
                             <div>
-                                <p class="text-sm font-bold text-slate-700 leading-relaxed">{{ question.content }}</p>
+                                <p class="text-sm leading-relaxed font-bold text-slate-700">{{ question.content }}</p>
                                 <div class="mt-2 flex items-center gap-3">
                                     <span class="text-[10px] font-black tracking-widest text-slate-400 uppercase">{{ question.type }}</span>
-                                    <div class="h-1 w-1 rounded-lg-full bg-slate-200"></div>
+                                    <div class="rounded-lg-full h-1 w-1 bg-slate-200"></div>
                                     <span class="text-[10px] font-black tracking-widest text-slate-400 uppercase">{{ question.difficulty }}</span>
                                 </div>
                             </div>
@@ -115,16 +119,21 @@ const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
                 </div>
 
                 <!-- Empty State -->
-                <div 
+                <div
                     v-else
                     class="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 py-20 text-center"
                 >
-                    <div class="mb-4 flex h-20 w-20 items-center justify-center rounded-lg-full bg-white text-slate-200 shadow-sm">
+                    <div class="rounded-lg-full mb-4 flex h-20 w-20 items-center justify-center bg-white text-slate-200 shadow-sm">
                         <svg class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                            />
                         </svg>
                     </div>
-                    <h4 class="text-xl font-black text-slate-400 uppercase tracking-widest">No Questions Allocated</h4>
+                    <h4 class="text-xl font-black tracking-widest text-slate-400 uppercase">No Questions Allocated</h4>
                     <p class="mt-2 text-sm font-bold text-slate-400">Click "Manage Questions" to start adding questions to this exam.</p>
                 </div>
             </div>

@@ -50,7 +50,7 @@ export type Batch = {
     name: string;
     slug: string;
     description?: string;
-    is_active:boolean
+    is_active: boolean;
 };
 
 export type PaginatedData<T> = {

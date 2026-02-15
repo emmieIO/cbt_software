@@ -48,28 +48,28 @@ class ExamController extends Controller
     /**
      * Show create form with assigned classes/subjects.
      */
-            public function create(Request $request): Response
-            {
-                $user = $request->user();
-        
-                // Get only assigned loads for this teacher
-                $assignments = $user->currentAssignments()
-                    ->with(['schoolClass', 'subject', 'prospectiveClass'])
-                    ->get();
-        
-                // Get prospective batches for entrance exams
-                $batches = \App\Models\ProspectiveClass::where('is_active', true)->get();
-        
-                return Inertia::render('Staff/Exams/Create', [
-                    'assignments' => $assignments,
-                    'sessions' => AcademicSession::current()->get(),
-                    'batches' => $batches,
-                    'subjects' => \App\Models\Subject::all(),
-                    'classes' => \App\Models\SchoolClass::all(),
-                ]);
-            }
-        
-        /**
+    public function create(Request $request): Response
+    {
+        $user = $request->user();
+
+        // Get only assigned loads for this teacher
+        $assignments = $user->currentAssignments()
+            ->with(['schoolClass', 'subject', 'prospectiveClass'])
+            ->get();
+
+        // Get prospective batches for entrance exams
+        $batches = \App\Models\ProspectiveClass::where('is_active', true)->get();
+
+        return Inertia::render('Staff/Exams/Create', [
+            'assignments' => $assignments,
+            'sessions' => AcademicSession::current()->get(),
+            'batches' => $batches,
+            'subjects' => \App\Models\Subject::all(),
+            'classes' => \App\Models\SchoolClass::all(),
+        ]);
+    }
+
+    /**
      * Store a new exam.
      */
     public function store(Request $request): RedirectResponse
@@ -185,25 +185,21 @@ class ExamController extends Controller
 
         $batches = \App\Models\ProspectiveClass::where('is_active', true)->get();
 
-                        return Inertia::render('Staff/Exams/Edit', [
+        return Inertia::render('Staff/Exams/Edit', [
 
-                            'exam' => $exam->load(['subject', 'schoolClass', 'prospectiveClass']),
+            'exam' => $exam->load(['subject', 'schoolClass', 'prospectiveClass']),
 
-                            'assignments' => $assignments,
+            'assignments' => $assignments,
 
-                            'sessions' => AcademicSession::current()->get(),
+            'sessions' => AcademicSession::current()->get(),
 
-                            'batches' => $batches,
+            'batches' => $batches,
 
-                            'subjects' => \App\Models\Subject::all(),
+            'subjects' => \App\Models\Subject::all(),
 
-                            'classes' => \App\Models\SchoolClass::all(),
+            'classes' => \App\Models\SchoolClass::all(),
 
-                        ]);
-
-                
-
-        
+        ]);
 
     }
 
@@ -249,124 +245,90 @@ class ExamController extends Controller
 
     }
 
-        /**
+    /**
+     * Delete the exam.
+     */
+    public function destroy(Exam $exam): RedirectResponse
+    {
 
-         * Delete the exam.
+        // Safety: Prevent deletion if there are already attempts
 
-         */
+        if ($exam->attempts()->exists()) {
 
-        public function destroy(Exam $exam): RedirectResponse
-
-        {
-
-            // Safety: Prevent deletion if there are already attempts
-
-            if ($exam->attempts()->exists()) {
-
-                return back()->with('error', 'Cannot delete an exam that already has student attempts.');
-
-            }
-
-    
-
-            $exam->questions()->detach();
-
-            $exam->delete();
-
-    
-
-            return redirect()->route('staff.exams.index')
-
-                ->with('success', 'Exam deleted successfully.');
+            return back()->with('error', 'Cannot delete an exam that already has student attempts.');
 
         }
 
-    
+        $exam->questions()->detach();
 
-        /**
+        $exam->delete();
 
-         * Display a listing of exam results.
+        return redirect()->route('staff.exams.index')
 
-         */
-
-        public function results(Request $request): Response
-
-        {
-
-            $user = $request->user();
-
-            $query = Exam::with(['subject', 'schoolClass', 'prospectiveClass'])
-
-                ->withCount('attempts');
-
-    
-
-            if (! $user->hasRole('admin')) {
-
-                $assignedClassIds = $user->currentAssignments()->pluck('school_class_id')->unique();
-
-                $assignedSubjectIds = $user->currentAssignments()->pluck('subject_id')->unique();
-
-    
-
-                $query->where(function ($q) use ($assignedClassIds, $assignedSubjectIds) {
-
-                    $q->whereIn('school_class_id', $assignedClassIds)
-
-                      ->whereIn('subject_id', $assignedSubjectIds);
-
-                });
-
-            }
-
-    
-
-            return Inertia::render('Staff/Results/Index', [
-
-                'exams' => $query->latest()->paginate(10),
-
-            ]);
-
-        }
-
-    
-
-        /**
-
-         * Show detailed results for a specific exam.
-
-         */
-
-        public function showResults(Exam $exam): Response
-
-        {
-
-            $exam->load(['subject', 'schoolClass', 'prospectiveClass']);
-
-            
-
-            $attempts = $exam->attempts()
-
-                ->with(['user.schoolClass'])
-
-                ->latest('submitted_at')
-
-                ->get();
-
-    
-
-            return Inertia::render('Staff/Results/Show', [
-
-                'exam' => $exam,
-
-                'attempts' => $attempts,
-
-                'totalQuestions' => $exam->questions()->count(),
-
-            ]);
-
-        }
+            ->with('success', 'Exam deleted successfully.');
 
     }
 
-    
+    /**
+     * Display a listing of exam results.
+     */
+    public function results(Request $request): Response
+    {
+
+        $user = $request->user();
+
+        $query = Exam::with(['subject', 'schoolClass', 'prospectiveClass'])
+
+            ->withCount('attempts');
+
+        if (! $user->hasRole('admin')) {
+
+            $assignedClassIds = $user->currentAssignments()->pluck('school_class_id')->unique();
+
+            $assignedSubjectIds = $user->currentAssignments()->pluck('subject_id')->unique();
+
+            $query->where(function ($q) use ($assignedClassIds, $assignedSubjectIds) {
+
+                $q->whereIn('school_class_id', $assignedClassIds)
+                    ->whereIn('subject_id', $assignedSubjectIds);
+
+            });
+
+        }
+
+        return Inertia::render('Staff/Results/Index', [
+
+            'exams' => $query->latest()->paginate(10),
+
+        ]);
+
+    }
+
+    /**
+     * Show detailed results for a specific exam.
+     */
+    public function showResults(Exam $exam): Response
+    {
+
+        $exam->load(['subject', 'schoolClass', 'prospectiveClass']);
+
+        $attempts = $exam->attempts()
+
+            ->with(['user.schoolClass'])
+
+            ->latest('submitted_at')
+
+            ->get();
+
+        return Inertia::render('Staff/Results/Show', [
+
+            'exam' => $exam,
+
+            'attempts' => $attempts,
+
+            'totalQuestions' => $exam->questions()->count(),
+
+        ]);
+
+    }
+}

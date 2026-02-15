@@ -17,18 +17,18 @@ return new class extends Migration
             $table->foreignUlid('school_class_id')->constrained()->onDelete('cascade');
             $table->foreignUlid('academic_session_id')->constrained()->onDelete('cascade');
             $table->foreignUlid('created_by')->constrained('users')->onDelete('cascade');
-            
+
             $table->string('title');
             $table->text('description')->nullable();
             $table->text('instructions')->nullable();
-            
+
             $table->integer('duration')->comment('Duration in minutes');
             $table->dateTime('start_time')->nullable();
             $table->dateTime('end_time')->nullable();
-            
+
             $table->string('type'); // App\Enums\ExamType
             $table->string('status'); // App\Enums\ExamStatus
-            
+
             $table->json('settings')->nullable()->comment('Config for randomization, proctoring, etc');
             $table->timestamps();
         });

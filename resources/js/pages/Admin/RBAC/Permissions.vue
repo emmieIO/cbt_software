@@ -44,7 +44,7 @@ defineProps<{
                     class="group relative overflow-hidden rounded-xl border border-slate-100 bg-white p-5 shadow-sm transition-all hover:border-primary/20"
                 >
                     <div class="flex items-center gap-3">
-                        <div class="h-2 w-2 rounded-lg-full bg-slate-200 transition-colors group-hover:bg-primary"></div>
+                        <div class="rounded-lg-full h-2 w-2 bg-slate-200 transition-colors group-hover:bg-primary"></div>
                         <span class="text-[11px] font-black tracking-widest text-slate-700 uppercase">{{ permission.name }}</span>
                     </div>
                 </div>

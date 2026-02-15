@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { usePage } from '@inertiajs/vue3';
 import { h, defineComponent, computed } from 'vue';
+import { index as examIndex } from '@/actions/App/Http/Controllers/Staff/ExamController';
 import { logout } from '@/actions/App/Http/Controllers/Staff/StaffAuthController';
 import StaffDashboardController from '@/actions/App/Http/Controllers/Staff/StaffDashboardController';
-import { index as examIndex } from '@/actions/App/Http/Controllers/Staff/ExamController';
 import { index as questionIndex, generate as aiLabGenerate } from '@/actions/App/Http/Controllers/Staff/StaffQuestionController';
 import DashboardLayout from '@/layouts/DashboardLayout.vue';
 
@@ -57,18 +57,6 @@ const IconAI = defineComponent({
         ]),
 });
 
-const IconProfile = defineComponent({
-    render: () =>
-        h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor' }, [
-            h('path', {
-                'stroke-linecap': 'round',
-                'stroke-linejoin': 'round',
-                'stroke-width': '2',
-                d: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
-            }),
-        ]),
-});
-
 const navigation = [
     {
         section: 'Main',
@@ -79,7 +67,7 @@ const navigation = [
                 active: page.component === 'Staff/Dashboard',
                 icon: IconDashboard,
             },
-        ]
+        ],
     },
     {
         section: 'Academic Operations',
@@ -103,19 +91,21 @@ const navigation = [
                 active: page.component === 'QuestionBank/Index',
                 icon: IconBank,
             },
-        ]
-    }
+        ],
+    },
 ];
 
 const filteredNavigation = computed(() => {
-    return navigation.map(section => ({
-        ...section,
-        items: section.items.filter((item) => {
-            if (!item.permission) return true;
-            const userPermissions = (page.props.auth.user as any).permissions || [];
-            return userPermissions.includes(item.permission);
-        })
-    })).filter(section => section.items.length > 0);
+    return navigation
+        .map((section) => ({
+            ...section,
+            items: section.items.filter((item) => {
+                if (!item.permission) return true;
+                const userPermissions = (page.props.auth.user as any).permissions || [];
+                return userPermissions.includes(item.permission);
+            }),
+        }))
+        .filter((section) => section.items.length > 0);
 });
 </script>
 
