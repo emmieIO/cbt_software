@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { Head, router, Link } from '@inertiajs/vue3';
-import { useForm } from 'laravel-precognition-vue';
+import { Head, router, Link, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { index, store, update, destroy, importMethod } from '@/actions/App/Http/Controllers/Admin/StudentController';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
@@ -30,7 +29,7 @@ const isModalOpen = ref(false);
 const isEditing = ref(false);
 const editingStudent = ref<StudentUser | null>(null);
 
-const form = useForm('post', store().url, {
+const form = useForm({
     name: '',
     email: '',
     username: '',
@@ -48,25 +47,23 @@ const openCreateModal = () => {
 const openEditModal = (user: StudentUser) => {
     isEditing.value = true;
     editingStudent.value = user;
-    form.setData({
-        name: user.name,
-        email: user.email,
-        username: user.username,
-        school_id: user.school_id || '',
-        school_class_id: user.school_class_id || '',
-    });
+    
+    form.name = user.name;
+    form.email = user.email;
+    form.username = user.username;
+    form.school_id = user.school_id || '';
+    form.school_class_id = user.school_class_id || '';
+    
     isModalOpen.value = true;
 };
 
 const submit = () => {
     if (isEditing.value && editingStudent.value) {
-        form.submit({
-            method: 'put',
-            url: update(editingStudent.value.id).url,
+        form.put(update(editingStudent.value.id).url, {
             onSuccess: () => closeModal(),
         });
     } else {
-        form.submit({
+        form.post(store().url, {
             onSuccess: () => closeModal(),
         });
     }
@@ -96,9 +93,8 @@ const handleDelete = () => {
     }
 };
 
-// Filters (standard inertia form for search)
-import { useForm as useInertiaForm } from '@inertiajs/vue3';
-const filterForm = useInertiaForm({
+// Filters
+const filterForm = useForm({
     search: props.filters.search || '',
     school_class_id: props.filters.school_class_id || '',
 });
@@ -109,12 +105,12 @@ const applyFilters = () => {
 
 // Import
 const isImportModalOpen = ref(false);
-const importForm = useForm('post', importMethod().url, {
+const importForm = useForm({
     file: null as File | null,
 });
 
 const handleImport = () => {
-    importForm.submit({
+    importForm.post(importMethod().url, {
         onSuccess: () => {
             isImportModalOpen.value = false;
             importForm.reset();
@@ -265,31 +261,31 @@ const handleImport = () => {
                         <div class="grid grid-cols-2 gap-6">
                             <div class="col-span-2">
                                 <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Student Full Name</label>
-                                <input v-model="form.name" @change="form.validate('name')" type="text" required placeholder="e.g. Alice Wonderland" :class="{'border-red-500': form.invalid('name')}" class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary" />
+                                <input v-model="form.name" type="text" required placeholder="e.g. Alice Wonderland" class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary" />
                                 <div v-if="form.errors.name" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.name }}</div>
                             </div>
 
                             <div>
                                 <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Email Address</label>
-                                <input v-model="form.email" @change="form.validate('email')" type="email" required placeholder="alice.w@chrisland.com" :class="{'border-red-500': form.invalid('email')}" class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary" />
+                                <input v-model="form.email" type="email" required placeholder="alice.w@chrisland.com" class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary" />
                                 <div v-if="form.errors.email" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.email }}</div>
                             </div>
 
                             <div>
                                 <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Admission Number / Username</label>
-                                <input v-model="form.username" @change="form.validate('username')" type="text" required placeholder="CHRIS/ADM/10234" :class="{'border-red-500': form.invalid('username')}" class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary" />
+                                <input v-model="form.username" type="text" required placeholder="CHRIS/ADM/10234" class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary" />
                                 <div v-if="form.errors.username" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.username }}</div>
                             </div>
 
                             <div>
                                 <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Student ID (External)</label>
-                                <input v-model="form.school_id" @change="form.validate('school_id')" type="text" placeholder="e.g. STUD-10234" :class="{'border-red-500': form.invalid('school_id')}" class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary" />
+                                <input v-model="form.school_id" type="text" placeholder="e.g. STUD-10234" class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary" />
                                 <div v-if="form.errors.school_id" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.school_id }}</div>
                             </div>
 
                             <div>
                                 <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Assign Class</label>
-                                <select v-model="form.school_class_id" @change="form.validate('school_class_id')" required :class="{'border-red-500': form.invalid('school_class_id')}" class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary">
+                                <select v-model="form.school_class_id" required class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary">
                                     <option value="" disabled>Select Class</option>
                                     <option v-for="cls in classes" :key="cls.id" :value="cls.id">{{ cls.name }}</option>
                                 </select>
@@ -320,12 +316,12 @@ const handleImport = () => {
                     </p>
 
                     <form @submit.prevent="handleImport" class="space-y-6">
-                        <label class="group relative flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-6 py-10 transition-all hover:border-primary hover:bg-white" :class="{'border-red-500': importForm.invalid('file')}">
+                        <label class="group relative flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-6 py-10 transition-all hover:border-primary hover:bg-white">
                             <svg class="mb-4 h-10 w-10 text-slate-300 transition-colors group-hover:text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                             </svg>
                             <span class="text-xs font-black tracking-widest text-slate-400 uppercase group-hover:text-primary">{{ importForm.file ? importForm.file.name : 'Select Enrollment File' }}</span>
-                            <input type="file" class="hidden" accept=".csv,.xlsx" @input="importForm.file = ($event.target as HTMLInputElement).files?.[0] || null; importForm.validate('file')" />
+                            <input type="file" class="hidden" accept=".csv,.xlsx" @input="importForm.file = ($event.target as HTMLInputElement).files?.[0] || null" />
                         </label>
                         <div v-if="importForm.errors.file" class="mt-1 text-xs font-bold text-red-500">{{ importForm.errors.file }}</div>
 

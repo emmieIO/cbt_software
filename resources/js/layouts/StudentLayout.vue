@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { usePage } from '@inertiajs/vue3';
 import { h, defineComponent } from 'vue';
-import { logout, dashboard } from '@/actions/App/Http/Controllers/Student/StudentController';
+import { logout, dashboard, index as examIndex, results as resultsIndex } from '@/actions/App/Http/Controllers/Student/StudentController';
 import DashboardLayout from '@/layouts/DashboardLayout.vue';
 
 const page = usePage();
@@ -71,14 +71,14 @@ const navigation = [
         items: [
             {
                 name: 'Available Exams',
-                href: '#',
-                active: false,
+                href: examIndex().url,
+                active: page.component.startsWith('Student/Exams/'),
                 icon: IconExams,
             },
             {
                 name: 'My Results',
-                href: '#',
-                active: false,
+                href: resultsIndex().url,
+                active: page.component.startsWith('Student/Results/'),
                 icon: IconResults,
             },
         ]

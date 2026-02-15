@@ -2,7 +2,8 @@
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { 
-    manageQuestions
+    manageQuestions,
+    edit as editExamAction
 } from '@/actions/App/Http/Controllers/Staff/ExamController';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import StaffLayout from '@/layouts/StaffLayout.vue';
@@ -60,6 +61,15 @@ const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
                         </div>
                     </div>
                     <div class="flex gap-4">
+                        <Link 
+                            :href="editExamAction(exam.id).url"
+                            class="flex items-center gap-3 rounded-xl border-2 border-white/20 bg-white/10 px-8 py-4 text-xs font-black tracking-widest text-white uppercase transition-all hover:bg-white hover:text-slate-900 active:scale-95"
+                        >
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                            Edit Configuration
+                        </Link>
                         <Link 
                             :href="manageQuestions(exam.id).url"
                             class="flex items-center gap-3 rounded-xl bg-primary px-8 py-4 text-xs font-black tracking-widest text-slate-900 uppercase transition-all hover:scale-105 active:scale-95 shadow-xl shadow-primary/20"

@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
-import { useForm } from 'laravel-precognition-vue';
+import { Head, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { store, update, destroy } from '@/actions/App/Http/Controllers/Admin/RoleController';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
@@ -26,7 +25,7 @@ const isModalOpen = ref(false);
 const isEditing = ref(false);
 const editingRole = ref<Role | null>(null);
 
-const form = useForm('post', store().url, {
+const form = useForm({
     name: '',
     permissions: [] as string[],
 });
@@ -41,22 +40,20 @@ const openCreateModal = () => {
 const openEditModal = (role: Role) => {
     isEditing.value = true;
     editingRole.value = role;
-    form.setData({
-        name: role.name,
-        permissions: role.permissions.map((p) => p.name),
-    });
+    
+    form.name = role.name;
+    form.permissions = role.permissions.map((p) => p.name);
+    
     isModalOpen.value = true;
 };
 
 const submit = () => {
     if (isEditing.value && editingRole.value) {
-        form.submit({
-            method: 'put',
-            url: update(editingRole.value.id).url,
+        form.put(update(editingRole.value.id).url, {
             onSuccess: () => closeModal(),
         });
     } else {
-        form.submit({
+        form.post(store().url, {
             onSuccess: () => closeModal(),
         });
     }
@@ -94,8 +91,7 @@ const togglePermission = (permissionName: string) => {
     } else {
         permissions.push(permissionName);
     }
-    form.setData({ ...form.data(), permissions });
-    form.validate('permissions');
+    form.permissions = permissions;
 };
 </script>
 
@@ -204,11 +200,9 @@ const togglePermission = (permissionName: string) => {
                             <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Role Name</label>
                             <input
                                 v-model="form.name"
-                                @change="form.validate('name')"
                                 type="text"
                                 required
                                 placeholder="e.g. subject_lead"
-                                :class="{'border-red-500': form.invalid('name')}"
                                 class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                             />
                             <div v-if="form.errors.name" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.name }}</div>
@@ -229,7 +223,6 @@ const togglePermission = (permissionName: string) => {
                                         form.permissions.includes(permission.name)
                                             ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20'
                                             : 'border-slate-100 bg-white text-slate-400 hover:border-primary hover:text-primary',
-                                        form.invalid('permissions') ? 'border-red-500' : ''
                                     ]"
                                 >
                                     {{ permission.name }}

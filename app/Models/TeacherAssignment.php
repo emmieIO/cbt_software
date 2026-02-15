@@ -14,6 +14,7 @@ class TeacherAssignment extends Model
         'user_id',
         'subject_id',
         'school_class_id',
+        'prospective_class_id',
         'academic_session_id',
     ];
 
@@ -30,6 +31,11 @@ class TeacherAssignment extends Model
     public function schoolClass(): BelongsTo
     {
         return $this->belongsTo(SchoolClass::class);
+    }
+
+    public function prospectiveClass(): BelongsTo
+    {
+        return $this->belongsTo(ProspectiveClass::class);
     }
 
     public function academicSession(): BelongsTo

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { usePage } from '@inertiajs/vue3';
-import { h, defineComponent } from 'vue';
+import { h, defineComponent, computed } from 'vue';
 import { logout } from '@/actions/App/Http/Controllers/Staff/StaffAuthController';
 import StaffDashboardController from '@/actions/App/Http/Controllers/Staff/StaffDashboardController';
 import { index as examIndex } from '@/actions/App/Http/Controllers/Staff/ExamController';

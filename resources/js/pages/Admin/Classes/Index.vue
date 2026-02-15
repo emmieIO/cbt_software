@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
-import { useForm } from 'laravel-precognition-vue';
+import { Head, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { store as storeAction, update as updateAction, destroy as destroyAction } from '@/actions/App/Http/Controllers/Admin/SchoolClassController';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
@@ -16,7 +15,7 @@ const isModalOpen = ref(false);
 const isEditing = ref(false);
 const editingClass = ref<SchoolClass | null>(null);
 
-const form = useForm('post', storeAction().url, {
+const form = useForm({
     name: '',
     level: 'primary' as any,
 });
@@ -32,22 +31,20 @@ const openEditModal = (cls: SchoolClass) => {
     isEditing.value = true;
     editingClass.value = cls;
     const levelValue = typeof cls.level === 'object' ? (cls.level as any).value : cls.level;
-    form.setData({
-        name: cls.name,
-        level: levelValue,
-    });
+    
+    form.name = cls.name;
+    form.level = levelValue;
+    
     isModalOpen.value = true;
 };
 
 const submit = () => {
     if (isEditing.value && editingClass.value) {
-        form.submit({
-            method: 'put',
-            url: updateAction(editingClass.value.id).url,
+        form.put(updateAction(editingClass.value.id).url, {
             onSuccess: () => closeModal(),
         });
     } else {
-        form.submit({
+        form.post(storeAction().url, {
             onSuccess: () => closeModal(),
         });
     }
@@ -167,11 +164,9 @@ const getRawLevel = (cls: SchoolClass): string => {
                             <label class="mb-2 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Class Name</label>
                             <input
                                 v-model="form.name"
-                                @change="form.validate('name')"
                                 type="text"
                                 required
                                 placeholder="e.g. JSS 1"
-                                :class="{'border-red-500': form.invalid('name')}"
                                 class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                             />
                             <div v-if="form.errors.name" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.name }}</div>
@@ -184,13 +179,12 @@ const getRawLevel = (cls: SchoolClass): string => {
                                     v-for="level in levels"
                                     :key="level.value"
                                     type="button"
-                                    @click="form.level = level.value; form.validate('level')"
+                                    @click="form.level = level.value"
                                     :class="[
                                         'rounded-xl py-3.5 text-[10px] font-black tracking-widest uppercase transition-all',
                                         form.level === level.value
                                             ? 'bg-primary text-white shadow-lg shadow-primary/20'
                                             : 'bg-slate-50 text-slate-400 hover:bg-slate-100',
-                                        form.invalid('level') ? 'border-2 border-red-500' : ''
                                     ]"
                                 >
                                     {{ level.label }}

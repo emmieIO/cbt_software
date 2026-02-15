@@ -1,16 +1,15 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
-import { useForm } from 'laravel-precognition-vue';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import { store } from '@/actions/App/Http/Controllers/Student/StudentController';
 
-const form = useForm('post', store().url, {
+const form = useForm({
     login_id: '',
     password: '',
     remember: false,
 });
 
 const submit = () => {
-    form.submit({
+    form.post(store().url, {
         onFinish: () => form.reset('password'),
     });
 };
@@ -42,11 +41,9 @@ const submit = () => {
                         <input
                             id="student_id"
                             v-model="form.login_id"
-                            @change="form.validate('login_id')"
                             type="text"
                             required
                             autofocus
-                            :class="{'border-red-500': form.invalid('login_id')}"
                             class="mt-1 block w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 shadow-sm transition-all focus:border-primary focus:ring-primary"
                             placeholder="CHS/2026/001"
                         />
@@ -58,10 +55,8 @@ const submit = () => {
                         <input
                             id="password"
                             v-model="form.password"
-                            @change="form.validate('password')"
                             type="password"
                             required
-                            :class="{'border-red-500': form.invalid('password')}"
                             class="mt-1 block w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 shadow-sm transition-all focus:border-primary focus:ring-primary"
                             placeholder="••••••••"
                         />

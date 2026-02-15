@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { Head, router, Link } from '@inertiajs/vue3';
-import { useForm } from 'laravel-precognition-vue';
+import { Head, router, Link, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { index, store, update, destroy, importMethod } from '@/actions/App/Http/Controllers/Admin/StaffController';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
@@ -26,7 +25,7 @@ const isModalOpen = ref(false);
 const isEditing = ref(false);
 const editingStaff = ref<StaffUser | null>(null);
 
-const form = useForm('post', store().url, {
+const form = useForm({
     name: '',
     email: '',
     username: '',
@@ -43,12 +42,12 @@ const openCreateModal = () => {
 const openEditModal = (user: StaffUser) => {
     isEditing.value = true;
     editingStaff.value = user;
-    form.setData({
-        name: user.name,
-        email: user.email,
-        username: user.username,
-        school_id: user.school_id || '',
-    });
+    
+    form.name = user.name;
+    form.email = user.email;
+    form.username = user.username;
+    form.school_id = user.school_id || '';
+    
     isModalOpen.value = true;
 };
 

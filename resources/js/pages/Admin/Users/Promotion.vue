@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
-import { useForm } from 'laravel-precognition-vue';
+import { Head, useForm } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import { promote as processPromote, students as fetchStudentsAction } from '@/actions/App/Http/Controllers/Admin/PromotionController';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
@@ -59,7 +58,7 @@ const toggleSelectAll = () => {
     }
 };
 
-const form = useForm('post', processPromote().url, {
+const form = useForm({
     from_class_id: '',
     to_class_id: '',
     student_ids: [] as string[],
@@ -68,16 +67,15 @@ const form = useForm('post', processPromote().url, {
 const isConfirmModalOpen = ref(false);
 
 const startPromotion = () => {
-    form.setData({
-        from_class_id: selectedSourceClassId.value,
-        to_class_id: selectedTargetClassId.value,
-        student_ids: selectedStudentIds.value,
-    });
+    form.from_class_id = selectedSourceClassId.value;
+    form.to_class_id = selectedTargetClassId.value;
+    form.student_ids = selectedStudentIds.value;
+    
     isConfirmModalOpen.value = true;
 };
 
 const submitPromotion = () => {
-    form.submit({
+    form.post(processPromote().url, {
         onSuccess: () => {
             isConfirmModalOpen.value = false;
             selectedSourceClassId.value = '';

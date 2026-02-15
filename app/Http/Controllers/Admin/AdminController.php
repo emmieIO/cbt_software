@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\Exam;
+use App\Models\User;
 use App\Services\AuthService;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -20,18 +22,18 @@ class AdminController extends Controller
 
     public function store(LoginRequest $request): RedirectResponse
     {
-        $redirectUrl = $this->authService->login($request->credentials(), $request->boolean('remember'), 'admin');
+        $user = $this->authService->login($request->credentials(), $request->boolean('remember'), 'admin');
 
-        return redirect()->intended($redirectUrl);
+        return to_route('admin.dashboard');
     }
 
     public function dashboard(): Response
     {
         return Inertia::render('Admin/Dashboard', [
             'stats' => [
-                'totalStudents' => \App\Models\User::role('student')->count(),
-                'totalStaff' => \App\Models\User::role('staff')->count(),
-                'activeExams' => \App\Models\Exam::where('status', \App\Enums\ExamStatus::LIVE)->count(),
+                'totalStudents' => User::role('student')->count(),
+                'totalStaff' => User::role('staff')->count(),
+                'activeExams' => Exam::where('status', \App\Enums\ExamStatus::LIVE)->count(),
                 'systemStatus' => 'Healthy',
             ],
             'recentActivity' => [

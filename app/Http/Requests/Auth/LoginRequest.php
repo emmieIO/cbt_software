@@ -33,8 +33,11 @@ class LoginRequest extends FormRequest
      */
     public function credentials(): array
     {
+        $loginId = $this->input('login_id');
+        $field = filter_var($loginId, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+
         return [
-            'username' => $this->login_id,
+            $field => $loginId,
             'password' => $this->password,
         ];
     }

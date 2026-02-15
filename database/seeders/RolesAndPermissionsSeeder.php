@@ -41,6 +41,7 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::findOrCreate('delete exams');
         Permission::findOrCreate('view exams');
         Permission::findOrCreate('take exams');
+        Permission::findOrCreate('manage entrance exams');
 
         // Results
         Permission::findOrCreate('view results');

@@ -4,7 +4,8 @@ import { computed } from 'vue';
 import { 
     index as examsIndex, 
     create as createExamAction,
-    show as showExamAction
+    show as showExamAction,
+    edit as editExamAction
 } from '@/actions/App/Http/Controllers/Staff/ExamController';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import StaffLayout from '@/layouts/StaffLayout.vue';
@@ -101,15 +102,25 @@ const getStatusColor = (status: string) => {
                             </div>
                         </div>
 
-                        <Link 
-                            :href="showExamAction(exam.id).url"
-                            class="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-slate-100 py-4 text-xs font-black tracking-widest text-slate-600 uppercase transition-all hover:border-primary hover:text-primary"
-                        >
-                            Configure Paper
-                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                            </svg>
-                        </Link>
+                        <div class="flex gap-3">
+                            <Link 
+                                :href="editExamAction(exam.id).url"
+                                class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border-2 border-slate-100 text-slate-400 transition-all hover:border-primary hover:text-primary active:scale-90"
+                            >
+                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                            </Link>
+                            <Link 
+                                :href="showExamAction(exam.id).url"
+                                class="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-slate-100 py-4 text-xs font-black tracking-widest text-slate-600 uppercase transition-all hover:border-primary hover:text-primary"
+                            >
+                                Configure Paper
+                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                                </svg>
+                            </Link>
+                        </div>
                     </div>
                 </div>
 

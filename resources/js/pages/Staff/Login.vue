@@ -1,16 +1,15 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
-import { useForm } from 'laravel-precognition-vue';
-import { store } from '@/actions/App/Http/Controllers/Staff/StaffController';
+import { Head, Link, useForm } from '@inertiajs/vue3';
+import { authenticate } from '@/actions/App/Http/Controllers/Staff/StaffAuthController';
 
-const form = useForm('post', store().url, {
-    username: '',
+const form = useForm({
+    login_id: '',
     password: '',
     remember: false,
 });
 
 const submit = () => {
-    form.submit({
+    form.post(authenticate().url, {
         onFinish: () => form.reset('password'),
     });
 };
@@ -41,16 +40,14 @@ const submit = () => {
                         <label for="username" class="mb-2 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Username / ID</label>
                         <input
                             id="username"
-                            v-model="form.username"
-                            @change="form.validate('username')"
+                            v-model="form.login_id"
                             type="text"
                             required
                             autofocus
-                            :class="{'border-red-500': form.invalid('username')}"
                             class="block w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary/10"
-                            placeholder="e.g. JS-2025-001"
+                            placeholder="enter Staff mail or Staff ID"
                         />
-                        <div v-if="form.errors.username" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.username }}</div>
+                        <div v-if="form.errors.login_id" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.login_id }}</div>
                     </div>
 
                     <div>
@@ -58,10 +55,8 @@ const submit = () => {
                         <input
                             id="password"
                             v-model="form.password"
-                            @change="form.validate('password')"
                             type="password"
                             required
-                            :class="{'border-red-500': form.invalid('password')}"
                             class="block w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary/10"
                             placeholder="••••••••"
                         />

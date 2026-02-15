@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
-import { useForm } from 'laravel-precognition-vue';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import { updateQuestions, aiSelectQuestions } from '@/actions/App/Http/Controllers/Staff/ExamController';
 import AdminLayout from '@/layouts/AdminLayout.vue';
@@ -59,23 +58,23 @@ const toggleQuestion = (id: string) => {
     }
 };
 
-const form = useForm('post', updateQuestions(props.exam.id).url, {
+const form = useForm({
     question_ids: [] as string[],
 });
 
 const saveSelection = () => {
-    form.setData({ question_ids: selectedIds.value });
-    form.submit();
+    form.question_ids = selectedIds.value;
+    form.post(updateQuestions(props.exam.id).url);
 };
 
 // AI Selection
 const isAiModalOpen = ref(false);
-const aiForm = useForm('post', aiSelectQuestions(props.exam.id).url, {
+const aiForm = useForm({
     count: 10,
 });
 
 const runAiSelection = () => {
-    aiForm.submit({
+    aiForm.post(aiSelectQuestions(props.exam.id).url, {
         onSuccess: () => {
             isAiModalOpen.value = false;
         }
@@ -241,12 +240,10 @@ const runAiSelection = () => {
                         <label class="mb-2 block text-[10px] font-black tracking-widest text-slate-400 uppercase ml-1">Number of Questions</label>
                         <input
                             v-model="aiForm.count"
-                            @change="aiForm.validate('count')"
                             type="number"
                             min="1"
                             max="100"
                             required
-                            :class="{'border-red-500': aiForm.invalid('count')}"
                             class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                         />
                         <div v-if="aiForm.errors.count" class="mt-1 text-xs text-red-600">{{ aiForm.errors.count }}</div>

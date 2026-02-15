@@ -22,9 +22,9 @@ class StaffAuthController extends Controller
 
     public function authenticate(LoginRequest $request): RedirectResponse
     {
-        $redirectUrl = $this->authService->login($request->credentials(), $request->boolean('remember'), 'staff');
+        $user = $this->authService->login($request->credentials(), $request->boolean('remember'), 'staff');
 
-        return redirect()->intended($redirectUrl);
+        return redirect()->intended(route('staff.dashboard'));
     }
 
     public function logout(): RedirectResponse

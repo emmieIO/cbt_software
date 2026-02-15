@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { Head, router, Link } from '@inertiajs/vue3';
-import { useForm } from 'laravel-precognition-vue';
+import { Head, router, Link, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { index, store, importMethod, admit as processAdmit } from '@/actions/App/Http/Controllers/Admin/EntranceController';
 import AdminLayout from '@/layouts/AdminLayout.vue';
@@ -15,6 +14,12 @@ interface CandidateUser {
     status: string;
     prospective_class?: { name: string };
     school_class?: { name: string };
+    latest_attempt?: {
+        score: number;
+        exam: {
+            questions_count?: number;
+        }
+    };
 }
 
 const props = defineProps<{
@@ -27,7 +32,7 @@ const props = defineProps<{
 }>();
 
 const isModalOpen = ref(false);
-const form = useForm('post', store().url, {
+const form = useForm({
     name: '',
     email: '',
     username: '',
@@ -42,7 +47,7 @@ const openCreateModal = () => {
 };
 
 const submit = () => {
-    form.submit({
+    form.post(store().url, {
         onSuccess: () => closeModal(),
     });
 };
@@ -56,20 +61,19 @@ const closeModal = () => {
 const isAdmitModalOpen = ref(false);
 const candidateToAdmit = ref<CandidateUser | null>(null);
 
-const admitForm = useForm('post', '', {
+const admitForm = useForm({
     school_class_id: '',
 });
 
 const openAdmitModal = (user: CandidateUser) => {
     candidateToAdmit.value = user;
-    admitForm.setData({ school_class_id: '' });
+    admitForm.school_class_id = '';
     isAdmitModalOpen.value = true;
 };
 
 const handleAdmit = () => {
     if (candidateToAdmit.value) {
-        admitForm.submit({
-            url: processAdmit(candidateToAdmit.value.id).url,
+        admitForm.post(processAdmit(candidateToAdmit.value.id).url, {
             onSuccess: () => {
                 isAdmitModalOpen.value = false;
                 candidateToAdmit.value = null;
@@ -87,12 +91,12 @@ const handleSearch = () => {
 
 // Import
 const isImportModalOpen = ref(false);
-const importForm = useForm('post', importMethod().url, {
+const importForm = useForm({
     file: null as File | null,
 });
 
 const handleImport = () => {
-    importForm.submit({
+    importForm.post(importMethod().url, {
         onSuccess: () => {
             isImportModalOpen.value = false;
             importForm.reset();
@@ -141,7 +145,7 @@ const handleImport = () => {
                         <div class="relative flex-1">
                             <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
                                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                 </svg>
                             </span>
                             <input
@@ -163,6 +167,7 @@ const handleImport = () => {
                                 <th class="px-8 py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase">Applicant Details</th>
                                 <th class="px-6 py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase">Application ID</th>
                                 <th class="px-6 py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase">Exam Batch</th>
+                                <th class="px-6 py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase whitespace-nowrap">Entrance Score</th>
                                 <th class="px-6 py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase">Status</th>
                                 <th class="px-8 py-5 text-right text-[10px] font-black tracking-widest text-slate-400 uppercase">Actions</th>
                             </tr>
@@ -190,6 +195,16 @@ const handleImport = () => {
                                         {{ user.prospective_class.name }}
                                     </span>
                                     <span v-else class="text-[9px] font-black text-slate-300 uppercase tracking-widest">No Batch</span>
+                                </td>
+                                <td class="px-6 py-6">
+                                    <div v-if="user.latest_attempt" class="flex flex-col">
+                                        <span class="text-xs font-black text-slate-800">
+                                            {{ user.latest_attempt.score }} 
+                                            <span class="text-slate-300">/ {{ user.latest_attempt.exam.questions_count }}</span>
+                                        </span>
+                                        <span class="text-[9px] font-bold text-slate-400 uppercase">Correct Answers</span>
+                                    </div>
+                                    <span v-else class="text-[9px] font-black text-slate-300 uppercase tracking-widest">No Attempt</span>
                                 </td>
                                 <td class="px-6 py-6">
                                     <span class="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-1 text-[9px] font-black text-blue-600 uppercase">
@@ -231,31 +246,31 @@ const handleImport = () => {
                         <div class="grid grid-cols-2 gap-6">
                             <div class="col-span-2">
                                 <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Applicant Full Name</label>
-                                <input v-model="form.name" @change="form.validate('name')" type="text" required placeholder="e.g. Jane Doe" :class="{'border-red-500': form.invalid('name')}" class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary" />
+                                <input v-model="form.name" type="text" required placeholder="e.g. Jane Doe" class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary" />
                                 <div v-if="form.errors.name" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.name }}</div>
                             </div>
 
                             <div>
                                 <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Email Address</label>
-                                <input v-model="form.email" @change="form.validate('email')" type="email" required placeholder="jane@example.com" :class="{'border-red-500': form.invalid('email')}" class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary" />
+                                <input v-model="form.email" type="email" required placeholder="jane@example.com" class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary" />
                                 <div v-if="form.errors.email" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.email }}</div>
                             </div>
 
                             <div>
                                 <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Application ID / Username</label>
-                                <input v-model="form.username" @change="form.validate('username')" type="text" required placeholder="APP/2026/001" :class="{'border-red-500': form.invalid('username')}" class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary" />
+                                <input v-model="form.username" type="text" required placeholder="APP/2026/001" class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary" />
                                 <div v-if="form.errors.username" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.username }}</div>
                             </div>
 
                             <div>
                                 <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">External Application No.</label>
-                                <input v-model="form.school_id" @change="form.validate('school_id')" type="text" required placeholder="EX-10234" :class="{'border-red-500': form.invalid('school_id')}" class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary" />
+                                <input v-model="form.school_id" type="text" required placeholder="EX-10234" class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary" />
                                 <div v-if="form.errors.school_id" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.school_id }}</div>
                             </div>
 
                             <div>
                                 <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Target Admission Class</label>
-                                <select v-model="form.school_class_id" @change="form.validate('school_class_id')" required :class="{'border-red-500': form.invalid('school_class_id')}" class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary">
+                                <select v-model="form.school_class_id" required class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary">
                                     <option value="">Select Class</option>
                                     <option v-for="cls in classes" :key="cls.id" :value="cls.id">{{ cls.name }}</option>
                                 </select>
@@ -264,7 +279,7 @@ const handleImport = () => {
 
                             <div>
                                 <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Assign to Entrance Batch</label>
-                                <select v-model="form.prospective_class_id" @change="form.validate('prospective_class_id')" required :class="{'border-red-500': form.invalid('prospective_class_id')}" class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary">
+                                <select v-model="form.prospective_class_id" required class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary">
                                     <option value="">Select Batch</option>
                                     <option v-for="batch in batches" :key="batch.id" :value="batch.id">{{ batch.name }}</option>
                                 </select>
@@ -293,9 +308,7 @@ const handleImport = () => {
                             <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Admit to Class</label>
                             <select
                                 v-model="admitForm.school_class_id"
-                                @change="admitForm.validate('school_class_id')"
                                 required
-                                :class="{'border-red-500': admitForm.invalid('school_class_id')}"
                                 class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                             >
                                 <option value="">Select Target Class</option>
@@ -336,12 +349,11 @@ const handleImport = () => {
                     <form @submit.prevent="handleImport" class="space-y-6">
                         <label
                             class="group relative flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-6 py-10 transition-all hover:border-primary hover:bg-white"
-                            :class="{'border-red-500': importForm.invalid('file')}"
                         >
                             <span class="text-xs font-black tracking-widest text-slate-400 uppercase group-hover:text-primary">{{
                                 importForm.file ? importForm.file.name : 'Select Candidate List'
                             }}</span>
-                            <input type="file" class="hidden" @input="importForm.file = ($event.target as HTMLInputElement).files?.[0] || null; importForm.validate('file')" />
+                            <input type="file" class="hidden" @input="importForm.file = ($event.target as HTMLInputElement).files?.[0] || null" />
                         </label>
                         <div v-if="importForm.errors.file" class="mt-1 text-xs font-bold text-red-500">{{ importForm.errors.file }}</div>
                         <button

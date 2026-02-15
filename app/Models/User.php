@@ -15,6 +15,13 @@ class User extends Authenticatable
     use HasFactory, HasRoles, HasUlids, Notifiable;
 
     /**
+     * The guard name for Spatie permissions.
+     *
+     * @var string
+     */
+    protected $guard_name = 'web';
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var list<string>
@@ -62,6 +69,22 @@ class User extends Authenticatable
     {
         return $this->hasMany(TeacherAssignment::class, 'user_id')
             ->whereHas('academicSession', fn ($q) => $q->where('is_current', true));
+    }
+
+    /**
+     * Get all exam attempts for the user.
+     */
+    public function attempts(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ExamAttempt::class);
+    }
+
+    /**
+     * Get the latest exam attempt for the user.
+     */
+    public function latestAttempt(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(ExamAttempt::class)->latestOfMany();
     }
 
     /**

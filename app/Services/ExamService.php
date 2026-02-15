@@ -2,15 +2,12 @@
 
 namespace App\Services;
 
-use App\DTOs\ExamDTO;
-use App\DTOs\ExamVersionDTO;
 use App\Models\Exam;
-use App\Models\ExamVersion;
 use App\Models\Question;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
-class ExamService 
+class ExamService
 {
     /**
      * Create a new exam.
@@ -100,17 +97,19 @@ class ExamService
     /**
      * Start a new exam attempt for a student.
      */
-    public function startExam(\App\Models\User $user, \App\Models\Exam $exam): \App\Models\ExamAttempt
+    public function startExam(\App\Models\User $user, Exam $exam): \App\Models\ExamAttempt
     {
         return DB::transaction(function () use ($user, $exam) {
-            // 1. Eligibility Check: Ensure no active attempt already exists
+            // 1. Eligibility Check: Ensure no attempt (ongoing or submitted) already exists
             $existingAttempt = \App\Models\ExamAttempt::where('user_id', $user->id)
                 ->where('exam_id', $exam->id)
-                ->where('status', \App\Enums\AttemptStatus::ONGOING)
                 ->first();
 
             if ($existingAttempt) {
-                return $existingAttempt;
+                if ($existingAttempt->status === \App\Enums\AttemptStatus::SUBMITTED) {
+                    throw new \Exception('You have already completed this examination. Only one attempt is permitted.');
+                }
+                return $existingAttempt; // Return ongoing attempt
             }
 
             // 2. Create the Attempt
@@ -123,17 +122,19 @@ class ExamService
 
             // 3. Locked-in Shuffling: Save the unique sequence for this student
             $questions = $exam->questions()->with('options')->get();
-            $seed = crc32($attempt->id);
+            $seed = $attempt->id;
 
-            // Shuffle questions and capture IDs
-            $shuffledQuestionIds = $questions->shuffle($seed)->pluck('id')->toArray();
+            // Stable shuffle questions using a hash of (ID + attempt seed)
+            $shuffledQuestionIds = $questions->values()
+                ->sortBy(fn ($q) => hash('sha256', $q->id.$seed))
+                ->pluck('id')
+                ->toArray();
 
-            // Shuffle options for every question and capture their order
+            // Stable shuffle options for every question
             $optionMap = [];
             foreach ($questions as $question) {
-                $questionSeed = $seed + crc32($question->id);
-                $optionMap[$question->id] = $question->options
-                    ->shuffle($questionSeed)
+                $optionMap[$question->id] = $question->options->values()
+                    ->sortBy(fn ($o) => hash('sha256', $o->id.$seed))
                     ->pluck('id')
                     ->toArray();
             }
@@ -161,7 +162,7 @@ class ExamService
         $optionOrders = $metadata['option_orders'] ?? [];
 
         // Fetch all questions in the attempt pool
-        $questions = \App\Models\Question::whereIn('id', $questionOrder)
+        $questions = Question::whereIn('id', $questionOrder)
             ->with('options')
             ->get()
             ->sortBy(fn ($q) => array_search($q->id, $questionOrder))
@@ -184,9 +185,9 @@ class ExamService
     /**
      * Submit an exam attempt and calculate the score.
      */
-    public function submitAttempt(\App\Models\ExamAttempt $attempt, array $answers): void
+    public function submitAttempt(\App\Models\ExamAttempt $attempt, array $answers, array $additionalMetadata = []): void
     {
-        DB::transaction(function () use ($attempt, $answers) {
+        DB::transaction(function () use ($attempt, $answers, $additionalMetadata) {
             if ($attempt->status !== \App\Enums\AttemptStatus::ONGOING) {
                 return;
             }
@@ -217,10 +218,13 @@ class ExamService
                 ]);
             }
 
+            $finalMetadata = array_merge($attempt->metadata ?? [], $additionalMetadata);
+
             $attempt->update([
                 'status' => \App\Enums\AttemptStatus::SUBMITTED,
                 'submitted_at' => now(),
                 'score' => $score,
+                'metadata' => $finalMetadata,
             ]);
         });
     }

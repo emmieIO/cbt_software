@@ -22,7 +22,7 @@ class TeachingLoadController extends Controller
     {
         $currentSession = AcademicSession::current()->first();
 
-        $query = TeacherAssignment::with(['teacher', 'subject', 'schoolClass', 'academicSession']);
+        $query = TeacherAssignment::with(['teacher', 'subject', 'schoolClass', 'prospectiveClass', 'academicSession']);
 
         if ($request->filled('user_id')) {
             $query->where('user_id', $request->user_id);
@@ -34,9 +34,10 @@ class TeachingLoadController extends Controller
 
         return Inertia::render('Admin/Users/TeachingLoads', [
             'assignments' => $query->latest()->paginate(15)->withQueryString(),
-            'teachers' => User::role(['staff', 'subject_lead'])->get(['id', 'name', 'school_id']),
+            'teachers' => User::role(['staff', 'subject_lead', 'admin'])->get(['id', 'name', 'school_id']),
             'subjects' => Subject::with(['topics' => fn ($q) => $q->select('id', 'subject_id', 'school_class_id')])->get(['id', 'name']),
             'classes' => SchoolClass::all(['id', 'name']),
+            'batches' => \App\Models\ProspectiveClass::where('is_active', true)->get(['id', 'name']),
             'filters' => $request->only(['user_id', 'school_class_id']),
             'current_session' => $currentSession,
         ]);
@@ -50,8 +51,13 @@ class TeachingLoadController extends Controller
         $request->validate([
             'user_id' => ['required', 'exists:users,id'],
             'subject_id' => ['required', 'exists:subjects,id'],
-            'school_class_id' => ['required', 'exists:school_classes,id'],
+            'school_class_id' => ['nullable', 'exists:school_classes,id'],
+            'prospective_class_id' => ['nullable', 'exists:prospective_classes,id'],
         ]);
+
+        if (! $request->school_class_id && ! $request->prospective_class_id) {
+            return back()->withErrors(['school_class_id' => 'Please select a target class or prospective batch.']);
+        }
 
         $currentSession = AcademicSession::current()->firstOrFail();
 
@@ -59,6 +65,7 @@ class TeachingLoadController extends Controller
             'user_id' => $request->user_id,
             'subject_id' => $request->subject_id,
             'school_class_id' => $request->school_class_id,
+            'prospective_class_id' => $request->prospective_class_id,
             'academic_session_id' => $currentSession->id,
         ]);
 

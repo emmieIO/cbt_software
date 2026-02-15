@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
-import { useForm } from 'laravel-precognition-vue';
+import { Head, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { store, update, destroy } from '@/actions/App/Http/Controllers/Admin/SubjectController';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
@@ -21,7 +20,7 @@ const isModalOpen = ref(false);
 const isEditing = ref(false);
 const editingSubject = ref<Subject | null>(null);
 
-const form = useForm('post', store().url, {
+const form = useForm({
     name: '',
     description: '',
 });
@@ -36,22 +35,20 @@ const openCreateModal = () => {
 const openEditModal = (subject: Subject) => {
     isEditing.value = true;
     editingSubject.value = subject;
-    form.setData({
-        name: subject.name,
-        description: subject.description || '',
-    });
+    
+    form.name = subject.name;
+    form.description = subject.description || '';
+    
     isModalOpen.value = true;
 };
 
 const submit = () => {
     if (isEditing.value && editingSubject.value) {
-        form.submit({
-            method: 'put',
-            url: update(editingSubject.value.id).url,
+        form.put(update(editingSubject.value.id).url, {
             onSuccess: () => closeModal(),
         });
     } else {
-        form.submit({
+        form.post(store().url, {
             onSuccess: () => closeModal(),
         });
     }
@@ -182,11 +179,9 @@ const handleDelete = () => {
                             <label class="mb-2 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Subject Name</label>
                             <input
                                 v-model="form.name"
-                                @change="form.validate('name')"
                                 type="text"
                                 required
                                 placeholder="e.g. Further Mathematics"
-                                :class="{'border-red-500': form.invalid('name')}"
                                 class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                             />
                             <div v-if="form.errors.name" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.name }}</div>
@@ -196,10 +191,8 @@ const handleDelete = () => {
                             <label class="mb-2 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Description (Optional)</label>
                             <textarea
                                 v-model="form.description"
-                                @change="form.validate('description')"
                                 rows="4"
                                 placeholder="Provide a brief overview of the subject curriculum..."
-                                :class="{'border-red-500': form.invalid('description')}"
                                 class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                             ></textarea>
                             <div v-if="form.errors.description" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.description }}</div>

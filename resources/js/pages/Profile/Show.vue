@@ -11,6 +11,12 @@ const props = defineProps<{
         username: string;
         school_id: string | null;
         school_class?: { name: string };
+        assignments?: Array<{
+            id: string;
+            subject: { name: string };
+            school_class?: { name: string };
+            prospective_class?: { name: string };
+        }>;
         status: string;
     };
 }>();
@@ -135,20 +141,34 @@ const formatDate = (dateString: string) => {
                     </div>
                     <div class="p-8 space-y-6">
                         <div v-if="user.school_class">
-                            <p class="text-[10px] font-black tracking-widest text-slate-400 uppercase">Grade Assignment</p>
+                            <p class="text-[10px] font-black tracking-widest text-slate-400 uppercase">Regular Class</p>
                             <p class="mt-1 text-lg font-black text-slate-800">{{ user.school_class.name }}</p>
                         </div>
+                        
+                        <div v-if="user.assignments && user.assignments.length > 0">
+                            <p class="text-[10px] font-black tracking-widest text-slate-400 uppercase mb-3">Teaching Assignments</p>
+                            <div class="space-y-3">
+                                <div v-for="load in user.assignments" :key="load.id" class="flex items-center justify-between rounded-xl bg-slate-50 p-4 border border-slate-100">
+                                    <span class="text-xs font-black text-slate-700">{{ load.subject.name }}</span>
+                                    <span class="text-[9px] font-black text-primary uppercase bg-primary/5 px-2 py-1 rounded-lg border border-primary/10">
+                                        {{ load.school_class?.name || load.prospective_class?.name }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
                         <div v-else-if="roles.includes('staff')">
                             <p class="text-[10px] font-black tracking-widest text-slate-400 uppercase">Professional Designation</p>
                             <p class="mt-1 text-lg font-black text-slate-800 uppercase tracking-tighter">Academic Staff</p>
                         </div>
+                        
                         <div v-else-if="roles.includes('admin')">
                             <p class="text-[10px] font-black tracking-widest text-slate-400 uppercase">Administrative Scope</p>
                             <p class="mt-1 text-lg font-black text-slate-800 uppercase tracking-tighter">System Oversight</p>
                         </div>
                         
                         <div>
-                            <p class="text-[10px] font-black tracking-widest text-slate-400 uppercase">Enrollment Date</p>
+                            <p class="text-[10px] font-black tracking-widest text-slate-400 uppercase">Account Registered</p>
                             <p class="mt-1 text-lg font-black text-slate-800 tracking-tighter">{{ formatDate(user.created_at) }}</p>
                         </div>
                     </div>

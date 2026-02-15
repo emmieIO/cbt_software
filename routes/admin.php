@@ -3,12 +3,12 @@
 use App\Http\Controllers\Admin\AdminController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('guest')->group(function () {
+Route::middleware(['guest'])->group(function () {
     Route::get('/login', [AdminController::class, 'login'])->name('login');
     Route::post('/login', [AdminController::class, 'store'])->name('login.store');
 });
 
-Route::middleware(['auth', 'role_or_permission:admin|manage settings|manage school setup|manage curriculum|manage users|manage prospective batches|manage admissions'])->group(function () {
+Route::middleware(['auth:admin', 'role_or_permission:admin|manage settings|manage school setup|manage curriculum|manage users|manage prospective batches|manage admissions'])->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
 
     Route::prefix('school-setup')->middleware('permission:manage school setup')->group(function () {

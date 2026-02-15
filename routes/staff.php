@@ -5,13 +5,13 @@ use App\Http\Controllers\Staff\StaffDashboardController;
 use App\Http\Controllers\Staff\StaffQuestionController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('guest')->group(function () {
+Route::middleware('guest:staff,admin')->group(function () {
     Route::get('/login', [StaffAuthController::class, 'login'])->name('login');
     Route::post('/login', [StaffAuthController::class, 'authenticate'])->name('login.store');
 });
 
-Route::middleware(['auth'])->group(function () {
-    Route::get('/dashboard', StaffDashboardController::class)->name('dashboard')->middleware('role_or_permission:staff|admin');
+Route::middleware(['auth:staff,admin'])->group(function () {
+    Route::get('/dashboard', StaffDashboardController::class)->name('dashboard')->middleware('role_or_permission:staff|admin|subject_lead');
 
     Route::prefix('questions')->name('questions.')->middleware('role_or_permission:staff|admin|subject_lead|view questions')->group(function () {
         Route::get('/', [StaffQuestionController::class, 'index'])->name('index');
@@ -31,16 +31,18 @@ Route::middleware(['auth'])->group(function () {
 
     Route::prefix('exams')->name('exams.')->middleware('role_or_permission:staff|admin|subject_lead')->group(function () {
         Route::get('/', [\App\Http\Controllers\Staff\ExamController::class, 'index'])->name('index');
+        Route::get('/results', [\App\Http\Controllers\Staff\ExamController::class, 'results'])->name('results.index');
         Route::get('/create', [\App\Http\Controllers\Staff\ExamController::class, 'create'])->name('create');
         Route::post('/', [\App\Http\Controllers\Staff\ExamController::class, 'store'])->name('store');
         Route::get('/{exam}', [\App\Http\Controllers\Staff\ExamController::class, 'show'])->name('show');
-        
+
         // Question Management (Directly on Exam)
         Route::get('/{exam}/questions', [\App\Http\Controllers\Staff\ExamController::class, 'manageQuestions'])->name('questions');
         Route::post('/{exam}/questions', [\App\Http\Controllers\Staff\ExamController::class, 'updateQuestions'])->name('questions.update');
         Route::post('/{exam}/ai-select', [\App\Http\Controllers\Staff\ExamController::class, 'aiSelectQuestions'])->name('ai-select');
 
         Route::get('/{exam}/edit', [\App\Http\Controllers\Staff\ExamController::class, 'edit'])->name('edit');
+        Route::get('/{exam}/results', [\App\Http\Controllers\Staff\ExamController::class, 'showResults'])->name('results.show');
         Route::put('/{exam}', [\App\Http\Controllers\Staff\ExamController::class, 'update'])->name('update');
         Route::delete('/{exam}', [\App\Http\Controllers\Staff\ExamController::class, 'destroy'])->name('destroy');
     });

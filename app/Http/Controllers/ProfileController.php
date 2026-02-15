@@ -13,11 +13,12 @@ class ProfileController extends Controller
      */
     public function show(Request $request): Response
     {
-        $user = $request->user()->load(['schoolClass']);
-        
+        $user = $request->user()->load(['schoolClass', 'currentAssignments.subject', 'currentAssignments.schoolClass', 'currentAssignments.prospectiveClass']);
+
         // Ensure roles are passed as a flat array of names for frontend consistency
         $userData = array_merge($user->toArray(), [
             'roles' => $user->getRoleNames(),
+            'assignments' => $user->currentAssignments,
         ]);
 
         return Inertia::render('Profile/Show', [

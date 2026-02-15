@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
-import { useForm } from 'laravel-precognition-vue';
-import { usePage } from '@inertiajs/vue3';
+import { Head, usePage, useForm } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import { processGeneration } from '@/actions/App/Http/Controllers/Staff/StaffQuestionController';
 import AdminLayout from '@/layouts/AdminLayout.vue';
@@ -20,7 +18,7 @@ const page = usePage<AppPageProps>();
 const isAdmin = computed(() => page.props.auth.user.roles.includes('admin'));
 const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
 
-const form = useForm('post', processGeneration().url, {
+const form = useForm({
     subject_id: '',
     topic_id: '',
     school_class_id: '',
@@ -49,21 +47,15 @@ const filteredTopics = computed(() => {
 watch(
     () => form.subject_id,
     () => {
-        form.setData({
-            ...form.data(),
-            school_class_id: '',
-            topic_id: '',
-        });
+        form.school_class_id = '';
+        form.topic_id = '';
     },
 );
 
 watch(
     () => form.school_class_id,
     () => {
-        form.setData({
-            ...form.data(),
-            topic_id: '',
-        });
+        form.topic_id = '';
     },
 );
 
@@ -78,15 +70,15 @@ const startGeneration = () => {
     addLog('info', 'Analyzing curriculum requirements and class level...');
     addLog('info', `Requesting ${form.count} ${form.difficulty} questions from the agent...`);
 
-    form.submit({
+    form.post(processGeneration().url, {
         onSuccess: () => {
             isGenerating.value = false;
             addLog('success', 'AI Agent successfully initialized in the background.');
         },
-        onValidationError: () => {
+        onError: () => {
             isGenerating.value = false;
             addLog('error', 'Validation failed.');
-            Object.values(form.errors).forEach((err) => addLog('error', err));
+            Object.values(form.errors).forEach((err) => addLog('error', err || 'Unknown error'));
         },
     });
 };
@@ -148,9 +140,7 @@ const addLog = (type: 'info' | 'success' | 'error', message: string) => {
                                     >
                                     <select
                                         v-model="form.subject_id"
-                                        @change="form.validate('subject_id')"
                                         required
-                                        :class="{'border-red-500': form.invalid('subject_id')}"
                                         class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                                     >
                                         <option value="" disabled>Select Subject</option>
@@ -166,10 +156,8 @@ const addLog = (type: 'info' | 'success' | 'error', message: string) => {
                                     >
                                     <select
                                         v-model="form.school_class_id"
-                                        @change="form.validate('school_class_id')"
                                         required
                                         :disabled="!selectedSubject"
-                                        :class="{'border-red-500': form.invalid('school_class_id')}"
                                         class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary disabled:opacity-50"
                                     >
                                         <option value="" disabled>Select Class</option>
@@ -186,10 +174,8 @@ const addLog = (type: 'info' | 'success' | 'error', message: string) => {
                                     >
                                     <select
                                         v-model="form.topic_id"
-                                        @change="form.validate('topic_id')"
                                         required
                                         :disabled="!selectedSubject || !form.school_class_id"
-                                        :class="{'border-red-500': form.invalid('topic_id')}"
                                         class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary disabled:opacity-50"
                                     >
                                         <option value="" disabled>Select Topic</option>
@@ -209,7 +195,6 @@ const addLog = (type: 'info' | 'success' | 'error', message: string) => {
                                 </div>
                                 <input
                                     v-model="form.count"
-                                    @change="form.validate('count')"
                                     type="range"
                                     min="1"
                                     max="20"
@@ -221,12 +206,12 @@ const addLog = (type: 'info' | 'success' | 'error', message: string) => {
                                     <label class="mb-4 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase"
                                         >Target Difficulty</label
                                     >
-                                    <div class="flex gap-2 rounded-xl border border-slate-100 bg-slate-50 p-1" :class="{'ring-1 ring-red-500': form.invalid('difficulty')}">
+                                    <div class="flex gap-2 rounded-xl border border-slate-100 bg-slate-50 p-1">
                                         <button
                                             v-for="diff in difficulties"
                                             :key="diff.value"
                                             type="button"
-                                            @click="form.difficulty = diff.value; form.validate('difficulty')"
+                                            @click="form.difficulty = diff.value"
                                             :class="[
                                                 'flex-1 rounded-xl py-3 text-[10px] font-black tracking-wider uppercase transition-all',
                                                 form.difficulty === diff.value

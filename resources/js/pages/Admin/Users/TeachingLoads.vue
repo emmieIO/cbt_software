@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import { Head, router, Link } from '@inertiajs/vue3';
-import { useForm } from 'laravel-precognition-vue';
-import { ref } from 'vue';
+import { Head, router, Link, useForm } from '@inertiajs/vue3';
+import { ref, computed, watch } from 'vue';
 import { index, store, destroy } from '@/actions/App/Http/Controllers/Admin/TeachingLoadController';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import type { PaginatedData, Subject, SchoolClass } from '@/types/academics';
-import { computed, watch } from 'vue';
 
 interface Teacher {
     id: string;
@@ -18,7 +16,8 @@ interface Assignment {
     id: string;
     teacher: Teacher;
     subject: Subject;
-    school_class: SchoolClass;
+    school_class: SchoolClass | null;
+    prospective_class: { id: string; name: string } | null;
     academic_session: { name: string };
 }
 
@@ -27,6 +26,7 @@ const props = defineProps<{
     teachers: Teacher[];
     subjects: any[]; // Changed to any to handle topics
     classes: SchoolClass[];
+    batches: { id: string; name: string }[];
     filters: {
         user_id?: string;
         school_class_id?: string;
@@ -35,10 +35,11 @@ const props = defineProps<{
 }>();
 
 const isModalOpen = ref(false);
-const form = useForm('post', store().url, {
+const form = useForm({
     user_id: '',
     subject_id: '',
     school_class_id: '',
+    prospective_class_id: '',
 });
 
 const filteredClasses = computed(() => {
@@ -52,21 +53,30 @@ const filteredClasses = computed(() => {
 });
 
 watch(() => form.subject_id, () => {
-    form.setData({ ...form.data(), school_class_id: '' });
+    form.school_class_id = '';
+    form.prospective_class_id = '';
+});
+
+// Clear opposite field when one is selected
+watch(() => form.school_class_id, (val) => {
+    if (val) form.prospective_class_id = '';
+});
+
+watch(() => form.prospective_class_id, (val) => {
+    if (val) form.school_class_id = '';
 });
 
 const submit = () => {
-    form.submit({
+    form.post(store().url, {
         onSuccess: () => {
             isModalOpen.value = false;
-            form.setData({ user_id: '', subject_id: '', school_class_id: '' });
+            form.reset();
         },
     });
 };
 
 // Filters
-import { useForm as useInertiaForm } from '@inertiajs/vue3';
-const filterForm = useInertiaForm({
+const filterForm = useForm({
     user_id: props.filters.user_id || '',
     school_class_id: props.filters.school_class_id || '',
 });
@@ -158,7 +168,7 @@ const handleDelete = () => {
                             <tr class="border-b border-slate-100 bg-slate-50/50">
                                 <th class="px-8 py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase">Teacher</th>
                                 <th class="px-6 py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase">Subject</th>
-                                <th class="px-6 py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase">Class</th>
+                                <th class="px-6 py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase">Target Audience</th>
                                 <th class="px-8 py-5 text-right text-[10px] font-black tracking-widest text-slate-400 uppercase">Actions</th>
                             </tr>
                         </thead>
@@ -180,7 +190,14 @@ const handleDelete = () => {
                                     </span>
                                 </td>
                                 <td class="px-6 py-6">
-                                    <span class="text-xs font-bold text-slate-600">{{ assignment.school_class.name }}</span>
+                                    <div v-if="assignment.school_class">
+                                        <span class="text-xs font-bold text-slate-600">{{ assignment.school_class.name }}</span>
+                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Regular Class</p>
+                                    </div>
+                                    <div v-else-if="assignment.prospective_class">
+                                        <span class="text-xs font-bold text-slate-600">{{ assignment.prospective_class.name }}</span>
+                                        <p class="text-[9px] font-black text-primary uppercase tracking-widest">Entrance Batch</p>
+                                    </div>
                                 </td>
                                 <td class="px-8 py-6 text-right">
                                     <button
@@ -238,12 +255,10 @@ const handleDelete = () => {
 
                     <form @submit.prevent="submit" class="space-y-6">
                         <div>
-                            <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Select Teacher</label>
+                            <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Select Personnel</label>
                             <select
                                 v-model="form.user_id"
-                                @change="form.validate('user_id')"
                                 required
-                                :class="{'border-red-500': form.invalid('user_id')}"
                                 class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                             >
                                 <option value="" disabled>Choose Personnel</option>
@@ -258,9 +273,7 @@ const handleDelete = () => {
                             <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Subject</label>
                             <select
                                 v-model="form.subject_id"
-                                @change="form.validate('subject_id')"
                                 required
-                                :class="{'border-red-500': form.invalid('subject_id')}"
                                 class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                             >
                                 <option value="" disabled>Select Subject</option>
@@ -269,21 +282,36 @@ const handleDelete = () => {
                             <div v-if="form.errors.subject_id" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.subject_id }}</div>
                         </div>
 
-                        <div>
-                            <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Assign to Class</label>
-                            <select
-                                v-model="form.school_class_id"
-                                @change="form.validate('school_class_id')"
-                                required
-                                :disabled="!form.subject_id"
-                                :class="{'border-red-500': form.invalid('school_class_id')}"
-                                class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                <option value="" disabled>Select Class Level</option>
-                                <option v-for="cls in filteredClasses" :key="cls.id" :value="cls.id">{{ cls.name }}</option>
-                            </select>
-                            <div v-if="form.errors.school_class_id" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.school_class_id }}</div>
+                        <div class="grid grid-cols-1 gap-6">
+                            <div>
+                                <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Assign to Regular Class</label>
+                                <select
+                                    v-model="form.school_class_id"
+                                    :disabled="!form.subject_id || form.prospective_class_id !== ''"
+                                    class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    <option value="">None (Select Batch Instead)</option>
+                                    <option v-for="cls in filteredClasses" :key="cls.id" :value="cls.id">{{ cls.name }}</option>
+                                </select>
+                            </div>
+
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-1/2 -top-3 flex h-6 -translate-x-1/2 items-center bg-white px-3 text-[8px] font-black text-slate-300 uppercase tracking-[0.3em]">OR</div>
+                                <div class="h-px bg-slate-100 w-full mb-6"></div>
+                                
+                                <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Assign to Entrance Batch</label>
+                                <select
+                                    v-model="form.prospective_class_id"
+                                    :disabled="!form.subject_id || form.school_class_id !== ''"
+                                    class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    <option value="">None (Select Class Instead)</option>
+                                    <option v-for="batch in batches" :key="batch.id" :value="batch.id">{{ batch.name }}</option>
+                                </select>
+                            </div>
                         </div>
+                        
+                        <div v-if="form.errors.school_class_id" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.school_class_id }}</div>
 
                         <div class="flex gap-3 border-t border-slate-50 pt-4">
                             <button

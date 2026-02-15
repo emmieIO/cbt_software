@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { Head, router, Link } from '@inertiajs/vue3';
-import { useForm } from 'laravel-precognition-vue';
+import { Head, router, Link, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { store, update, destroy, index as topicsIndex } from '@/actions/App/Http/Controllers/Admin/TopicController';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
@@ -32,7 +31,7 @@ const isModalOpen = ref(false);
 const isEditing = ref(false);
 const editingTopic = ref<Topic | null>(null);
 
-const form = useForm('post', store().url, {
+const form = useForm({
     subject_id: props.filters.subject_id || '',
     school_class_id: props.filters.school_class_id || '',
     name: '',
@@ -42,36 +41,34 @@ const form = useForm('post', store().url, {
 const openCreateModal = () => {
     isEditing.value = false;
     editingTopic.value = null;
-    form.setData({
-        subject_id: props.filters.subject_id || '',
-        school_class_id: props.filters.school_class_id || '',
-        name: '',
-        description: '',
-    });
+    
+    form.subject_id = props.filters.subject_id || '';
+    form.school_class_id = props.filters.school_class_id || '';
+    form.name = '';
+    form.description = '';
+    
     isModalOpen.value = true;
 };
 
 const openEditModal = (topic: Topic) => {
     isEditing.value = true;
     editingTopic.value = topic;
-    form.setData({
-        subject_id: topic.subject_id,
-        school_class_id: topic.school_class_id,
-        name: topic.name,
-        description: topic.description || '',
-    });
+    
+    form.subject_id = topic.subject_id;
+    form.school_class_id = topic.school_class_id;
+    form.name = topic.name;
+    form.description = topic.description || '';
+    
     isModalOpen.value = true;
 };
 
 const submit = () => {
     if (isEditing.value && editingTopic.value) {
-        form.submit({
-            method: 'put',
-            url: update(editingTopic.value.id).url,
+        form.put(update(editingTopic.value.id).url, {
             onSuccess: () => closeModal(),
         });
     } else {
-        form.submit({
+        form.post(store().url, {
             onSuccess: () => closeModal(),
         });
     }
@@ -82,9 +79,8 @@ const closeModal = () => {
     form.reset();
 };
 
-// Filtering logic for the list - normal useForm is fine here as it's a GET search
-import { useForm as useInertiaForm } from '@inertiajs/vue3';
-const filterForm = useInertiaForm({
+// Filtering logic
+const filterForm = useForm({
     subject_id: props.filters.subject_id || '',
     school_class_id: props.filters.school_class_id || '',
 });
@@ -288,9 +284,7 @@ const handleDelete = () => {
                                 <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Subject</label>
                                 <select
                                     v-model="form.subject_id"
-                                    @change="form.validate('subject_id')"
                                     required
-                                    :class="{'border-red-500': form.invalid('subject_id')}"
                                     class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                                 >
                                     <option value="" disabled>Select Subject</option>
@@ -302,9 +296,7 @@ const handleDelete = () => {
                                 <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Target Class</label>
                                 <select
                                     v-model="form.school_class_id"
-                                    @change="form.validate('school_class_id')"
                                     required
-                                    :class="{'border-red-500': form.invalid('school_class_id')}"
                                     class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                                 >
                                     <option value="" disabled>Select Class</option>
@@ -318,11 +310,9 @@ const handleDelete = () => {
                             <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Topic Name</label>
                             <input
                                 v-model="form.name"
-                                @change="form.validate('name')"
                                 type="text"
                                 required
                                 placeholder="e.g. Linear Equations"
-                                :class="{'border-red-500': form.invalid('name')}"
                                 class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                             />
                             <div v-if="form.errors.name" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.name }}</div>
@@ -334,10 +324,8 @@ const handleDelete = () => {
                             >
                             <textarea
                                 v-model="form.description"
-                                @change="form.validate('description')"
                                 rows="3"
                                 placeholder="Details about this curriculum topic..."
-                                :class="{'border-red-500': form.invalid('description')}"
                                 class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                             ></textarea>
                             <div v-if="form.errors.description" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.description }}</div>

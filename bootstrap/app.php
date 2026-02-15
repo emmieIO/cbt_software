@@ -1,10 +1,12 @@
 <?php
 
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Services\AuthService;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -31,13 +33,33 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
             HandleInertiaRequests::class,
-            AddLinkHeadersForPreloadedAssets::class,
         ]);
 
-        $middleware->redirectTo(
-            guests: '/',
-            users: '/student/dashboard', // Default if role is unknown
-        );
+        $middleware->redirectGuestsTo(function (Request $request) {
+            if ($request->is('admin/*')) {
+                return route('admin.login');
+            }
+            if ($request->is('staff/*')) {
+                return route('staff.login');
+            }
+            if ($request->is('student/*')) {
+                return route('student.login');
+            }
+
+            return route('home');
+        });
+
+        $middleware->redirectUsersTo(function (Request $request) {
+            $user = null;
+            foreach (['admin', 'staff', 'student', 'web'] as $guard) {
+                if ($request->user($guard)) {
+                    $user = $request->user($guard);
+                    break;
+                }
+            }
+
+            return $user ? app(AuthService::class)->getRedirectUrl($user) : route('home');
+        });
 
         $middleware->alias([
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,

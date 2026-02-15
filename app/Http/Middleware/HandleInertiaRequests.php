@@ -35,7 +35,13 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-        $user = $request->user();
+        $user = null;
+        foreach (['admin', 'staff', 'student', 'web'] as $guard) {
+            if ($request->user($guard)) {
+                $user = $request->user($guard);
+                break;
+            }
+        }
 
         if ($user) {
             $user->loadMissing(['roles', 'permissions']);

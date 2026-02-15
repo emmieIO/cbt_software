@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
-import { useForm } from 'laravel-precognition-vue';
+import { Head, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import {
     store as storeAction,
@@ -35,7 +34,7 @@ const isModalOpen = ref(false);
 const isEditing = ref(false);
 const editingId = ref<string | null>(null);
 
-const form = useForm('post', storeAction().url, {
+const form = useForm({
     name: '',
     start_date: '',
     end_date: '',
@@ -52,27 +51,25 @@ const openCreateModal = () => {
 const openEditModal = (session: AcademicSession) => {
     isEditing.value = true;
     editingId.value = session.id;
-    form.setData({
-        name: session.name,
-        start_date: session.start_date,
-        end_date: session.end_date,
-        is_current: session.is_current,
-    });
+    
+    form.name = session.name;
+    form.start_date = session.start_date;
+    form.end_date = session.end_date;
+    form.is_current = session.is_current;
+    
     isModalOpen.value = true;
 };
 
 const submit = () => {
     if (isEditing.value && editingId.value) {
-        form.submit({
-            method: 'put',
-            url: updateAction(editingId.value).url,
+        form.put(updateAction(editingId.value).url, {
             onSuccess: () => {
                 isModalOpen.value = false;
                 form.reset();
             },
         });
     } else {
-        form.submit({
+        form.post(storeAction().url, {
             onSuccess: () => {
                 isModalOpen.value = false;
                 form.reset();
@@ -212,11 +209,9 @@ const handleDelete = () => {
                             <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Session Name</label>
                             <input
                                 v-model="form.name"
-                                @change="form.validate('name')"
                                 type="text"
                                 required
                                 placeholder="e.g. 2026/2027"
-                                :class="{'border-red-500': form.invalid('name')}"
                                 class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                             />
                             <div v-if="form.errors.name" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.name }}</div>
@@ -227,10 +222,8 @@ const handleDelete = () => {
                                 <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Start Date</label>
                                 <input
                                     v-model="form.start_date"
-                                    @change="form.validate('start_date')"
                                     type="date"
                                     required
-                                    :class="{'border-red-500': form.invalid('start_date')}"
                                     class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                                 />
                                 <div v-if="form.errors.start_date" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.start_date }}</div>
@@ -239,10 +232,8 @@ const handleDelete = () => {
                                 <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">End Date</label>
                                 <input
                                     v-model="form.end_date"
-                                    @change="form.validate('end_date')"
                                     type="date"
                                     required
-                                    :class="{'border-red-500': form.invalid('end_date')}"
                                     class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                                 />
                                 <div v-if="form.errors.end_date" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.end_date }}</div>

@@ -38,7 +38,7 @@ const hubs = [
         items: [
             { name: 'Manage Exams', href: '/staff/exams', icon: '📝' },
             { name: 'New Exam', href: '/staff/exams/create', icon: '➕' },
-            { name: 'Results & Grading', href: '#', icon: '📊' },
+            { name: 'Results & Grading', href: '/staff/exams/results', icon: '📊' },
         ]
     }
 ];

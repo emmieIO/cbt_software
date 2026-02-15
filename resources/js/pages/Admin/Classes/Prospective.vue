@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
-import { useForm } from 'laravel-precognition-vue';
+import { Head, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import ProspectiveClassController from '@/actions/App/Http/Controllers/Admin/ProspectiveClassController';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
@@ -22,7 +21,7 @@ const isModalOpen = ref(false);
 const isEditing = ref(false);
 const editingClass = ref<ProspectiveClass | null>(null);
 
-const form = useForm('post', ProspectiveClassController.store().url, {
+const form = useForm({
     name: '',
     description: '',
     is_active: true,
@@ -38,23 +37,21 @@ const openCreateModal = () => {
 const openEditModal = (cls: ProspectiveClass) => {
     isEditing.value = true;
     editingClass.value = cls;
-    form.setData({
-        name: cls.name,
-        description: cls.description || '',
-        is_active: cls.is_active,
-    });
+    
+    form.name = cls.name;
+    form.description = cls.description || '';
+    form.is_active = cls.is_active;
+    
     isModalOpen.value = true;
 };
 
 const submit = () => {
     if (isEditing.value && editingClass.value) {
-        form.submit({
-            method: 'put',
-            url: ProspectiveClassController.update(editingClass.value.id).url,
+        form.put(ProspectiveClassController.update(editingClass.value.id).url, {
             onSuccess: () => closeModal(),
         });
     } else {
-        form.submit({
+        form.post(ProspectiveClassController.store().url, {
             onSuccess: () => closeModal(),
         });
     }
@@ -169,11 +166,9 @@ const handleDelete = () => {
                             <label class="mb-2 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Batch Name</label>
                             <input
                                 v-model="form.name"
-                                @change="form.validate('name')"
                                 type="text"
                                 required
                                 placeholder="e.g. 2026 Batch A - Morning"
-                                :class="{'border-red-500': form.invalid('name')}"
                                 class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary/10"
                             />
                             <div v-if="form.errors.name" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.name }}</div>
@@ -183,10 +178,8 @@ const handleDelete = () => {
                             <label class="mb-2 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Description</label>
                             <textarea
                                 v-model="form.description"
-                                @change="form.validate('description')"
                                 rows="3"
                                 placeholder="Additional details about this batch..."
-                                :class="{'border-red-500': form.invalid('description')}"
                                 class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary/10"
                             ></textarea>
                             <div v-if="form.errors.description" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.description }}</div>
