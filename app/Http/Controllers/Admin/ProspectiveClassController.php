@@ -32,6 +32,7 @@ class ProspectiveClassController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255', 'unique:prospective_classes,name'],
             'description' => ['nullable', 'string'],
+            'pass_percentage' => ['required', 'integer', 'min:0', 'max:100'],
         ]);
 
         $this->classService->createClass($data);
@@ -47,6 +48,7 @@ class ProspectiveClassController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255', 'unique:prospective_classes,name,'.$prospectiveClass->id],
             'description' => ['nullable', 'string'],
+            'pass_percentage' => ['required', 'integer', 'min:0', 'max:100'],
             'is_active' => ['required', 'boolean'],
         ]);
 

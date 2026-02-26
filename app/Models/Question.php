@@ -19,6 +19,7 @@ class Question extends Model
     protected $fillable = [
         'topic_id',
         'school_class_id',
+        'prospective_class_id',
         'content',
         'explanation',
         'type',
@@ -41,6 +42,14 @@ class Question extends Model
     public function schoolClass(): BelongsTo
     {
         return $this->belongsTo(SchoolClass::class);
+    }
+
+    /**
+     * Get the prospective batch that owns the question.
+     */
+    public function prospectiveClass(): BelongsTo
+    {
+        return $this->belongsTo(ProspectiveClass::class);
     }
 
     /**
@@ -86,6 +95,8 @@ class Question extends Model
             });
         })->when($filters['school_class_id'] ?? null, function ($query, $classId) {
             $query->where('school_class_id', $classId);
+        })->when($filters['prospective_class_id'] ?? null, function ($query, $batchId) {
+            $query->where('prospective_class_id', $batchId);
         })->when($filters['difficulty'] ?? null, function ($query, $difficulty) {
             $query->where('difficulty', $difficulty);
         });

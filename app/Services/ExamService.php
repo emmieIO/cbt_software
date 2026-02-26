@@ -15,11 +15,20 @@ class ExamService
     public function createExam(array $data, string $creatorId): Exam
     {
         return DB::transaction(function () use ($data, $creatorId) {
-            return Exam::create([
+            $compositions = $data['compositions'] ?? [];
+            unset($data['compositions']);
+
+            $exam = Exam::create([
                 ...$data,
                 'created_by' => $creatorId,
                 'status' => 'draft',
             ]);
+
+            foreach ($compositions as $compDTO) {
+                $exam->compositions()->create($compDTO->toArray());
+            }
+
+            return $exam;
         });
     }
 
@@ -33,54 +42,114 @@ class ExamService
 
     /**
      * Automatically select questions for an exam using the biennial rotation policy.
-     *
-     * Policy:
-     * 1. Prioritize questions never used or used > 2 years ago.
-     * 2. Fallback to Least Recently Used (LRU) if quota not met.
+     * Supports both single-subject and multi-subject (composition) exams.
      */
-    public function autoSelectQuestions(Exam $exam, int $count): int
+    public function autoSelectQuestions(Exam $exam, ?int $totalCount = null): int
     {
-        return DB::transaction(function () use ($exam, $count) {
+        return DB::transaction(function () use ($exam, $totalCount) {
             $twoYearsAgo = now()->subYears(2);
+            $selectedQuestionIds = [];
 
-            // 1. Primary Pool: Compliant questions (Never used OR used > 2 years ago)
-            $primaryPool = Question::whereHas('topic', fn ($q) => $q->where('subject_id', $exam->subject_id))
-                ->where('school_class_id', $exam->school_class_id)
-                ->where(function ($query) use ($twoYearsAgo) {
-                    $query->whereNull('last_used_at')
-                        ->orWhere('last_used_at', '<', $twoYearsAgo);
-                })
-                ->inRandomOrder()
-                ->limit($count)
-                ->get();
-
-            $selectedQuestions = $primaryPool;
-
-            // 2. Secondary Pool: Fill gap with LRU questions if needed
-            if ($selectedQuestions->count() < $count) {
-                $remainingNeeded = $count - $selectedQuestions->count();
-
-                $secondaryPool = Question::whereHas('topic', fn ($q) => $q->where('subject_id', $exam->subject_id))
-                    ->where('school_class_id', $exam->school_class_id)
-                    ->whereNotIn('id', $selectedQuestions->pluck('id'))
-                    ->orderBy('last_used_at', 'asc') // Oldest usage first
-                    ->limit($remainingNeeded)
-                    ->get();
-
-                $selectedQuestions = $selectedQuestions->concat($secondaryPool);
+            // Case 1: Multi-subject Blueprint (Compositions)
+            if ($exam->compositions()->exists()) {
+                foreach ($exam->compositions as $composition) {
+                    $sectionIds = $this->pullQuestionsForCriteria(
+                        subjectId: $composition->subject_id,
+                        topicId: $composition->topic_id,
+                        prospectiveClassId: $exam->prospective_class_id,
+                        schoolClassId: $composition->source_class_id ?? $exam->school_class_id,
+                        count: $composition->question_count,
+                        twoYearsAgo: $twoYearsAgo,
+                        isEntrance: $exam->type === \App\Enums\ExamType::ENTRANCE
+                    );
+                    $selectedQuestionIds = array_merge($selectedQuestionIds, $sectionIds);
+                }
+            } 
+            // Case 2: Standard Single-subject Exam
+            else if ($totalCount && $exam->subject_id) {
+                $selectedQuestionIds = $this->pullQuestionsForCriteria(
+                    subjectId: $exam->subject_id,
+                    topicId: null,
+                    prospectiveClassId: $exam->prospective_class_id,
+                    schoolClassId: $exam->school_class_id,
+                    count: $totalCount,
+                    twoYearsAgo: $twoYearsAgo,
+                    isEntrance: $exam->type === \App\Enums\ExamType::ENTRANCE
+                );
             }
 
-            // Sync selected questions
-            $exam->questions()->sync($selectedQuestions->pluck('id'));
-
-            // Update usage timestamps
-            if ($selectedQuestions->isNotEmpty()) {
-                Question::whereIn('id', $selectedQuestions->pluck('id'))
-                    ->update(['last_used_at' => now()]);
+            // Sync all selected questions
+            if (!empty($selectedQuestionIds)) {
+                $exam->questions()->sync($selectedQuestionIds);
+                Question::whereIn('id', $selectedQuestionIds)->update(['last_used_at' => now()]);
             }
 
-            return $selectedQuestions->count();
+            return count($selectedQuestionIds);
         });
+    }
+
+    /**
+     * Internal helper to pull questions following the biennial rotation policy.
+     */
+    protected function pullQuestionsForCriteria(
+        string $subjectId, 
+        ?string $topicId, 
+        ?string $prospectiveClassId, 
+        ?string $schoolClassId, 
+        int $count, 
+        \Carbon\CarbonInterface $twoYearsAgo,
+        bool $isEntrance = false
+    ): array {
+        $query = Question::whereHas('topic', fn ($q) => $q->where('subject_id', $subjectId));
+
+        if ($topicId) {
+            $query->where('topic_id', $topicId);
+        }
+
+        // For entrance exams, we are more flexible with class/batch filtering
+        // unless specific batch questions are required.
+        if (!$isEntrance) {
+            if ($prospectiveClassId) {
+                $query->where('prospective_class_id', $prospectiveClassId);
+            } else {
+                $query->where('school_class_id', $schoolClassId);
+            }
+        } else {
+            // Entrance Exams: Prefer batch-specific, fallback to source class (level) if provided
+            $hasBatchQuestions = (clone $query)->where('prospective_class_id', $prospectiveClassId)->exists();
+            if ($hasBatchQuestions) {
+                $query->where('prospective_class_id', $prospectiveClassId);
+            } elseif ($schoolClassId) {
+                $query->where('school_class_id', $schoolClassId);
+            }
+        }
+
+        // 1. Primary Pool: Compliant questions
+        $primaryPool = (clone $query)
+            ->where(function ($q) use ($twoYearsAgo) {
+                $q->whereNull('last_used_at')->orWhere('last_used_at', '<', $twoYearsAgo);
+            })
+            ->inRandomOrder()
+            ->limit($count)
+            ->pluck('id')
+            ->toArray();
+
+        $selectedIds = $primaryPool;
+
+        // 2. Secondary Pool: Fallback to LRU
+        if (count($selectedIds) < $count) {
+            $remainingNeeded = $count - count($selectedIds);
+            $secondaryIds = (clone $query)
+                ->whereNotIn('id', $selectedIds)
+                ->orderBy('last_used_at', 'asc')
+                ->limit($remainingNeeded)
+                ->pluck('id')
+                ->toArray();
+
+            $selectedIds = array_merge($selectedIds, $secondaryIds);
+        }
+
+        return $selectedIds;
     }
 
     /**
@@ -88,10 +157,39 @@ class ExamService
      */
     public function getAvailableQuestions(Exam $exam): Collection
     {
-        return Question::whereHas('topic', fn ($q) => $q->where('subject_id', $exam->subject_id))
-            ->where('school_class_id', $exam->school_class_id)
-            ->with('topic')
-            ->get();
+        $query = Question::query();
+
+        // Case 1: Multi-subject Blueprint
+        if ($exam->compositions()->exists()) {
+            $subjectIds = $exam->compositions->pluck('subject_id')->unique();
+            $query->whereHas('topic', fn ($q) => $q->whereIn('subject_id', $subjectIds));
+            
+            // Note: For multi-subject manual select, we currently pull ALL questions from these subjects.
+            // If we wanted to be stricter, we'd need to join or union queries per composition.
+            // For now, we'll let the user see the whole pool of those subjects.
+        } 
+        // Case 2: Standard Single-subject Exam
+        else {
+            $query->whereHas('topic', fn ($q) => $q->where('subject_id', $exam->subject_id));
+        }
+
+        // Relaxed filtering for entrance exams
+        if ($exam->type !== \App\Enums\ExamType::ENTRANCE) {
+            if ($exam->prospective_class_id) {
+                $query->where('prospective_class_id', $exam->prospective_class_id);
+            } else {
+                $query->where('school_class_id', $exam->school_class_id);
+            }
+        } else {
+            // For Entrance: If batch-specific questions exist, show them, 
+            // otherwise show everything in those subjects
+            $hasBatchQuestions = (clone $query)->where('prospective_class_id', $exam->prospective_class_id)->exists();
+            if ($hasBatchQuestions) {
+                $query->where('prospective_class_id', $exam->prospective_class_id);
+            }
+        }
+
+        return $query->with(['topic.subject'])->get();
     }
 
     /**
@@ -163,7 +261,8 @@ class ExamService
         $optionOrders = $metadata['option_orders'] ?? [];
 
         // Fetch all questions in the attempt pool
-        $questions = Question::whereIn('id', $questionOrder)
+        $questions = Question::query()
+            ->whereIn('id', $questionOrder)
             ->with('options')
             ->get()
             ->sortBy(fn ($q) => array_search($q->id, $questionOrder))
@@ -193,8 +292,18 @@ class ExamService
                 return;
             }
 
-            $score = 0;
-            $questions = $this->getAttemptQuestions($attempt);
+            $totalScore = 0;
+            $questions = $this->getAttemptQuestions($attempt)->load('topic');
+            $exam = $attempt->exam->load('compositions');
+
+            // Cache marks per subject/topic for performance
+            $marksMap = [];
+            if ($exam->compositions->isNotEmpty()) {
+                foreach ($exam->compositions as $comp) {
+                    $key = $comp->topic_id ? "t_{$comp->topic_id}" : "s_{$comp->subject_id}";
+                    $marksMap[$key] = (float) $comp->marks_per_question;
+                }
+            }
 
             foreach ($questions as $question) {
                 $selectedOptionId = $answers[$question->id] ?? null;
@@ -205,9 +314,17 @@ class ExamService
                     $isCorrect = $option ? $option->is_correct : false;
                 }
 
-                if ($isCorrect) {
-                    $score++;
+                // Determine marks for this question
+                $marks = 1.00; // Default
+                if (!empty($marksMap)) {
+                    // Try topic-specific match first, then subject match
+                    $marks = $marksMap["t_{$question->topic_id}"] 
+                          ?? $marksMap["s_{$question->topic->subject_id}"] 
+                          ?? 1.00;
                 }
+
+                $earned = $isCorrect ? $marks : 0.00;
+                $totalScore += $earned;
 
                 // Record the answer
                 \App\Models\ExamAnswer::create([
@@ -215,7 +332,7 @@ class ExamService
                     'question_id' => $question->id,
                     'option_id' => $selectedOptionId,
                     'is_correct' => $isCorrect,
-                    'marks_earned' => $isCorrect ? 1.00 : 0.00, // Assuming 1 mark per question for now
+                    'marks_earned' => $earned,
                 ]);
             }
 
@@ -224,7 +341,7 @@ class ExamService
             $attempt->update([
                 'status' => \App\Enums\AttemptStatus::SUBMITTED,
                 'submitted_at' => now(),
-                'score' => $score,
+                'score' => $totalScore,
                 'metadata' => $finalMetadata,
             ]);
         });

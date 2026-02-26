@@ -9,15 +9,20 @@ interface Question {
     content: string;
     difficulty: string;
     type: string;
-    topic: { name: string };
+    topic: { 
+        name: string;
+        subject: { id: string; name: string };
+    };
     options: any[];
 }
 
 interface Exam {
     id: string;
     title: string;
-    subject: { name: string };
-    school_class: { name: string };
+    subject?: { name: string };
+    school_class?: { name: string };
+    prospective_class?: { name: string };
+    type: string;
 }
 
 const props = defineProps<{
@@ -27,7 +32,18 @@ const props = defineProps<{
 }>();
 
 const searchQuery = ref('');
+const subjectFilter = ref('');
 const selectedIds = ref<string[]>([...props.selectedQuestionIds]);
+
+// Extract unique subjects from available questions
+const availableSubjects = computed(() => {
+    const subjects = new Map();
+    props.availableQuestions.forEach(q => {
+        const s = q.topic.subject;
+        subjects.set(s.id, s.name);
+    });
+    return Array.from(subjects.entries()).map(([id, name]) => ({ id, name }));
+});
 
 // Keep local state in sync with server state (needed after AI shuffle)
 watch(
@@ -39,10 +55,13 @@ watch(
 );
 
 const filteredQuestions = computed(() => {
-    return props.availableQuestions.filter(
-        (q) =>
-            q.content.toLowerCase().includes(searchQuery.value.toLowerCase()) || q.topic.name.toLowerCase().includes(searchQuery.value.toLowerCase()),
-    );
+    return props.availableQuestions.filter((q) => {
+        const matchesSearch = q.content.toLowerCase().includes(searchQuery.value.toLowerCase()) || 
+                             q.topic.name.toLowerCase().includes(searchQuery.value.toLowerCase());
+        const matchesSubject = !subjectFilter.value || q.topic.subject.id === subjectFilter.value;
+        
+        return matchesSearch && matchesSubject;
+    });
 });
 
 const toggleQuestion = (id: string) => {
@@ -94,7 +113,9 @@ const runAiSelection = () => {
                     </nav>
                     <h1 class="text-3xl font-black text-slate-900">Manage Questions</h1>
                     <p class="mt-1 text-sm font-bold text-slate-500">
-                        Allocating questions for {{ exam.subject.name }} ({{ exam.school_class.name }})
+                        Allocating questions for 
+                        <span class="text-primary">{{ exam.subject?.name || 'Multi-Subject Assessment' }}</span> 
+                        ({{ exam.type === 'entrance' ? exam.prospective_class?.name : exam.school_class?.name }})
                     </p>
                 </div>
 
@@ -124,23 +145,35 @@ const runAiSelection = () => {
             <div class="grid grid-cols-1 gap-8 lg:grid-cols-12">
                 <!-- Search & List -->
                 <div class="space-y-6 lg:col-span-8">
-                    <div class="relative">
-                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-5 text-slate-400">
-                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2.5"
-                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                                />
-                            </svg>
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <div class="relative flex-1">
+                            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-5 text-slate-400">
+                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2.5"
+                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                                    />
+                                </svg>
+                            </div>
+                            <input
+                                v-model="searchQuery"
+                                type="text"
+                                placeholder="Search by content or topic..."
+                                class="h-16 w-full rounded-xl border-none bg-white px-14 text-sm font-bold shadow-sm transition-all focus:ring-2 focus:ring-primary/20"
+                            />
                         </div>
-                        <input
-                            v-model="searchQuery"
-                            type="text"
-                            placeholder="Search by content or topic..."
-                            class="h-16 w-full rounded-xl border-none bg-white px-14 text-sm font-bold shadow-sm transition-all focus:ring-2 focus:ring-primary/20"
-                        />
+                        
+                        <div v-if="!exam.subject" class="w-full sm:w-64">
+                            <select 
+                                v-model="subjectFilter"
+                                class="h-16 w-full rounded-xl border-none bg-white px-6 text-sm font-bold shadow-sm transition-all focus:ring-2 focus:ring-primary/20"
+                            >
+                                <option value="">All Subjects</option>
+                                <option v-for="s in availableSubjects" :key="s.id" :value="s.id">{{ s.name }}</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div class="space-y-4">
@@ -171,10 +204,12 @@ const runAiSelection = () => {
                                 </div>
                                 <div class="space-y-3">
                                     <div class="flex flex-wrap items-center gap-2">
-                                        <span
-                                            class="rounded-xl bg-slate-100 px-2 py-0.5 text-[9px] font-black tracking-widest text-slate-500 uppercase"
-                                            >{{ question.topic.name }}</span
-                                        >
+                                        <span class="rounded-xl bg-primary/10 px-2 py-0.5 text-[9px] font-black tracking-widest text-primary uppercase">
+                                            {{ question.topic.subject.name }}
+                                        </span>
+                                        <span class="rounded-xl bg-slate-100 px-2 py-0.5 text-[9px] font-black tracking-widest text-slate-500 uppercase">
+                                            {{ question.topic.name }}
+                                        </span>
                                         <span
                                             :class="[
                                                 'rounded-xl px-2 py-0.5 text-[9px] font-black tracking-widest uppercase',

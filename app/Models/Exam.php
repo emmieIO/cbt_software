@@ -78,4 +78,9 @@ class Exam extends Model
     {
         return $this->hasMany(ExamAttempt::class);
     }
+
+    public function compositions(): HasMany
+    {
+        return $this->hasMany(ExamComposition::class);
+    }
 }

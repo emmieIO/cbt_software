@@ -9,7 +9,7 @@ class UserDTO
     public function __construct(
         public string $name,
         public string $email,
-        public string $username,
+        public ?string $username = null,
         public ?string $school_id = null,
         public ?string $school_class_id = null,
         public ?string $password = null,

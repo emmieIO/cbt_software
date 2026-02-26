@@ -4,11 +4,39 @@ namespace App\Services;
 
 use App\DTOs\QuestionDTO;
 use App\Models\Question;
+use App\Models\SchoolClass;
+use App\Models\Subject;
+use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
 class QuestionService
 {
+    /**
+     * Get authorized subjects and classes for a user.
+     */
+    public function getAuthorizedContext(User $user, bool $withTopics = false): array
+    {
+        $isAdmin = $user->hasRole('admin');
+
+        $subjectsQuery = $isAdmin
+            ? Subject::query()
+            : Subject::whereIn('id', $user->currentAssignments()->pluck('subject_id'));
+
+        if ($withTopics) {
+            $subjectsQuery->with('topics');
+        }
+
+        $classesQuery = $isAdmin
+            ? SchoolClass::query()
+            : SchoolClass::whereIn('id', $user->currentAssignments()->pluck('school_class_id'));
+
+        return [
+            'subjects' => $subjectsQuery->get(),
+            'classes' => $classesQuery->get(),
+        ];
+    }
+
     /**
      * Create a new question with its options.
      */
@@ -108,7 +136,7 @@ class QuestionService
     /**
      * Get filtered and paginated questions.
      */
-    public function getFilteredQuestions(array $filters, \App\Models\User $user): LengthAwarePaginator
+    public function getFilteredQuestions(array $filters, User $user): LengthAwarePaginator
     {
         $query = Question::query()
             ->with(['topic.subject', 'schoolClass', 'options']);
@@ -118,9 +146,9 @@ class QuestionService
             $assignments = $user->currentAssignments();
 
             $query->where(function ($q) use ($assignments) {
-                $q->whereIn('school_class_id', $assignments->pluck('school_class_id'))
+                $q->whereIn('school_class_id', $assignments->pluck('school_class_id')->toArray())
                     ->whereHas('topic', function ($q) use ($assignments) {
-                        $q->whereIn('subject_id', $assignments->pluck('subject_id'));
+                        $q->whereIn('subject_id', $assignments->pluck('subject_id')->toArray());
                     });
             });
         }
@@ -136,14 +164,26 @@ class QuestionService
      */
     public function deleteQuestion(Question $question): bool
     {
-        return $question->delete();
+        return (bool) $question->delete();
     }
 
     /**
      * Bulk delete questions.
      */
-    public function bulkDeleteQuestions(array $ids): int
+    public function bulkDeleteQuestions(array $ids, User $user): int
     {
-        return Question::whereIn('id', $ids)->delete();
+        // Filter IDs to only those the user is authorized to delete
+        $authorizedIds = Question::query()
+            ->whereIn('id', $ids)
+            ->get()
+            ->filter(fn ($question) => $user->can('delete', $question))
+            ->pluck('id')
+            ->toArray();
+
+        if (empty($authorizedIds)) {
+            return 0;
+        }
+
+        return Question::query()->whereIn('id', $authorizedIds)->delete();
     }
 }

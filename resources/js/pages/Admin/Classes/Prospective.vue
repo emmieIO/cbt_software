@@ -10,6 +10,7 @@ interface ProspectiveClass {
     name: string;
     slug: string;
     description: string | null;
+    pass_percentage: number;
     is_active: boolean;
 }
 
@@ -24,6 +25,7 @@ const editingClass = ref<ProspectiveClass | null>(null);
 const form = useForm({
     name: '',
     description: '',
+    pass_percentage: 50,
     is_active: true,
 });
 
@@ -40,6 +42,7 @@ const openEditModal = (cls: ProspectiveClass) => {
 
     form.name = cls.name;
     form.description = cls.description || '';
+    form.pass_percentage = cls.pass_percentage;
     form.is_active = cls.is_active;
 
     isModalOpen.value = true;
@@ -180,7 +183,6 @@ const handleDelete = () => {
                             <input
                                 v-model="form.name"
                                 type="text"
-                                required
                                 placeholder="e.g. 2026 Batch A - Morning"
                                 class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary/10"
                             />
@@ -196,6 +198,19 @@ const handleDelete = () => {
                                 class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary/10"
                             ></textarea>
                             <div v-if="form.errors.description" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.description }}</div>
+                        </div>
+
+                        <div>
+                            <label class="mb-2 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Admission Pass Percentage (%)</label>
+                            <input
+                                v-model="form.pass_percentage"
+                                type="number"
+                                min="0"
+                                max="100"
+                                required
+                                class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary/10"
+                            />
+                            <div v-if="form.errors.pass_percentage" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.pass_percentage }}</div>
                         </div>
 
                         <div v-if="isEditing" class="flex items-center gap-3">

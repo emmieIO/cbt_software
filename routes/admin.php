@@ -84,6 +84,7 @@ Route::middleware(['auth:admin', 'role_or_permission:admin|manage settings|manag
         Route::middleware('permission:manage admissions')->group(function () {
             Route::get('/entrance', [\App\Http\Controllers\Admin\EntranceController::class, 'index'])->name('entrance.index');
             Route::post('/entrance', [\App\Http\Controllers\Admin\EntranceController::class, 'store'])->name('entrance.store');
+            Route::put('/entrance/{candidate}', [\App\Http\Controllers\Admin\EntranceController::class, 'update'])->name('entrance.update');
             Route::post('/entrance/import', [\App\Http\Controllers\Admin\EntranceController::class, 'import'])->name('entrance.import');
             Route::post('/entrance/admit/{candidate}', [\App\Http\Controllers\Admin\EntranceController::class, 'admit'])->name('entrance.admit');
         });

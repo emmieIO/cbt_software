@@ -7,15 +7,15 @@ use App\Enums\QuestionDifficulty;
 use App\Enums\QuestionType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Question\BulkDestroyQuestionRequest;
+use App\Http\Requests\Question\GenerateQuestionsRequest;
 use App\Http\Requests\Question\GetQuestionsRequest;
 use App\Http\Requests\Question\StoreQuestionRequest;
 use App\Http\Requests\Question\UpdateQuestionRequest;
 use App\Models\Question;
-use App\Models\SchoolClass;
-use App\Models\Subject;
 use App\Services\BulkExportService;
 use App\Services\BulkImportService;
 use App\Services\QuestionService;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -25,6 +25,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class StaffQuestionController extends Controller
 {
+    use AuthorizesRequests;
+
     public function __construct(
         protected QuestionService $questionService,
         protected BulkImportService $bulkImportService,
@@ -37,19 +39,12 @@ class StaffQuestionController extends Controller
     public function index(GetQuestionsRequest $request): Response
     {
         $user = $request->user();
-
-        $subjects = $user->hasRole('admin')
-            ? Subject::all()
-            : Subject::whereIn('id', $user->currentAssignments()->pluck('subject_id'))->get();
-
-        $classes = $user->hasRole('admin')
-            ? SchoolClass::all()
-            : SchoolClass::whereIn('id', $user->currentAssignments()->pluck('school_class_id'))->get();
+        $context = $this->questionService->getAuthorizedContext($user);
 
         return Inertia::render('QuestionBank/Index', [
             'questions' => $this->questionService->getFilteredQuestions($request->validated(), $user),
-            'subjects' => $subjects,
-            'classes' => $classes,
+            'subjects' => $context['subjects'],
+            'classes' => $context['classes'],
             'difficulties' => collect(QuestionDifficulty::cases())->map(fn ($d) => ['value' => $d->value, 'label' => Str::title($d->value)]),
             'filters' => $request->only(['search', 'subject_id', 'school_class_id', 'difficulty']),
         ]);
@@ -61,20 +56,11 @@ class StaffQuestionController extends Controller
     public function generate(Request $request): Response
     {
         $user = $request->user();
-
-        $subjects = $user->hasRole('admin')
-            ? Subject::with('topics')->get()
-            : Subject::with('topics')
-                ->whereIn('id', $user->currentAssignments()->pluck('subject_id'))
-                ->get();
-
-        $classes = $user->hasRole('admin')
-            ? SchoolClass::all()
-            : SchoolClass::whereIn('id', $user->currentAssignments()->pluck('school_class_id'))->get();
+        $context = $this->questionService->getAuthorizedContext($user, true);
 
         return Inertia::render('QuestionBank/Generate', [
-            'subjects' => $subjects,
-            'classes' => $classes,
+            'subjects' => $context['subjects'],
+            'classes' => $context['classes'],
             'types' => collect(QuestionType::cases())->map(fn ($t) => ['value' => $t->value, 'label' => str_replace('_', ' ', Str::title($t->value))]),
             'difficulties' => collect(QuestionDifficulty::cases())->map(fn ($d) => ['value' => $d->value, 'label' => Str::title($d->value)]),
         ]);
@@ -83,23 +69,15 @@ class StaffQuestionController extends Controller
     /**
      * Process the AI question generation.
      */
-    public function processGeneration(Request $request): RedirectResponse
+    public function processGeneration(GenerateQuestionsRequest $request): RedirectResponse
     {
-        $request->validate([
-            'subject_id' => ['required', 'exists:subjects,id'],
-            'topic_id' => ['required', 'exists:topics,id'],
-            'school_class_id' => ['required', 'exists:school_classes,id'],
-            'count' => ['required', 'integer', 'min:1', 'max:20'],
-            'difficulty' => ['required', 'string'],
-        ]);
-
         \App\Jobs\GenerateQuestionsJob::dispatch(
             $request->user()->id,
-            $request->subject_id,
-            $request->topic_id,
-            $request->school_class_id,
-            $request->count,
-            $request->difficulty
+            $request->validated('subject_id'),
+            $request->validated('topic_id'),
+            $request->validated('school_class_id'),
+            $request->validated('count'),
+            $request->validated('difficulty')
         );
 
         return redirect()->route('staff.questions.index')->with('success', 'AI generation has started in the background. Your questions will appear in the bank shortly.');
@@ -111,20 +89,11 @@ class StaffQuestionController extends Controller
     public function create(Request $request): Response
     {
         $user = $request->user();
-
-        $subjects = $user->hasRole('admin')
-            ? Subject::with('topics')->get()
-            : Subject::with('topics')
-                ->whereIn('id', $user->currentAssignments()->pluck('subject_id'))
-                ->get();
-
-        $classes = $user->hasRole('admin')
-            ? SchoolClass::all()
-            : SchoolClass::whereIn('id', $user->currentAssignments()->pluck('school_class_id'))->get();
+        $context = $this->questionService->getAuthorizedContext($user, true);
 
         return Inertia::render('QuestionBank/Create', [
-            'subjects' => $subjects,
-            'classes' => $classes,
+            'subjects' => $context['subjects'],
+            'classes' => $context['classes'],
             'types' => collect(QuestionType::cases())->map(fn ($t) => ['value' => $t->value, 'label' => str_replace('_', ' ', Str::title($t->value))]),
             'difficulties' => collect(QuestionDifficulty::cases())->map(fn ($d) => ['value' => $d->value, 'label' => Str::title($d->value)]),
         ]);
@@ -150,21 +119,12 @@ class StaffQuestionController extends Controller
 
         $user = $request->user();
         $question->load(['topic.subject', 'options']);
-
-        $subjects = $user->hasRole('admin')
-            ? Subject::with('topics')->get()
-            : Subject::with('topics')
-                ->whereIn('id', $user->currentAssignments()->pluck('subject_id'))
-                ->get();
-
-        $classes = $user->hasRole('admin')
-            ? SchoolClass::all()
-            : SchoolClass::whereIn('id', $user->currentAssignments()->pluck('school_class_id'))->get();
+        $context = $this->questionService->getAuthorizedContext($user, true);
 
         return Inertia::render('QuestionBank/Edit', [
             'question' => $question,
-            'subjects' => $subjects,
-            'classes' => $classes,
+            'subjects' => $context['subjects'],
+            'classes' => $context['classes'],
             'types' => collect(QuestionType::cases())->map(fn ($t) => ['value' => $t->value, 'label' => str_replace('_', ' ', Str::title($t->value))]),
             'difficulties' => collect(QuestionDifficulty::cases())->map(fn ($d) => ['value' => $d->value, 'label' => Str::title($d->value)]),
         ]);
@@ -230,16 +190,7 @@ class StaffQuestionController extends Controller
      */
     public function bulkDestroy(BulkDestroyQuestionRequest $request): RedirectResponse
     {
-        $user = $request->user();
-
-        // Filter IDs to only those the user is authorized to delete
-        $authorizedIds = Question::whereIn('id', $request->ids)
-            ->get()
-            ->filter(fn ($question) => $user->can('delete', $question))
-            ->pluck('id')
-            ->toArray();
-
-        $count = $this->questionService->bulkDeleteQuestions($authorizedIds);
+        $count = $this->questionService->bulkDeleteQuestions($request->validated('ids'), $request->user());
 
         return redirect()->route('staff.questions.index')->with('success', "$count questions deleted successfully.");
     }

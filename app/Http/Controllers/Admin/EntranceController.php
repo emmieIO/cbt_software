@@ -54,8 +54,7 @@ class EntranceController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'username' => ['required', 'string', 'max:255', 'unique:users'],
-            'school_id' => ['required', 'string', 'max:255', 'unique:users'], // App Number
+            'username' => ['nullable', 'string', 'max:255', 'unique:users'], // Application ID
             'school_class_id' => ['required', 'exists:school_classes,id'], // Target Admission Class
             'prospective_class_id' => ['required', 'exists:prospective_classes,id'], // Exam Batch
         ]);
@@ -68,6 +67,21 @@ class EntranceController extends Controller
         ]);
 
         return back()->with('success', 'Candidate enrolled for entrance exam.');
+    }
+
+    /**
+     * Update candidate details and batch assignment.
+     */
+    public function update(\App\Http\Requests\Admin\UpdateCandidateRequest $request, User $candidate): RedirectResponse
+    {
+        $dto = UserDTO::fromRequest($request);
+        
+        $this->userService->updateUser($candidate, $dto);
+
+        // Update prospective_class_id specifically
+        $candidate->update(['prospective_class_id' => $request->prospective_class_id]);
+
+        return back()->with('success', 'Candidate batch assignment updated.');
     }
 
     /**

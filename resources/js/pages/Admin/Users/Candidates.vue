@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, router, Link, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
-import { index, store, importMethod, admit as processAdmit } from '@/actions/App/Http/Controllers/Admin/EntranceController';
+import { index, store, update, importMethod, admit as processAdmit } from '@/actions/App/Http/Controllers/Admin/EntranceController';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import type { PaginatedData, SchoolClass } from '@/types/academics';
 
@@ -12,7 +12,13 @@ interface CandidateUser {
     username: string;
     school_id: string | null;
     status: string;
-    prospective_class?: { name: string };
+    prospective_class_id: string | null;
+    school_class_id: string | null;
+    prospective_class?: { 
+        id: string;
+        name: string;
+        pass_percentage: number;
+    };
     school_class?: { name: string };
     latest_attempt?: {
         score: number;
@@ -25,31 +31,71 @@ interface CandidateUser {
 const props = defineProps<{
     candidates: PaginatedData<CandidateUser>;
     classes: SchoolClass[];
-    batches: { id: string; name: string }[];
+    batches: { id: string; name: string; pass_percentage: number }[];
     filters: {
         search?: string;
     };
 }>();
 
+// Helper to determine if a candidate is qualified for admission
+const getQualificationStatus = (user: CandidateUser) => {
+    if (!user.latest_attempt || !user.prospective_class) return { qualified: false, percentage: 0 };
+    
+    const total = user.latest_attempt.exam.questions_count || 0;
+    if (total === 0) return { qualified: false, percentage: 0 };
+    
+    const percentage = Math.round((user.latest_attempt.score / total) * 100);
+    const passMark = user.prospective_class.pass_percentage || 50;
+    
+    return {
+        qualified: percentage >= passMark,
+        percentage,
+        passMark
+    };
+};
+
 const isModalOpen = ref(false);
+const isEditing = ref(false);
+const editingCandidate = ref<CandidateUser | null>(null);
+
 const form = useForm({
     name: '',
     email: '',
     username: '',
-    school_id: '',
     school_class_id: '',
     prospective_class_id: '',
 });
 
 const openCreateModal = () => {
+    isEditing.value = false;
+    editingCandidate.value = null;
     form.reset();
     isModalOpen.value = true;
 };
 
+const openEditModal = (user: CandidateUser) => {
+    isEditing.value = true;
+    editingCandidate.value = user;
+    
+    form.name = user.name;
+    form.email = user.email;
+    form.username = user.username;
+    form.school_class_id = user.school_class_id || '';
+    form.prospective_class_id = user.prospective_class_id || '';
+    
+    isModalOpen.value = true;
+};
+
 const submit = () => {
-    form.post(store().url, {
-        onSuccess: () => closeModal(),
-    });
+    if (isEditing.value && editingCandidate.value) {
+        form.put(update(editingCandidate.value.id).url, {
+            onSuccess: () => closeModal(),
+        });
+    } else {
+        form.post(store().url, {
+            onSuccess: () => closeModal(),
+        });
+    }
 };
 
 const closeModal = () => {
@@ -146,13 +192,13 @@ const handleImport = () => {
 
             <!-- Main Table Card -->
             <div class="overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm">
-                <!-- Search & Filters Container (From UI Concept) -->
+                <!-- Search & Filters Container -->
                 <div class="border-b border-slate-50 bg-white p-6">
                     <div class="flex flex-col gap-4 lg:flex-row lg:items-center">
                         <div class="relative flex-1">
                             <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
                                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                 </svg>
                             </span>
                             <input
@@ -211,24 +257,51 @@ const handleImport = () => {
                                 <td class="px-6 py-6">
                                     <span
                                         v-if="user.prospective_class"
-                                        class="inline-flex items-center rounded-lg border border-primary/10 bg-primary/5 px-3 py-1 text-[9px] font-black text-primary uppercase shadow-sm"
+                                        class="inline-flex flex-col"
                                     >
-                                        {{ user.prospective_class.name }}
+                                        <span class="text-[10px] font-black text-slate-700 uppercase">{{ user.prospective_class.name }}</span>
+                                        <span class="text-[8px] font-bold text-slate-400 uppercase">Pass Mark: {{ user.prospective_class.pass_percentage }}%</span>
                                     </span>
                                     <span v-else class="text-[9px] font-black tracking-widest text-slate-300 uppercase">No Batch</span>
                                 </td>
                                 <td class="px-6 py-6">
                                     <div v-if="user.latest_attempt" class="flex flex-col">
-                                        <span class="text-xs font-black text-slate-800">
-                                            {{ user.latest_attempt.score }}
-                                            <span class="text-slate-300">/ {{ user.latest_attempt.exam.questions_count }}</span>
-                                        </span>
-                                        <span class="text-[9px] font-bold text-slate-400 uppercase">Correct Answers</span>
+                                        <div class="flex items-center gap-2">
+                                            <span 
+                                                class="text-xs font-black"
+                                                :class="getQualificationStatus(user).qualified ? 'text-green-600' : 'text-red-500'"
+                                            >
+                                                {{ getQualificationStatus(user).percentage }}%
+                                            </span>
+                                            <span class="text-[9px] font-bold text-slate-300 uppercase">({{ user.latest_attempt.score }} / {{ user.latest_attempt.exam.questions_count }})</span>
+                                        </div>
+                                        <div class="mt-1 h-1 w-20 overflow-hidden rounded-full bg-slate-100">
+                                            <div 
+                                                class="h-full transition-all duration-1000"
+                                                :class="getQualificationStatus(user).qualified ? 'bg-green-500' : 'bg-red-400'"
+                                                :style="{ width: `${getQualificationStatus(user).percentage}%` }"
+                                            ></div>
+                                        </div>
                                     </div>
-                                    <span v-else class="text-[9px] font-black tracking-widest text-slate-300 uppercase">No Attempt</span>
+                                    <span v-else class="text-[9px] font-black tracking-widest text-slate-300 uppercase italic">Awaiting Exam</span>
                                 </td>
                                 <td class="px-6 py-6">
                                     <span
+                                        v-if="user.latest_attempt && getQualificationStatus(user).qualified"
+                                        class="inline-flex items-center gap-1.5 rounded-lg bg-green-50 px-3 py-1 text-[9px] font-black text-green-600 uppercase"
+                                    >
+                                        <span class="h-1 w-1 rounded-full bg-green-500"></span>
+                                        Qualified
+                                    </span>
+                                    <span
+                                        v-else-if="user.latest_attempt"
+                                        class="inline-flex items-center gap-1.5 rounded-lg bg-red-50 px-3 py-1 text-[9px] font-black text-red-600 uppercase"
+                                    >
+                                        <span class="h-1 w-1 rounded-full bg-red-500"></span>
+                                        Not Qualified
+                                    </span>
+                                    <span
+                                        v-else
                                         class="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-1 text-[9px] font-black text-blue-600 uppercase"
                                     >
                                         <span class="h-1 w-1 rounded-full bg-blue-500"></span>
@@ -236,12 +309,25 @@ const handleImport = () => {
                                     </span>
                                 </td>
                                 <td class="px-8 py-6 text-right">
-                                    <button
-                                        @click="openAdmitModal(user)"
-                                        class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-[10px] font-black tracking-widest text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
-                                    >
-                                        Approve Admission
-                                    </button>
+                                    <div class="flex items-center justify-end gap-2">
+                                        <button
+                                            @click="openEditModal(user)"
+                                            class="flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-600 active:scale-90"
+                                            title="Manage Batch / Details"
+                                        >
+                                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                        </button>
+                                        <button
+                                            @click="openAdmitModal(user)"
+                                            :disabled="!getQualificationStatus(user).qualified"
+                                            class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-[10px] font-black tracking-widest text-white uppercase shadow-lg shadow-primary/20 transition-all enabled:hover:scale-105 enabled:active:scale-95 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:shadow-none"
+                                            :title="getQualificationStatus(user).qualified ? 'Approve Admission' : 'Score below threshold'"
+                                        >
+                                            Approve Admission
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         </tbody>
@@ -270,11 +356,11 @@ const handleImport = () => {
                 </div>
             </div>
 
-            <!-- Create Modal -->
+            <!-- Create/Edit Modal -->
             <div v-if="isModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
                 <div @click="closeModal" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"></div>
                 <div class="animate-in zoom-in-95 relative w-full max-w-xl overflow-hidden rounded-xl bg-white p-10 shadow-2xl">
-                    <h3 class="mb-8 text-2xl font-black text-slate-900 italic">New Student Application</h3>
+                    <h3 class="mb-8 text-2xl font-black text-slate-900 italic">{{ isEditing ? 'Update Application' : 'New Student Application' }}</h3>
                     <form @submit.prevent="submit" class="space-y-6">
                         <div class="grid grid-cols-2 gap-6">
                             <div class="col-span-2">
@@ -284,19 +370,17 @@ const handleImport = () => {
                                 <input
                                     v-model="form.name"
                                     type="text"
-                                    required
                                     placeholder="e.g. Jane Doe"
                                     class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                                 />
                                 <div v-if="form.errors.name" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.name }}</div>
                             </div>
 
-                            <div>
+                            <div class="col-span-2">
                                 <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Email Address</label>
                                 <input
                                     v-model="form.email"
                                     type="email"
-                                    required
                                     placeholder="jane@example.com"
                                     class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                                 />
@@ -310,25 +394,10 @@ const handleImport = () => {
                                 <input
                                     v-model="form.username"
                                     type="text"
-                                    required
-                                    placeholder="APP/2026/001"
+                                    placeholder="Auto-generated if blank"
                                     class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                                 />
                                 <div v-if="form.errors.username" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.username }}</div>
-                            </div>
-
-                            <div>
-                                <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase"
-                                    >External Application No.</label
-                                >
-                                <input
-                                    v-model="form.school_id"
-                                    type="text"
-                                    required
-                                    placeholder="EX-10234"
-                                    class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
-                                />
-                                <div v-if="form.errors.school_id" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.school_id }}</div>
                             </div>
 
                             <div>
@@ -337,7 +406,6 @@ const handleImport = () => {
                                 >
                                 <select
                                     v-model="form.school_class_id"
-                                    required
                                     class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                                 >
                                     <option value="">Select Class</option>
@@ -354,7 +422,6 @@ const handleImport = () => {
                                 >
                                 <select
                                     v-model="form.prospective_class_id"
-                                    required
                                     class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                                 >
                                     <option value="">Select Batch</option>
@@ -378,7 +445,7 @@ const handleImport = () => {
                                 :disabled="form.processing"
                                 class="flex-1 rounded-lg bg-primary py-4 text-xs font-black tracking-widest text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
                             >
-                                Enroll Applicant
+                                {{ isEditing ? 'Save Changes' : 'Enroll Applicant' }}
                             </button>
                         </div>
                     </form>
@@ -437,7 +504,7 @@ const handleImport = () => {
                     <h3 class="mb-4 text-2xl font-black text-slate-900">Batch Candidate Import</h3>
                     <p class="mb-8 px-4 text-sm leading-relaxed font-bold text-slate-500">
                         Upload an Excel/CSV file with columns: <br />
-                        <span class="font-black text-primary">Name, Email, Username, Application_ID, Target_Class, Exam_Batch</span>
+                        <span class="font-black text-primary">Name, Email, Application_ID, Target_Class, Exam_Batch</span>
                     </p>
                     <form @submit.prevent="handleImport" class="space-y-6">
                         <label

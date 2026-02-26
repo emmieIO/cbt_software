@@ -13,7 +13,7 @@ import type { PaginatedData } from '@/types/academics';
 interface Exam {
     id: string;
     title: string;
-    subject: { name: string };
+    subject?: { name: string };
     school_class?: { name: string };
     prospective_class?: { name: string };
     academic_session: { name: string };
@@ -87,12 +87,12 @@ const getStatusColor = (status: string) => {
 
                         <h3 class="mb-2 line-clamp-1 text-xl font-black text-slate-800">{{ exam.title }}</h3>
                         <div class="mb-6 flex items-center gap-2">
-                            <span class="rounded-xl bg-primary/5 px-2 py-1 text-[10px] font-black text-primary uppercase">{{
-                                exam.subject.name
-                            }}</span>
+                            <span class="rounded-xl bg-primary/5 px-2 py-1 text-[10px] font-black text-primary uppercase">
+                                {{ exam.subject?.name || 'Multi-Subject' }}
+                            </span>
                             <div class="rounded-lg-full h-1 w-1 bg-slate-200"></div>
                             <span class="text-[10px] font-bold tracking-widest text-slate-400 uppercase">
-                                {{ exam.type === 'entrance' ? exam.prospective_class?.name : exam.school_class?.name }}
+                                {{ exam.type === 'entrance' ? (exam.prospective_class?.name || 'All Candidates') : (exam.school_class?.name || 'General') }}
                             </span>
                         </div>
 

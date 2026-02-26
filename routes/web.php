@@ -13,6 +13,11 @@ Route::middleware('auth:admin,staff,student,web')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::post('/notifications/{id}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
     Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-as-read');
+
+    // Dynamic UI API Helpers
+    Route::get('/api/subjects/{subject}/topics', function (\App\Models\Subject $subject) {
+        return $subject->topics()->orderBy('name')->get(['id', 'name']);
+    })->name('api.topics.index');
 });
 Route::get('/debug-exception', function () {
     throw new \Exception('Debug Exception');

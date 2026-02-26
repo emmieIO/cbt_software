@@ -16,6 +16,7 @@ class ProspectiveClass extends Model
         'name',
         'slug',
         'description',
+        'pass_percentage',
         'is_active',
     ];
 

@@ -57,7 +57,8 @@ class UserImportService
                         continue;
                     }
 
-                    [$name, $email, $username, $schoolId] = $data;
+                    [$name, $email, $username] = $data;
+                    $schoolId = !empty($data[3]) ? trim((string) $data[3]) : null;
                     $className = $data[4] ?? null;
                     $batchName = $data[5] ?? null;
 
@@ -75,7 +76,7 @@ class UserImportService
                         name: trim((string) $name),
                         email: trim((string) $email),
                         username: trim((string) $username),
-                        school_id: trim((string) $schoolId),
+                        school_id: $schoolId,
                         school_class_id: $classId
                     );
 

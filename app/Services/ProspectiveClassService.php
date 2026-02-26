@@ -13,6 +13,7 @@ class ProspectiveClassService
             'name' => $data['name'],
             'slug' => Str::slug($data['name']),
             'description' => $data['description'] ?? null,
+            'pass_percentage' => $data['pass_percentage'] ?? 50,
             'is_active' => $data['is_active'] ?? true,
         ]);
     }

@@ -8,13 +8,19 @@ import StaffLayout from '@/layouts/StaffLayout.vue';
 interface Exam {
     id: string;
     title: string;
-    subject: { name: string };
+    subject?: { name: string };
     school_class?: { name: string };
     prospective_class?: { name: string };
     status: string;
     type: string;
     duration: number;
     questions: any[];
+    compositions?: Array<{
+        id: string;
+        subject: { name: string };
+        topic?: { name: string };
+        question_count: number;
+    }>;
 }
 
 defineProps<{
@@ -32,29 +38,31 @@ const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
 
         <div class="space-y-10">
             <div class="relative overflow-hidden rounded-xl bg-slate-900 px-10 py-12 text-white shadow-2xl">
-                <div class="relative z-10 flex items-center justify-between">
-                    <div>
-                        <div class="mb-4 flex items-center gap-4">
-                            <span class="rounded-lg-full bg-primary px-3 py-1 text-[9px] font-black tracking-widest text-slate-900 uppercase">{{
+                <div class="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
+                    <div class="space-y-6">
+                        <div class="flex items-center gap-4">
+                            <span class="rounded-full bg-primary px-3 py-1 text-[9px] font-black tracking-widest text-slate-900 uppercase">{{
                                 exam.status
                             }}</span>
                             <h1 class="text-3xl font-black">{{ exam.title }}</h1>
                         </div>
-                        <div class="flex items-center gap-6">
-                            <div class="flex items-center gap-2">
+                        <div class="flex flex-wrap items-center gap-x-8 gap-y-4">
+                            <div class="flex items-center gap-2 border-r border-white/10 pr-8 last:border-0 last:pr-0">
                                 <span class="text-[10px] font-black tracking-widest text-slate-400 uppercase">Subject:</span>
-                                <span class="text-sm font-bold text-lemon-yellow">{{ exam.subject.name }}</span>
+                                <span class="text-sm font-bold text-lemon-yellow">
+                                    {{ exam.type === 'entrance' ? 'Multi-Subject Assessment' : (exam.subject?.name || 'N/A') }}
+                                </span>
                             </div>
-                            <div class="flex items-center gap-2">
+                            <div class="flex items-center gap-2 border-r border-white/10 pr-8 last:border-0 last:pr-0">
                                 <span class="text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                                    {{ exam.type === 'entrance' ? 'Batch:' : 'Class:' }}
+                                    {{ exam.type === 'entrance' ? 'Admission Batch:' : 'Class:' }}
                                 </span>
                                 <span class="text-sm font-bold text-lemon-yellow">
                                     {{ exam.type === 'entrance' ? exam.prospective_class?.name : exam.school_class?.name }}
                                 </span>
                             </div>
-                            <div class="flex items-center gap-2">
-                                <span class="text-[10px] font-black tracking-widest text-slate-400 uppercase">Duration:</span>
+                            <div class="flex items-center gap-2 border-r border-white/10 pr-8 last:border-0 last:pr-0">
+                                <span class="text-[10px] font-black tracking-widest text-slate-400 uppercase">Time Allotted:</span>
                                 <span class="text-sm font-bold text-lemon-yellow">{{ exam.duration }} Mins</span>
                             </div>
                         </div>
@@ -81,11 +89,28 @@ const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
                             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                             </svg>
-                            Manage Questions
+                            {{ exam.questions.length > 0 ? 'Update Allocated Pool' : 'Allocate Questions' }}
                         </Link>
                     </div>
                 </div>
-                <div class="rounded-lg-full absolute -top-24 -right-24 h-64 w-64 bg-primary/20 blur-3xl"></div>
+                <div class="rounded-full absolute -top-24 -right-24 h-64 w-64 bg-primary/20 blur-3xl"></div>
+            </div>
+
+            <!-- Blueprint Summary for Entrance -->
+            <div v-if="exam.type === 'entrance' && exam.compositions?.length" class="space-y-6">
+                <h3 class="flex items-center gap-3 text-xs font-black tracking-[0.2em] text-slate-400 uppercase italic">
+                    Assessment Blueprint (Compositions)
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div v-for="comp in exam.compositions" :key="comp.id" class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm space-y-2">
+                        <span class="text-[10px] font-black tracking-widest text-primary uppercase">{{ comp.subject.name }}</span>
+                        <p class="text-xs font-bold text-slate-500 italic">{{ comp.topic?.name || 'General Subject Pool' }}</p>
+                        <div class="flex items-center justify-between pt-2">
+                            <span class="text-[9px] font-black text-slate-400 uppercase">Goal:</span>
+                            <span class="text-sm font-black text-slate-800">{{ comp.question_count }} Questions</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="space-y-6">
