@@ -1,4 +1,4 @@
-FROM dunglas/frankenphp:1.3-php8.3-alpine
+FROM dunglas/frankenphp:1.3-php8.4-alpine
 
 # Install system dependencies for GD, Zip, and Postgres
 RUN apk add --no-cache \
