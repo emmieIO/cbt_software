@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 class ExamDTO
 {
     /**
-     * @param ExamCompositionDTO[] $compositions
+     * @param  ExamCompositionDTO[]  $compositions
      */
     public function __construct(
         public string $title,

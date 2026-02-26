@@ -64,9 +64,9 @@ class ExamService
                     );
                     $selectedQuestionIds = array_merge($selectedQuestionIds, $sectionIds);
                 }
-            } 
+            }
             // Case 2: Standard Single-subject Exam
-            else if ($totalCount && $exam->subject_id) {
+            elseif ($totalCount && $exam->subject_id) {
                 $selectedQuestionIds = $this->pullQuestionsForCriteria(
                     subjectId: $exam->subject_id,
                     topicId: null,
@@ -79,7 +79,7 @@ class ExamService
             }
 
             // Sync all selected questions
-            if (!empty($selectedQuestionIds)) {
+            if (! empty($selectedQuestionIds)) {
                 $exam->questions()->sync($selectedQuestionIds);
                 Question::whereIn('id', $selectedQuestionIds)->update(['last_used_at' => now()]);
             }
@@ -92,11 +92,11 @@ class ExamService
      * Internal helper to pull questions following the biennial rotation policy.
      */
     protected function pullQuestionsForCriteria(
-        string $subjectId, 
-        ?string $topicId, 
-        ?string $prospectiveClassId, 
-        ?string $schoolClassId, 
-        int $count, 
+        string $subjectId,
+        ?string $topicId,
+        ?string $prospectiveClassId,
+        ?string $schoolClassId,
+        int $count,
         \Carbon\CarbonInterface $twoYearsAgo,
         bool $isEntrance = false
     ): array {
@@ -108,7 +108,7 @@ class ExamService
 
         // For entrance exams, we are more flexible with class/batch filtering
         // unless specific batch questions are required.
-        if (!$isEntrance) {
+        if (! $isEntrance) {
             if ($prospectiveClassId) {
                 $query->where('prospective_class_id', $prospectiveClassId);
             } else {
@@ -163,11 +163,11 @@ class ExamService
         if ($exam->compositions()->exists()) {
             $subjectIds = $exam->compositions->pluck('subject_id')->unique();
             $query->whereHas('topic', fn ($q) => $q->whereIn('subject_id', $subjectIds));
-            
+
             // Note: For multi-subject manual select, we currently pull ALL questions from these subjects.
             // If we wanted to be stricter, we'd need to join or union queries per composition.
             // For now, we'll let the user see the whole pool of those subjects.
-        } 
+        }
         // Case 2: Standard Single-subject Exam
         else {
             $query->whereHas('topic', fn ($q) => $q->where('subject_id', $exam->subject_id));
@@ -181,7 +181,7 @@ class ExamService
                 $query->where('school_class_id', $exam->school_class_id);
             }
         } else {
-            // For Entrance: If batch-specific questions exist, show them, 
+            // For Entrance: If batch-specific questions exist, show them,
             // otherwise show everything in those subjects
             $hasBatchQuestions = (clone $query)->where('prospective_class_id', $exam->prospective_class_id)->exists();
             if ($hasBatchQuestions) {
@@ -316,10 +316,10 @@ class ExamService
 
                 // Determine marks for this question
                 $marks = 1.00; // Default
-                if (!empty($marksMap)) {
+                if (! empty($marksMap)) {
                     // Try topic-specific match first, then subject match
-                    $marks = $marksMap["t_{$question->topic_id}"] 
-                          ?? $marksMap["s_{$question->topic->subject_id}"] 
+                    $marks = $marksMap["t_{$question->topic_id}"]
+                          ?? $marksMap["s_{$question->topic->subject_id}"]
                           ?? 1.00;
                 }
 

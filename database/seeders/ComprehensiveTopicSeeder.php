@@ -65,13 +65,17 @@ class ComprehensiveTopicSeeder extends Seeder
         ];
 
         foreach ($data as $subjectName => $classTopics) {
-            if (!isset($subjects[$subjectName])) continue;
-            
+            if (! isset($subjects[$subjectName])) {
+                continue;
+            }
+
             $subjectId = $subjects[$subjectName];
 
             foreach ($classTopics as $className => $topics) {
-                if (!isset($classes[$className])) continue;
-                
+                if (! isset($classes[$className])) {
+                    continue;
+                }
+
                 $classId = $classes[$className];
 
                 foreach ($topics as $topicName) {
@@ -82,7 +86,7 @@ class ComprehensiveTopicSeeder extends Seeder
                             'school_class_id' => $classId,
                         ],
                         [
-                            'slug' => Str::slug($topicName . '-' . $className),
+                            'slug' => Str::slug($topicName.'-'.$className),
                             'description' => "Comprehensive topic on $topicName for $className $subjectName.",
                         ]
                     );

@@ -23,7 +23,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('exams', function (Blueprint $table) {
-            // Reverting to non-nullable might fail if null data exists, 
+            // Reverting to non-nullable might fail if null data exists,
             // but standard Laravel practice is to define it.
             $table->foreignUlid('subject_id')->nullable(false)->change();
             $table->foreignUlid('school_class_id')->nullable(false)->change();

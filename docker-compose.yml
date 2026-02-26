@@ -1,0 +1,48 @@
+services:
+  # The Web App
+  app:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "7000:80"
+    environment:
+      - SERVER_NAME=:80
+    env_file:
+      - .env
+    volumes:
+      - /var/www/cbt_software:/var/www/html
+    depends_on:
+      - postgres
+
+# The Worker
+  worker:
+    build: .
+    restart: unless-stopped
+    command: php artisan queue:work --max-jobs=1000 --max-time=3600
+    env_file: .env
+    volumes:
+      - /var/www/cbt_software:/var/www/html
+    depends_on:
+      - postgres
+      - redis
+
+  postgres:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      - POSTGRES_DB=${DB_DATABASE}
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  # NEW SERVICE: Redis
+  redis:
+    image: redis:7-alpine
+    restart: always
+    volumes:
+      - redisdata:/data
+
+volumes:
+  pgdata:
+  redisdata: # Persists Redis data so you don't lose jobs on reboot

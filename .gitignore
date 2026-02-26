@@ -27,3 +27,7 @@ yarn-error.log
 /.zed
 GEMINI.*
 boost.json
+
+**/caddy
+frankenphp
+frankenphp-worker.php

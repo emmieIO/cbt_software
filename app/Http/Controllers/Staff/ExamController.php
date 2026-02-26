@@ -209,8 +209,8 @@ class ExamController extends Controller
 
         \Illuminate\Support\Facades\DB::transaction(function () use ($request, $exam) {
             $data = $request->only([
-                'title', 'subject_id', 'school_class_id', 'prospective_class_id', 
-                'duration', 'type', 'start_time', 'end_time', 'status'
+                'title', 'subject_id', 'school_class_id', 'prospective_class_id',
+                'duration', 'type', 'start_time', 'end_time', 'status',
             ]);
 
             $exam->update($data);

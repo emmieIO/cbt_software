@@ -75,7 +75,7 @@ class EntranceController extends Controller
     public function update(\App\Http\Requests\Admin\UpdateCandidateRequest $request, User $candidate): RedirectResponse
     {
         $dto = UserDTO::fromRequest($request);
-        
+
         $this->userService->updateUser($candidate, $dto);
 
         // Update prospective_class_id specifically
