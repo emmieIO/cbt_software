@@ -25,4 +25,3 @@ jobs:
             sleep 10
             docker compose exec -T app php artisan migrate --force
             docker compose exec -T app php artisan optimize
-            docker compose exec -T app npm install && npm run build
