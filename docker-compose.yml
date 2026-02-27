@@ -13,6 +13,7 @@ services:
       - /var/www/cbt_software:/var/www/html
       - /var/www/html/vendor
       - /var/www/html/storage
+      - /var/www/html/public/build
     depends_on:
       - postgres
 
