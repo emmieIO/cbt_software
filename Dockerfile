@@ -1,3 +1,11 @@
+# --- Stage 1: Build Frontend Assets ---
+FROM node:20-slim AS frontend-builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+
 FROM dunglas/frankenphp:1.3-php8.4-alpine
 
 # Install system dependencies for GD, Zip, and Postgres
@@ -8,8 +16,6 @@ RUN apk add --no-cache \
     zlib-dev \
     freetype-dev \
     libjpeg-turbo-dev \
-    nodejs \
-    npm \
     $PHPIZE_DEPS
 
 # Configure and install PHP extensions
