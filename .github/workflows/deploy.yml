@@ -23,5 +23,5 @@ jobs:
             docker compose up -d --build
             echo "Waiting for containers to initialize..."
             sleep 10
-            docker compose exec -T app php artisan migrate --force
+           
             docker compose exec -T app php artisan optimize
