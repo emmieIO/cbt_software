@@ -21,13 +21,12 @@ jobs:
             cd /var/www/cbt_software
             git pull origin master
 
-            # 1. Physically create the manifest on the VPS disk
-            docker run --rm -v $(pwd):/app -w /app node:20-alpine sh -c "npm install && npm run build"
-
-            # 2. Start the project
+            # Simple deploy
             docker compose up -d --build
 
-            # 3. Permissions & Laravel Commands
-            sudo chown -R 33:33 storage bootstrap/cache public/build
+            # Allow time for DB to boot
+            echo "Stabilizing..."
+            sleep 15
+
             docker compose exec -T app php artisan migrate --force
             docker compose exec -T app php artisan optimize
