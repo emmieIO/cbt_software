@@ -10,9 +10,9 @@ services:
       - .env
     volumes:
       - /var/www/cbt_software:/var/www/html
-      - /var/www/html/vendor        # Protects internal vendor
-      - /var/www/html/public/build  # Protects internal Vite build
-      - /var/www/html/storage       # Ensures storage is writable
+      - /var/www/cbt_software/vendor:/var/www/html/vendor        # Protects internal vendor
+      - /var/www/cbt_software/build:/var/www/html/public/build  # Protects internal Vite build
+      - /var/www/cbt_software/storage:/var/www/html/storage       # Ensures storage is writable
     depends_on:
       - postgres
       - redis # Added this so app doesn't crash waiting for Redis
@@ -24,8 +24,8 @@ services:
     env_file: .env
     volumes:
       - /var/www/cbt_software:/var/www/html
-      - /var/www/html/vendor        # Added: Worker needs vendor too
-      - /var/www/html/public/build  # Added: Some workers need access to assets
+      - /var/www/cbt_software/vendor:/var/www/html/vendor        # Added: Worker needs vendor too
+      - /var/www/cbt_software/build:/var/www/html/public/build  # Added: Some workers need access to assets
     depends_on:
       - postgres
       - redis
