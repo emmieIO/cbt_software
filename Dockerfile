@@ -8,6 +8,8 @@ RUN apk add --no-cache \
     zlib-dev \
     freetype-dev \
     libjpeg-turbo-dev \
+    nodejs \
+    npm \
     $PHPIZE_DEPS
 
 # Configure and install PHP extensions
@@ -24,6 +26,9 @@ COPY . .
 # Install Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
     && composer install --optimize-autoloader --no-dev
+
+# Build Frontend Assets
+RUN npm install && npm run buil
 
 RUN chown -R www-data:www-data storage bootstrap/cache
 
