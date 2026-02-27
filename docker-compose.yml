@@ -1,5 +1,4 @@
 services:
-  # The Web App
   app:
     build: .
     restart: unless-stopped
@@ -11,13 +10,13 @@ services:
       - .env
     volumes:
       - /var/www/cbt_software:/var/www/html
-      - /var/www/html/vendor
-      - /var/www/html/storage
-      - /var/www/html/public/build
+      - /var/www/html/vendor        # Protects internal vendor
+      - /var/www/html/public/build  # Protects internal Vite build
+      - /var/www/html/storage       # Ensures storage is writable
     depends_on:
       - postgres
+      - redis # Added this so app doesn't crash waiting for Redis
 
-# The Worker
   worker:
     build: .
     restart: unless-stopped
@@ -25,7 +24,8 @@ services:
     env_file: .env
     volumes:
       - /var/www/cbt_software:/var/www/html
-      - /var/www/html/vendor
+      - /var/www/html/vendor        # Added: Worker needs vendor too
+      - /var/www/html/public/build  # Added: Some workers need access to assets
     depends_on:
       - postgres
       - redis
@@ -34,13 +34,12 @@ services:
     image: postgres:16-alpine
     restart: always
     environment:
-      - POSTGRES_DB=${DB_DATABASE}
-      - POSTGRES_USER=${DB_USERNAME}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - pgdata:/var/lib/postgresql/data
 
-  # NEW SERVICE: Redis
   redis:
     image: redis:7-alpine
     restart: always
@@ -49,4 +48,4 @@ services:
 
 volumes:
   pgdata:
-  redisdata: # Persists Redis data so you don't lose jobs on reboot
+  redisdata:
