@@ -21,7 +21,7 @@ jobs:
             cd /var/www/cbt_software
             git pull origin master
             docker compose up -d --build
-            echo "Waiting for containers to initialize..."
-            sleep 10
-           
-            docker compose exec -T app php artisan optimize
+            # echo "Waiting for containers to initialize..."
+            # sleep 10
+
+            # docker compose exec -T app php artisan optimize

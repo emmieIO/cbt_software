@@ -11,6 +11,8 @@ services:
       - .env
     volumes:
       - /var/www/cbt_software:/var/www/html
+      - /var/www/html/vendor
+      - /var/www/html/storage
     depends_on:
       - postgres
 
@@ -22,6 +24,7 @@ services:
     env_file: .env
     volumes:
       - /var/www/cbt_software:/var/www/html
+      - /var/www/html/vendor
     depends_on:
       - postgres
       - redis
