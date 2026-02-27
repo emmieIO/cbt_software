@@ -27,8 +27,7 @@ COPY . .
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
     && composer install --optimize-autoloader --no-dev
 
-# Build Frontend Assets
-RUN npm install && npm run build
+
 
 RUN chown -R www-data:www-data storage bootstrap/cache
 
