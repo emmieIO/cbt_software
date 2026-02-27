@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link, usePage } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import StaffLayout from '@/layouts/StaffLayout.vue';
 
@@ -21,27 +21,6 @@ defineProps<{
 
 const page = usePage();
 const userName = computed(() => page.props.auth?.user?.name || 'Staff');
-
-const hubs = [
-    {
-        title: 'Question Management',
-        description: 'Build and manage your assessment content.',
-        items: [
-            { name: 'Question Bank', href: '/staff/questions', icon: '📁' },
-            { name: 'AI Question Lab', href: '/staff/questions/generate', icon: '🤖' },
-            { name: 'Create New', href: '/staff/questions/create', icon: '✍️' },
-        ],
-    },
-    {
-        title: 'Exam Operations',
-        description: 'Configure and monitor your examinations.',
-        items: [
-            { name: 'Manage Exams', href: '/staff/exams', icon: '📝' },
-            { name: 'New Exam', href: '/staff/exams/create', icon: '➕' },
-            { name: 'Results & Grading', href: '/staff/exams/results', icon: '📊' },
-        ],
-    },
-];
 </script>
 
 <template>
@@ -49,31 +28,11 @@ const hubs = [
         <Head title="Staff Hub" />
 
         <div class="space-y-10">
-            <!-- Page Header (From UI Concept) -->
+            <!-- Page Header -->
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-2xl font-black tracking-tight text-slate-900">Teacher Hub</h1>
                     <p class="mt-1 text-sm font-bold text-slate-400">Welcome back, {{ userName }}</p>
-                </div>
-                <div class="flex items-center gap-3">
-                    <Link
-                        :href="'/staff/questions/generate'"
-                        class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-black text-slate-600 uppercase shadow-sm transition-all hover:bg-slate-50"
-                    >
-                        <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
-                        AI Lab
-                    </Link>
-                    <Link
-                        :href="'/staff/exams/create'"
-                        class="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-xs font-black text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
-                    >
-                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" />
-                        </svg>
-                        Create Exam
-                    </Link>
                 </div>
             </div>
 
@@ -111,41 +70,6 @@ const hubs = [
                     <p class="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Question Bank</p>
                     <h3 class="mt-4 text-6xl font-black tracking-tighter text-primary">{{ stats.questionBankCount }}</h3>
                     <div class="mt-6 text-xs font-black tracking-widest text-primary/60 uppercase">Verified Repository</div>
-                </div>
-            </div>
-
-            <!-- Management Hubs -->
-            <div class="space-y-10">
-                <div v-for="hub in hubs" :key="hub.title" class="space-y-6">
-                    <div class="ml-2">
-                        <h3 class="text-2xl font-black tracking-tight text-slate-900">{{ hub.title }}</h3>
-                        <p class="text-sm font-bold tracking-wide text-slate-400">{{ hub.description }}</p>
-                    </div>
-
-                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                        <Link
-                            v-for="item in hub.items"
-                            :key="item.name"
-                            :href="item.href"
-                            class="group relative overflow-hidden rounded-xl border border-slate-100 bg-white p-8 transition-all hover:-translate-y-1 hover:border-primary/20 hover:shadow-2xl"
-                        >
-                            <div class="relative z-10 flex items-center gap-6">
-                                <div
-                                    class="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-3xl transition-transform group-hover:scale-110 group-hover:rotate-3 group-hover:bg-primary/5"
-                                >
-                                    {{ item.icon }}
-                                </div>
-                                <div>
-                                    <h4 class="text-lg leading-tight font-black text-slate-800">{{ item.name }}</h4>
-                                    <p
-                                        class="mt-2 text-[10px] font-black tracking-widest text-primary uppercase opacity-0 transition-opacity group-hover:opacity-100"
-                                    >
-                                        Open Management &rarr;
-                                    </p>
-                                </div>
-                            </div>
-                        </Link>
-                    </div>
                 </div>
             </div>
 

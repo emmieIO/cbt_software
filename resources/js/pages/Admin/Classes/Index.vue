@@ -84,16 +84,16 @@ const getRawLevel = (cls: SchoolClass): string => {
     <AdminLayout>
         <Head title="Class Management" />
 
-        <div class="space-y-10">
+        <div class="space-y-8 md:space-y-10">
             <!-- Page Header -->
             <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 class="text-3xl font-black tracking-tight text-slate-900">School Classes</h1>
-                    <p class="mt-1 text-sm font-bold tracking-widest text-slate-400 uppercase">Grade Levels • {{ classes.length }} Active Sections</p>
+                    <h1 class="text-2xl md:text-3xl font-black tracking-tight text-slate-900">School Classes</h1>
+                    <p class="mt-1 text-[10px] md:text-sm font-bold tracking-widest text-slate-400 uppercase">Grade Levels • {{ classes.length }} Active Sections</p>
                 </div>
                 <button
                     @click="openCreateModal"
-                    class="flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-xs font-black text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
+                    class="flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-xs font-black text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 sm:w-auto"
                 >
                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" />
@@ -106,7 +106,7 @@ const getRawLevel = (cls: SchoolClass): string => {
                 <div
                     v-for="cls in classes"
                     :key="cls.id"
-                    class="group relative overflow-hidden rounded-xl border border-slate-100 bg-white p-8 shadow-sm transition-all hover:shadow-xl hover:shadow-primary/5"
+                    class="group relative overflow-hidden rounded-xl border border-slate-100 bg-white p-6 md:p-8 shadow-sm transition-all hover:shadow-xl hover:shadow-primary/5"
                 >
                     <div class="relative z-10 flex items-start justify-between">
                         <div class="space-y-4">
@@ -119,7 +119,7 @@ const getRawLevel = (cls: SchoolClass): string => {
                             >
                                 {{ typeof cls.level === 'object' ? (cls.level as any).label : cls.level }}
                             </div>
-                            <h3 class="text-2xl leading-none font-black text-slate-800 transition-colors group-hover:text-primary">{{ cls.name }}</h3>
+                            <h3 class="text-xl md:text-2xl leading-none font-black text-slate-800 transition-colors group-hover:text-primary">{{ cls.name }}</h3>
                         </div>
                         <div class="flex gap-2">
                             <button
@@ -155,7 +155,7 @@ const getRawLevel = (cls: SchoolClass): string => {
                     <div
                         class="pointer-events-none absolute -right-4 -bottom-4 opacity-[0.02] transition-transform duration-500 group-hover:scale-110 group-hover:rotate-12"
                     >
-                        <svg class="h-32 w-32" fill="currentColor" viewBox="0 0 24 24">
+                        <svg class="h-24 w-24 md:h-32 md:w-32" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3z" />
                             <path d="M3.88 12.88L12 17l8.12-4.12V17.12L12 21.24l-8.12-4.12V12.88z" />
                         </svg>
@@ -166,10 +166,10 @@ const getRawLevel = (cls: SchoolClass): string => {
             <!-- Modal -->
             <div v-if="isModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
                 <div @click="closeModal" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"></div>
-                <div class="animate-in zoom-in-95 relative w-full max-w-md overflow-hidden rounded-xl bg-white p-10 shadow-2xl">
-                    <h3 class="mb-8 text-2xl font-black text-slate-900">{{ isEditing ? 'Edit Class' : 'Create New Class' }}</h3>
+                <div class="animate-in zoom-in-95 relative w-full max-w-md overflow-hidden rounded-xl bg-white p-6 sm:p-10 shadow-2xl">
+                    <h3 class="mb-6 md:mb-8 text-xl md:text-2xl font-black text-slate-900">{{ isEditing ? 'Edit Class' : 'Create New Class' }}</h3>
 
-                    <form @submit.prevent="submit" class="space-y-6">
+                    <form @submit.prevent="submit" class="space-y-5 md:space-y-6">
                         <div>
                             <label class="mb-2 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Class Name</label>
                             <input
@@ -177,21 +177,21 @@ const getRawLevel = (cls: SchoolClass): string => {
                                 type="text"
                                 required
                                 placeholder="e.g. JSS 1"
-                                class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
+                                class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-3.5 md:py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                             />
                             <div v-if="form.errors.name" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.name }}</div>
                         </div>
 
                         <div>
                             <label class="mb-2 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Academic Level</label>
-                            <div class="grid grid-cols-3 gap-3">
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 md:gap-3">
                                 <button
                                     v-for="level in levels"
                                     :key="level.value"
                                     type="button"
                                     @click="form.level = level.value"
                                     :class="[
-                                        'rounded-xl py-3.5 text-[10px] font-black tracking-widest uppercase transition-all',
+                                        'rounded-xl py-3 md:py-3.5 text-[9px] md:text-[10px] font-black tracking-widest uppercase transition-all',
                                         form.level === level.value
                                             ? 'bg-primary text-white shadow-lg shadow-primary/20'
                                             : 'bg-slate-50 text-slate-400 hover:bg-slate-100',
@@ -203,18 +203,18 @@ const getRawLevel = (cls: SchoolClass): string => {
                             <div v-if="form.errors.level" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.level }}</div>
                         </div>
 
-                        <div class="flex gap-3 pt-4">
+                        <div class="flex gap-3 pt-2 md:pt-4">
                             <button
                                 type="button"
                                 @click="closeModal"
-                                class="flex-1 rounded-xl border border-slate-100 py-4 text-sm font-black tracking-widest text-slate-400 uppercase transition-all hover:bg-slate-50"
+                                class="flex-1 rounded-xl border border-slate-100 py-3.5 md:py-4 text-xs md:text-sm font-black tracking-widest text-slate-400 uppercase transition-all hover:bg-slate-50"
                             >
                                 Cancel
                             </button>
                             <button
                                 type="submit"
                                 :disabled="form.processing"
-                                class="flex-1 rounded-xl bg-primary py-4 text-sm font-black tracking-widest text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+                                class="flex-1 rounded-xl bg-primary py-3.5 md:py-4 text-xs md:text-sm font-black tracking-widest text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
                             >
                                 {{ isEditing ? 'Update' : 'Create' }}
                             </button>

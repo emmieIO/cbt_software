@@ -127,14 +127,14 @@ const handleDelete = () => {
         <Head title="Curriculum Management" />
 
         <div class="space-y-8">
-            <div class="flex items-center justify-between">
+            <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h2 class="text-3xl font-black tracking-tight text-slate-900">Curriculum Topics</h2>
-                    <p class="mt-1 text-sm font-bold text-slate-500">Manage specific topics for each subject and class level.</p>
+                    <h2 class="text-2xl md:text-3xl font-black tracking-tight text-slate-900">Curriculum Topics</h2>
+                    <p class="mt-1 text-xs md:text-sm font-bold text-slate-500">Manage specific topics for each subject and class level.</p>
                 </div>
                 <button
                     @click="openCreateModal"
-                    class="flex h-12 items-center gap-3 rounded-xl bg-primary px-6 text-sm font-black tracking-wider text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
+                    class="flex h-12 items-center justify-center gap-3 rounded-xl bg-primary px-6 text-xs md:text-sm font-black tracking-wider text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 sm:w-auto"
                 >
                     <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -144,8 +144,8 @@ const handleDelete = () => {
             </div>
 
             <!-- Filters -->
-            <div class="flex flex-wrap items-center gap-4 rounded-xl border border-slate-100 bg-white p-6 shadow-sm">
-                <div class="flex flex-1 gap-4">
+            <div class="flex flex-col gap-4 rounded-xl border border-slate-100 bg-white p-6 shadow-sm sm:flex-row sm:items-center sm:gap-6">
+                <div class="flex flex-1 flex-col gap-4 sm:flex-row">
                     <div class="flex-1">
                         <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Filter by Subject</label>
                         <select
@@ -172,7 +172,7 @@ const handleDelete = () => {
                 <button
                     v-if="filterForm.subject_id || filterForm.school_class_id"
                     @click="clearFilters"
-                    class="mt-6 px-4 py-3 text-[10px] font-black tracking-widest text-slate-400 uppercase transition-colors hover:text-red-500"
+                    class="sm:mt-6 px-4 py-3 text-[10px] font-black tracking-widest text-slate-400 uppercase transition-colors hover:text-red-500"
                 >
                     Clear Filters
                 </button>
@@ -183,39 +183,39 @@ const handleDelete = () => {
                     <table class="w-full border-collapse text-left">
                         <thead>
                             <tr class="border-b border-slate-100 bg-slate-50/50">
-                                <th class="px-8 py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase">Topic Name</th>
-                                <th class="px-6 py-5 text-[10px] font-black tracking-widest whitespace-nowrap text-slate-400 uppercase">Subject</th>
-                                <th class="px-6 py-5 text-[10px] font-black tracking-widest whitespace-nowrap text-slate-400 uppercase">Class</th>
-                                <th class="px-6 py-5 text-[10px] font-black tracking-widest whitespace-nowrap text-slate-400 uppercase">Questions</th>
-                                <th class="px-8 py-5 text-right text-[10px] font-black tracking-widest text-slate-400 uppercase">Actions</th>
+                                <th class="px-4 md:px-8 py-4 md:py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase">Topic Name</th>
+                                <th class="px-4 md:px-6 py-4 md:py-5 text-[10px] font-black tracking-widest whitespace-nowrap text-slate-400 uppercase">Subject</th>
+                                <th class="px-4 md:px-6 py-4 md:py-5 text-[10px] font-black tracking-widest whitespace-nowrap text-slate-400 uppercase">Class</th>
+                                <th class="px-4 md:px-6 py-4 md:py-5 text-[10px] font-black tracking-widest whitespace-nowrap text-slate-400 uppercase">Questions</th>
+                                <th class="px-4 md:px-8 py-4 md:py-5 text-right text-[10px] font-black tracking-widest text-slate-400 uppercase">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">
                             <tr v-for="topic in topics.data" :key="topic.id" class="group transition-all hover:bg-slate-50/80">
-                                <td class="px-8 py-6">
-                                    <h4 class="text-sm font-black text-slate-800">{{ topic.name }}</h4>
-                                    <p class="mt-1 line-clamp-1 text-xs font-medium text-slate-400">
+                                <td class="px-4 md:px-8 py-4 md:py-6">
+                                    <h4 class="text-xs md:text-sm font-black text-slate-800">{{ topic.name }}</h4>
+                                    <p class="mt-1 line-clamp-1 text-[10px] md:text-xs font-medium text-slate-400">
                                         {{ topic.description || 'No description.' }}
                                     </p>
                                 </td>
-                                <td class="px-6 py-6">
+                                <td class="px-4 md:px-6 py-4 md:py-6">
                                     <span
-                                        class="inline-flex items-center rounded-xl bg-primary/5 px-2.5 py-1 text-[10px] font-black text-primary uppercase"
+                                        class="inline-flex items-center rounded-xl bg-primary/5 px-2 py-0.5 md:px-2.5 md:py-1 text-[9px] md:text-[10px] font-black text-primary uppercase"
                                     >
                                         {{ topic.subject.name }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-6 whitespace-nowrap">
-                                    <span class="text-xs font-bold text-slate-600">{{ topic.school_class.name }}</span>
+                                <td class="px-4 md:px-6 py-4 md:py-6 whitespace-nowrap">
+                                    <span class="text-[10px] md:text-xs font-bold text-slate-600">{{ topic.school_class.name }}</span>
                                 </td>
-                                <td class="px-6 py-6 text-center">
-                                    <span class="text-xs font-black text-slate-400">{{ topic.questions_count }}</span>
+                                <td class="px-4 md:px-6 py-4 md:py-6 text-center">
+                                    <span class="text-[10px] md:text-xs font-black text-slate-400">{{ topic.questions_count }}</span>
                                 </td>
-                                <td class="px-8 py-6 text-right">
-                                    <div class="flex justify-end gap-2">
+                                <td class="px-4 md:px-8 py-4 md:py-6 text-right">
+                                    <div class="flex justify-end gap-1.5 md:gap-2">
                                         <button
                                             @click="openEditModal(topic)"
-                                            class="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 text-slate-400 transition-all hover:bg-primary hover:text-white"
+                                            class="flex h-8 w-8 md:h-9 md:w-9 items-center justify-center rounded-xl bg-slate-50 text-slate-400 transition-all hover:bg-primary hover:text-white"
                                         >
                                             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path
@@ -228,7 +228,7 @@ const handleDelete = () => {
                                         </button>
                                         <button
                                             @click="confirmDelete(topic)"
-                                            class="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 text-slate-400 transition-all hover:bg-red-500 hover:text-white"
+                                            class="flex h-8 w-8 md:h-9 md:w-9 items-center justify-center rounded-xl bg-slate-50 text-slate-400 transition-all hover:bg-red-500 hover:text-white"
                                         >
                                             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path
@@ -251,14 +251,14 @@ const handleDelete = () => {
                     </table>
                 </div>
 
-                <div class="flex items-center justify-between border-t border-slate-50 px-8 py-6">
+                <div class="flex flex-col gap-4 items-center justify-between border-t border-slate-50 px-8 py-6 sm:flex-row">
                     <p class="text-xs font-bold text-slate-400">Showing {{ topics.from }} to {{ topics.to }} of {{ topics.total }} results.</p>
-                    <div class="flex gap-2">
+                    <div class="flex flex-wrap justify-center gap-2">
                         <Link
                             v-for="link in topics.links"
                             :key="link.label"
                             :href="link.url || '#'"
-                            class="flex h-9 items-center justify-center rounded-xl border px-4 text-xs font-black transition-all"
+                            class="flex h-9 items-center justify-center rounded-xl border px-3 md:px-4 text-[10px] md:text-xs font-black transition-all"
                             :class="[
                                 link.active
                                     ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20'
@@ -275,17 +275,17 @@ const handleDelete = () => {
             <!-- Modal -->
             <div v-if="isModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
                 <div @click="closeModal" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"></div>
-                <div class="animate-in zoom-in-95 relative w-full max-w-lg overflow-hidden rounded-xl bg-white p-10 shadow-2xl">
-                    <h3 class="mb-8 text-2xl font-black text-slate-900">{{ isEditing ? 'Edit Topic' : 'Add Topic to Curriculum' }}</h3>
+                <div class="animate-in zoom-in-95 relative w-full max-w-lg overflow-hidden rounded-xl bg-white p-6 md:p-10 shadow-2xl">
+                    <h3 class="mb-6 md:mb-8 text-xl md:text-2xl font-black text-slate-900">{{ isEditing ? 'Edit Topic' : 'Add Topic to Curriculum' }}</h3>
 
-                    <form @submit.prevent="submit" class="space-y-6">
-                        <div class="grid grid-cols-2 gap-4">
+                    <form @submit.prevent="submit" class="space-y-5 md:space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Subject</label>
                                 <select
                                     v-model="form.subject_id"
                                     required
-                                    class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
+                                    class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-3.5 md:py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                                 >
                                     <option value="" disabled>Select Subject</option>
                                     <option v-for="subject in subjects" :key="subject.id" :value="subject.id">{{ subject.name }}</option>
@@ -297,7 +297,7 @@ const handleDelete = () => {
                                 <select
                                     v-model="form.school_class_id"
                                     required
-                                    class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
+                                    class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-3.5 md:py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                                 >
                                     <option value="" disabled>Select Class</option>
                                     <option v-for="cls in classes" :key="cls.id" :value="cls.id">{{ cls.name }}</option>
@@ -315,7 +315,7 @@ const handleDelete = () => {
                                 type="text"
                                 required
                                 placeholder="e.g. Linear Equations"
-                                class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
+                                class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-3.5 md:py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                             />
                             <div v-if="form.errors.name" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.name }}</div>
                         </div>
@@ -328,23 +328,23 @@ const handleDelete = () => {
                                 v-model="form.description"
                                 rows="3"
                                 placeholder="Details about this curriculum topic..."
-                                class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
+                                class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-3.5 md:py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                             ></textarea>
                             <div v-if="form.errors.description" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.description }}</div>
                         </div>
 
-                        <div class="flex gap-3 pt-4">
+                        <div class="flex gap-3 pt-2 md:pt-4">
                             <button
                                 type="button"
                                 @click="closeModal"
-                                class="flex-1 rounded-xl border border-slate-100 py-4 text-sm font-black tracking-widest text-slate-400 uppercase transition-all hover:bg-slate-50"
+                                class="flex-1 rounded-xl border border-slate-100 py-3.5 md:py-4 text-xs md:text-sm font-black tracking-widest text-slate-400 uppercase transition-all hover:bg-slate-50"
                             >
                                 Cancel
                             </button>
                             <button
                                 type="submit"
                                 :disabled="form.processing"
-                                class="flex-1 rounded-xl bg-primary py-4 text-sm font-black tracking-widest text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+                                class="flex-1 rounded-xl bg-primary py-3.5 md:py-4 text-xs md:text-sm font-black tracking-widest text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
                             >
                                 {{ isEditing ? 'Update' : 'Add to Bank' }}
                             </button>

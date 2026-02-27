@@ -251,7 +251,7 @@ if (typeof window !== 'undefined') {
                         <!-- Dropdown (Minimal) -->
                         <div
                             v-if="isNotificationsOpen"
-                            class="absolute right-0 z-50 mt-4 w-80 overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5"
+                            class="absolute right-0 z-50 mt-4 w-[calc(100vw-2rem)] max-w-xs overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 sm:w-80"
                         >
                             <div class="flex items-center justify-between bg-slate-50 px-6 py-4">
                                 <h3 class="text-xs font-black tracking-widest text-slate-800 uppercase">Notifications</h3>

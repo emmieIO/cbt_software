@@ -81,16 +81,16 @@ watch(
                     leave-from-class="opacity-100 scale-100 translate-y-0"
                     leave-to-class="opacity-0 scale-95 translate-y-4"
                 >
-                    <div v-if="show" class="relative w-full max-w-md overflow-hidden rounded-xl bg-white p-8 shadow-2xl shadow-slate-900/20 md:p-10">
+                    <div v-if="show" class="relative w-full max-w-md overflow-hidden rounded-xl bg-white p-6 sm:p-8 md:p-10 shadow-2xl shadow-slate-900/20">
                         <!-- Icon Header -->
-                        <div class="mb-8 flex flex-col items-center text-center">
+                        <div class="mb-6 md:mb-8 flex flex-col items-center text-center">
                             <div
                                 :class="[
-                                    'mb-6 flex h-20 w-20 items-center justify-center rounded-xl shadow-lg transition-transform hover:scale-110',
+                                    'mb-4 md:mb-6 flex h-16 w-16 md:h-20 md:w-20 items-center justify-center rounded-xl shadow-lg transition-transform hover:scale-110',
                                     variant === 'danger' ? 'bg-red-50 text-red-500 shadow-red-500/20' : 'bg-primary/5 text-primary shadow-primary/20',
                                 ]"
                             >
-                                <svg v-if="variant === 'danger'" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg v-if="variant === 'danger'" class="h-8 w-8 md:h-10 md:w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path
                                         stroke-linecap="round"
                                         stroke-linejoin="round"
@@ -98,7 +98,7 @@ watch(
                                         d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                                     />
                                 </svg>
-                                <svg v-else class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg v-else class="h-8 w-8 md:h-10 md:w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path
                                         stroke-linecap="round"
                                         stroke-linejoin="round"
@@ -107,8 +107,8 @@ watch(
                                     />
                                 </svg>
                             </div>
-                            <h3 class="text-2xl font-black tracking-tight text-slate-900">{{ title }}</h3>
-                            <p class="mt-3 text-sm leading-relaxed font-medium text-slate-500">
+                            <h3 class="text-xl md:text-2xl font-black tracking-tight text-slate-900">{{ title }}</h3>
+                            <p class="mt-2 md:mt-3 text-xs md:text-sm leading-relaxed font-medium text-slate-500">
                                 {{ message }}
                             </p>
                         </div>
@@ -119,7 +119,7 @@ watch(
                                 @click="confirm"
                                 :disabled="loading"
                                 :class="[
-                                    'flex h-14 w-full items-center justify-center rounded-xl text-sm font-black tracking-widest text-white uppercase shadow-lg transition-all active:scale-95 disabled:opacity-50',
+                                    'flex h-12 md:h-14 w-full items-center justify-center rounded-xl text-xs md:text-sm font-black tracking-widest text-white uppercase shadow-lg transition-all active:scale-95 disabled:opacity-50',
                                     variant === 'danger'
                                         ? 'bg-red-600 shadow-red-600/20 hover:bg-red-700'
                                         : 'bg-primary shadow-primary/20 hover:bg-primary/90',
@@ -131,7 +131,7 @@ watch(
                             <button
                                 @click="close"
                                 :disabled="loading"
-                                class="flex h-14 w-full items-center justify-center rounded-xl bg-slate-50 text-sm font-black tracking-widest text-slate-400 uppercase transition-all hover:bg-slate-100 hover:text-slate-600 active:scale-95 disabled:opacity-50"
+                                class="flex h-12 md:h-14 w-full items-center justify-center rounded-xl bg-slate-50 text-xs md:text-sm font-black tracking-widest text-slate-400 uppercase transition-all hover:bg-slate-100 hover:text-slate-600 active:scale-95 disabled:opacity-50"
                             >
                                 {{ cancelLabel }}
                             </button>

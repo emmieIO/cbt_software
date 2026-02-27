@@ -52,14 +52,14 @@ const getStatusColor = (status: string) => {
         <Head title="My Examinations" />
 
         <div class="space-y-8">
-            <div class="flex items-center justify-between">
+            <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h2 class="text-3xl font-black tracking-tight text-slate-900">Examination Vault</h2>
-                    <p class="mt-1 text-sm font-bold text-slate-500">Manage your papers and student schedules.</p>
+                    <h2 class="text-2xl md:text-3xl font-black tracking-tight text-slate-900">Examination Vault</h2>
+                    <p class="mt-1 text-xs md:text-sm font-bold text-slate-500">Manage your papers and student schedules.</p>
                 </div>
                 <Link
                     :href="createExamAction().url"
-                    class="flex h-12 items-center gap-3 rounded-xl bg-primary px-6 text-sm font-black tracking-wider text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
+                    class="flex h-12 items-center justify-center gap-3 rounded-xl bg-primary px-6 text-xs md:text-sm font-black tracking-wider text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 sm:w-auto"
                 >
                     <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -72,47 +72,47 @@ const getStatusColor = (status: string) => {
                 <div
                     v-for="exam in exams.data"
                     :key="exam.id"
-                    class="group relative overflow-hidden rounded-xl border border-slate-100 bg-white p-8 shadow-sm transition-all hover:shadow-xl"
+                    class="group relative overflow-hidden rounded-xl border border-slate-100 bg-white p-6 md:p-8 shadow-sm transition-all hover:shadow-xl"
                 >
                     <div class="relative z-10">
-                        <div class="mb-6 flex items-start justify-between">
+                        <div class="mb-4 md:mb-6 flex items-start justify-between">
                             <span
-                                class="rounded-lg-full px-3 py-1 text-[9px] font-black tracking-widest text-slate-900 uppercase"
+                                class="rounded-lg-full px-2 py-0.5 md:px-3 md:py-1 text-[8px] md:text-[9px] font-black tracking-widest text-slate-900 uppercase"
                                 :class="getStatusColor(exam.status)"
                             >
                                 {{ exam.status }}
                             </span>
-                            <span class="text-[10px] font-black tracking-tighter text-slate-300 uppercase">{{ exam.type }}</span>
+                            <span class="text-[9px] md:text-[10px] font-black tracking-tighter text-slate-300 uppercase">{{ exam.type }}</span>
                         </div>
 
-                        <h3 class="mb-2 line-clamp-1 text-xl font-black text-slate-800">{{ exam.title }}</h3>
-                        <div class="mb-6 flex items-center gap-2">
-                            <span class="rounded-xl bg-primary/5 px-2 py-1 text-[10px] font-black text-primary uppercase">
+                        <h3 class="mb-2 line-clamp-1 text-lg md:text-xl font-black text-slate-800">{{ exam.title }}</h3>
+                        <div class="mb-4 md:mb-6 flex flex-wrap items-center gap-2">
+                            <span class="rounded-xl bg-primary/5 px-2 py-0.5 md:py-1 text-[9px] md:text-[10px] font-black text-primary uppercase">
                                 {{ exam.subject?.name || 'Multi-Subject' }}
                             </span>
-                            <div class="rounded-lg-full h-1 w-1 bg-slate-200"></div>
-                            <span class="text-[10px] font-bold tracking-widest text-slate-400 uppercase">
+                            <div class="hidden sm:block rounded-lg-full h-1 w-1 bg-slate-200"></div>
+                            <span class="text-[9px] md:text-[10px] font-bold tracking-widest text-slate-400 uppercase">
                                 {{ exam.type === 'entrance' ? (exam.prospective_class?.name || 'All Candidates') : (exam.school_class?.name || 'General') }}
                             </span>
                         </div>
 
-                        <div class="mb-8 grid grid-cols-2 gap-4">
-                            <div class="rounded-xl bg-slate-50 p-4">
-                                <span class="mb-1 block text-[9px] font-black tracking-widest text-slate-400 uppercase">Time</span>
-                                <span class="text-xs font-bold text-slate-700">{{ exam.duration }} Mins</span>
+                        <div class="mb-6 md:mb-8 grid grid-cols-2 gap-3 md:gap-4">
+                            <div class="rounded-xl bg-slate-50 p-3 md:p-4">
+                                <span class="mb-1 block text-[8px] md:text-[9px] font-black tracking-widest text-slate-400 uppercase">Time</span>
+                                <span class="text-[10px] md:text-xs font-bold text-slate-700">{{ exam.duration }} Mins</span>
                             </div>
-                            <div class="rounded-xl bg-slate-50 p-4">
-                                <span class="mb-1 block text-[9px] font-black tracking-widest text-slate-400 uppercase">Pool</span>
-                                <span class="text-xs font-bold text-slate-700">{{ exam.questions_count }} Questions</span>
+                            <div class="rounded-xl bg-slate-50 p-3 md:p-4">
+                                <span class="mb-1 block text-[8px] md:text-[9px] font-black tracking-widest text-slate-400 uppercase">Pool</span>
+                                <span class="text-[10px] md:text-xs font-bold text-slate-700">{{ exam.questions_count }} Items</span>
                             </div>
                         </div>
 
-                        <div class="flex gap-3">
+                        <div class="flex gap-2 md:gap-3">
                             <Link
                                 :href="editExamAction(exam.id).url"
-                                class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border-2 border-slate-100 text-slate-400 transition-all hover:border-primary hover:text-primary active:scale-90"
+                                class="flex h-12 w-12 md:h-14 md:w-14 shrink-0 items-center justify-center rounded-xl border-2 border-slate-100 text-slate-400 transition-all hover:border-primary hover:text-primary active:scale-90"
                             >
-                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg class="h-4 w-4 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path
                                         stroke-linecap="round"
                                         stroke-linejoin="round"
@@ -123,10 +123,10 @@ const getStatusColor = (status: string) => {
                             </Link>
                             <Link
                                 :href="showExamAction(exam.id).url"
-                                class="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-slate-100 py-4 text-xs font-black tracking-widest text-slate-600 uppercase transition-all hover:border-primary hover:text-primary"
+                                class="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-slate-100 py-3 md:py-4 text-[10px] md:text-xs font-black tracking-widest text-slate-600 uppercase transition-all hover:border-primary hover:text-primary"
                             >
-                                Configure Paper
-                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                Configure
+                                <svg class="h-3 w-3 md:h-4 md:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                                 </svg>
                             </Link>
@@ -135,8 +135,8 @@ const getStatusColor = (status: string) => {
                 </div>
 
                 <!-- Empty State -->
-                <div v-if="exams.data.length === 0" class="col-span-full flex flex-col items-center justify-center py-20 opacity-30">
-                    <svg class="mb-4 h-20 w-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div v-if="exams.data.length === 0" class="col-span-full flex flex-col items-center justify-center py-12 md:py-20 opacity-30">
+                    <svg class="mb-4 h-16 w-16 md:h-20 md:w-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path
                             stroke-linecap="round"
                             stroke-linejoin="round"
@@ -144,7 +144,7 @@ const getStatusColor = (status: string) => {
                             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                         />
                     </svg>
-                    <p class="text-lg font-bold tracking-widest uppercase">No Examinations Drafted</p>
+                    <p class="text-base md:text-lg font-bold tracking-widest uppercase">No Examinations Drafted</p>
                 </div>
             </div>
         </div>

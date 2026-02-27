@@ -14,8 +14,8 @@ import { index as studentIndex } from '@/actions/App/Http/Controllers/Admin/Stud
 import { index as subjectsIndex } from '@/actions/App/Http/Controllers/Admin/SubjectController';
 import { index as teachingLoadsIndex } from '@/actions/App/Http/Controllers/Admin/TeachingLoadController';
 import { index as topicsIndex } from '@/actions/App/Http/Controllers/Admin/TopicController';
-import { index as examsIndex } from '@/actions/App/Http/Controllers/Staff/ExamController';
-import { index as questionsIndex, generate as aiLabGenerate } from '@/actions/App/Http/Controllers/Staff/StaffQuestionController';
+import { index as examsIndex, create as createExam, results as resultsIndex } from '@/actions/App/Http/Controllers/Staff/ExamController';
+import { index as questionsIndex, generate as aiLabGenerate, create as createQuestion, exportMethod as questionsExport } from '@/actions/App/Http/Controllers/Staff/StaffQuestionController';
 import DashboardLayout from '@/layouts/DashboardLayout.vue';
 
 const page = usePage();
@@ -116,6 +116,18 @@ const IconAI = defineComponent({
         ]),
 });
 
+const IconResults = defineComponent({
+    render: () =>
+        h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor' }, [
+            h('path', {
+                'stroke-linecap': 'round',
+                'stroke-linejoin': 'round',
+                'stroke-width': '2',
+                d: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
+            }),
+        ]),
+});
+
 const navigation = [
     {
         section: 'Main',
@@ -126,19 +138,57 @@ const navigation = [
                 active: page.component === 'Admin/Dashboard',
                 icon: IconDashboard,
             },
+        ],
+    },
+    {
+        section: 'Question Management',
+        items: [
             {
                 name: 'Question Bank',
                 href: questionsIndex().url,
-                active: page.component.startsWith('QuestionBank/'),
+                active: page.component === 'QuestionBank/Index',
                 icon: IconBank,
                 permission: 'manage question bank',
             },
             {
-                name: 'Examinations',
+                name: 'Create Question',
+                href: createQuestion().url,
+                active: page.component === 'QuestionBank/Create',
+                icon: IconBank,
+                permission: 'create questions',
+            },
+            {
+                name: 'AI Question Lab',
+                href: aiLabGenerate().url,
+                active: page.component === 'QuestionBank/Generate',
+                icon: IconAI,
+                permission: 'use ai lab',
+            },
+        ],
+    },
+    {
+        section: 'Exam Operations',
+        items: [
+            {
+                name: 'Manage Exams',
                 href: examsIndex().url,
-                active: page.component.startsWith('Staff/Exams/'),
+                active: page.component === 'Staff/Exams/Index',
                 icon: IconExams,
                 permission: 'view exams',
+            },
+            {
+                name: 'New Examination',
+                href: createExam().url,
+                active: page.component === 'Staff/Exams/Create',
+                icon: IconExams,
+                permission: 'create exams',
+            },
+            {
+                name: 'Results & Grading',
+                href: resultsIndex().url,
+                active: page.component === 'Staff/Exams/Results',
+                icon: IconResults,
+                permission: 'view results',
             },
         ],
     },
@@ -172,13 +222,6 @@ const navigation = [
                 active: page.component === 'Admin/Topics/Index',
                 icon: IconTopic,
                 permission: 'manage curriculum',
-            },
-            {
-                name: 'AI Question Lab',
-                href: aiLabGenerate().url,
-                active: page.component === 'QuestionBank/Generate',
-                icon: IconAI,
-                permission: 'use ai lab',
             },
         ],
     },
@@ -243,6 +286,13 @@ const navigation = [
                 name: 'Permissions',
                 href: permissionsIndex().url,
                 active: page.component === 'Admin/RBAC/Permissions',
+                icon: IconDashboard,
+                permission: 'manage settings',
+            },
+            {
+                name: 'System Export',
+                href: questionsExport().url,
+                active: false,
                 icon: IconDashboard,
                 permission: 'manage settings',
             },

@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { usePage } from '@inertiajs/vue3';
 import { h, defineComponent, computed } from 'vue';
-import { index as examIndex } from '@/actions/App/Http/Controllers/Staff/ExamController';
+import { index as examIndex, create as createExam, results as resultsIndex } from '@/actions/App/Http/Controllers/Staff/ExamController';
 import { logout } from '@/actions/App/Http/Controllers/Staff/StaffAuthController';
 import StaffDashboardController from '@/actions/App/Http/Controllers/Staff/StaffDashboardController';
-import { index as questionIndex, generate as aiLabGenerate } from '@/actions/App/Http/Controllers/Staff/StaffQuestionController';
+import { index as questionIndex, generate as aiLabGenerate, create as createQuestion } from '@/actions/App/Http/Controllers/Staff/StaffQuestionController';
 import DashboardLayout from '@/layouts/DashboardLayout.vue';
 
 const page = usePage();
@@ -57,6 +57,18 @@ const IconAI = defineComponent({
         ]),
 });
 
+const IconResults = defineComponent({
+    render: () =>
+        h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor' }, [
+            h('path', {
+                'stroke-linecap': 'round',
+                'stroke-linejoin': 'round',
+                'stroke-width': '2',
+                d: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
+            }),
+        ]),
+});
+
 const navigation = [
     {
         section: 'Main',
@@ -70,8 +82,20 @@ const navigation = [
         ],
     },
     {
-        section: 'Academic Operations',
+        section: 'Question Management',
         items: [
+            {
+                name: 'Question Bank',
+                href: questionIndex().url,
+                active: page.component === 'QuestionBank/Index',
+                icon: IconBank,
+            },
+            {
+                name: 'Create Question',
+                href: createQuestion().url,
+                active: page.component === 'QuestionBank/Create',
+                icon: IconBank,
+            },
             {
                 name: 'AI Question Lab',
                 href: aiLabGenerate().url,
@@ -79,17 +103,28 @@ const navigation = [
                 icon: IconAI,
                 permission: 'use ai lab',
             },
+        ],
+    },
+    {
+        section: 'Exam Operations',
+        items: [
             {
-                name: 'Exam Management',
+                name: 'Manage Exams',
                 href: examIndex().url,
-                active: page.component.startsWith('Staff/Exams/'),
+                active: page.component === 'Staff/Exams/Index',
                 icon: IconExams,
             },
             {
-                name: 'Question Bank',
-                href: questionIndex().url,
-                active: page.component === 'QuestionBank/Index',
-                icon: IconBank,
+                name: 'New Examination',
+                href: createExam().url,
+                active: page.component === 'Staff/Exams/Create',
+                icon: IconExams,
+            },
+            {
+                name: 'Results & Grading',
+                href: resultsIndex().url,
+                active: page.component === 'Staff/Exams/Results',
+                icon: IconResults,
             },
         ],
     },

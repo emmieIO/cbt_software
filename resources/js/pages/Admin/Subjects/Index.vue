@@ -84,14 +84,14 @@ const handleDelete = () => {
         <Head title="Subject Management" />
 
         <div class="space-y-8">
-            <div class="flex items-center justify-between">
+            <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h2 class="text-3xl font-black tracking-tight text-slate-900">Academic Subjects</h2>
-                    <p class="mt-1 text-sm font-bold text-slate-500">Define the global subjects offered across all grade levels.</p>
+                    <h2 class="text-2xl md:text-3xl font-black tracking-tight text-slate-900">Academic Subjects</h2>
+                    <p class="mt-1 text-xs md:text-sm font-bold text-slate-500">Define the global subjects offered across all grade levels.</p>
                 </div>
                 <button
                     @click="openCreateModal"
-                    class="flex h-12 items-center gap-3 rounded-xl bg-primary px-6 text-sm font-black tracking-wider text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
+                    class="flex h-12 items-center justify-center gap-3 rounded-xl bg-primary px-6 text-xs md:text-sm font-black tracking-wider text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 sm:w-auto"
                 >
                     <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -104,13 +104,13 @@ const handleDelete = () => {
                 <div
                     v-for="subject in subjects"
                     :key="subject.id"
-                    class="group relative overflow-hidden rounded-xl border border-slate-100 bg-white p-8 shadow-sm transition-all hover:shadow-xl hover:shadow-primary/5"
+                    class="group relative overflow-hidden rounded-xl border border-slate-100 bg-white p-6 md:p-8 shadow-sm transition-all hover:shadow-xl hover:shadow-primary/5"
                 >
                     <div class="relative z-10 flex h-full flex-col justify-between">
                         <div class="space-y-4">
                             <div class="flex items-center justify-between">
-                                <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/5 text-primary">
-                                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <div class="flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-xl bg-primary/5 text-primary">
+                                    <svg class="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path
                                             stroke-linecap="round"
                                             stroke-linejoin="round"
@@ -122,7 +122,7 @@ const handleDelete = () => {
                                 <div class="flex gap-2">
                                     <button
                                         @click="openEditModal(subject)"
-                                        class="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 text-slate-400 transition-all hover:bg-primary hover:text-white"
+                                        class="flex h-8 w-8 md:h-9 md:w-9 items-center justify-center rounded-xl bg-slate-50 text-slate-400 transition-all hover:bg-primary hover:text-white"
                                     >
                                         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path
@@ -135,7 +135,7 @@ const handleDelete = () => {
                                     </button>
                                     <button
                                         @click="confirmDelete(subject)"
-                                        class="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 text-slate-400 transition-all hover:bg-red-500 hover:text-white"
+                                        class="flex h-8 w-8 md:h-9 md:w-9 items-center justify-center rounded-xl bg-slate-50 text-slate-400 transition-all hover:bg-red-500 hover:text-white"
                                     >
                                         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path
@@ -149,17 +149,17 @@ const handleDelete = () => {
                                 </div>
                             </div>
                             <div>
-                                <h3 class="text-xl font-black text-slate-800">{{ subject.name }}</h3>
-                                <p class="mt-2 line-clamp-2 text-xs leading-relaxed font-medium text-slate-500">
+                                <h3 class="text-lg md:text-xl font-black text-slate-800">{{ subject.name }}</h3>
+                                <p class="mt-1 md:mt-2 line-clamp-2 text-[10px] md:text-xs leading-relaxed font-medium text-slate-500">
                                     {{ subject.description || 'No description provided.' }}
                                 </p>
                             </div>
                         </div>
 
-                        <div class="mt-8 flex items-center gap-4 border-t border-slate-50 pt-6">
+                        <div class="mt-6 md:mt-8 flex items-center gap-4 border-t border-slate-50 pt-4 md:pt-6">
                             <div class="flex items-center gap-2">
                                 <div class="h-1.5 w-1.5 rounded-full bg-primary"></div>
-                                <span class="text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                                <span class="text-[9px] md:text-[10px] font-black tracking-widest text-slate-400 uppercase">
                                     {{ subject.topics_count }} Topics
                                 </span>
                             </div>
@@ -171,10 +171,10 @@ const handleDelete = () => {
             <!-- Modal -->
             <div v-if="isModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
                 <div @click="closeModal" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"></div>
-                <div class="animate-in zoom-in-95 relative w-full max-w-md overflow-hidden rounded-xl bg-white p-10 shadow-2xl">
-                    <h3 class="mb-8 text-2xl font-black text-slate-900">{{ isEditing ? 'Edit Subject' : 'Create New Subject' }}</h3>
+                <div class="animate-in zoom-in-95 relative w-full max-w-md overflow-hidden rounded-xl bg-white p-6 md:p-10 shadow-2xl">
+                    <h3 class="mb-6 md:mb-8 text-xl md:text-2xl font-black text-slate-900">{{ isEditing ? 'Edit Subject' : 'Create New Subject' }}</h3>
 
-                    <form @submit.prevent="submit" class="space-y-6">
+                    <form @submit.prevent="submit" class="space-y-5 md:space-y-6">
                         <div>
                             <label class="mb-2 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Subject Name</label>
                             <input
@@ -182,7 +182,7 @@ const handleDelete = () => {
                                 type="text"
                                 required
                                 placeholder="e.g. Further Mathematics"
-                                class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
+                                class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-3.5 md:py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                             />
                             <div v-if="form.errors.name" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.name }}</div>
                         </div>
@@ -193,23 +193,23 @@ const handleDelete = () => {
                                 v-model="form.description"
                                 rows="4"
                                 placeholder="Provide a brief overview of the subject curriculum..."
-                                class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
+                                class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-3.5 md:py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                             ></textarea>
                             <div v-if="form.errors.description" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.description }}</div>
                         </div>
 
-                        <div class="flex gap-3 pt-4">
+                        <div class="flex gap-3 pt-2 md:pt-4">
                             <button
                                 type="button"
                                 @click="closeModal"
-                                class="flex-1 rounded-xl border border-slate-100 py-4 text-sm font-black tracking-widest text-slate-400 uppercase transition-all hover:bg-slate-50"
+                                class="flex-1 rounded-xl border border-slate-100 py-3.5 md:py-4 text-xs md:text-sm font-black tracking-widest text-slate-400 uppercase transition-all hover:bg-slate-50"
                             >
                                 Cancel
                             </button>
                             <button
                                 type="submit"
                                 :disabled="form.processing"
-                                class="flex-1 rounded-xl bg-primary py-4 text-sm font-black tracking-widest text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+                                class="flex-1 rounded-xl bg-primary py-3.5 md:py-4 text-xs md:text-sm font-black tracking-widest text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
                             >
                                 {{ isEditing ? 'Update' : 'Create' }}
                             </button>

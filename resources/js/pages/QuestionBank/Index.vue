@@ -112,16 +112,16 @@ const clearFilters = () => {
     <component :is="Layout">
         <Head title="Question Repository" />
 
-        <div class="w-full space-y-10">
-            <!-- AI Processing Banner (Keep existing logic but refine style) -->
+        <div class="w-full space-y-8 md:space-y-10">
+            <!-- AI Processing Banner -->
             <div
                 v-if="isSeeding"
-                class="animate-in fade-in slide-in-from-top-4 relative overflow-hidden rounded-xl border border-primary/20 bg-primary px-8 py-6 shadow-xl shadow-primary/10"
+                class="animate-in fade-in slide-in-from-top-4 relative overflow-hidden rounded-xl border border-primary/20 bg-primary px-5 py-4 md:px-8 md:py-6 shadow-xl shadow-primary/10"
             >
-                <div class="relative z-10 flex flex-col items-center justify-between gap-6 sm:flex-row">
-                    <div class="flex items-start gap-5">
-                        <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-white/10 text-lemon-yellow backdrop-blur-xl">
-                            <svg class="h-8 w-8 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div class="relative z-10 flex flex-col items-center justify-between gap-4 sm:flex-row md:gap-6">
+                    <div class="flex items-start gap-4 md:gap-5">
+                        <div class="flex h-10 w-10 md:h-14 md:w-14 shrink-0 items-center justify-center rounded-xl bg-white/10 text-lemon-yellow backdrop-blur-xl">
+                            <svg class="h-6 w-6 md:h-8 md:w-8 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path
                                     stroke-linecap="round"
                                     stroke-linejoin="round"
@@ -131,9 +131,9 @@ const clearFilters = () => {
                             </svg>
                         </div>
                         <div class="space-y-1">
-                            <h4 class="text-lg font-black tracking-tight text-white">AI Seeding in Progress</h4>
-                            <p class="text-sm leading-relaxed font-medium text-white/70">
-                                The agent is currently generating questions for
+                            <h4 class="text-base md:text-lg font-black tracking-tight text-white">AI Seeding in Progress</h4>
+                            <p class="text-xs md:text-sm leading-relaxed font-medium text-white/70">
+                                Generating for
                                 <span class="font-black text-lemon-yellow underline decoration-dotted underline-offset-4">{{ isSeeding.topic }}</span
                                 >.
                             </p>
@@ -141,26 +141,26 @@ const clearFilters = () => {
                     </div>
                     <div class="flex items-center gap-4">
                         <div
-                            class="flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-[10px] font-black tracking-widest text-white uppercase backdrop-blur-md"
+                            class="flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 md:px-4 md:py-2 text-[9px] md:text-[10px] font-black tracking-widest text-white uppercase backdrop-blur-md"
                         >
-                            <div class="h-1.5 w-1.5 animate-ping rounded-full bg-lemon-yellow"></div>
+                            <div class="h-1 w-1 md:h-1.5 md:w-1.5 animate-ping rounded-full bg-lemon-yellow"></div>
                             Processing Batch
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Page Header (From UI Concept) -->
+            <!-- Page Header -->
             <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 class="text-3xl font-black tracking-tight text-slate-900">Question Bank</h1>
-                    <p class="mt-1 text-sm font-bold tracking-widest text-slate-400 uppercase">Repository • {{ questions.total }} Verified Items</p>
+                    <h1 class="text-2xl md:text-3xl font-black tracking-tight text-slate-900">Question Bank</h1>
+                    <p class="mt-1 text-[10px] md:text-sm font-bold tracking-widest text-slate-400 uppercase">Repository • {{ questions.total }} Verified Items</p>
                 </div>
                 <div class="flex flex-wrap items-center gap-3">
                     <a
                         v-if="(page.props.auth.user as any).permissions.includes('export questions')"
                         :href="exportMethod().url"
-                        class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-5 py-3 text-xs font-black text-slate-600 uppercase shadow-sm transition-all hover:bg-slate-50 active:scale-95"
+                        class="flex flex-1 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 md:px-5 md:py-3 text-[10px] md:text-xs font-black text-slate-600 uppercase shadow-sm transition-all hover:bg-slate-50 active:scale-95 sm:flex-none"
                     >
                         <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path
@@ -170,25 +170,25 @@ const clearFilters = () => {
                                 d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
                             />
                         </svg>
-                        Export CSV
+                        CSV
                     </a>
                     <Link
                         v-if="(page.props.auth.user as any).permissions.includes('create questions')"
                         :href="create().url"
-                        class="flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-xs font-black text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
+                        class="flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 md:px-6 md:py-3 text-[10px] md:text-xs font-black text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 sm:flex-none"
                     >
                         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" />
                         </svg>
-                        Add Question
+                        Add New
                     </Link>
                 </div>
             </div>
 
             <!-- Main Table Card -->
             <div class="overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm">
-                <!-- Search & Filters Container (From UI Concept) -->
-                <div class="border-b border-slate-50 bg-white p-6">
+                <!-- Search & Filters Container -->
+                <div class="border-b border-slate-50 bg-white p-4 md:p-6">
                     <div class="flex flex-col gap-4 lg:flex-row lg:items-center">
                         <!-- Left: Search -->
                         <div class="relative flex-1">
@@ -206,13 +206,13 @@ const clearFilters = () => {
                                 v-model="filterForm.search"
                                 type="text"
                                 placeholder="Search repository..."
-                                class="h-12 w-full rounded-xl border-none bg-slate-50 pl-12 text-sm font-bold text-slate-700 transition-all focus:bg-white focus:ring-2 focus:ring-primary/10"
+                                class="h-11 md:h-12 w-full rounded-xl border-none bg-slate-50 pl-11 md:pl-12 text-sm font-bold text-slate-700 transition-all focus:bg-white focus:ring-2 focus:ring-primary/10"
                             />
                         </div>
 
                         <!-- Right: Filters -->
                         <div class="flex flex-wrap items-center gap-3">
-                            <div class="flex h-12 items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 px-4">
+                            <div class="flex h-11 md:h-12 flex-1 items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 px-3 md:px-4 sm:flex-none">
                                 <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path
                                         stroke-linecap="round"
@@ -223,17 +223,17 @@ const clearFilters = () => {
                                 </svg>
                                 <select
                                     v-model="filterForm.subject_id"
-                                    class="cursor-pointer border-none bg-transparent text-xs font-black text-slate-600 uppercase focus:ring-0"
+                                    class="cursor-pointer border-none bg-transparent text-[10px] md:text-xs font-black text-slate-600 uppercase focus:ring-0"
                                 >
-                                    <option value="">All Subjects</option>
+                                    <option value="">Subjects</option>
                                     <option v-for="s in subjects" :key="s.id" :value="s.id">{{ s.name }}</option>
                                 </select>
-                                <div class="mx-2 h-4 w-px bg-slate-200"></div>
+                                <div class="mx-1.5 md:mx-2 h-4 w-px bg-slate-200"></div>
                                 <select
                                     v-model="filterForm.school_class_id"
-                                    class="cursor-pointer border-none bg-transparent text-xs font-black text-slate-600 uppercase focus:ring-0"
+                                    class="cursor-pointer border-none bg-transparent text-[10px] md:text-xs font-black text-slate-600 uppercase focus:ring-0"
                                 >
-                                    <option value="">All Classes</option>
+                                    <option value="">Classes</option>
                                     <option v-for="c in classes" :key="c.id" :value="c.id">{{ c.name }}</option>
                                 </select>
                             </div>
@@ -241,7 +241,7 @@ const clearFilters = () => {
                             <button
                                 v-if="filterForm.search || filterForm.subject_id || filterForm.school_class_id"
                                 @click="clearFilters"
-                                class="flex h-12 items-center gap-2 rounded-xl px-4 text-xs font-black text-slate-400 uppercase transition-all hover:bg-red-50 hover:text-red-500"
+                                class="flex h-11 md:h-12 items-center gap-2 rounded-xl px-3 md:px-4 text-[10px] md:text-xs font-black text-slate-400 uppercase transition-all hover:bg-red-50 hover:text-red-500"
                             >
                                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -257,7 +257,7 @@ const clearFilters = () => {
                     <table class="w-full border-collapse text-left">
                         <thead>
                             <tr class="bg-slate-50/50">
-                                <th class="w-12 px-8 py-5">
+                                <th class="w-10 md:w-12 px-4 md:px-8 py-4 md:py-5">
                                     <input
                                         type="checkbox"
                                         :checked="isAllSelected"
@@ -265,15 +265,15 @@ const clearFilters = () => {
                                         class="rounded border-slate-200 text-primary focus:ring-primary/20"
                                     />
                                 </th>
-                                <th class="px-6 py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase">Question Details</th>
-                                <th class="px-6 py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase">Academic Context</th>
-                                <th class="px-6 py-5 text-center text-[10px] font-black tracking-widest text-slate-400 uppercase">Difficulty</th>
-                                <th class="px-8 py-5 text-right text-[10px] font-black tracking-widest text-slate-400 uppercase">Actions</th>
+                                <th class="px-4 md:px-6 py-4 md:py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase whitespace-nowrap">Question Details</th>
+                                <th class="px-4 md:px-6 py-4 md:py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase whitespace-nowrap">Context</th>
+                                <th class="px-4 md:px-6 py-4 md:py-5 text-center text-[10px] font-black tracking-widest text-slate-400 uppercase whitespace-nowrap">Difficulty</th>
+                                <th class="px-4 md:px-8 py-4 md:py-5 text-right text-[10px] font-black tracking-widest text-slate-400 uppercase">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">
                             <tr v-for="question in questions.data" :key="question.id" class="group transition-all hover:bg-[#F8F9FB]">
-                                <td class="px-8 py-6">
+                                <td class="px-4 md:px-8 py-4 md:py-6">
                                     <input
                                         type="checkbox"
                                         v-model="selectedIds"
@@ -281,39 +281,39 @@ const clearFilters = () => {
                                         class="rounded border-slate-200 text-primary focus:ring-primary/20"
                                     />
                                 </td>
-                                <td class="max-w-xl px-6 py-6">
-                                    <div class="flex items-center gap-4">
+                                <td class="max-w-xs md:max-w-xl px-4 md:px-6 py-4 md:py-6">
+                                    <div class="flex items-center gap-3 md:gap-4">
                                         <div
-                                            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-50 text-xs font-black text-slate-400"
+                                            class="flex h-8 w-8 md:h-10 md:w-10 shrink-0 items-center justify-center rounded-lg bg-slate-50 text-[10px] md:text-xs font-black text-slate-400"
                                         >
                                             {{ question.type.charAt(0).toUpperCase() }}
                                         </div>
                                         <div>
                                             <p
-                                                class="line-clamp-2 text-sm leading-relaxed font-black text-slate-800 transition-all group-hover:line-clamp-none"
+                                                class="line-clamp-2 text-xs md:text-sm leading-relaxed font-black text-slate-800 transition-all group-hover:line-clamp-none"
                                             >
                                                 {{ question.content }}
                                             </p>
-                                            <div class="mt-2 flex items-center gap-2">
-                                                <span class="text-[10px] font-bold tracking-widest text-slate-400 uppercase">{{
+                                            <div class="mt-1 flex items-center gap-2">
+                                                <span class="text-[9px] font-bold tracking-widest text-slate-400 uppercase">{{
                                                     question.type.replace('_', ' ')
                                                 }}</span>
                                             </div>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-6 py-6">
+                                <td class="px-4 md:px-6 py-4 md:py-6">
                                     <div class="space-y-1">
-                                        <p class="text-xs font-black text-slate-700">{{ question.topic.subject.name }}</p>
-                                        <p class="text-[10px] font-bold tracking-tight text-slate-400 uppercase">
+                                        <p class="text-[10px] md:text-xs font-black text-slate-700 whitespace-nowrap">{{ question.topic.subject.name }}</p>
+                                        <p class="text-[8px] md:text-[10px] font-bold tracking-tight text-slate-400 uppercase whitespace-nowrap">
                                             {{ question.school_class.name }} • {{ question.topic.name }}
                                         </p>
                                     </div>
                                 </td>
-                                <td class="px-6 py-6 text-center">
+                                <td class="px-4 md:px-6 py-4 md:py-6 text-center">
                                     <span
                                         :class="[
-                                            'inline-flex items-center rounded-lg px-2.5 py-1 text-[9px] font-black tracking-widest uppercase shadow-sm',
+                                            'inline-flex items-center rounded-lg px-2 py-0.5 md:px-2.5 md:py-1 text-[8px] md:text-[9px] font-black tracking-widest uppercase shadow-sm',
                                             question.difficulty === 'easy'
                                                 ? 'border border-green-100 bg-green-50 text-green-600'
                                                 : question.difficulty === 'medium'
@@ -324,13 +324,13 @@ const clearFilters = () => {
                                         {{ question.difficulty }}
                                     </span>
                                 </td>
-                                <td class="px-8 py-6 text-right">
+                                <td class="px-4 md:px-8 py-4 md:py-6 text-right">
                                     <div class="relative inline-block">
                                         <button
                                             @click.stop="toggleDropdown(question.id)"
-                                            class="flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-600 active:scale-90"
+                                            class="flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-lg text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-600 active:scale-90"
                                         >
-                                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <svg class="h-4 w-4 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path
                                                     stroke-linecap="round"
                                                     stroke-linejoin="round"
@@ -339,19 +339,18 @@ const clearFilters = () => {
                                                 />
                                             </svg>
                                         </button>
-                                        <!-- Action Menu (Simplified for brevity in the replacement, but matches concept) -->
                                         <div
                                             v-if="activeDropdown === question.id"
-                                            class="absolute right-0 z-50 mt-2 w-48 origin-top-right rounded-lg bg-white p-1 shadow-2xl ring-1 ring-black/5"
+                                            class="absolute right-0 z-50 mt-2 w-40 md:w-48 origin-top-right rounded-lg bg-white p-1 shadow-2xl ring-1 ring-black/5"
                                         >
                                             <Link
                                                 :href="edit(question.id).url"
-                                                class="flex items-center gap-2 rounded-md px-3 py-2 text-[10px] font-black text-slate-600 uppercase hover:bg-slate-50"
+                                                class="flex items-center gap-2 rounded-md px-3 py-2 text-[9px] md:text-[10px] font-black text-slate-600 uppercase hover:bg-slate-50"
                                                 >Edit</Link
                                             >
                                             <button
                                                 @click="confirmDelete(question)"
-                                                class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-[10px] font-black text-red-600 uppercase hover:bg-red-50"
+                                                class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-[9px] md:text-[10px] font-black text-red-600 uppercase hover:bg-red-50"
                                             >
                                                 Delete
                                             </button>
@@ -363,17 +362,17 @@ const clearFilters = () => {
                     </table>
                 </div>
 
-                <!-- Pagination (Simplified but refined) -->
-                <div class="flex items-center justify-between border-t border-slate-50 bg-white px-8 py-6">
-                    <p class="text-xs font-bold tracking-widest text-slate-400 uppercase">
+                <!-- Pagination -->
+                <div class="flex flex-col gap-4 items-center justify-between border-t border-slate-50 bg-white px-6 md:px-8 py-4 md:py-6 sm:flex-row">
+                    <p class="text-[10px] font-bold tracking-widest text-slate-400 uppercase">
                         Page <span class="font-black text-slate-900">{{ questions.current_page }}</span> of {{ questions.last_page }}
                     </p>
-                    <div class="flex gap-2">
+                    <div class="flex flex-wrap justify-center gap-1.5 md:gap-2">
                         <Link
                             v-for="link in questions.links"
                             :key="link.label"
                             :href="link.url || '#'"
-                            class="flex h-10 min-w-[2.5rem] items-center justify-center rounded-lg text-xs font-black transition-all"
+                            class="flex h-8 md:h-10 min-w-[2rem] md:min-w-[2.5rem] items-center justify-center rounded-lg text-[10px] md:text-xs font-black transition-all"
                             :class="[
                                 link.active ? 'bg-primary text-white shadow-lg' : 'bg-slate-50 text-slate-600 hover:bg-slate-100',
                                 !link.url && 'cursor-not-allowed opacity-30',
@@ -386,7 +385,6 @@ const clearFilters = () => {
             </div>
         </div>
 
-        <!-- Confirmations remain the same -->
         <ConfirmationModal
             :show="isDeleteModalOpen"
             title="Delete Question?"
