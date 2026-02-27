@@ -19,14 +19,4 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             cd /var/www/cbt_software
-            git pull origin master
-
-            # Simple deploy
-            docker compose up -d --build
-
-            # Allow time for DB to boot
-            echo "Stabilizing..."
-            sleep 15
-
-            docker compose exec -T app php artisan migrate --force
-            docker compose exec -T app php artisan optimize
+            ./deploy.sh
