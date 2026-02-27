@@ -20,12 +20,14 @@ jobs:
           script: |
             cd /var/www/cbt_software
             git pull origin master
-            # Build assets on the host disk so the volumes can see them
+
+            # 1. Physically create the manifest on the VPS disk
             docker run --rm -v $(pwd):/app -w /app node:20-alpine sh -c "npm install && npm run build"
 
-            # Restart containers
+            # 2. Start the project
             docker compose up -d --build
-            echo "Waiting for containers to initialize..."
-            sleep 10
+
+            # 3. Permissions & Laravel Commands
+            sudo chown -R 33:33 storage bootstrap/cache public/build
             docker compose exec -T app php artisan migrate --force
             docker compose exec -T app php artisan optimize
