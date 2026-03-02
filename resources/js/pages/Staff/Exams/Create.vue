@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, usePage, useForm, router } from '@inertiajs/vue3';
+import { Head, usePage, useForm } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import { store as storeExamAction } from '@/actions/App/Http/Controllers/Staff/ExamController';
 import AdminLayout from '@/layouts/AdminLayout.vue';

@@ -29,8 +29,6 @@ const percentage = computed(() => {
     return Math.round((props.attempt.score / props.totalQuestions) * 100);
 });
 
-const isPassed = computed(() => percentage.value >= 50);
-
 const getGrade = computed(() => {
     const p = percentage.value;
     if (p >= 85) return { label: 'Distinction', color: 'text-primary' };
