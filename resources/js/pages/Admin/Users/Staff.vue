@@ -283,10 +283,9 @@ const handleImport = () => {
                                 <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Full Name</label>
                                 <input
                                     v-model="form.name"
-                                    @change="form.validate('name')"
                                     type="text"
                                     required
-                                    :class="{ 'border-red-500': form.invalid('name') }"
+                                    :class="{ 'border-red-500': form.errors.name }"
                                     class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                                 />
                                 <div v-if="form.errors.name" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.name }}</div>
@@ -296,11 +295,10 @@ const handleImport = () => {
                                 <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Email Address</label>
                                 <input
                                     v-model="form.email"
-                                    @change="form.validate('email')"
                                     type="email"
                                     required
                                     placeholder="smith.j@school.com"
-                                    :class="{ 'border-red-500': form.invalid('email') }"
+                                    :class="{ 'border-red-500': form.errors.email }"
                                     class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                                 />
                                 <div v-if="form.errors.email" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.email }}</div>
@@ -310,11 +308,10 @@ const handleImport = () => {
                                 <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Username</label>
                                 <input
                                     v-model="form.username"
-                                    @change="form.validate('username')"
                                     type="text"
                                     required
                                     placeholder="jsmith"
-                                    :class="{ 'border-red-500': form.invalid('username') }"
+                                    :class="{ 'border-red-500': form.errors.username }"
                                     class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                                 />
                                 <div v-if="form.errors.username" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.username }}</div>
@@ -326,10 +323,9 @@ const handleImport = () => {
                                 >
                                 <input
                                     v-model="form.school_id"
-                                    @change="form.validate('school_id')"
                                     type="text"
                                     placeholder="e.g. CHRIS/STF/2024/001"
-                                    :class="{ 'border-red-500': form.invalid('school_id') }"
+                                    :class="{ 'border-red-500': form.errors.school_id }"
                                     class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                                 />
                                 <div v-if="form.errors.school_id" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.school_id }}</div>
@@ -377,7 +373,7 @@ const handleImport = () => {
                     <form @submit.prevent="handleImport" class="space-y-6">
                         <label
                             class="group relative flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-6 py-10 transition-all hover:border-primary hover:bg-white"
-                            :class="{ 'border-red-500': importForm.invalid('file') }"
+                            :class="{ 'border-red-500': importForm.errors.file }"
                         >
                             <svg
                                 class="mb-4 h-10 w-10 text-slate-300 transition-colors group-hover:text-primary"
@@ -399,10 +395,7 @@ const handleImport = () => {
                                 type="file"
                                 class="hidden"
                                 accept=".csv,.xlsx"
-                                @input="
-                                    importForm.file = ($event.target as HTMLInputElement).files?.[0] || null;
-                                    importForm.validate('file');
-                                "
+                                @input="importForm.file = ($event.target as HTMLInputElement).files?.[0] || null"
                             />
                         </label>
                         <div v-if="importForm.errors.file" class="mt-1 text-xs font-bold text-red-500">{{ importForm.errors.file }}</div>
