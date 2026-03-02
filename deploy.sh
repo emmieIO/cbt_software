@@ -7,7 +7,8 @@ echo "Deployment started..."
 (php artisan down) || true
 
 # Update codebase
-git pull origin master
+git fetch origin master
+git reset --hard origin/master
 
 # Install PHP dependencies
 composer install --no-interaction --prefer-dist --optimize-autoloader
