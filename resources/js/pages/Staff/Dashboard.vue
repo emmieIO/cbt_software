@@ -77,8 +77,8 @@ const userName = computed(() => page.props.auth?.user?.name || 'Staff');
             <div class="rounded-xl border border-slate-100 bg-white p-12 shadow-sm">
                 <div class="mb-10 flex items-center justify-between">
                     <div>
-                        <h3 class="text-2xl font-black text-slate-900">Today's Schedule</h3>
-                        <p class="mt-1 text-sm font-bold tracking-widest text-slate-400 uppercase">Upcoming Invitigilations</p>
+                        <h3 class="text-2xl font-black text-slate-900">Upcoming Schedule</h3>
+                        <p class="mt-1 text-sm font-bold tracking-widest text-slate-400 uppercase">Upcoming Exams</p>
                     </div>
                     <button
                         class="rounded-xl bg-slate-50 px-6 py-3 text-[10px] font-black tracking-widest text-slate-500 uppercase transition-all hover:bg-slate-100"
@@ -87,7 +87,7 @@ const userName = computed(() => page.props.auth?.user?.name || 'Staff');
                     </button>
                 </div>
 
-                <div class="space-y-4">
+                <div v-if="schedule.length > 0" class="space-y-4">
                     <div
                         v-for="item in schedule"
                         :key="item.id"
@@ -111,6 +111,23 @@ const userName = computed(() => page.props.auth?.user?.name || 'Staff');
                             item.type
                         }}</span>
                     </div>
+                </div>
+
+                <div v-else class="flex flex-col items-center justify-center py-12 text-center">
+                    <div class="mb-4 rounded-full bg-slate-50 p-6">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="currentColor"
+                            class="h-10 w-10 text-slate-300"
+                        >
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+                        </svg>
+                    </div>
+                    <h4 class="text-lg font-bold text-slate-900">No upcoming exams</h4>
+                    <p class="mt-1 text-sm text-slate-400 font-medium">Your schedule is clear for now.</p>
                 </div>
             </div>
         </div>

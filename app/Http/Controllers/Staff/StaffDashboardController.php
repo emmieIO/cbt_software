@@ -13,8 +13,10 @@ class StaffDashboardController extends Controller
         $user = auth()->user();
         $currentSession = \App\Models\AcademicSession::current()->first();
 
-        $assignments = $user->currentAssignments()->with(['subject', 'schoolClass'])->get();
+        $assignments = $user->currentAssignments()->with(['subject', 'schoolClass', 'prospectiveClass'])->get();
         $assignedSubjectIds = $assignments->pluck('subject_id');
+        $assignedClassIds = $assignments->pluck('school_class_id')->filter()->unique();
+        $assignedProspectiveClassIds = $assignments->pluck('prospective_class_id')->filter()->unique();
 
         return Inertia::render('Staff/Dashboard', [
             'stats' => [
@@ -28,27 +30,27 @@ class StaffDashboardController extends Controller
             'assignments' => $assignments->map(fn ($a) => [
                 'id' => $a->id,
                 'subject' => $a->subject->name,
-                'class' => $a->schoolClass->name,
+                'class' => $a->schoolClass?->name ?? $a->prospectiveClass?->name,
             ]),
-            'schedule' => [
-                // Mock schedule for now as we don't have a dedicated schedule/timetable table
-                [
-                    'id' => 1,
-                    'title' => 'Physics - SS2 Blue',
-                    'time' => 'Today, 2:00 PM',
-                    'location' => 'Examination Hall A',
-                    'type' => 'Invigilation',
+            'schedule' => \App\Models\Exam::whereIn('subject_id', $assignedSubjectIds)
+                ->where(function ($query) use ($assignedClassIds, $assignedProspectiveClassIds) {
+                    $query->whereIn('school_class_id', $assignedClassIds)
+                        ->orWhereIn('prospective_class_id', $assignedProspectiveClassIds);
+                })
+                ->where('academic_session_id', $currentSession?->id)
+                ->where('start_time', '>=', now())
+                ->orderBy('start_time', 'asc')
+                ->take(5)
+                ->with(['subject', 'schoolClass', 'prospectiveClass'])
+                ->get()
+                ->map(fn ($exam) => [
+                    'id' => $exam->id,
+                    'title' => "{$exam->subject->name} - ".($exam->schoolClass?->name ?? $exam->prospectiveClass?->name),
+                    'time' => $exam->start_time->isToday() ? 'Today, '.$exam->start_time->format('g:i A') : $exam->start_time->format('M d, g:i A'),
+                    'location' => 'Main Hall',
+                    'type' => 'Examination',
                     'color' => 'blue',
-                ],
-                [
-                    'id' => 2,
-                    'title' => 'General Math - SS1 Green',
-                    'time' => 'Today, 4:30 PM',
-                    'location' => 'Classroom 4B',
-                    'type' => 'Class Session',
-                    'color' => 'purple',
-                ],
-            ],
+                ]),
         ]);
     }
 }

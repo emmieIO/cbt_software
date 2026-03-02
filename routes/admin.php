@@ -75,10 +75,10 @@ Route::middleware(['auth:admin', 'role_or_permission:admin|manage settings|manag
             Route::delete('/teaching-loads/{assignment}', [\App\Http\Controllers\Admin\TeachingLoadController::class, 'destroy'])->name('teaching-loads.destroy');
         });
 
-        Route::middleware('permission:manage enrollment')->group(function () {
-            Route::get('/promotion', [\App\Http\Controllers\Admin\PromotionController::class, 'index'])->name('promotion.index');
-            Route::get('/promotion/students/{class}', [\App\Http\Controllers\Admin\PromotionController::class, 'students'])->name('promotion.students');
-            Route::post('/promotion/process', [\App\Http\Controllers\Admin\PromotionController::class, 'promote'])->name('promotion.process');
+        Route::name('promotion.')->group(function () {
+            Route::get('/promotion', [\App\Http\Controllers\Admin\PromotionController::class, 'index'])->name('index');
+            Route::get('/promotion/students/{schoolClass}', [\App\Http\Controllers\Admin\PromotionController::class, 'students'])->name('students');
+            Route::post('/promotion/process', [\App\Http\Controllers\Admin\PromotionController::class, 'promote'])->name('process');
         });
 
         Route::middleware('permission:manage admissions')->group(function () {

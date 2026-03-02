@@ -28,10 +28,10 @@ class PromotionController extends Controller
     /**
      * Get students for a specific class.
      */
-    public function students(SchoolClass $class): \Illuminate\Http\JsonResponse
+    public function students(SchoolClass $schoolClass): \Illuminate\Http\JsonResponse
     {
         return response()->json(
-            User::where('school_class_id', $class->id)
+            User::where('school_class_id', $schoolClass->id)
                 ->where('status', 'active')
                 ->select('id', 'name', 'school_id')
                 ->get()

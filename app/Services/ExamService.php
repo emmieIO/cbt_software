@@ -330,9 +330,9 @@ class ExamService
                 \App\Models\ExamAnswer::create([
                     'exam_attempt_id' => $attempt->id,
                     'question_id' => $question->id,
-                    'option_id' => $selectedOptionId,
+                    'selected_options' => $selectedOptionId ? [$selectedOptionId] : [],
                     'is_correct' => $isCorrect,
-                    'marks_earned' => $earned,
+                    'score' => $earned,
                 ]);
             }
 

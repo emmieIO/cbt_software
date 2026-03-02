@@ -186,7 +186,7 @@ const navigation = [
             {
                 name: 'Results & Grading',
                 href: resultsIndex().url,
-                active: page.component === 'Staff/Exams/Results',
+                active: page.component === 'Staff/Results/Index',
                 icon: IconResults,
                 permission: 'view results',
             },

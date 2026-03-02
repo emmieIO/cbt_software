@@ -1,12 +1,69 @@
-name: Chrisland CBT workflow
+name: Chrisland CBT Deployment
 
 on:
   push:
     branches: [master]
 
 jobs:
-  deploy:
+  quality-assurance:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php-version: ['8.4']
+        node-version: ['22']
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: mbstring, xml, bcmath, gd, zip, mysql
+          tools: composer:v2
+          coverage: none
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Get Composer Cache Directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache Composer Dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install Node Dependencies
+        run: npm ci
+
+      - name: Install PHP Dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Check PHP Code Style (Pint)
+        run: composer run lint
+
+      - name: Lint Frontend (ESLint)
+        run: npm run lint
+
+      - name: Build Assets
+        run: npm run build
+
+      - name: Run Tests (Pest)
+        run: php artisan test --compact
+
+  deploy:
+    needs: quality-assurance
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+    
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -15,8 +72,22 @@ jobs:
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.VPS_IP }}
-          username: root
+          username: ${{ secrets.VPS_USERNAME || 'root' }}
           key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
           script: |
             cd /var/www/cbt_software
-            ./deploy.sh
+            if [ -f "deploy.sh" ]; then
+              ./deploy.sh
+            else
+              echo "deploy.sh not found, running manual deployment..."
+              git pull origin master
+              composer install --no-interaction --prefer-dist --optimize-autoloader
+              php artisan migrate --force
+              php artisan config:cache
+              php artisan route:cache
+              php artisan view:cache
+              npm install
+              npm run build
+              php artisan octane:reload || php artisan queue:restart
+            fi
