@@ -370,7 +370,7 @@ const handleImport = () => {
                                 <input
                                     v-model="form.name"
                                     type="text"
-                                    placeholder="e.g. Jane Doe"
+                                    placeholder="Enter Candidate Full Name"
                                     class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                                 />
                                 <div v-if="form.errors.name" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.name }}</div>
@@ -381,7 +381,7 @@ const handleImport = () => {
                                 <input
                                     v-model="form.email"
                                     type="email"
-                                    placeholder="jane@example.com"
+                                    placeholder="Enter Candidate Email Address"
                                     class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                                 />
                                 <div v-if="form.errors.email" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.email }}</div>

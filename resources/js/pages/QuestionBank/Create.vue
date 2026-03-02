@@ -221,7 +221,7 @@ const submit = () => {
                                         rows="10"
                                         required
                                         class="block w-full rounded-xl border-slate-200 bg-slate-50 px-5 py-5 text-sm transition-all focus:border-primary focus:ring-primary"
-                                        placeholder="Enter your question here..."
+                                        placeholder="Enter the full text of your question..."
                                     ></textarea>
                                     <div v-if="form.errors.content" class="mt-2 text-xs font-medium text-red-600">{{ form.errors.content }}</div>
                                 </div>
@@ -232,7 +232,7 @@ const submit = () => {
                                         v-model="form.explanation"
                                         rows="4"
                                         class="block w-full rounded-xl border-slate-200 bg-slate-50 px-5 py-5 text-sm transition-all focus:border-primary focus:ring-primary"
-                                        placeholder="Explain why the correct answer is right..."
+                                        placeholder="Provide a detailed explanation for the correct answer..."
                                     ></textarea>
                                     <div v-if="form.errors.explanation" class="mt-2 text-xs text-red-600">{{ form.errors.explanation }}</div>
                                 </div>

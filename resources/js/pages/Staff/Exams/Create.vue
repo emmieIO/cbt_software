@@ -156,7 +156,7 @@ const submit = () => {
                                 <input
                                     v-model="form.title"
                                     type="text"
-                                    placeholder="e.g. SS 1 Entrance Examination (General)"
+                                    placeholder="Enter Examination Title (e.g. First Term Mathematics Exam)"
                                     class="w-full rounded-xl border-slate-100 bg-slate-50 px-6 py-5 text-lg font-black text-slate-800 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                                 />
                                 <div v-if="form.errors.title" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.title }}</div>

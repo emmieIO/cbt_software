@@ -45,7 +45,7 @@ const submit = () => {
                             required
                             autofocus
                             class="block w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary/10"
-                            placeholder="enter Staff mail or Staff ID"
+                            placeholder="Enter Staff ID or Username"
                         />
                         <div v-if="form.errors.login_id" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.login_id }}</div>
                     </div>

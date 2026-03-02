@@ -104,19 +104,20 @@ const runAiSelection = () => {
         <div class="space-y-8">
             <div class="flex items-center justify-between">
                 <div>
-                    <nav class="mb-4 flex items-center gap-2 text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                        <Link href="/staff/exams" class="hover:text-primary">Exams</Link>
-                        <span>/</span>
-                        <Link :href="`/staff/exams/${exam.id}`" class="hover:text-primary">{{ exam.title }}</Link>
-                        <span>/</span>
-                        <span class="text-slate-600">Allocation</span>
+                    <nav class="mb-4 flex items-center gap-2 text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                        <Link href="/staff/exams" class="hover:text-slate-600 transition-colors">Exams</Link>
+                        <span class="text-slate-300">/</span>
+                        <Link :href="`/staff/exams/${exam.id}`" class="hover:text-slate-600 transition-colors">{{ exam.title }}</Link>
+                        <span class="text-slate-300">/</span>
+                        <span class="text-slate-500">Allocation</span>
                     </nav>
                     <h1 class="text-3xl font-black text-slate-900">Manage Questions</h1>
-                    <p class="mt-1 text-sm font-bold text-slate-500">
-                        Allocating questions for 
-                        <span class="text-primary">{{ exam.subject?.name || 'Multi-Subject Assessment' }}</span> 
-                        ({{ exam.type === 'entrance' ? exam.prospective_class?.name : exam.school_class?.name }})
+                    <p class="mt-1 text-sm font-medium text-slate-500">
+                        Allocating questions for
+                        <span class="font-bold text-slate-700">{{ exam.subject?.name || 'Multi-Subject Assessment' }}</span>
+                        <span class="ml-1 text-slate-400">({{ exam.type === 'entrance' ? exam.prospective_class?.name : exam.school_class?.name }})</span>
                     </p>
+
                 </div>
 
                 <div class="flex items-center gap-3">

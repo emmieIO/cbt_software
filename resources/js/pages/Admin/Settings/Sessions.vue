@@ -223,7 +223,7 @@ const handleDelete = () => {
                                     v-model="form.name"
                                     type="text"
                                     required
-                                    placeholder="e.g. 2026/2027"
+                                    placeholder="Enter Session Name (e.g. 2026/2027)"
                                     class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                                 />
                                 <div v-if="form.errors.name" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.name }}</div>

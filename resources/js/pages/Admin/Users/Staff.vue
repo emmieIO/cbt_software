@@ -297,7 +297,7 @@ const handleImport = () => {
                                     v-model="form.email"
                                     type="email"
                                     required
-                                    placeholder="smith.j@school.com"
+                                    placeholder="Enter Staff Email Address"
                                     :class="{ 'border-red-500': form.errors.email }"
                                     class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                                 />
@@ -310,7 +310,7 @@ const handleImport = () => {
                                     v-model="form.username"
                                     type="text"
                                     required
-                                    placeholder="jsmith"
+                                    placeholder="Enter Staff Username"
                                     :class="{ 'border-red-500': form.errors.username }"
                                     class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                                 />
@@ -324,7 +324,7 @@ const handleImport = () => {
                                 <input
                                     v-model="form.school_id"
                                     type="text"
-                                    placeholder="e.g. CHRIS/STF/2024/001"
+                                    placeholder="Enter Staff ID Number"
                                     :class="{ 'border-red-500': form.errors.school_id }"
                                     class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                                 />

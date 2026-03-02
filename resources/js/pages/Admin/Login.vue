@@ -45,7 +45,7 @@ const submit = () => {
                             required
                             autofocus
                             class="mt-1 block w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 shadow-sm transition-all focus:border-primary focus:ring-primary"
-                            placeholder="admin_root"
+                            placeholder="Enter Admin Username"
                         />
                         <div v-if="form.errors.login_id" class="mt-1 text-xs text-red-600">{{ form.errors.login_id }}</div>
                     </div>

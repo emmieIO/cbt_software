@@ -176,7 +176,7 @@ const getRawLevel = (cls: SchoolClass): string => {
                                 v-model="form.name"
                                 type="text"
                                 required
-                                placeholder="e.g. JSS 1"
+                                placeholder="Enter Class Name (e.g. JSS 1)"
                                 class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-3.5 md:py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                             />
                             <div v-if="form.errors.name" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.name }}</div>
