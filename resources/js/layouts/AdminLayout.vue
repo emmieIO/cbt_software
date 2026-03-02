@@ -15,7 +15,7 @@ import { index as subjectsIndex } from '@/actions/App/Http/Controllers/Admin/Sub
 import { index as teachingLoadsIndex } from '@/actions/App/Http/Controllers/Admin/TeachingLoadController';
 import { index as topicsIndex } from '@/actions/App/Http/Controllers/Admin/TopicController';
 import { index as examsIndex, create as createExam, results as resultsIndex } from '@/actions/App/Http/Controllers/Staff/ExamController';
-import { index as questionsIndex, generate as aiLabGenerate, create as createQuestion, exportMethod as questionsExport } from '@/actions/App/Http/Controllers/Staff/StaffQuestionController';
+import { index as questionsIndex, generate as aiLabGenerate, create as createQuestion } from '@/actions/App/Http/Controllers/Staff/StaffQuestionController';
 import DashboardLayout from '@/layouts/DashboardLayout.vue';
 
 const page = usePage();
@@ -286,13 +286,6 @@ const navigation = [
                 name: 'Permissions',
                 href: permissionsIndex().url,
                 active: page.component === 'Admin/RBAC/Permissions',
-                icon: IconDashboard,
-                permission: 'manage settings',
-            },
-            {
-                name: 'System Export',
-                href: questionsExport().url,
-                active: false,
                 icon: IconDashboard,
                 permission: 'manage settings',
             },

@@ -22,6 +22,7 @@ class PromotionController extends Controller
     {
         return Inertia::render('Admin/Users/Promotion', [
             'classes' => $this->promotionService->getClassStatusSummary(),
+            'current_session' => \App\Models\AcademicSession::current()->first(),
         ]);
     }
 
@@ -50,15 +51,19 @@ class PromotionController extends Controller
             'student_ids.*' => ['exists:users,id'],
         ]);
 
-        $fromClass = SchoolClass::findOrFail($request->from_class_id);
-        $toClass = $request->to_class_id ? SchoolClass::findOrFail($request->to_class_id) : null;
+        try {
+            $fromClass = SchoolClass::findOrFail($request->from_class_id);
+            $toClass = $request->to_class_id ? SchoolClass::findOrFail($request->to_class_id) : null;
 
-        $count = $this->promotionService->promote($fromClass, $toClass, $request->student_ids);
+            $count = $this->promotionService->promote($fromClass, $toClass, $request->student_ids);
 
-        $message = $toClass
-            ? "$count students promoted from {$fromClass->name} to {$toClass->name}."
-            : "$count students from {$fromClass->name} have been graduated.";
+            $message = $toClass
+                ? "$count students promoted from {$fromClass->name} to {$toClass->name}."
+                : "$count students from {$fromClass->name} have been graduated.";
 
-        return back()->with('success', $message);
+            return back()->with('success', $message);
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
     }
 }

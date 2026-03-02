@@ -37,77 +37,72 @@ const userName = computed(() => page.props.auth?.user?.name || 'Staff');
             </div>
 
             <!-- Welcome Hero Section -->
-            <div class="relative overflow-hidden rounded-xl bg-primary px-12 py-16 text-white shadow-2xl shadow-primary/20">
+            <div class="relative overflow-hidden rounded-xl bg-primary px-6 py-10 md:px-12 md:py-16 text-white shadow-2xl shadow-primary/20">
                 <div class="relative z-10 max-w-2xl">
-                    <h1 class="text-5xl font-black tracking-tighter">Welcome, {{ userName }}</h1>
-                    <p class="mt-4 text-xl leading-relaxed font-medium text-white/70">
+                    <h1 class="text-3xl md:text-5xl font-black tracking-tighter">Welcome, {{ userName }}</h1>
+                    <p class="mt-4 text-base md:text-xl leading-relaxed font-medium text-white/70">
                         Your academic command center is ready. Manage your classes, build intelligent questions, and monitor performance.
                     </p>
                 </div>
                 <!-- Abstract Design -->
-                <div class="rounded-lg-full absolute -top-24 -right-24 h-96 w-96 bg-white/10 blur-3xl"></div>
-                <div class="rounded-lg-full absolute right-0 bottom-0 h-64 w-64 bg-lemon-yellow/10 blur-2xl"></div>
+                <div class="rounded-lg-full absolute -top-24 -right-24 h-64 w-64 md:h-96 md:w-96 bg-white/10 blur-3xl"></div>
+                <div class="rounded-lg-full absolute right-0 bottom-0 h-48 w-48 md:h-64 md:w-64 bg-lemon-yellow/10 blur-2xl"></div>
             </div>
 
             <!-- Performance Grid -->
-            <div class="grid grid-cols-1 gap-8 md:grid-cols-3">
-                <div class="group rounded-xl border border-slate-100 bg-white p-10 shadow-sm transition-all hover:-translate-y-1 hover:shadow-2xl">
+            <div class="grid grid-cols-1 gap-6 md:gap-8 md:grid-cols-3">
+                <div class="group rounded-xl border border-slate-100 bg-white p-6 md:p-10 shadow-sm transition-all hover:-translate-y-1 hover:shadow-2xl">
                     <p class="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Assigned Classes</p>
-                    <h3 class="mt-4 text-6xl font-black tracking-tighter text-slate-800">{{ stats.assignedClasses.toString().padStart(2, '0') }}</h3>
+                    <h3 class="mt-4 text-4xl md:text-6xl font-black tracking-tighter text-slate-800">{{ stats.assignedClasses.toString().padStart(2, '0') }}</h3>
                     <div class="mt-6 flex items-center text-xs font-bold text-green-600">
                         <span class="rounded-lg-full mr-2 h-1.5 w-1.5 animate-ping bg-green-500"></span>
                         Active this session
                     </div>
                 </div>
 
-                <div class="group rounded-xl border border-slate-100 bg-white p-10 shadow-sm transition-all hover:-translate-y-1 hover:shadow-2xl">
+                <div class="group rounded-xl border border-slate-100 bg-white p-6 md:p-10 shadow-sm transition-all hover:-translate-y-1 hover:shadow-2xl">
                     <p class="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Pending Results</p>
-                    <h3 class="mt-4 text-6xl font-black tracking-tighter text-orange-600">{{ stats.pendingResults.toString().padStart(2, '0') }}</h3>
+                    <h3 class="mt-4 text-4xl md:text-6xl font-black tracking-tighter text-orange-600">{{ stats.pendingResults.toString().padStart(2, '0') }}</h3>
                     <div class="mt-6 text-xs font-bold text-slate-400">Requires your attention</div>
                 </div>
 
-                <div class="group rounded-xl bg-slate-900 p-10 shadow-2xl transition-all hover:-translate-y-1">
+                <div class="group rounded-xl bg-slate-900 p-6 md:p-10 shadow-2xl transition-all hover:-translate-y-1">
                     <p class="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Question Bank</p>
-                    <h3 class="mt-4 text-6xl font-black tracking-tighter text-primary">{{ stats.questionBankCount }}</h3>
+                    <h3 class="mt-4 text-4xl md:text-6xl font-black tracking-tighter text-primary">{{ stats.questionBankCount }}</h3>
                     <div class="mt-6 text-xs font-black tracking-widest text-primary/60 uppercase">Verified Repository</div>
                 </div>
             </div>
 
             <!-- Schedule -->
-            <div class="rounded-xl border border-slate-100 bg-white p-12 shadow-sm">
-                <div class="mb-10 flex items-center justify-between">
+            <div class="rounded-xl border border-slate-100 bg-white p-6 md:p-12 shadow-sm">
+                <div class="mb-8 md:mb-10 flex items-center justify-between">
                     <div>
-                        <h3 class="text-2xl font-black text-slate-900">Upcoming Schedule</h3>
-                        <p class="mt-1 text-sm font-bold tracking-widest text-slate-400 uppercase">Upcoming Exams</p>
+                        <h3 class="text-xl md:text-2xl font-black text-slate-900">Upcoming Schedule</h3>
+                        <p class="mt-1 text-[10px] md:text-sm font-bold tracking-widest text-slate-400 uppercase">Upcoming Exams</p>
                     </div>
-                    <button
-                        class="rounded-xl bg-slate-50 px-6 py-3 text-[10px] font-black tracking-widest text-slate-500 uppercase transition-all hover:bg-slate-100"
-                    >
-                        Full Calendar
-                    </button>
                 </div>
 
                 <div v-if="schedule.length > 0" class="space-y-4">
                     <div
                         v-for="item in schedule"
                         :key="item.id"
-                        class="group flex cursor-pointer items-center justify-between rounded-xl border border-slate-50 p-6 transition-colors hover:bg-slate-50/50"
+                        class="group flex cursor-pointer flex-col gap-4 sm:flex-row sm:items-center sm:justify-between rounded-xl border border-slate-50 p-5 md:p-6 transition-colors hover:bg-slate-50/50"
                     >
-                        <div class="flex items-center gap-6">
+                        <div class="flex items-center gap-4 md:gap-6">
                             <div
                                 :class="[
-                                    'rounded-lg-full h-3 w-3',
+                                    'rounded-lg-full h-3 w-3 shrink-0',
                                     item.color === 'blue'
                                         ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]'
                                         : 'bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.5)]',
                                 ]"
                             ></div>
-                            <div>
-                                <h4 class="text-lg font-black text-slate-800">{{ item.title }}</h4>
-                                <p class="text-xs font-bold text-slate-400">{{ item.time }} • {{ item.location }}</p>
+                            <div class="min-w-0">
+                                <h4 class="truncate text-base md:text-lg font-black text-slate-800">{{ item.title }}</h4>
+                                <p class="truncate text-[10px] md:text-xs font-bold text-slate-400">{{ item.time }} • {{ item.location }}</p>
                             </div>
                         </div>
-                        <span class="rounded-lg-full bg-slate-100 px-4 py-1.5 text-[9px] font-black tracking-widest text-slate-500 uppercase">{{
+                        <span class="w-fit rounded-lg-full bg-slate-100 px-4 py-1.5 text-[9px] font-black tracking-widest text-slate-500 uppercase">{{
                             item.type
                         }}</span>
                     </div>

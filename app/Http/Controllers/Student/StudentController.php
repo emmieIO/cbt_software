@@ -62,6 +62,9 @@ class StudentController extends Controller
 
         return Inertia::render('Student/Dashboard', [
             'availableExams' => $exams,
+            'completedExamsCount' => \App\Models\ExamAttempt::where('user_id', $user->id)
+                ->where('status', \App\Enums\AttemptStatus::SUBMITTED)
+                ->count(),
         ]);
     }
 

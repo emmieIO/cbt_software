@@ -12,6 +12,7 @@ interface NavItem {
     icon?: any;
     active?: boolean;
     permission?: string;
+    external?: boolean;
 }
 
 interface NavSection {
@@ -28,6 +29,7 @@ defineProps<{
 const page = usePage();
 const user = computed<User>(() => page.props.auth.user);
 const notifications = computed(() => (page.props.auth as any).notifications || []);
+const academicSession = computed(() => (page.props as any).academic_session);
 const userInitials = computed(() => {
     if (!user.value?.name) return '?';
     return user.value.name
@@ -106,7 +108,7 @@ if (typeof window !== 'undefined') {
         <!-- Sidebar -->
         <aside
             :class="[
-                'fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-primary text-white transition-transform duration-300 ease-in-out md:translate-x-0',
+                'fixed inset-y-0 left-0 z-60 flex w-72 flex-col bg-primary text-white transition-transform duration-300 ease-in-out md:translate-x-0',
                 isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full',
             ]"
         >
@@ -127,23 +129,24 @@ if (typeof window !== 'undefined') {
                         {{ section.section }}
                     </h3>
                     <div class="space-y-1">
-                        <Link
-                            v-for="item in section.items"
-                            :key="item.name"
-                            :href="item.href"
-                            :class="[
-                                'group flex items-center rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200',
-                                item.active ? 'bg-white/10 text-white shadow-sm' : 'text-white/60 hover:bg-white/5 hover:text-white',
-                            ]"
-                        >
+                        <template v-for="item in section.items" :key="item.name">
                             <component
-                                v-if="item.icon"
-                                :is="item.icon"
-                                class="mr-3 h-5 w-5 shrink-0 transition-transform duration-300"
-                                :class="item.active ? 'text-white' : 'text-white/40 group-hover:text-white/80'"
-                            />
-                            {{ item.name }}
-                        </Link>
+                                :is="item.external ? 'a' : Link"
+                                :href="item.href"
+                                :class="[
+                                    'group flex items-center rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200',
+                                    item.active ? 'bg-white/10 text-white shadow-sm' : 'text-white/60 hover:bg-white/5 hover:text-white',
+                                ]"
+                            >
+                                <component
+                                    v-if="item.icon"
+                                    :is="item.icon"
+                                    class="mr-3 h-5 w-5 shrink-0 transition-transform duration-300"
+                                    :class="item.active ? 'text-white' : 'text-white/40 group-hover:text-white/80'"
+                                />
+                                {{ item.name }}
+                            </component>
+                        </template>
                     </div>
                 </div>
             </nav>
@@ -177,7 +180,7 @@ if (typeof window !== 'undefined') {
         <!-- Main Content -->
         <main class="relative flex flex-1 flex-col overflow-hidden md:ml-72">
             <!-- Top Navigation Bar -->
-            <header class="sticky top-0 z-40 flex h-20 shrink-0 items-center justify-between border-b border-slate-100 bg-white px-6 md:px-10">
+            <header class="sticky top-0 z-50 flex h-20 shrink-0 items-center justify-between border-b border-slate-100 bg-white px-6 md:px-10">
                 <div class="flex flex-1 items-center gap-8">
                     <!-- Mobile Toggle -->
                     <button
@@ -190,8 +193,8 @@ if (typeof window !== 'undefined') {
                     </button>
 
                     <!-- Breadcrumb/Title Context -->
-                    <div class="hidden items-center gap-3 md:flex">
-                        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-400">
+                    <div class="flex items-center gap-2 md:gap-3">
+                        <div class="hidden h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-400 md:flex">
                             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path
                                     stroke-linecap="round"
@@ -201,38 +204,34 @@ if (typeof window !== 'undefined') {
                                 />
                             </svg>
                         </div>
-                        <h2 class="text-lg font-black text-slate-800">{{ title }}</h2>
+                        <h2 class="truncate text-sm md:text-lg font-black text-slate-800">{{ title }}</h2>
                     </div>
 
-                    <!-- Global Search Bar -->
-                    <div class="hidden max-w-xl flex-1 lg:block">
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
-                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                                    />
-                                </svg>
-                            </span>
-                            <input
-                                type="text"
-                                placeholder="Search here..."
-                                class="h-11 w-full rounded-xl border-none bg-[#F3F4F6] pl-12 text-sm font-bold text-slate-600 transition-all placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-primary/10"
-                            />
+                    <!-- Academic Session Indicator -->
+                    <div class="hidden xl:block">
+                        <div v-if="academicSession" class="flex items-center gap-2 rounded-xl bg-slate-50 px-5 py-2.5 border border-slate-100">
+                            <div class="h-2 w-2 rounded-full bg-primary animate-pulse"></div>
+                            <span class="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase mr-2">Session:</span>
+                            <span class="text-sm font-black text-slate-800">{{ academicSession.name }}</span>
+                            <div class="mx-2 h-4 w-px bg-slate-200"></div>
+                            <span class="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase mr-2">Term:</span>
+                            <span class="text-sm font-black text-slate-800">{{ academicSession.term_label }}</span>
+                        </div>
+                        <div v-else class="flex items-center gap-2 rounded-xl bg-red-50 px-5 py-2.5 border border-red-100">
+                            <div class="h-2 w-2 rounded-full bg-red-500"></div>
+                            <span class="text-[10px] font-black tracking-[0.2em] text-red-500 uppercase mr-2">No Active Session</span>
+                            <Link v-if="(page.props.auth.user as any).roles.includes('admin')" href="/admin/school-setup/sessions" class="text-[10px] font-black text-red-600 underline uppercase hover:text-red-700">Setup Now</Link>
                         </div>
                     </div>
                 </div>
 
                 <!-- Header Actions -->
-                <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2 md:gap-4">
                     <!-- Notifications -->
                     <div class="relative" @click.stop>
                         <button
                             @click="isNotificationsOpen = !isNotificationsOpen"
-                            class="relative flex h-11 w-11 items-center justify-center rounded-xl text-slate-400 transition-all hover:bg-slate-50 active:scale-90"
+                            class="relative flex h-10 w-10 md:h-11 md:w-11 items-center justify-center rounded-xl text-slate-400 transition-all hover:bg-slate-50 active:scale-90"
                         >
                             <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path
@@ -251,7 +250,7 @@ if (typeof window !== 'undefined') {
                         <!-- Dropdown (Minimal) -->
                         <div
                             v-if="isNotificationsOpen"
-                            class="absolute right-0 z-50 mt-4 w-[calc(100vw-2rem)] max-w-xs overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 sm:w-80"
+                            class="fixed inset-x-4 top-20 z-100 mt-2 max-w-[320px] overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 sm:absolute sm:inset-x-auto sm:right-0 sm:mt-4 sm:w-80 sm:max-w-xs"
                         >
                             <div class="flex items-center justify-between bg-slate-50 px-6 py-4">
                                 <h3 class="text-xs font-black tracking-widest text-slate-800 uppercase">Notifications</h3>
@@ -309,7 +308,7 @@ if (typeof window !== 'undefined') {
                         <!-- Profile Dropdown Menu -->
                         <div
                             v-if="isProfileDropdownOpen"
-                            class="absolute right-0 z-50 mt-4 w-56 overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5"
+                            class="absolute right-0 z-100 mt-4 w-56 max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5"
                         >
                             <div class="bg-slate-50/50 p-4">
                                 <p class="text-[10px] font-black tracking-widest text-slate-400 uppercase">Signed in as</p>
@@ -329,21 +328,6 @@ if (typeof window !== 'undefined') {
                                         />
                                     </svg>
                                     My Profile
-                                </Link>
-                                <Link
-                                    href="#"
-                                    class="flex items-center gap-3 rounded-xl px-4 py-2.5 text-xs font-black text-slate-600 uppercase transition-colors hover:bg-slate-50 hover:text-primary"
-                                >
-                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.756 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.756 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.756 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.756 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.756 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.756 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.756 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                                        />
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    </svg>
-                                    Settings
                                 </Link>
                             </div>
                             <div class="border-t border-slate-50 p-2">

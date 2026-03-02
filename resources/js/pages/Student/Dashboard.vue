@@ -17,6 +17,7 @@ defineProps<{
         questions_count: number;
         attempts: Array<{ id: string; status: string }>;
     }>;
+    completedExamsCount: number;
 }>();
 
 const isStartModalOpen = ref(false);
@@ -53,47 +54,43 @@ const handleStartExam = () => {
             </div>
 
             <!-- Welcome Section -->
-            <div class="relative overflow-hidden rounded-xl bg-slate-900 px-12 py-16 text-white shadow-2xl">
+            <div class="relative overflow-hidden rounded-xl bg-slate-900 px-6 py-10 md:px-12 md:py-16 text-white shadow-2xl">
                 <div class="relative z-10 max-w-2xl">
-                    <h1 class="text-5xl font-black tracking-tighter italic">Hello, {{ userName }}!</h1>
-                    <p class="mt-4 text-xl leading-relaxed font-medium text-slate-400">
+                    <h1 class="text-3xl md:text-5xl font-black tracking-tighter italic">Hello, {{ userName }}!</h1>
+                    <p class="mt-4 text-base md:text-xl leading-relaxed font-medium text-slate-400">
                         Ready for your next challenge? Below are the live examinations currently available for your academic level.
                     </p>
                 </div>
                 <!-- Abstract Design -->
-                <div class="rounded-lg-full absolute -top-24 -right-24 h-96 w-96 bg-primary/10 blur-3xl"></div>
-                <div class="rounded-lg-full absolute right-0 bottom-0 h-64 w-64 bg-lemon-yellow/5 blur-2xl"></div>
+                <div class="rounded-lg-full absolute -top-24 -right-24 h-64 w-64 md:h-96 md:w-96 bg-primary/10 blur-3xl"></div>
+                <div class="rounded-lg-full absolute right-0 bottom-0 h-48 w-48 md:h-64 md:w-64 bg-lemon-yellow/5 blur-2xl"></div>
             </div>
 
             <!-- Stats Grid -->
-            <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+            <div class="grid grid-cols-1 gap-4 md:gap-6 md:grid-cols-2">
                 <Link
                     :href="examIndex().url"
-                    class="group rounded-xl border border-slate-100 bg-white p-8 shadow-sm transition-all hover:border-primary/20 hover:shadow-lg"
+                    class="group rounded-xl border border-slate-100 bg-white p-6 md:p-8 shadow-sm transition-all hover:border-primary/20 hover:shadow-lg"
                 >
                     <p class="text-[10px] font-black tracking-widest text-slate-400 uppercase transition-colors group-hover:text-primary">
                         Live Assessments
                     </p>
-                    <p class="mt-4 text-4xl font-black tracking-tighter text-primary">{{ availableExams.length }}</p>
+                    <p class="mt-4 text-3xl md:text-4xl font-black tracking-tighter text-primary">{{ availableExams.length }}</p>
                 </Link>
                 <Link
                     :href="resultsIndex().url"
-                    class="group rounded-xl border border-slate-100 bg-white p-8 shadow-sm transition-all hover:border-primary/20 hover:shadow-lg"
+                    class="group rounded-xl border border-slate-100 bg-white p-6 md:p-8 shadow-sm transition-all hover:border-primary/20 hover:shadow-lg"
                 >
                     <p class="text-[10px] font-black tracking-widest text-slate-400 uppercase transition-colors group-hover:text-primary">
                         Completed Tests
                     </p>
-                    <p class="mt-4 text-4xl font-black tracking-tighter text-slate-800">--</p>
+                    <p class="mt-4 text-3xl md:text-4xl font-black tracking-tighter text-slate-800">{{ completedExamsCount }}</p>
                 </Link>
-                <div class="rounded-xl border border-slate-100 bg-white p-8 opacity-50 shadow-sm grayscale transition-all hover:shadow-lg">
-                    <p class="text-[10px] font-black tracking-widest text-slate-400 uppercase">Global Rank</p>
-                    <p class="mt-4 text-4xl font-black tracking-tighter text-slate-800">#--</p>
-                </div>
             </div>
 
             <!-- Exam List -->
             <div class="space-y-6">
-                <div class="ml-2 flex items-center justify-between">
+                <div class="ml-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <h3 class="flex items-center gap-3 text-sm font-black tracking-[0.2em] text-slate-400 uppercase">
                         <div class="h-2 w-2 animate-ping rounded-full bg-primary"></div>
                         Ongoing Examinations
@@ -105,28 +102,28 @@ const handleStartExam = () => {
 
                 <div
                     v-if="availableExams.length === 0"
-                    class="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 bg-white py-20 text-center"
+                    class="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 bg-white py-12 md:py-20 text-center"
                 >
                     <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-50 text-slate-300">
                         <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </div>
-                    <p class="text-sm font-bold tracking-widest text-slate-400 uppercase italic">No active examinations at this hour.</p>
+                    <p class="px-6 text-sm font-bold tracking-widest text-slate-400 uppercase italic">No active examinations at this hour.</p>
                 </div>
 
                 <div v-else class="grid grid-cols-1 gap-6 lg:grid-cols-2">
                     <div
                         v-for="exam in availableExams"
                         :key="exam.id"
-                        class="group relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-8 shadow-sm transition-all hover:-translate-y-1 hover:border-primary/20 hover:shadow-2xl"
+                        class="group relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-6 md:p-8 shadow-sm transition-all hover:-translate-y-1 hover:border-primary/20 hover:shadow-2xl"
                     >
-                        <div class="relative z-10 flex items-center justify-between">
-                            <div class="flex items-center gap-6">
+                        <div class="relative z-10 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+                            <div class="flex items-start gap-4 md:gap-6">
                                 <div
-                                    class="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/5 text-primary transition-transform group-hover:scale-110 group-hover:rotate-3"
+                                    class="flex h-12 w-12 md:h-16 md:w-16 shrink-0 items-center justify-center rounded-2xl bg-primary/5 text-primary transition-transform group-hover:scale-110 group-hover:rotate-3"
                                 >
-                                    <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg class="h-6 w-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path
                                             stroke-linecap="round"
                                             stroke-linejoin="round"
@@ -135,16 +132,16 @@ const handleStartExam = () => {
                                         />
                                     </svg>
                                 </div>
-                                <div>
-                                    <h4 class="text-xl leading-tight font-black text-slate-800 transition-colors group-hover:text-primary">
+                                <div class="min-w-0">
+                                    <h4 class="truncate text-lg md:text-xl leading-tight font-black text-slate-800 transition-colors group-hover:text-primary">
                                         {{ exam.title }}
                                     </h4>
-                                    <div class="mt-2 flex items-center gap-3">
-                                        <span class="text-[10px] font-black tracking-widest text-slate-400 uppercase">{{ exam.subject.name }}</span>
+                                    <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                                        <span class="text-[9px] md:text-[10px] font-black tracking-widest text-slate-400 uppercase">{{ exam.subject.name }}</span>
                                         <span class="h-1 w-1 rounded-full bg-slate-200"></span>
-                                        <span class="text-[10px] font-black tracking-widest text-primary uppercase">{{ exam.duration }} MINS</span>
+                                        <span class="text-[9px] md:text-[10px] font-black tracking-widest text-primary uppercase">{{ exam.duration }} MINS</span>
                                         <span class="h-1 w-1 rounded-full bg-slate-200"></span>
-                                        <span class="text-[10px] font-black tracking-widest text-slate-400 uppercase"
+                                        <span class="text-[9px] md:text-[10px] font-black tracking-widest text-slate-400 uppercase whitespace-nowrap"
                                             >{{ exam.questions_count }} QUESTIONS</span
                                         >
                                     </div>
@@ -153,7 +150,7 @@ const handleStartExam = () => {
 
                             <div
                                 v-if="exam.attempts.some((a) => a.status === 'submitted')"
-                                class="flex items-center gap-2 rounded-xl border border-green-100 bg-green-50 px-6 py-3 text-[10px] font-black tracking-widest text-green-600 uppercase"
+                                class="flex items-center justify-center gap-2 rounded-xl border border-green-100 bg-green-50 px-6 py-3 text-[10px] font-black tracking-widest text-green-600 uppercase sm:w-auto"
                             >
                                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
@@ -163,7 +160,7 @@ const handleStartExam = () => {
                             <button
                                 v-else
                                 @click="confirmStartExam(exam.id)"
-                                class="rounded-xl bg-slate-900 px-6 py-3 text-[10px] font-black tracking-widest text-white uppercase shadow-lg transition-all hover:bg-black active:scale-95"
+                                class="w-full sm:w-auto rounded-xl bg-slate-900 px-6 py-3.5 text-[10px] font-black tracking-widest text-white uppercase shadow-lg transition-all hover:bg-black active:scale-95"
                             >
                                 {{ exam.attempts.some((a) => a.status === 'ongoing') ? 'Continue Exam' : 'Start Assessment' }}
                             </button>

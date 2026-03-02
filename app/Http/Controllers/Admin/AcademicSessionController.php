@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\Term;
 use App\Http\Controllers\Controller;
 use App\Models\AcademicSession;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -18,6 +20,10 @@ class AcademicSessionController extends Controller
     {
         return Inertia::render('Admin/Settings/Sessions', [
             'sessions' => AcademicSession::latest()->get(),
+            'terms' => collect(Term::cases())->map(fn ($t) => [
+                'value' => $t->value,
+                'label' => $t->label(),
+            ]),
         ]);
     }
 
@@ -27,7 +33,12 @@ class AcademicSessionController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'name' => ['required', 'string', 'unique:academic_sessions,name'],
+            'name' => [
+                'required',
+                'string',
+                Rule::unique('academic_sessions')->where('term', $request->term),
+            ],
+            'term' => ['required', Rule::enum(Term::class)],
             'start_date' => ['required', 'date'],
             'end_date' => ['required', 'date', 'after:start_date'],
             'is_current' => ['boolean'],
@@ -48,7 +59,14 @@ class AcademicSessionController extends Controller
     public function update(Request $request, AcademicSession $session): RedirectResponse
     {
         $request->validate([
-            'name' => ['required', 'string', 'unique:academic_sessions,name,'.$session->id.',id'],
+            'name' => [
+                'required',
+                'string',
+                Rule::unique('academic_sessions')
+                    ->where('term', $request->term)
+                    ->ignore($session->id),
+            ],
+            'term' => ['required', Rule::enum(Term::class)],
             'start_date' => ['required', 'date'],
             'end_date' => ['required', 'date', 'after:start_date'],
             'is_current' => ['boolean'],

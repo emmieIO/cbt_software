@@ -16,8 +16,14 @@ class AcademicSessionFactory extends Factory
      */
     public function definition(): array
     {
+        $year = fake()->unique()->year();
+
         return [
-            //
+            'name' => "{$year}/".($year + 1),
+            'term' => \App\Enums\Term::FIRST,
+            'is_current' => false,
+            'start_date' => now(),
+            'end_date' => now()->addMonths(4),
         ];
     }
 }

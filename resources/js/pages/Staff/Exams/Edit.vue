@@ -49,6 +49,7 @@ const props = defineProps<{
     batches: Batch[];
     subjects: { id: string; name: string }[];
     classes: { id: string; name: string }[];
+    academic_session: any | null;
 }>();
 
 const page = usePage();
@@ -173,6 +174,21 @@ const handleDelete = () => {
         <Head :title="`Edit ${exam.title}`" />
 
         <div class="mx-auto max-w-4xl space-y-10">
+            <div v-if="!academic_session" class="rounded-xl border border-red-200 bg-red-50 p-6 shadow-sm">
+                <div class="flex items-center gap-4 text-red-600">
+                    <svg class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <div>
+                        <h4 class="text-sm font-black uppercase tracking-widest">Warning: No Active Session</h4>
+                        <p class="mt-1 text-xs font-bold leading-relaxed opacity-80">
+                            The system is currently running without an active academic session. 
+                            While you can edit existing exams, new operations may be restricted.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
             <div class="flex items-center justify-between">
                 <div>
                     <h2 class="text-4xl font-black tracking-tight text-slate-900 italic">Edit Examination</h2>

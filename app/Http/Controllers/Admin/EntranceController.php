@@ -121,6 +121,8 @@ class EntranceController extends Controller
                 ['user_id' => $candidate->id, 'academic_session_id' => $currentSession->id],
                 ['school_class_id' => $request->school_class_id]
             );
+        } else {
+            return back()->with('error', 'Student admitted, but enrollment history could not be recorded because no current academic session is active. Please set a session as current.');
         }
 
         return back()->with('success', "{$candidate->name} has been officially admitted.");

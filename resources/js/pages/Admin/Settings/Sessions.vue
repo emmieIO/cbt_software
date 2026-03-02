@@ -13,14 +13,20 @@ import AdminLayout from '@/layouts/AdminLayout.vue';
 interface AcademicSession {
     id: string;
     name: string;
+    term: string;
     is_current: boolean;
     start_date: string;
     end_date: string;
 }
 
-defineProps<{
+const props = defineProps<{
     sessions: AcademicSession[];
+    terms: Array<{ value: string; label: string }>;
 }>();
+
+const getTermLabel = (value: string) => {
+    return props.terms.find((t) => t.value === value)?.label || value;
+};
 
 const formatDate = (dateString: string) => {
     return new Intl.DateTimeFormat('en-US', {
@@ -36,6 +42,7 @@ const editingId = ref<string | null>(null);
 
 const form = useForm({
     name: '',
+    term: 'first',
     start_date: '',
     end_date: '',
     is_current: false,
@@ -53,6 +60,7 @@ const openEditModal = (session: AcademicSession) => {
     editingId.value = session.id;
 
     form.name = session.name;
+    form.term = session.term;
     form.start_date = session.start_date;
     form.end_date = session.end_date;
     form.is_current = session.is_current;
@@ -135,6 +143,9 @@ const handleDelete = () => {
                             <div>
                                 <div class="flex items-center gap-3">
                                     <h3 class="text-2xl font-black tracking-tight text-slate-800">{{ session.name }}</h3>
+                                    <span class="rounded-lg bg-slate-100 px-3 py-1 text-[10px] font-black tracking-widest text-slate-500 uppercase">
+                                        {{ getTermLabel(session.term) }}
+                                    </span>
                                     <span
                                         v-if="session.is_current"
                                         class="animate-pulse rounded-full bg-primary px-3 py-1 text-[9px] font-black tracking-widest text-white uppercase"
@@ -205,16 +216,29 @@ const handleDelete = () => {
                     <h3 class="mb-8 text-2xl font-black text-slate-900">{{ isEditing ? 'Edit Session' : 'Define New Session' }}</h3>
 
                     <form @submit.prevent="submit" class="space-y-6">
-                        <div>
-                            <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Session Name</label>
-                            <input
-                                v-model="form.name"
-                                type="text"
-                                required
-                                placeholder="e.g. 2026/2027"
-                                class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
-                            />
-                            <div v-if="form.errors.name" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.name }}</div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Session Name</label>
+                                <input
+                                    v-model="form.name"
+                                    type="text"
+                                    required
+                                    placeholder="e.g. 2026/2027"
+                                    class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
+                                />
+                                <div v-if="form.errors.name" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.name }}</div>
+                            </div>
+                            <div>
+                                <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Academic Term</label>
+                                <select
+                                    v-model="form.term"
+                                    required
+                                    class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
+                                >
+                                    <option v-for="term in terms" :key="term.value" :value="term.value">{{ term.label }}</option>
+                                </select>
+                                <div v-if="form.errors.term" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.term }}</div>
+                            </div>
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">

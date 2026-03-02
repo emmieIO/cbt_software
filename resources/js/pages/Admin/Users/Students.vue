@@ -127,13 +127,13 @@ const handleImport = () => {
             <!-- Page Header -->
             <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 class="text-3xl font-black tracking-tight text-slate-900">Student Body</h1>
-                    <p class="mt-1 text-sm font-bold tracking-widest text-slate-400 uppercase">Enrolled Students • {{ students.total }} Records</p>
+                    <h1 class="text-2xl md:text-3xl font-black tracking-tight text-slate-900">Student Body</h1>
+                    <p class="mt-1 text-[10px] md:text-sm font-bold tracking-widest text-slate-400 uppercase">Enrolled Students • {{ students.total }} Records</p>
                 </div>
-                <div class="flex flex-wrap items-center gap-3">
+                <div class="flex items-center gap-3">
                     <button
                         @click="isImportModalOpen = true"
-                        class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-5 py-3 text-xs font-black text-slate-600 uppercase shadow-sm transition-all hover:bg-slate-50 active:scale-95"
+                        class="flex flex-1 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 md:px-5 md:py-3 text-[10px] md:text-xs font-black text-slate-600 uppercase shadow-sm transition-all hover:bg-slate-50 active:scale-95 sm:flex-none"
                     >
                         <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path
@@ -143,11 +143,11 @@ const handleImport = () => {
                                 d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
                             />
                         </svg>
-                        Import Batch
+                        Import
                     </button>
                     <button
                         @click="openCreateModal"
-                        class="flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-xs font-black text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
+                        class="flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 md:px-6 md:py-3 text-[10px] md:text-xs font-black text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 sm:flex-none"
                     >
                         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" />
@@ -160,7 +160,7 @@ const handleImport = () => {
             <!-- Main Table Card -->
             <div class="overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm">
                 <!-- Search & Filters Container -->
-                <div class="border-b border-slate-50 bg-white p-6">
+                <div class="border-b border-slate-50 bg-white p-4 md:p-6">
                     <div class="flex flex-col gap-4 lg:flex-row lg:items-center">
                         <div class="relative flex-1">
                             <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
@@ -177,13 +177,13 @@ const handleImport = () => {
                                 v-model="filterForm.search"
                                 @keyup.enter="applyFilters"
                                 type="text"
-                                placeholder="Search by name, email, or Student ID..."
-                                class="h-12 w-full rounded-xl border-none bg-slate-50 pl-12 text-sm font-bold text-slate-700 transition-all focus:bg-white focus:ring-2 focus:ring-primary/10"
+                                placeholder="Search repository..."
+                                class="h-11 md:h-12 w-full rounded-xl border-none bg-slate-50 pl-11 md:pl-12 text-sm font-bold text-slate-700 transition-all focus:bg-white focus:ring-2 focus:ring-primary/10"
                             />
                         </div>
 
                         <div class="flex flex-wrap items-center gap-3">
-                            <div class="flex h-12 items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 px-4">
+                            <div class="flex h-11 md:h-12 flex-1 items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 px-3 md:px-4 sm:flex-none">
                                 <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path
                                         stroke-linecap="round"
@@ -195,7 +195,7 @@ const handleImport = () => {
                                 <select
                                     v-model="filterForm.school_class_id"
                                     @change="applyFilters"
-                                    class="cursor-pointer border-none bg-transparent text-xs font-black text-slate-600 uppercase focus:ring-0"
+                                    class="cursor-pointer border-none bg-transparent text-[10px] md:text-xs font-black text-slate-600 uppercase focus:ring-0"
                                 >
                                     <option value="">All Classes</option>
                                     <option v-for="c in classes" :key="c.id" :value="c.id">{{ c.name }}</option>
@@ -204,7 +204,7 @@ const handleImport = () => {
 
                             <button
                                 @click="applyFilters"
-                                class="h-12 rounded-xl bg-slate-900 px-8 text-xs font-black tracking-widest text-white uppercase transition-all hover:bg-black active:scale-95"
+                                class="h-11 md:h-12 rounded-xl bg-slate-900 px-6 md:px-8 text-[10px] md:text-xs font-black tracking-widest text-white uppercase transition-all hover:bg-black active:scale-95"
                             >
                                 Apply
                             </button>
@@ -212,16 +212,16 @@ const handleImport = () => {
                     </div>
                 </div>
 
-                <div class="overflow-x-auto">
+                <div class="overflow-x-auto scrollbar-thin">
                     <table class="w-full border-collapse text-left">
                         <thead>
                             <tr class="bg-slate-50/50">
-                                <th class="px-8 py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase">Student Profile</th>
-                                <th class="px-6 py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase">Class Level</th>
-                                <th class="px-6 py-5 text-[10px] font-black tracking-widest whitespace-nowrap text-slate-400 uppercase">
+                                <th class="px-4 md:px-8 py-4 md:py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase whitespace-nowrap">Student Profile</th>
+                                <th class="px-4 md:px-6 py-4 md:py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase whitespace-nowrap">Class Level</th>
+                                <th class="px-4 md:px-6 py-4 md:py-5 text-[10px] font-black tracking-widest whitespace-nowrap text-slate-400 uppercase whitespace-nowrap">
                                     Admission ID
                                 </th>
-                                <th class="px-8 py-5 text-right text-[10px] font-black tracking-widest text-slate-400 uppercase">Actions</th>
+                                <th class="px-4 md:px-8 py-4 md:py-5 text-right text-[10px] font-black tracking-widest text-slate-400 uppercase whitespace-nowrap">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">

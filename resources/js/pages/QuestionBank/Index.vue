@@ -167,47 +167,49 @@ const clearFilters = () => {
                     <h1 class="text-2xl md:text-3xl font-black tracking-tight text-slate-900">Question Bank</h1>
                     <p class="mt-1 text-[10px] md:text-sm font-bold tracking-widest text-slate-400 uppercase">Repository • {{ questions.total }} Verified Items</p>
                 </div>
-                <div class="flex flex-wrap items-center gap-3">
-                    <button
-                        @click="refresh"
-                        :disabled="isRefreshing"
-                        class="flex flex-1 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 md:px-5 md:py-3 text-[10px] md:text-xs font-black text-slate-600 uppercase shadow-sm transition-all hover:bg-slate-50 active:scale-95 disabled:opacity-50 sm:flex-none"
-                    >
-                        <svg
-                            class="h-4 w-4 text-slate-400"
-                            :class="{ 'animate-spin': isRefreshing }"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <div class="flex items-center gap-3">
+                        <button
+                            @click="refresh"
+                            :disabled="isRefreshing"
+                            class="flex flex-1 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 md:px-5 md:py-3 text-[10px] md:text-xs font-black text-slate-600 uppercase shadow-sm transition-all hover:bg-slate-50 active:scale-95 disabled:opacity-50 sm:flex-none"
                         >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                            />
-                        </svg>
-                        {{ isRefreshing ? 'Refreshing...' : 'Refresh' }}
-                    </button>
-                    <a
-                        v-if="(page.props.auth.user as any).permissions.includes('export questions')"
-                        :href="exportMethod().url"
-                        class="flex flex-1 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 md:px-5 md:py-3 text-[10px] md:text-xs font-black text-slate-600 uppercase shadow-sm transition-all hover:bg-slate-50 active:scale-95 sm:flex-none"
-                    >
-                        <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                            />
-                        </svg>
-                        CSV
-                    </a>
+                            <svg
+                                class="h-4 w-4 text-slate-400"
+                                :class="{ 'animate-spin': isRefreshing }"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                />
+                            </svg>
+                            {{ isRefreshing ? 'Refreshing...' : 'Refresh' }}
+                        </button>
+                        <a
+                            v-if="(page.props.auth.user as any).permissions.includes('export questions')"
+                            :href="exportMethod().url"
+                            class="flex flex-1 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 md:px-5 md:py-3 text-[10px] md:text-xs font-black text-slate-600 uppercase shadow-sm transition-all hover:bg-slate-50 active:scale-95 sm:flex-none"
+                        >
+                            <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                                />
+                            </svg>
+                            Export
+                        </a>
+                    </div>
                     <Link
                         v-if="(page.props.auth.user as any).permissions.includes('create questions')"
                         :href="create().url"
-                        class="flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 md:px-6 md:py-3 text-[10px] md:text-xs font-black text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 sm:flex-none"
+                        class="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 md:px-6 md:py-3 text-[10px] md:text-xs font-black text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 sm:w-auto"
                     >
                         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" />
@@ -244,7 +246,7 @@ const clearFilters = () => {
 
                         <!-- Right: Filters -->
                         <div class="flex flex-wrap items-center gap-3">
-                            <div class="flex h-11 md:h-12 flex-1 items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 px-3 md:px-4 sm:flex-none">
+                            <div class="flex h-11 md:h-12 w-full sm:w-auto flex-1 items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 px-3 md:px-4">
                                 <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path
                                         stroke-linecap="round"
@@ -255,7 +257,7 @@ const clearFilters = () => {
                                 </svg>
                                 <select
                                     v-model="filterForm.subject_id"
-                                    class="cursor-pointer border-none bg-transparent text-[10px] md:text-xs font-black text-slate-600 uppercase focus:ring-0"
+                                    class="flex-1 cursor-pointer border-none bg-transparent text-[10px] md:text-xs font-black text-slate-600 uppercase focus:ring-0"
                                 >
                                     <option value="">Subjects</option>
                                     <option v-for="s in subjects" :key="s.id" :value="s.id">{{ s.name }}</option>
@@ -263,7 +265,7 @@ const clearFilters = () => {
                                 <div class="mx-1.5 md:mx-2 h-4 w-px bg-slate-200"></div>
                                 <select
                                     v-model="filterForm.school_class_id"
-                                    class="cursor-pointer border-none bg-transparent text-[10px] md:text-xs font-black text-slate-600 uppercase focus:ring-0"
+                                    class="flex-1 cursor-pointer border-none bg-transparent text-[10px] md:text-xs font-black text-slate-600 uppercase focus:ring-0"
                                 >
                                     <option value="">Classes</option>
                                     <option v-for="c in classes" :key="c.id" :value="c.id">{{ c.name }}</option>
@@ -285,7 +287,7 @@ const clearFilters = () => {
                 </div>
 
                 <!-- Table -->
-                <div class="overflow-x-auto">
+                <div class="overflow-x-auto scrollbar-thin">
                     <table class="w-full border-collapse text-left">
                         <thead>
                             <tr class="bg-slate-50/50">
@@ -300,7 +302,7 @@ const clearFilters = () => {
                                 <th class="px-4 md:px-6 py-4 md:py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase whitespace-nowrap">Question Details</th>
                                 <th class="px-4 md:px-6 py-4 md:py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase whitespace-nowrap">Context</th>
                                 <th class="px-4 md:px-6 py-4 md:py-5 text-center text-[10px] font-black tracking-widest text-slate-400 uppercase whitespace-nowrap">Difficulty</th>
-                                <th class="px-4 md:px-8 py-4 md:py-5 text-right text-[10px] font-black tracking-widest text-slate-400 uppercase">Actions</th>
+                                <th class="px-4 md:px-8 py-4 md:py-5 text-right text-[10px] font-black tracking-widest text-slate-400 uppercase whitespace-nowrap">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">

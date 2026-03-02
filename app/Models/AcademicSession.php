@@ -13,6 +13,7 @@ class AcademicSession extends Model
 
     protected $fillable = [
         'name',
+        'term',
         'is_current',
         'start_date',
         'end_date',
@@ -21,10 +22,18 @@ class AcademicSession extends Model
     protected function casts(): array
     {
         return [
+            'term' => \App\Enums\Term::class,
             'is_current' => 'boolean',
             'start_date' => 'date',
             'end_date' => 'date',
         ];
+    }
+
+    protected $appends = ['term_label'];
+
+    public function getTermLabelAttribute(): string
+    {
+        return $this->term->label();
     }
 
     /**

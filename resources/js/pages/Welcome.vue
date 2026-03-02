@@ -10,26 +10,26 @@ const page = usePage();
 <template>
     <Head title="Welcome to Chrisland CBT Portal" />
 
-    <div class="flex min-h-screen flex-col items-center justify-center bg-primary p-6 font-sans text-white">
+    <div class="flex min-h-screen flex-col items-center justify-center bg-primary p-4 sm:p-6 font-sans text-white">
         <div class="w-full max-w-4xl space-y-8 text-center">
             <!-- Header Section -->
             <div class="flex flex-col items-center space-y-4">
-                <img src="/assets/img/chrisland-school-logo.png" alt="Chrisland School Logo" class="h-24 sm:h-32 w-auto object-contain drop-shadow-2xl" />
-                <h1 class="text-4xl font-black tracking-tighter sm:text-6xl">Chrisland Schools</h1>
-                <p class="text-sm sm:text-xl font-bold tracking-[0.2em] text-lemon-yellow uppercase">CBT INFRASTRUCTURE</p>
+                <img src="/assets/img/chrisland-school-logo.png" alt="Chrisland School Logo" class="h-20 sm:h-32 w-auto object-contain drop-shadow-2xl" />
+                <h1 class="text-3xl font-black tracking-tighter sm:text-6xl">Chrisland Schools</h1>
+                <p class="text-xs sm:text-xl font-bold tracking-[0.2em] text-lemon-yellow uppercase">CBT INFRASTRUCTURE</p>
             </div>
 
             <!-- Authenticated View -->
             <div v-if="page.props.auth.user" class="mt-8 sm:mt-12 flex flex-col items-center space-y-6">
-                <div class="rounded-xl bg-white/10 p-6 sm:p-8 shadow-2xl backdrop-blur-md">
-                    <h2 class="text-xl sm:text-2xl font-bold">Welcome back, {{ page.props.auth.user.name }}!</h2>
-                    <p class="mt-2 text-sm sm:text-base text-white/80">
+                <div class="rounded-xl bg-white/10 p-6 sm:p-10 shadow-2xl backdrop-blur-md">
+                    <h2 class="text-xl sm:text-3xl font-bold">Welcome back, {{ page.props.auth.user.name }}!</h2>
+                    <p class="mt-2 text-sm sm:text-lg text-white/80">
                         You are currently signed in as a <span class="capitalize">{{ page.props.auth.user.roles[0] || 'user' }}</span
                         >.
                     </p>
                     <Link
                         :href="page.props.auth.dashboard_url || '#'"
-                        class="mt-6 sm:mt-8 flex items-center justify-center rounded-xl bg-lemon-yellow px-8 sm:px-12 py-4 sm:py-5 text-lg sm:text-xl font-bold text-primary shadow-xl transition-all hover:scale-105 hover:bg-lemon-yellow/90 active:scale-95"
+                        class="mt-6 sm:mt-10 flex items-center justify-center rounded-xl bg-lemon-yellow px-8 sm:px-12 py-4 sm:py-5 text-lg sm:text-xl font-bold text-primary shadow-xl transition-all hover:scale-105 hover:bg-lemon-yellow/90 active:scale-95"
                     >
                         Go to your Dashboard &rarr;
                     </Link>
@@ -37,13 +37,13 @@ const page = usePage();
             </div>
 
             <!-- Portal Entry Options (Guest View) -->
-            <div v-else class="mt-8 sm:mt-12 grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-2">
+            <div v-else class="mt-8 sm:mt-12 grid grid-cols-1 gap-4 sm:gap-8 md:grid-cols-2">
                 <!-- Student Portal Card -->
                 <div
-                    class="group relative overflow-hidden rounded-xl bg-white p-6 sm:p-8 text-slate-900 shadow-2xl transition-all hover:-translate-y-1 hover:shadow-lemon-yellow/20"
+                    class="group relative overflow-hidden rounded-xl bg-white p-5 sm:p-8 text-slate-900 shadow-2xl transition-all hover:-translate-y-1 hover:shadow-lemon-yellow/20"
                 >
                     <div class="absolute top-0 right-0 p-4 opacity-10 transition-opacity group-hover:opacity-20">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 sm:h-24 sm:w-24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 sm:h-24 sm:w-24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path d="M12 14l9-5-9-5-9 5 9 5z" />
                             <path
                                 d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"
@@ -58,22 +58,22 @@ const page = usePage();
                     </div>
                     <div class="relative z-10 flex flex-col items-center space-y-4">
                         <h2 class="text-xl sm:text-2xl font-bold">Student Portal</h2>
-                        <p class="text-xs sm:text-sm text-slate-600">Access your exams, results, and learning materials here.</p>
+                        <p class="text-[11px] sm:text-sm text-slate-600">Access your exams, results, and learning materials here.</p>
                         <Link
                             :href="studentLogin.url()"
-                            class="mt-4 flex w-full items-center justify-center rounded-xl bg-lemon-yellow px-6 py-3.5 sm:py-4 text-base sm:text-lg font-bold text-primary transition-all hover:scale-105 hover:bg-lemon-yellow/90 active:scale-95"
+                            class="mt-2 flex w-full items-center justify-center rounded-xl bg-lemon-yellow px-6 py-3.5 sm:py-4 text-base sm:text-lg font-bold text-primary transition-all hover:scale-105 hover:bg-lemon-yellow/90 active:scale-95"
                         >
                             Enter Exam Portal
                         </Link>
                     </div>
                 </div>
 
-                <!-- Staff/Admin Portal Card -->
+                <!-- Staff Portal Card -->
                 <div
-                    class="group relative overflow-hidden rounded-xl border-2 border-lemon-yellow bg-primary/50 p-6 sm:p-8 shadow-2xl backdrop-blur-sm transition-all hover:-translate-y-1"
+                    class="group relative overflow-hidden rounded-xl border-2 border-lemon-yellow bg-primary/50 p-5 sm:p-8 shadow-2xl backdrop-blur-sm transition-all hover:-translate-y-1"
                 >
                     <div class="absolute top-0 right-0 p-4 text-lemon-yellow opacity-10 transition-opacity group-hover:opacity-20">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 sm:h-24 sm:w-24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 sm:h-24 sm:w-24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
@@ -83,11 +83,11 @@ const page = usePage();
                         </svg>
                     </div>
                     <div class="relative z-10 flex flex-col items-center space-y-4">
-                        <h2 class="text-xl sm:text-2xl font-bold text-lemon-yellow">Staff & Admin</h2>
-                        <p class="text-xs sm:text-sm text-white/80">Manage students, questions, and view detailed reports.</p>
+                        <h2 class="text-xl sm:text-2xl font-bold text-lemon-yellow">Staff Portal</h2>
+                        <p class="text-[11px] sm:text-sm text-white/80">Manage students, questions, and view detailed reports.</p>
                         <Link
                             :href="staffLogin.url()"
-                            class="mt-4 flex w-full items-center justify-center rounded-xl border-2 border-lemon-yellow bg-transparent px-6 py-3.5 sm:py-4 text-base sm:text-lg font-bold text-lemon-yellow transition-all hover:scale-105 hover:bg-lemon-yellow hover:text-primary active:scale-95"
+                            class="mt-2 flex w-full items-center justify-center rounded-xl border-2 border-lemon-yellow bg-transparent px-6 py-3.5 sm:py-4 text-base sm:text-lg font-bold text-lemon-yellow transition-all hover:scale-105 hover:bg-lemon-yellow hover:text-primary active:scale-95"
                         >
                             Administrative Login
                         </Link>

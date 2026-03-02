@@ -17,7 +17,11 @@ class PromotionService
     public function promote(SchoolClass $fromClass, ?SchoolClass $toClass, array $studentIds): int
     {
         return DB::transaction(function () use ($fromClass, $toClass, $studentIds) {
-            $currentSession = AcademicSession::current()->firstOrFail();
+            $currentSession = AcademicSession::current()->first();
+
+            if (! $currentSession) {
+                throw new \RuntimeException('No current academic session found. Please set a session as current in Settings > Academic Sessions.');
+            }
 
             $query = User::whereIn('id', $studentIds)
                 ->where('school_class_id', $fromClass->id);

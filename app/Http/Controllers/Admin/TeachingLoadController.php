@@ -59,7 +59,11 @@ class TeachingLoadController extends Controller
             return back()->withErrors(['school_class_id' => 'Please select a target class or prospective batch.']);
         }
 
-        $currentSession = AcademicSession::current()->firstOrFail();
+        $currentSession = AcademicSession::current()->first();
+
+        if (! $currentSession) {
+            return back()->with('error', 'No current academic session found. Please set a session as current in Settings > Academic Sessions.');
+        }
 
         TeacherAssignment::updateOrCreate([
             'user_id' => $request->user_id,

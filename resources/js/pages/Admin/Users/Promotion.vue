@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, useForm, Link } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import { promote as processPromote, students as fetchStudentsAction } from '@/actions/App/Http/Controllers/Admin/PromotionController';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
@@ -21,6 +21,7 @@ interface Student {
 
 const props = defineProps<{
     classes: ClassSummary[];
+    current_session: any | null;
 }>();
 
 const selectedSourceClassId = ref('');
@@ -91,6 +92,21 @@ const submitPromotion = () => {
         <Head title="Student Promotion Wizard" />
 
         <div class="space-y-10">
+            <div v-if="!current_session" class="rounded-xl border border-red-200 bg-red-50 p-6 shadow-sm">
+                <div class="flex items-center gap-4 text-red-600">
+                    <svg class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <div>
+                        <h4 class="text-sm font-black uppercase tracking-widest">Action Required: No Active Session</h4>
+                        <p class="mt-1 text-xs font-bold leading-relaxed opacity-80">
+                            Promotions require an active academic session to record enrollment history. 
+                            Please set a current session in <Link href="/admin/school-setup/sessions" class="underline font-black hover:text-red-700 transition-colors">Settings > Academic Sessions</Link> before continuing.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
             <div class="relative overflow-hidden rounded-xl bg-slate-900 px-10 py-12 text-white shadow-2xl">
                 <div class="relative z-10">
                     <div class="mb-4 flex items-center gap-4">
@@ -224,7 +240,7 @@ const submitPromotion = () => {
                             <div class="pt-6">
                                 <button
                                     @click="startPromotion"
-                                    :disabled="selectedStudentIds.length === 0"
+                                    :disabled="selectedStudentIds.length === 0 || !current_session"
                                     class="flex w-full items-center justify-center gap-3 rounded-xl bg-primary py-5 text-sm font-black tracking-[0.2em] text-white uppercase shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
                                 >
                                     <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

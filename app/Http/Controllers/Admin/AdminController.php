@@ -36,14 +36,6 @@ class AdminController extends Controller
                 'activeExams' => Exam::where('status', \App\Enums\ExamStatus::LIVE)->count(),
                 'systemStatus' => 'Healthy',
             ],
-            'recentActivity' => [
-                [
-                    'id' => 1,
-                    'user' => 'System',
-                    'action' => 'Activity logging feature pending implementation',
-                    'time' => 'N/A',
-                ],
-            ],
         ]);
     }
 

@@ -39,10 +39,10 @@ const handleStartExam = () => {
 
         <div class="space-y-10">
             <!-- Page Header -->
-            <div class="flex items-center justify-between">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 class="text-2xl font-black tracking-tight text-slate-900">Available Assessments</h1>
-                    <p class="mt-1 text-sm font-bold tracking-widest text-slate-400 uppercase italic">
+                    <h1 class="text-2xl md:text-3xl font-black tracking-tight text-slate-900">Available Assessments</h1>
+                    <p class="mt-1 text-[10px] md:text-sm font-bold tracking-widest text-slate-400 uppercase italic">
                         All assessments for your current academic level
                     </p>
                 </div>
@@ -51,29 +51,29 @@ const handleStartExam = () => {
             <!-- Exam Grid -->
             <div
                 v-if="exams.length === 0"
-                class="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 bg-white py-24 text-center"
+                class="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 bg-white py-12 md:py-24 text-center"
             >
-                <div class="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-slate-50 text-slate-300">
-                    <svg class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div class="mb-6 flex h-16 w-16 md:h-20 md:w-20 items-center justify-center rounded-2xl bg-slate-50 text-slate-300">
+                    <svg class="h-8 w-8 md:h-10 md:w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                 </div>
-                <h3 class="text-xl font-black text-slate-400">No active assessments found.</h3>
-                <p class="mt-2 text-sm font-bold tracking-widest text-slate-400 uppercase">Please check back later or contact the admin.</p>
+                <h3 class="text-lg md:text-xl font-black text-slate-400">No active assessments found.</h3>
+                <p class="mt-2 text-[10px] md:text-sm font-bold tracking-widest text-slate-400 uppercase">Please check back later or contact the admin.</p>
             </div>
 
-            <div v-else class="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div v-else class="grid grid-cols-1 gap-4 md:gap-6 md:grid-cols-2">
                 <div
                     v-for="exam in exams"
                     :key="exam.id"
-                    class="group relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-8 shadow-sm transition-all hover:-translate-y-1 hover:border-primary/20 hover:shadow-2xl"
+                    class="group relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-6 md:p-8 shadow-sm transition-all hover:-translate-y-1 hover:border-primary/20 hover:shadow-2xl"
                 >
                     <div class="relative z-10 flex h-full flex-col justify-between">
-                        <div class="mb-8 flex items-center gap-6">
+                        <div class="mb-6 md:mb-8 flex items-start gap-4 md:gap-6">
                             <div
-                                class="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary/5 text-primary transition-transform group-hover:scale-110 group-hover:rotate-3"
+                                class="flex h-12 w-12 md:h-16 md:w-16 shrink-0 items-center justify-center rounded-2xl bg-primary/5 text-primary transition-transform group-hover:scale-110 group-hover:rotate-3"
                             >
-                                <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg class="h-6 w-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path
                                         stroke-linecap="round"
                                         stroke-linejoin="round"
@@ -82,26 +82,26 @@ const handleStartExam = () => {
                                     />
                                 </svg>
                             </div>
-                            <div>
-                                <h4 class="text-xl leading-tight font-black text-slate-800 transition-colors group-hover:text-primary">
+                            <div class="min-w-0">
+                                <h4 class="truncate text-lg md:text-xl font-black text-slate-800 transition-colors group-hover:text-primary">
                                     {{ exam.title }}
                                 </h4>
-                                <div class="mt-2 flex items-center gap-3">
-                                    <span class="text-[10px] font-black tracking-widest text-slate-400 uppercase">{{ exam.subject.name }}</span>
+                                <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                                    <span class="text-[9px] md:text-[10px] font-black tracking-widest text-slate-400 uppercase">{{ exam.subject.name }}</span>
                                     <span class="h-1 w-1 rounded-full bg-slate-200"></span>
-                                    <span class="text-[10px] font-black tracking-widest text-primary uppercase">{{ exam.duration }} MINS</span>
+                                    <span class="text-[9px] md:text-[10px] font-black tracking-widest text-primary uppercase">{{ exam.duration }} MINS</span>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="flex items-center justify-between border-t border-slate-50 pt-6">
-                            <span class="text-[10px] font-black tracking-widest text-slate-400 uppercase"
+                        <div class="flex flex-col gap-4 border-t border-slate-50 pt-6 sm:flex-row sm:items-center sm:justify-between">
+                            <span class="text-[9px] md:text-[10px] font-black tracking-widest text-slate-400 uppercase"
                                 >{{ exam.questions_count }} TOTAL QUESTIONS</span
                             >
 
                             <div
                                 v-if="exam.attempts.some((a) => a.status === 'submitted')"
-                                class="flex items-center gap-2 rounded-xl border border-green-100 bg-green-50 px-6 py-3 text-[10px] font-black tracking-widest text-green-600 uppercase"
+                                class="flex items-center justify-center gap-2 rounded-xl border border-green-100 bg-green-50 px-6 py-3 text-[10px] font-black tracking-widest text-green-600 uppercase"
                             >
                                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
@@ -111,7 +111,7 @@ const handleStartExam = () => {
                             <button
                                 v-else
                                 @click="confirmStartExam(exam.id)"
-                                class="rounded-xl bg-slate-900 px-8 py-3 text-[10px] font-black tracking-widest text-white uppercase shadow-lg transition-all hover:bg-black active:scale-95"
+                                class="w-full rounded-xl bg-slate-900 px-8 py-3.5 text-[10px] font-black tracking-widest text-white uppercase shadow-lg transition-all hover:bg-black active:scale-95 sm:w-auto"
                             >
                                 {{ exam.attempts.some((a) => a.status === 'ongoing') ? 'Continue Exam' : 'Start Assessment' }}
                             </button>

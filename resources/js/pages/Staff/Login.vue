@@ -70,7 +70,7 @@ const submit = () => {
                             id="remember"
                             v-model="form.remember"
                             type="checkbox"
-                            class="h-5 w-5 rounded border-slate-300 text-primary transition-all focus:ring-primary/10"
+                            class="h-5 w-5 rounded border-slate-300 text-primary transition-all focus:ring-primary/20"
                         />
                         <label for="remember" class="ml-3 text-sm font-bold text-slate-500">Stay signed in</label>
                     </div>

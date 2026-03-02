@@ -89,7 +89,11 @@ class ExamController extends Controller
             'compositions.*.question_count' => ['required', 'integer', 'min:1'],
         ]);
 
-        $currentSession = AcademicSession::current()->firstOrFail();
+        $currentSession = AcademicSession::current()->first();
+
+        if (! $currentSession) {
+            return back()->with('error', 'No current academic session found. Please contact an administrator to set an active session.');
+        }
 
         $dto = ExamDTO::fromRequest($request, $currentSession->id);
         $exam = $this->examService->createExam($dto->toArray(), $request->user()->id);
