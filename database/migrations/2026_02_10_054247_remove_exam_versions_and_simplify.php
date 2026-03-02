@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -16,7 +17,7 @@ return new class extends Migration
         });
 
         // Migrate data if any exists (optional for fresh projects but good practice)
-        DB::statement('UPDATE exam_questions eq SET exam_id = (SELECT exam_id FROM exam_versions ev WHERE ev.id = eq.exam_version_id)');
+        DB::statement('UPDATE exam_questions SET exam_id = (SELECT exam_id FROM exam_versions WHERE exam_versions.id = exam_questions.exam_version_id)');
 
         Schema::table('exam_questions', function (Blueprint $table) {
             $table->dropForeign(['exam_version_id']);
