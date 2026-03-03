@@ -88,12 +88,12 @@ const handleStartExam = () => {
                 </Link>
             </div>
 
-            <!-- Exam List -->
+            <!-- Exam Table -->
             <div class="space-y-6">
                 <div class="ml-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <h3 class="flex items-center gap-3 text-sm font-black tracking-[0.2em] text-slate-400 uppercase">
                         <div class="h-2 w-2 animate-ping rounded-full bg-primary"></div>
-                        Ongoing Examinations
+                        Recent Assessments
                     </h3>
                     <Link :href="examIndex().url" class="text-[10px] font-black tracking-widest text-primary uppercase hover:underline"
                         >View All Assessments &rarr;</Link
@@ -112,59 +112,59 @@ const handleStartExam = () => {
                     <p class="px-6 text-sm font-bold tracking-widest text-slate-400 uppercase italic">No active examinations at this hour.</p>
                 </div>
 
-                <div v-else class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                    <div
-                        v-for="exam in availableExams"
-                        :key="exam.id"
-                        class="group relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-6 md:p-8 shadow-sm transition-all hover:-translate-y-1 hover:border-primary/20 hover:shadow-2xl"
-                    >
-                        <div class="relative z-10 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-                            <div class="flex items-start gap-4 md:gap-6">
-                                <div
-                                    class="flex h-12 w-12 md:h-16 md:w-16 shrink-0 items-center justify-center rounded-2xl bg-primary/5 text-primary transition-transform group-hover:scale-110 group-hover:rotate-3"
-                                >
-                                    <svg class="h-6 w-6 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01m-.01 4h.01"
-                                        />
-                                    </svg>
-                                </div>
-                                <div class="min-w-0">
-                                    <h4 class="truncate text-lg md:text-xl leading-tight font-black text-slate-800 transition-colors group-hover:text-primary">
-                                        {{ exam.title }}
-                                    </h4>
-                                    <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                                        <span class="text-[9px] md:text-[10px] font-black tracking-widest text-slate-400 uppercase">{{ exam.subject?.name || 'Multi-Subject' }}</span>
-                                        <span class="h-1 w-1 rounded-full bg-slate-200"></span>
-                                        <span class="text-[9px] md:text-[10px] font-black tracking-widest text-primary uppercase">{{ exam.duration }} MINS</span>
-                                        <span class="h-1 w-1 rounded-full bg-slate-200"></span>
-                                        <span class="text-[9px] md:text-[10px] font-black tracking-widest text-slate-400 uppercase whitespace-nowrap"
-                                            >{{ exam.questions_count }} QUESTIONS</span
+                <div v-else class="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-xl">
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse text-left">
+                            <thead>
+                                <tr class="bg-[#FBFBFC]">
+                                    <th class="px-8 py-5 text-[9px] font-black tracking-widest text-slate-400 uppercase">Examination</th>
+                                    <th class="px-6 py-5 text-[9px] font-black tracking-widest text-slate-400 uppercase">Subject</th>
+                                    <th class="px-6 py-5 text-[9px] font-black tracking-widest text-slate-400 uppercase">Details</th>
+                                    <th class="px-8 py-5 text-right text-[9px] font-black tracking-widest text-slate-400 uppercase">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50">
+                                <tr v-for="exam in availableExams.slice(0, 5)" :key="exam.id" class="group transition-all hover:bg-[#F8F9FB]">
+                                    <td class="px-8 py-6">
+                                        <div class="flex items-center gap-4">
+                                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/5 text-primary">
+                                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01m-.01 4h.01" />
+                                                </svg>
+                                            </div>
+                                            <div class="min-w-0">
+                                                <span class="block truncate text-sm font-black text-slate-800">{{ exam.title }}</span>
+                                                <span class="text-[10px] font-bold text-slate-400 uppercase">{{ exam.questions_count }} Questions</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-6">
+                                        <span class="rounded-lg bg-primary/5 px-2.5 py-1 text-[10px] font-black text-primary uppercase">
+                                            {{ exam.subject?.name || 'Multi-Subject' }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-6 text-[10px] font-black text-slate-500 uppercase">
+                                        {{ exam.duration }} Mins Allotted
+                                    </td>
+                                    <td class="px-8 py-6 text-right">
+                                        <div
+                                            v-if="exam.attempts.some((a) => a.status === 'submitted')"
+                                            class="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-3 py-1 text-[9px] font-black text-green-600 uppercase border border-green-100"
                                         >
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div
-                                v-if="exam.attempts.some((a) => a.status === 'submitted')"
-                                class="flex items-center justify-center gap-2 rounded-xl border border-green-100 bg-green-50 px-6 py-3 text-[10px] font-black tracking-widest text-green-600 uppercase sm:w-auto"
-                            >
-                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
-                                </svg>
-                                Completed
-                            </div>
-                            <button
-                                v-else
-                                @click="confirmStartExam(exam.id)"
-                                class="w-full sm:w-auto rounded-xl bg-slate-900 px-6 py-3.5 text-[10px] font-black tracking-widest text-white uppercase shadow-lg transition-all hover:bg-black active:scale-95"
-                            >
-                                {{ exam.attempts.some((a) => a.status === 'ongoing') ? 'Continue Exam' : 'Start Assessment' }}
-                            </button>
-                        </div>
+                                            <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
+                                            Completed
+                                        </div>
+                                        <button
+                                            v-else
+                                            @click="confirmStartExam(exam.id)"
+                                            class="rounded-lg bg-slate-900 px-4 py-2 text-[9px] font-black tracking-widest text-white uppercase shadow-lg transition-all hover:bg-black active:scale-95"
+                                        >
+                                            {{ exam.attempts.some((a) => a.status === 'ongoing') ? 'Continue' : 'Start' }}
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>

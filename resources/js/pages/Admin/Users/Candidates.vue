@@ -224,6 +224,7 @@ const handleImport = () => {
                             <tr class="bg-slate-50/50">
                                 <th class="px-8 py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase">Applicant Details</th>
                                 <th class="px-6 py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase">Application ID</th>
+                                <th class="px-6 py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase">Target Class</th>
                                 <th class="px-6 py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase">Exam Batch</th>
                                 <th class="px-6 py-5 text-[10px] font-black tracking-widest whitespace-nowrap text-slate-400 uppercase">
                                     Entrance Score
@@ -253,6 +254,9 @@ const handleImport = () => {
                                     >
                                         {{ user.school_id || 'N/A' }}
                                     </span>
+                                </td>
+                                <td class="px-6 py-6 text-[10px] font-black text-slate-500 uppercase">
+                                    {{ user.school_class?.name || 'Not Set' }}
                                 </td>
                                 <td class="px-6 py-6">
                                     <span

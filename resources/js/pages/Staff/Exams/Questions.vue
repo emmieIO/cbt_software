@@ -112,11 +112,17 @@ const runAiSelection = () => {
                         <span class="text-slate-500 font-bold">Allocation</span>
                     </nav>
                     <h1 class="text-3xl font-black text-slate-900">Manage Questions</h1>
-                    <p class="mt-1 text-sm font-medium text-slate-500">
-                        Allocating questions for
-                        <span class="font-bold text-slate-700">{{ exam.subject?.name || 'Multi-Subject Assessment' }}</span>
-                        <span class="ml-1 text-slate-400">({{ exam.type === 'entrance' ? exam.prospective_class?.name : exam.school_class?.name }})</span>
-                    </p>
+                    <div class="mt-1 flex items-center gap-3">
+                        <p class="text-sm font-medium text-slate-500">
+                            Allocating questions for
+                            <span class="font-bold text-slate-700">{{ exam.subject?.name || 'Multi-Subject Assessment' }}</span>
+                            <span class="ml-1 text-slate-400">({{ exam.type === 'entrance' ? exam.prospective_class?.name : exam.school_class?.name }})</span>
+                        </p>
+                        <div class="h-4 w-px bg-slate-200"></div>
+                        <span class="rounded-lg bg-slate-100 px-2.5 py-1 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                            {{ availableQuestions.length }} Total in Pool
+                        </span>
+                    </div>
 
                 </div>
 
