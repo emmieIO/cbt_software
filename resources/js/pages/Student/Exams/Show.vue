@@ -21,7 +21,7 @@ interface Attempt {
         id: string;
         title: string;
         duration: number;
-        subject: { name: string };
+        subject: { name: string } | null;
     };
 }
 
@@ -215,7 +215,7 @@ onBeforeUnmount(() => {
                     <div>
                         <h1 class="text-lg font-black tracking-tight text-slate-900">{{ attempt.exam.title }}</h1>
                         <p class="text-[10px] font-bold tracking-widest text-slate-400 uppercase">
-                            {{ attempt.exam.subject.name }} • {{ questions.length }} Questions
+                            {{ attempt.exam.subject?.name || 'Multi-Subject Assessment' }} • {{ questions.length }} Questions
                         </p>
                     </div>
                 </div>

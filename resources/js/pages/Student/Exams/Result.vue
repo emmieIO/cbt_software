@@ -13,7 +13,7 @@ interface Attempt {
     } | null;
     exam: {
         title: string;
-        subject: { name: string };
+        subject: { name: string } | null;
     };
 }
 
@@ -115,7 +115,7 @@ const handlePrint = () => {
                         <div class="space-y-6">
                             <div>
                                 <label class="text-[9px] font-black tracking-widest text-slate-400 uppercase">Academic Subject</label>
-                                <p class="mt-1 text-lg font-black text-slate-800 underline decoration-primary/20 decoration-2 underline-offset-4">{{ attempt.exam.subject.name }}</p>
+                                <p class="mt-1 text-lg font-black text-slate-800 underline decoration-primary/20 decoration-2 underline-offset-4">{{ attempt.exam.subject?.name || 'Multi-Subject Assessment' }}</p>
                             </div>
                             <div>
                                 <label class="text-[9px] font-black tracking-widest text-slate-400 uppercase">Examination Title</label>

@@ -8,7 +8,7 @@ import StaffLayout from '@/layouts/StaffLayout.vue';
 interface Exam {
     id: string;
     title: string;
-    subject?: { name: string };
+    subject?: { name: string } | null;
     school_class?: { name: string };
     prospective_class?: { name: string };
     status: string;
@@ -17,7 +17,7 @@ interface Exam {
     questions: any[];
     compositions?: Array<{
         id: string;
-        subject: { name: string };
+        subject: { name: string } | null;
         topic?: { name: string };
         question_count: number;
     }>;
@@ -109,7 +109,7 @@ const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
                 </h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div v-for="comp in exam.compositions" :key="comp.id" class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm space-y-2">
-                        <span class="text-[10px] font-black tracking-widest text-primary uppercase">{{ comp.subject.name }}</span>
+                        <span class="text-[10px] font-black tracking-widest text-primary uppercase">{{ comp.subject?.name || 'Multi-Subject' }}</span>
                         <p class="text-xs font-bold text-slate-500 italic">{{ comp.topic?.name || 'General Subject Pool' }}</p>
                         <div class="flex items-center justify-between pt-2">
                             <span class="text-[9px] font-black text-slate-400 uppercase">Goal:</span>

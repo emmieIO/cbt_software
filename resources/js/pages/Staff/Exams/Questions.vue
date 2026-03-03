@@ -19,7 +19,7 @@ interface Question {
 interface Exam {
     id: string;
     title: string;
-    subject?: { name: string };
+    subject?: { name: string } | null;
     school_class?: { name: string };
     prospective_class?: { name: string };
     type: string;

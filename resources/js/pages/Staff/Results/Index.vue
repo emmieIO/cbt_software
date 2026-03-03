@@ -8,7 +8,7 @@ import type { PaginatedData } from '@/types/academics';
 interface Exam {
     id: string;
     title: string;
-    subject: { name: string };
+    subject: { name: string } | null;
     school_class?: { name: string };
     prospective_class?: { name: string };
     attempts_count: number;
@@ -45,7 +45,7 @@ const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
                     <div class="relative z-10 flex h-full flex-col">
                         <div class="mb-6">
                             <span class="rounded-xl bg-primary/5 px-2 py-1 text-[9px] font-black tracking-widest text-primary uppercase">{{
-                                exam.subject.name
+                                exam.subject?.name || 'Multi-Subject'
                             }}</span>
                             <h3 class="mt-3 line-clamp-2 text-xl leading-tight font-black text-slate-800 transition-colors group-hover:text-primary">
                                 {{ exam.title }}

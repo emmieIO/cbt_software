@@ -8,7 +8,7 @@ interface Exam {
     id: string;
     title: string;
     duration: number;
-    subject: { name: string };
+    subject: { name: string } | null;
     questions_count: number;
     attempts: Array<{ id: string; status: string }>;
 }
@@ -87,7 +87,7 @@ const handleStartExam = () => {
                                     {{ exam.title }}
                                 </h4>
                                 <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                                    <span class="text-[9px] md:text-[10px] font-black tracking-widest text-slate-400 uppercase">{{ exam.subject.name }}</span>
+                                    <span class="text-[9px] md:text-[10px] font-black tracking-widest text-slate-400 uppercase">{{ exam.subject?.name || 'Multi-Subject' }}</span>
                                     <span class="h-1 w-1 rounded-full bg-slate-200"></span>
                                     <span class="text-[9px] md:text-[10px] font-black tracking-widest text-primary uppercase">{{ exam.duration }} MINS</span>
                                 </div>

@@ -8,7 +8,7 @@ interface Attempt {
     submitted_at: string;
     exam: {
         title: string;
-        subject: { name: string };
+        subject: { name: string } | null;
     };
 }
 
@@ -67,7 +67,7 @@ defineProps<{
                                     {{ attempt.exam.title }}
                                 </h4>
                                 <p class="mt-1 text-xs font-bold tracking-widest text-slate-400 uppercase">
-                                    {{ attempt.exam.subject.name }} • Submitted on {{ new Date(attempt.submitted_at).toLocaleDateString() }}
+                                    {{ attempt.exam.subject?.name || 'Multi-Subject' }} • Submitted on {{ new Date(attempt.submitted_at).toLocaleDateString() }}
                                 </p>
                             </div>
                         </div>

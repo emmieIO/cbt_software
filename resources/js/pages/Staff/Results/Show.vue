@@ -22,7 +22,7 @@ interface Attempt {
 interface Exam {
     id: string;
     title: string;
-    subject: { name: string };
+    subject: { name: string } | null;
 }
 
 const props = defineProps<{
@@ -78,7 +78,7 @@ const handleExport = () => {
                         Back to Results
                     </Link>
                     <h1 class="text-3xl font-black tracking-tight text-slate-900">{{ exam.title }}</h1>
-                    <p class="mt-1 text-sm font-bold tracking-widest text-slate-400 uppercase">{{ exam.subject.name }} • Performance Analytics</p>
+                    <p class="mt-1 text-sm font-bold tracking-widest text-slate-400 uppercase">{{ exam.subject?.name || 'Multi-Subject' }} • Performance Analytics</p>
                 </div>
 
                 <div class="flex items-center gap-3">
