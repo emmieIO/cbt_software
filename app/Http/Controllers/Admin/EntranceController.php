@@ -60,6 +60,9 @@ class EntranceController extends Controller
         ]);
 
         $dto = UserDTO::fromRequest($request);
+        // Explicitly set school_id to the provided username (Application ID)
+        $dto->school_id = $request->username;
+        
         $user = $this->userService->createUser($dto, 'candidate');
 
         $user->update([
@@ -75,6 +78,8 @@ class EntranceController extends Controller
     public function update(\App\Http\Requests\Admin\UpdateCandidateRequest $request, User $candidate): RedirectResponse
     {
         $dto = UserDTO::fromRequest($request);
+        // Explicitly set school_id to the provided username (Application ID)
+        $dto->school_id = $request->username;
 
         $this->userService->updateUser($candidate, $dto);
 

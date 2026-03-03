@@ -52,15 +52,16 @@ class UserImportService
 
                     $data = $row->toArray();
 
-                    // Expected columns: Name, Email, Username, School_ID, Class_Name (Target/Current), Batch_Name (for candidates)
-                    if (count($data) < 4) {
+                    // Expected columns: Name, Email, Application_ID, Target_Class, Exam_Batch
+                    if (count($data) < 3) {
                         continue;
                     }
 
-                    [$name, $email, $username] = $data;
-                    $schoolId = ! empty($data[3]) ? trim((string) $data[3]) : null;
-                    $className = $data[4] ?? null;
-                    $batchName = $data[5] ?? null;
+                    $name = $data[0] ?? null;
+                    $email = $data[1] ?? null;
+                    $applicationId = ! empty($data[2]) ? trim((string) $data[2]) : null;
+                    $className = $data[3] ?? null;
+                    $batchName = $data[4] ?? null;
 
                     $classId = null;
                     if ($className) {
@@ -75,8 +76,8 @@ class UserImportService
                     $dto = new UserDTO(
                         name: trim((string) $name),
                         email: trim((string) $email),
-                        username: trim((string) $username),
-                        school_id: $schoolId,
+                        username: $applicationId, // Map to username for login
+                        school_id: $applicationId, // Map to school_id for display/formal context
                         school_class_id: $classId
                     );
 
