@@ -15,25 +15,39 @@ class QuestionService
     /**
      * Get authorized subjects and classes for a user.
      */
-    public function getAuthorizedContext(User $user, bool $withTopics = false): array
+    public function getAuthorizedContext(User $user, bool $withTopics = false, bool $strict = false): array
     {
         $isAdmin = $user->hasRole('admin');
 
-        $subjectsQuery = $isAdmin
-            ? Subject::query()
-            : Subject::whereIn('id', $user->currentAssignments()->pluck('subject_id'));
+        if ($isAdmin) {
+            $subjectsQuery = Subject::query();
+            $classesQuery = SchoolClass::query();
+            $batchesQuery = \App\Models\ProspectiveClass::where('is_active', true);
+        } else {
+            $assignments = $user->currentAssignments()->get();
+
+            // If any assignment has subject_id as NULL, it means access to ALL subjects (for that batch/class)
+            // But if $strict is true, we ONLY want subjects they are explicitly teaching.
+            $hasAllSubjectsAccess = ! $strict && $assignments->contains(fn ($a) => is_null($a->subject_id));
+
+            if ($hasAllSubjectsAccess) {
+                $subjectsQuery = Subject::query();
+            } else {
+                $subjectsQuery = Subject::whereIn('id', $assignments->pluck('subject_id')->filter());
+            }
+
+            $classesQuery = SchoolClass::whereIn('id', $assignments->pluck('school_class_id')->filter());
+            $batchesQuery = \App\Models\ProspectiveClass::whereIn('id', $assignments->pluck('prospective_class_id')->filter());
+        }
 
         if ($withTopics) {
             $subjectsQuery->with('topics');
         }
 
-        $classesQuery = $isAdmin
-            ? SchoolClass::query()
-            : SchoolClass::whereIn('id', $user->currentAssignments()->pluck('school_class_id'));
-
         return [
             'subjects' => $subjectsQuery->get(),
             'classes' => $classesQuery->get(),
+            'batches' => $batchesQuery->get(),
         ];
     }
 
@@ -139,18 +153,41 @@ class QuestionService
     public function getFilteredQuestions(array $filters, User $user): LengthAwarePaginator
     {
         $query = Question::query()
-            ->with(['topic.subject', 'schoolClass', 'options']);
+            ->with(['topic.subject', 'schoolClass', 'prospectiveClass', 'options']);
 
         // Scope to teacher's assignments if they aren't an admin
         if (! $user->hasRole('admin')) {
-            $assignments = $user->currentAssignments();
+            $assignments = $user->currentAssignments()->get();
 
-            $query->where(function ($q) use ($assignments) {
-                $q->whereIn('school_class_id', $assignments->pluck('school_class_id')->toArray())
-                    ->whereHas('topic', function ($q) use ($assignments) {
-                        $q->whereIn('subject_id', $assignments->pluck('subject_id')->toArray());
-                    });
-            });
+            if ($assignments->isEmpty()) {
+                $query->whereRaw('1 = 0');
+            } else {
+                $query->where(function ($q) use ($assignments) {
+                    foreach ($assignments as $assignment) {
+                        $q->orWhere(function ($subQ) use ($assignment) {
+                            // Regular Assignment match regular questions
+                            if ($assignment->school_class_id) {
+                                $subQ->whereNull('prospective_class_id')
+                                    ->where('school_class_id', $assignment->school_class_id);
+
+                                if ($assignment->subject_id) {
+                                    $subQ->whereHas('topic', fn ($tQ) => $tQ->where('subject_id', $assignment->subject_id));
+                                }
+                            }
+
+                            // Entrance Assignment match entrance questions
+                            if ($assignment->prospective_class_id) {
+                                $subQ->whereNotNull('prospective_class_id')
+                                    ->where('prospective_class_id', $assignment->prospective_class_id);
+
+                                if ($assignment->subject_id) {
+                                    $subQ->whereHas('topic', fn ($tQ) => $tQ->where('subject_id', $assignment->subject_id));
+                                }
+                            }
+                        });
+                    }
+                });
+            }
         }
 
         return $query->filter($filters)

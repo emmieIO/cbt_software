@@ -29,13 +29,29 @@ class ExamController extends Controller
 
         // Scoping: Staff only see their own exams or exams for their assigned loads
         if (! $user->hasRole('admin')) {
-            $assignedClassIds = $user->currentAssignments()->pluck('school_class_id')->unique();
-            $assignedSubjectIds = $user->currentAssignments()->pluck('subject_id')->unique();
+            $assignments = $user->currentAssignments()->get();
+            $assignedClassIds = $assignments->pluck('school_class_id')->filter()->unique();
+            $assignedSubjectIds = $assignments->pluck('subject_id')->filter()->unique();
+            $assignedBatchIds = $assignments->pluck('prospective_class_id')->filter()->unique();
+            $isCoordinator = $assignments->contains(fn ($a) => is_null($a->subject_id));
 
-            $query->where(function ($q) use ($assignedClassIds, $assignedSubjectIds) {
-                $q->whereIn('school_class_id', $assignedClassIds)
-                    ->whereIn('subject_id', $assignedSubjectIds)
-                    ->orWhere('type', \App\Enums\ExamType::ENTRANCE); // Staff can see all entrance exams for setup
+            $query->where(function ($q) use ($assignedClassIds, $assignedSubjectIds, $assignedBatchIds, $isCoordinator) {
+                // Regular Exam Scoping
+                $q->where(function ($subQ) use ($assignedClassIds, $assignedSubjectIds) {
+                    $subQ->whereIn('school_class_id', $assignedClassIds)
+                        ->whereIn('subject_id', $assignedSubjectIds);
+                });
+
+                // Entrance Exam Scoping
+                $q->orWhere(function ($subQ) use ($assignedBatchIds, $assignedSubjectIds, $isCoordinator) {
+                    $subQ->where('type', \App\Enums\ExamType::ENTRANCE)
+                        ->whereIn('prospective_class_id', $assignedBatchIds);
+
+                    // If not a coordinator, further restrict entrance exams to their subject
+                    if (! $isCoordinator) {
+                        $subQ->whereIn('subject_id', $assignedSubjectIds);
+                    }
+                });
             });
         }
 
@@ -52,20 +68,20 @@ class ExamController extends Controller
     {
         $user = $request->user();
 
+        // Get authorized context with strict subjects (only those explicitly assigned)
+        $context = (new \App\Services\QuestionService())->getAuthorizedContext($user, false, true);
+
         // Get only assigned loads for this teacher
         $assignments = $user->currentAssignments()
             ->with(['schoolClass', 'subject', 'prospectiveClass'])
             ->get();
 
-        // Get prospective batches for entrance exams
-        $batches = \App\Models\ProspectiveClass::where('is_active', true)->get();
-
         return Inertia::render('Staff/Exams/Create', [
             'assignments' => $assignments,
             'sessions' => AcademicSession::current()->get(),
-            'batches' => $batches,
-            'subjects' => \App\Models\Subject::all(),
-            'classes' => \App\Models\SchoolClass::all(),
+            'batches' => $context['batches'],
+            'subjects' => $context['subjects'],
+            'classes' => $context['classes'],
         ]);
     }
 
@@ -171,21 +187,21 @@ class ExamController extends Controller
     {
         $user = $request->user();
 
+        // Get authorized context with strict subjects
+        $context = (new \App\Services\QuestionService())->getAuthorizedContext($user, false, true);
+
         // Get only assigned loads for this teacher
         $assignments = $user->currentAssignments()
             ->with(['schoolClass', 'subject', 'prospectiveClass'])
             ->get();
 
-        // Get prospective batches for entrance exams
-        $batches = \App\Models\ProspectiveClass::where('is_active', true)->get();
-
         return Inertia::render('Staff/Exams/Edit', [
             'exam' => $exam->load(['subject', 'schoolClass', 'prospectiveClass', 'compositions']),
             'assignments' => $assignments,
             'sessions' => AcademicSession::current()->get(),
-            'batches' => $batches,
-            'subjects' => \App\Models\Subject::all(),
-            'classes' => \App\Models\SchoolClass::all(),
+            'batches' => $context['batches'],
+            'subjects' => $context['subjects'],
+            'classes' => $context['classes'],
         ]);
     }
 
@@ -274,18 +290,29 @@ class ExamController extends Controller
             ->withCount('attempts');
 
         if (! $user->hasRole('admin')) {
+            $assignments = $user->currentAssignments()->get();
+            $assignedClassIds = $assignments->pluck('school_class_id')->filter()->unique();
+            $assignedSubjectIds = $assignments->pluck('subject_id')->filter()->unique();
+            $assignedBatchIds = $assignments->pluck('prospective_class_id')->filter()->unique();
+            $isCoordinator = $assignments->contains(fn ($a) => is_null($a->subject_id));
 
-            $assignedClassIds = $user->currentAssignments()->pluck('school_class_id')->unique();
+            $query->where(function ($q) use ($assignedClassIds, $assignedSubjectIds, $assignedBatchIds, $isCoordinator) {
+                // Regular Exam results
+                $q->where(function ($subQ) use ($assignedClassIds, $assignedSubjectIds) {
+                    $subQ->whereIn('school_class_id', $assignedClassIds)
+                        ->whereIn('subject_id', $assignedSubjectIds);
+                });
 
-            $assignedSubjectIds = $user->currentAssignments()->pluck('subject_id')->unique();
+                // Entrance Exam results
+                $q->orWhere(function ($subQ) use ($assignedBatchIds, $assignedSubjectIds, $isCoordinator) {
+                    $subQ->where('type', \App\Enums\ExamType::ENTRANCE)
+                        ->whereIn('prospective_class_id', $assignedBatchIds);
 
-            $query->where(function ($q) use ($assignedClassIds, $assignedSubjectIds) {
-
-                $q->whereIn('school_class_id', $assignedClassIds)
-                    ->whereIn('subject_id', $assignedSubjectIds);
-
+                    if (! $isCoordinator) {
+                        $subQ->whereIn('subject_id', $assignedSubjectIds);
+                    }
+                });
             });
-
         }
 
         return Inertia::render('Staff/Results/Index', [

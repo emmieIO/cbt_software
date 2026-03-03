@@ -10,6 +10,7 @@ import type { Subject, SchoolClass, Topic } from '@/types/academics';
 const props = defineProps<{
     subjects: (Subject & { topics: Topic[] })[];
     classes: SchoolClass[];
+    batches: { id: string, name: string }[];
     types: { value: string; label: string }[];
     difficulties: { value: string; label: string }[];
 }>();

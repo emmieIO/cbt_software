@@ -60,13 +60,30 @@ class QuestionPolicy
     }
 
     /**
-     * Check if the user is assigned to the question's subject and class.
+     * Check if the user is assigned to the question's subject and class/batch.
      */
     protected function isAssigned(User $user, Question $question): bool
     {
         return $user->currentAssignments()
-            ->where('subject_id', $question->topic->subject_id)
-            ->where('school_class_id', $question->school_class_id)
+            ->where(function ($query) use ($question) {
+                if (! $question->prospective_class_id) {
+                    // Regular Question: Teacher must be assigned to this regular class
+                    $query->whereNotNull('school_class_id')
+                        ->where('school_class_id', $question->school_class_id)
+                        ->where(function ($subQ) use ($question) {
+                            $subQ->where('subject_id', $question->topic->subject_id)
+                                ->orWhereNull('subject_id');
+                        });
+                } else {
+                    // Entrance Question: Teacher must be assigned to this entrance batch
+                    $query->whereNotNull('prospective_class_id')
+                        ->where('prospective_class_id', $question->prospective_class_id)
+                        ->where(function ($subQ) use ($question) {
+                            $subQ->where('subject_id', $question->topic->subject_id)
+                                ->orWhereNull('subject_id');
+                        });
+                }
+            })
             ->exists();
     }
 }

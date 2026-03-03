@@ -75,7 +75,7 @@ const form = useForm({
     assignment_id:
         props.assignments.find(
             (a) =>
-                a.subject.id === props.exam.subject_id &&
+                a.subject?.id === props.exam.subject_id &&
                 (a.school_class?.id === props.exam.school_class_id || a.prospective_class?.id === props.exam.prospective_class_id),
         )?.id || '',
     subject_id: props.exam.subject_id || '',
@@ -127,7 +127,7 @@ const fetchTopicsForComposition = async (index: number) => {
 const handleAssignmentChange = () => {
     const assignment = props.assignments.find((a) => a.id === form.assignment_id);
     if (assignment) {
-        form.subject_id = assignment.subject.id;
+        form.subject_id = assignment.subject?.id || '';
         form.school_class_id = assignment.school_class?.id || '';
         form.prospective_class_id = assignment.prospective_class?.id || '';
         
@@ -313,7 +313,7 @@ const handleDelete = () => {
                                 >
                                     <option value="" disabled>Choose Subject & Class</option>
                                     <option v-for="load in assignments" :key="load.id" :value="load.id">
-                                        {{ load.subject.name }} — {{ load.school_class?.name || load.prospective_class?.name }}
+                                        {{ load.subject?.name || 'All Subjects (Coordinator)' }} — {{ load.school_class?.name || load.prospective_class?.name }}
                                     </option>
                                 </select>
                                 <div v-if="form.errors.assignment_id" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.assignment_id }}</div>

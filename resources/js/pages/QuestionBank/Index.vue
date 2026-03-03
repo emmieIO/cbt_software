@@ -19,11 +19,13 @@ const props = defineProps<{
     questions: PaginatedData<Question>;
     subjects: Subject[];
     classes: SchoolClass[];
+    batches: { id: string, name: string }[];
     difficulties: { value: string; label: string }[];
     filters: {
         search?: string;
         subject_id?: string;
         school_class_id?: string;
+        prospective_class_id?: string;
         difficulty?: string;
     };
 }>();
@@ -95,6 +97,7 @@ const filterForm = ref({
     search: props.filters.search || '',
     subject_id: props.filters.subject_id || '',
     school_class_id: props.filters.school_class_id || '',
+    prospective_class_id: props.filters.prospective_class_id || '',
     difficulty: props.filters.difficulty || '',
 });
 
@@ -114,6 +117,7 @@ const clearFilters = () => {
         search: '',
         subject_id: '',
         school_class_id: '',
+        prospective_class_id: '',
         difficulty: '',
     };
 };
@@ -270,10 +274,19 @@ const clearFilters = () => {
                                     <option value="">Classes</option>
                                     <option v-for="c in classes" :key="c.id" :value="c.id">{{ c.name }}</option>
                                 </select>
+                                <div v-if="batches && batches.length > 0" class="mx-1.5 md:mx-2 h-4 w-px bg-slate-200"></div>
+                                <select
+                                    v-if="batches && batches.length > 0"
+                                    v-model="filterForm.prospective_class_id"
+                                    class="flex-1 cursor-pointer border-none bg-transparent text-[10px] md:text-xs font-black text-slate-600 uppercase focus:ring-0"
+                                >
+                                    <option value="">Batches</option>
+                                    <option v-for="b in batches" :key="b.id" :value="b.id">{{ b.name }}</option>
+                                </select>
                             </div>
 
                             <button
-                                v-if="filterForm.search || filterForm.subject_id || filterForm.school_class_id"
+                                v-if="filterForm.search || filterForm.subject_id || filterForm.school_class_id || filterForm.prospective_class_id"
                                 @click="clearFilters"
                                 class="flex h-11 md:h-12 items-center gap-2 rounded-xl px-3 md:px-4 text-[10px] md:text-xs font-black text-slate-400 uppercase transition-all hover:bg-red-50 hover:text-red-500"
                             >
@@ -338,7 +351,15 @@ const clearFilters = () => {
                                 </td>
                                 <td class="px-4 md:px-6 py-4 md:py-6">
                                     <div class="space-y-1">
-                                        <p class="text-[10px] md:text-xs font-black text-slate-700 whitespace-nowrap">{{ question.topic.subject.name }}</p>
+                                        <div class="flex items-center gap-2">
+                                            <p class="text-[10px] md:text-xs font-black text-slate-700 whitespace-nowrap">{{ question.topic.subject.name }}</p>
+                                            <span
+                                                v-if="question.prospective_class"
+                                                class="rounded-full bg-primary/10 px-2 py-0.5 text-[7px] md:text-[8px] font-black tracking-widest text-primary uppercase"
+                                            >
+                                                {{ question.prospective_class.name }}
+                                            </span>
+                                        </div>
                                         <p class="text-[8px] md:text-[10px] font-bold tracking-tight text-slate-400 uppercase whitespace-nowrap">
                                             {{ question.school_class.name }} • {{ question.topic.name }}
                                         </p>

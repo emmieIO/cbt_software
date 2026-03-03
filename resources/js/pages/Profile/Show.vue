@@ -146,7 +146,7 @@ const formatDate = (dateString: string) => {
                                     :key="load.id"
                                     class="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 p-4"
                                 >
-                                    <span class="text-xs font-black text-slate-700">{{ load.subject.name }}</span>
+                                    <span class="text-xs font-black text-slate-700">{{ load.subject?.name || 'All Subjects (Coordinator)' }}</span>
                                     <span
                                         class="rounded-lg border border-primary/10 bg-primary/5 px-2 py-1 text-[9px] font-black text-primary uppercase"
                                     >

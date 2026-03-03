@@ -54,9 +54,11 @@ const filteredClasses = computed(() => {
 
 watch(
     () => form.subject_id,
-    () => {
-        form.school_class_id = '';
-        form.prospective_class_id = '';
+    (newVal) => {
+        // Only clear class if subject is removed, as regular classes MUST have a subject
+        if (!newVal) {
+            form.school_class_id = '';
+        }
     },
 );
 
@@ -64,14 +66,18 @@ watch(
 watch(
     () => form.school_class_id,
     (val) => {
-        if (val) form.prospective_class_id = '';
+        if (val) {
+            form.prospective_class_id = '';
+        }
     },
 );
 
 watch(
     () => form.prospective_class_id,
     (val) => {
-        if (val) form.school_class_id = '';
+        if (val) {
+            form.school_class_id = '';
+        }
     },
 );
 
@@ -189,9 +195,16 @@ const handleDelete = () => {
                                 </td>
                                 <td class="px-6 py-6">
                                     <span
+                                        v-if="assignment.subject"
                                         class="inline-flex items-center rounded-xl bg-primary/5 px-2.5 py-1 text-[10px] font-black text-primary uppercase"
                                     >
                                         {{ assignment.subject.name }}
+                                    </span>
+                                    <span
+                                        v-else
+                                        class="inline-flex items-center rounded-xl bg-slate-100 px-2.5 py-1 text-[10px] font-black text-slate-500 uppercase"
+                                    >
+                                        All Subjects (Coordinator)
                                     </span>
                                 </td>
                                 <td class="px-6 py-6">
@@ -276,10 +289,9 @@ const handleDelete = () => {
                             <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Subject</label>
                             <select
                                 v-model="form.subject_id"
-                                required
                                 class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                             >
-                                <option value="" disabled>Select Subject</option>
+                                <option value="">None (For Batch Coordinators)</option>
                                 <option v-for="subject in subjects" :key="subject.id" :value="subject.id">{{ subject.name }}</option>
                             </select>
                             <div v-if="form.errors.subject_id" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.subject_id }}</div>
@@ -313,7 +325,7 @@ const handleDelete = () => {
                                 >
                                 <select
                                     v-model="form.prospective_class_id"
-                                    :disabled="!form.subject_id || form.school_class_id !== ''"
+                                    :disabled="form.school_class_id !== ''"
                                     class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     <option value="">None (Select Class Instead)</option>

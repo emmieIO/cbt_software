@@ -100,7 +100,7 @@ const fetchTopicsForComposition = async (index: number) => {
 const handleAssignmentChange = () => {
     const assignment = props.assignments.find((a) => a.id === form.assignment_id);
     if (assignment) {
-        form.subject_id = assignment.subject.id;
+        form.subject_id = assignment.subject?.id || '';
         form.school_class_id = assignment.school_class?.id || '';
         form.prospective_class_id = assignment.prospective_class?.id || '';
 
@@ -109,7 +109,6 @@ const handleAssignmentChange = () => {
         }
     }
 };
-
 watch(() => form.type, (newType) => {
     if (newType === 'entrance' && form.compositions.length === 0) {
         addCompositionRow();
@@ -231,7 +230,7 @@ const submit = () => {
                                 >
                                     <option value="" disabled>Choose Subject & Class</option>
                                     <option v-for="load in assignments" :key="load.id" :value="load.id">
-                                        {{ load.subject.name }} — {{ load.school_class?.name || load.prospective_class?.name }}
+                                        {{ load.subject?.name || 'All Subjects (Coordinator)' }} — {{ load.school_class?.name || load.prospective_class?.name }}
                                     </option>
                                 </select>
                                 <div v-if="form.errors.assignment_id" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.assignment_id }}</div>

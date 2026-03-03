@@ -50,13 +50,23 @@ class TeachingLoadController extends Controller
     {
         $request->validate([
             'user_id' => ['required', 'exists:users,id'],
-            'subject_id' => ['required', 'exists:subjects,id'],
+            'subject_id' => ['nullable', 'exists:subjects,id'],
             'school_class_id' => ['nullable', 'exists:school_classes,id'],
             'prospective_class_id' => ['nullable', 'exists:prospective_classes,id'],
         ]);
 
         if (! $request->school_class_id && ! $request->prospective_class_id) {
             return back()->withErrors(['school_class_id' => 'Please select a target class or prospective batch.']);
+        }
+
+        // Regular class MUST have a subject
+        if ($request->school_class_id && ! $request->subject_id) {
+            return back()->withErrors(['subject_id' => 'Regular class assignments must include a subject.']);
+        }
+
+        // Must have at least one (Subject for regular class, or Prospective batch for coordinator role)
+        if (! $request->subject_id && ! $request->prospective_class_id) {
+            return back()->withErrors(['subject_id' => 'Please select a subject or an entrance batch.']);
         }
 
         $currentSession = AcademicSession::current()->first();

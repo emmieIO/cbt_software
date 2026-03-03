@@ -6,12 +6,13 @@ import { update, index } from '@/actions/App/Http/Controllers/Staff/StaffQuestio
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import StaffLayout from '@/layouts/StaffLayout.vue';
 import type { AppPageProps } from '@/types';
-import type { Subject, Question } from '@/types/academics';
+import type { Subject } from '@/types/academics';
 
 const props = defineProps<{
-    question: Question;
+    question: any; // Using any to avoid complex nested type issues for now
     subjects: Subject[];
     classes: any[];
+    batches: any[];
     types: any[];
     difficulties: any[];
 }>();
@@ -24,11 +25,12 @@ const form = useForm({
     subject_id: props.question.topic.subject.id,
     topic_id: props.question.topic_id,
     school_class_id: props.question.school_class_id,
+    prospective_class_id: props.question.prospective_class_id || '',
     content: props.question.content,
     explanation: props.question.explanation || '',
     type: props.question.type,
     difficulty: props.question.difficulty,
-    options: props.question.options.map((opt) => ({
+    options: props.question.options.map((opt: any) => ({
         id: opt.id,
         content: opt.content,
         is_correct: !!opt.is_correct,
@@ -128,7 +130,7 @@ const submit = () => {
 
                     <form @submit.prevent="submit" class="space-y-10">
                         <!-- Metadata Row -->
-                        <div class="grid grid-cols-1 gap-10 md:grid-cols-3">
+                        <div class="grid grid-cols-1 gap-10 md:grid-cols-4">
                             <div>
                                 <label class="mb-2 block text-sm font-semibold text-slate-700">Subject</label>
                                 <select
@@ -172,6 +174,20 @@ const submit = () => {
                                     </option>
                                 </select>
                                 <div v-if="form.errors.topic_id" class="mt-1 text-xs text-red-600">{{ form.errors.topic_id }}</div>
+                            </div>
+
+                            <div v-if="batches && batches.length > 0">
+                                <label class="mb-2 block text-sm font-semibold text-slate-700">Entrance Batch (Optional)</label>
+                                <select
+                                    v-model="form.prospective_class_id"
+                                    class="block w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-3.5 text-sm transition-all focus:border-primary focus:ring-primary"
+                                >
+                                    <option value="">None (Regular Question)</option>
+                                    <option v-for="batch in batches" :key="batch.id" :value="batch.id">
+                                        {{ batch.name }}
+                                    </option>
+                                </select>
+                                <div v-if="form.errors.prospective_class_id" class="mt-1 text-xs text-red-600">{{ form.errors.prospective_class_id }}</div>
                             </div>
                         </div>
 

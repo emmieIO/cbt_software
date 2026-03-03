@@ -10,6 +10,7 @@ import type { Subject } from '@/types/academics';
 const props = defineProps<{
     subjects: Subject[];
     classes: any[];
+    batches: any[];
     types: any[];
     difficulties: any[];
 }>();
@@ -22,6 +23,7 @@ const form = useForm({
     subject_id: '',
     topic_id: '',
     school_class_id: '',
+    prospective_class_id: '',
     content: '',
     explanation: '',
     type: 'multiple_choice',
@@ -119,7 +121,7 @@ const submit = () => {
 
                     <form @submit.prevent="submit" class="space-y-10">
                         <!-- Metadata Row -->
-                        <div class="grid grid-cols-1 gap-10 md:grid-cols-3">
+                        <div class="grid grid-cols-1 gap-10 md:grid-cols-4">
                             <div>
                                 <label class="mb-2 block text-sm font-semibold text-slate-700">Subject</label>
                                 <select
@@ -136,22 +138,6 @@ const submit = () => {
                             </div>
 
                             <div>
-                                <label class="mb-2 block text-sm font-semibold text-slate-700">Topic</label>
-                                <select
-                                    v-model="form.topic_id"
-                                    required
-                                    :disabled="!selectedSubject"
-                                    class="block w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-3.5 text-sm transition-all focus:border-primary focus:ring-primary disabled:opacity-50"
-                                >
-                                    <option value="" disabled>Select Topic</option>
-                                    <option v-for="topic in filteredTopics" :key="topic.id" :value="topic.id">
-                                        {{ topic.name }}
-                                    </option>
-                                </select>
-                                <div v-if="form.errors.topic_id" class="mt-1 text-xs text-red-600">{{ form.errors.topic_id }}</div>
-                            </div>
-
-                            <div>
                                 <label class="mb-2 block text-sm font-semibold text-slate-700">Target Class</label>
                                 <select
                                     v-model="form.school_class_id"
@@ -163,6 +149,36 @@ const submit = () => {
                                     <option v-for="cls in availableClasses" :key="cls.id" :value="cls.id">{{ cls.name }} ({{ cls.level }})</option>
                                 </select>
                                 <div v-if="form.errors.school_class_id" class="mt-1 text-xs text-red-600">{{ form.errors.school_class_id }}</div>
+                            </div>
+
+                            <div>
+                                <label class="mb-2 block text-sm font-semibold text-slate-700">Topic</label>
+                                <select
+                                    v-model="form.topic_id"
+                                    required
+                                    :disabled="!selectedSubject || !form.school_class_id"
+                                    class="block w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-3.5 text-sm transition-all focus:border-primary focus:ring-primary disabled:opacity-50"
+                                >
+                                    <option value="" disabled>Select Topic</option>
+                                    <option v-for="topic in filteredTopics" :key="topic.id" :value="topic.id">
+                                        {{ topic.name }}
+                                    </option>
+                                </select>
+                                <div v-if="form.errors.topic_id" class="mt-1 text-xs text-red-600">{{ form.errors.topic_id }}</div>
+                            </div>
+
+                            <div v-if="batches && batches.length > 0">
+                                <label class="mb-2 block text-sm font-semibold text-slate-700">Entrance Batch (Optional)</label>
+                                <select
+                                    v-model="form.prospective_class_id"
+                                    class="block w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-3.5 text-sm transition-all focus:border-primary focus:ring-primary"
+                                >
+                                    <option value="">None (Regular Question)</option>
+                                    <option v-for="batch in batches" :key="batch.id" :value="batch.id">
+                                        {{ batch.name }}
+                                    </option>
+                                </select>
+                                <div v-if="form.errors.prospective_class_id" class="mt-1 text-xs text-red-600">{{ form.errors.prospective_class_id }}</div>
                             </div>
                         </div>
 

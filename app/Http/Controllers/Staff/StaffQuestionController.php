@@ -45,6 +45,7 @@ class StaffQuestionController extends Controller
             'questions' => $this->questionService->getFilteredQuestions($request->validated(), $user),
             'subjects' => $context['subjects'],
             'classes' => $context['classes'],
+            'batches' => $context['batches'],
             'difficulties' => collect(QuestionDifficulty::cases())->map(fn ($d) => ['value' => $d->value, 'label' => Str::title($d->value)]),
             'filters' => $request->only(['search', 'subject_id', 'school_class_id', 'difficulty']),
         ]);
@@ -56,11 +57,12 @@ class StaffQuestionController extends Controller
     public function generate(Request $request): Response
     {
         $user = $request->user();
-        $context = $this->questionService->getAuthorizedContext($user, true);
+        $context = $this->questionService->getAuthorizedContext($user, true, true);
 
         return Inertia::render('QuestionBank/Generate', [
             'subjects' => $context['subjects'],
             'classes' => $context['classes'],
+            'batches' => $context['batches'],
             'types' => collect(QuestionType::cases())->map(fn ($t) => ['value' => $t->value, 'label' => str_replace('_', ' ', Str::title($t->value))]),
             'difficulties' => collect(QuestionDifficulty::cases())->map(fn ($d) => ['value' => $d->value, 'label' => Str::title($d->value)]),
         ]);
@@ -89,11 +91,12 @@ class StaffQuestionController extends Controller
     public function create(Request $request): Response
     {
         $user = $request->user();
-        $context = $this->questionService->getAuthorizedContext($user, true);
+        $context = $this->questionService->getAuthorizedContext($user, true, true);
 
         return Inertia::render('QuestionBank/Create', [
             'subjects' => $context['subjects'],
             'classes' => $context['classes'],
+            'batches' => $context['batches'],
             'types' => collect(QuestionType::cases())->map(fn ($t) => ['value' => $t->value, 'label' => str_replace('_', ' ', Str::title($t->value))]),
             'difficulties' => collect(QuestionDifficulty::cases())->map(fn ($d) => ['value' => $d->value, 'label' => Str::title($d->value)]),
         ]);
@@ -119,12 +122,13 @@ class StaffQuestionController extends Controller
 
         $user = $request->user();
         $question->load(['topic.subject', 'options']);
-        $context = $this->questionService->getAuthorizedContext($user, true);
+        $context = $this->questionService->getAuthorizedContext($user, true, true);
 
         return Inertia::render('QuestionBank/Edit', [
             'question' => $question,
             'subjects' => $context['subjects'],
             'classes' => $context['classes'],
+            'batches' => $context['batches'],
             'types' => collect(QuestionType::cases())->map(fn ($t) => ['value' => $t->value, 'label' => str_replace('_', ' ', Str::title($t->value))]),
             'difficulties' => collect(QuestionDifficulty::cases())->map(fn ($d) => ['value' => $d->value, 'label' => Str::title($d->value)]),
         ]);
