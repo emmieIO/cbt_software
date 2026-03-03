@@ -125,7 +125,7 @@ const handleStartExam = () => {
                             </thead>
                             <tbody class="divide-y divide-slate-50">
                                 <tr v-for="exam in availableExams.slice(0, 5)" :key="exam.id" class="group transition-all hover:bg-[#F8F9FB]">
-                                    <td class="px-8 py-6">
+                                    <td class="px-8 py-6 whitespace-nowrap">
                                         <div class="flex items-center gap-4">
                                             <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/5 text-primary">
                                                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -138,15 +138,15 @@ const handleStartExam = () => {
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-6">
+                                    <td class="px-6 py-6 whitespace-nowrap">
                                         <span class="rounded-lg bg-primary/5 px-2.5 py-1 text-[10px] font-black text-primary uppercase">
                                             {{ exam.subject?.name || 'Multi-Subject' }}
                                         </span>
                                     </td>
-                                    <td class="px-6 py-6 text-[10px] font-black text-slate-500 uppercase">
+                                    <td class="px-6 py-6 whitespace-nowrap text-[10px] font-black text-slate-500 uppercase">
                                         {{ exam.duration }} Mins Allotted
                                     </td>
-                                    <td class="px-8 py-6 text-right">
+                                    <td class="px-8 py-6 text-right whitespace-nowrap">
                                         <div
                                             v-if="exam.attempts.some((a) => a.status === 'submitted')"
                                             class="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-3 py-1 text-[9px] font-black text-green-600 uppercase border border-green-100"

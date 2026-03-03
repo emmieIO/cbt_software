@@ -185,7 +185,7 @@ const handleDelete = () => {
                         </thead>
                         <tbody class="divide-y divide-slate-50">
                             <tr v-for="assignment in assignments.data" :key="assignment.id" class="group transition-all hover:bg-slate-50/80">
-                                <td class="px-8 py-6">
+                                <td class="px-8 py-6 whitespace-nowrap">
                                     <div>
                                         <h4 class="text-sm font-black text-slate-800">{{ assignment.teacher.name }}</h4>
                                         <p class="text-[10px] font-bold tracking-widest text-slate-400 uppercase">
@@ -193,7 +193,7 @@ const handleDelete = () => {
                                         </p>
                                     </div>
                                 </td>
-                                <td class="px-6 py-6">
+                                <td class="px-6 py-6 whitespace-nowrap">
                                     <span
                                         v-if="assignment.subject"
                                         class="inline-flex items-center rounded-xl bg-primary/5 px-2.5 py-1 text-[10px] font-black text-primary uppercase"
@@ -207,7 +207,7 @@ const handleDelete = () => {
                                         All Subjects (Coordinator)
                                     </span>
                                 </td>
-                                <td class="px-6 py-6">
+                                <td class="px-6 py-6 whitespace-nowrap">
                                     <div v-if="assignment.school_class">
                                         <span class="text-xs font-bold text-slate-600">{{ assignment.school_class.name }}</span>
                                         <p class="text-[9px] font-black tracking-widest text-slate-400 uppercase">Regular Class</p>
@@ -217,7 +217,7 @@ const handleDelete = () => {
                                         <p class="text-[9px] font-black tracking-widest text-primary uppercase">Entrance Batch</p>
                                     </div>
                                 </td>
-                                <td class="px-8 py-6 text-right">
+                                <td class="px-8 py-6 text-right whitespace-nowrap">
                                     <button
                                         @click="confirmDelete(assignment)"
                                         class="ml-auto flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 text-slate-400 transition-all hover:bg-red-500 hover:text-white"

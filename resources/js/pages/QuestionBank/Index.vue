@@ -320,7 +320,7 @@ const clearFilters = () => {
                         </thead>
                         <tbody class="divide-y divide-slate-50">
                             <tr v-for="question in questions.data" :key="question.id" class="group transition-all hover:bg-[#F8F9FB]">
-                                <td class="px-4 md:px-8 py-4 md:py-6">
+                                <td class="px-4 md:px-8 py-4 md:py-6 whitespace-nowrap">
                                     <input
                                         type="checkbox"
                                         v-model="selectedIds"
@@ -328,16 +328,16 @@ const clearFilters = () => {
                                         class="rounded border-slate-200 text-primary focus:ring-primary/20"
                                     />
                                 </td>
-                                <td class="max-w-xs md:max-w-xl px-4 md:px-6 py-4 md:py-6">
+                                <td class="max-w-xs md:max-w-xl px-4 md:px-6 py-4 md:py-6 whitespace-nowrap">
                                     <div class="flex items-center gap-3 md:gap-4">
                                         <div
                                             class="flex h-8 w-8 md:h-10 md:w-10 shrink-0 items-center justify-center rounded-lg bg-slate-50 text-[10px] md:text-xs font-black text-slate-400"
                                         >
                                             {{ question.type.charAt(0).toUpperCase() }}
                                         </div>
-                                        <div>
+                                        <div class="min-w-0">
                                             <p
-                                                class="line-clamp-2 text-xs md:text-sm leading-relaxed font-black text-slate-800 transition-all group-hover:line-clamp-none"
+                                                class="truncate text-xs md:text-sm leading-relaxed font-black text-slate-800"
                                             >
                                                 {{ question.content }}
                                             </p>
@@ -349,10 +349,10 @@ const clearFilters = () => {
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-4 md:px-6 py-4 md:py-6">
+                                <td class="px-4 md:px-6 py-4 md:py-6 whitespace-nowrap">
                                     <div class="space-y-1">
                                         <div class="flex items-center gap-2">
-                                            <p class="text-[10px] md:text-xs font-black text-slate-700 whitespace-nowrap">{{ question.topic.subject.name }}</p>
+                                            <p class="text-[10px] md:text-xs font-black text-slate-700 uppercase">{{ question.topic.subject.name }}</p>
                                             <span
                                                 v-if="question.prospective_class"
                                                 class="rounded-full bg-primary/10 px-2 py-0.5 text-[7px] md:text-[8px] font-black tracking-widest text-primary uppercase"
@@ -360,12 +360,12 @@ const clearFilters = () => {
                                                 {{ question.prospective_class.name }}
                                             </span>
                                         </div>
-                                        <p class="text-[8px] md:text-[10px] font-bold tracking-tight text-slate-400 uppercase whitespace-nowrap">
+                                        <p class="text-[8px] md:text-[10px] font-bold tracking-tight text-slate-400 uppercase">
                                             {{ question.school_class.name }} • {{ question.topic.name }}
                                         </p>
                                     </div>
                                 </td>
-                                <td class="px-4 md:px-6 py-4 md:py-6 text-center">
+                                <td class="px-4 md:px-6 py-4 md:py-6 text-center whitespace-nowrap">
                                     <span
                                         :class="[
                                             'inline-flex items-center rounded-lg px-2 py-0.5 md:px-2.5 md:py-1 text-[8px] md:text-[9px] font-black tracking-widest uppercase shadow-sm',
@@ -379,7 +379,7 @@ const clearFilters = () => {
                                         {{ question.difficulty }}
                                     </span>
                                 </td>
-                                <td class="px-4 md:px-8 py-4 md:py-6 text-right">
+                                <td class="px-4 md:px-8 py-4 md:py-6 text-right whitespace-nowrap">
                                     <div class="relative inline-block">
                                         <button
                                             @click.stop="toggleDropdown(question.id)"

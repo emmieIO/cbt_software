@@ -235,7 +235,7 @@ const handleImport = () => {
                         </thead>
                         <tbody class="divide-y divide-slate-50">
                             <tr v-for="user in candidates.data" :key="user.id" class="group transition-all hover:bg-[#F8F9FB]">
-                                <td class="px-8 py-6">
+                                <td class="px-8 py-6 whitespace-nowrap">
                                     <div class="flex items-center gap-4">
                                         <div
                                             class="flex h-10 w-10 items-center justify-center rounded-lg bg-lemon-yellow/10 text-xs font-black text-primary transition-colors group-hover:bg-lemon-yellow group-hover:text-primary"
@@ -248,17 +248,17 @@ const handleImport = () => {
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-6 py-6">
+                                <td class="px-6 py-6 whitespace-nowrap">
                                     <span
                                         class="inline-flex items-center rounded-lg border border-slate-100 bg-slate-50 px-3 py-1 text-[9px] font-black text-slate-600 uppercase shadow-sm"
                                     >
                                         {{ user.school_id || 'N/A' }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-6 text-[10px] font-black text-slate-500 uppercase">
+                                <td class="px-6 py-6 text-[10px] font-black text-slate-500 uppercase whitespace-nowrap">
                                     {{ user.school_class?.name || 'Not Set' }}
                                 </td>
-                                <td class="px-6 py-6">
+                                <td class="px-6 py-6 whitespace-nowrap">
                                     <span
                                         v-if="user.prospective_class"
                                         class="inline-flex flex-col"
@@ -268,7 +268,7 @@ const handleImport = () => {
                                     </span>
                                     <span v-else class="text-[9px] font-black tracking-widest text-slate-300 uppercase">No Batch</span>
                                 </td>
-                                <td class="px-6 py-6">
+                                <td class="px-6 py-6 whitespace-nowrap">
                                     <div v-if="user.latest_attempt" class="flex flex-col">
                                         <div class="flex items-center gap-2">
                                             <span 
@@ -282,14 +282,14 @@ const handleImport = () => {
                                         <div class="mt-1 h-1 w-20 overflow-hidden rounded-full bg-slate-100">
                                             <div 
                                                 class="h-full transition-all duration-1000"
-                                                :class="getQualificationStatus(user).qualified ? 'bg-green-500' : 'bg-red-400'"
+                                                :class="getQualificationStatus(user).qualified ? bg-green-500 : 'bg-red-400'"
                                                 :style="{ width: `${getQualificationStatus(user).percentage}%` }"
                                             ></div>
                                         </div>
                                     </div>
                                     <span v-else class="text-[9px] font-black tracking-widest text-slate-300 uppercase italic">Awaiting Exam</span>
                                 </td>
-                                <td class="px-6 py-6">
+                                <td class="px-6 py-6 whitespace-nowrap">
                                     <span
                                         v-if="user.latest_attempt && getQualificationStatus(user).qualified"
                                         class="inline-flex items-center gap-1.5 rounded-lg bg-green-50 px-3 py-1 text-[9px] font-black text-green-600 uppercase"
@@ -312,7 +312,7 @@ const handleImport = () => {
                                         Pending
                                     </span>
                                 </td>
-                                <td class="px-8 py-6 text-right">
+                                <td class="px-8 py-6 text-right whitespace-nowrap">
                                     <div class="flex items-center justify-end gap-2">
                                         <button
                                             @click="openEditModal(user)"
