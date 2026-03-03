@@ -37,6 +37,12 @@ const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
         <Head :title="exam.title" />
 
         <div class="space-y-10">
+            <nav class="flex items-center gap-2 text-xs font-medium text-slate-400">
+                <Link href="/staff/exams" class="text-slate-400 hover:text-slate-600 transition-colors">Exams</Link>
+                <span class="text-slate-300">/</span>
+                <span class="text-slate-500 font-bold">{{ exam.title }}</span>
+            </nav>
+
             <div class="relative overflow-hidden rounded-xl bg-slate-900 px-10 py-12 text-white shadow-2xl">
                 <div class="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
                     <div class="space-y-6">
@@ -84,9 +90,9 @@ const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
                         </Link>
                         <Link
                             :href="manageQuestions(exam.id).url"
-                            class="flex items-center gap-3 rounded-xl bg-primary px-8 py-4 text-xs font-black tracking-widest text-slate-900 uppercase shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95"
+                            class="group flex items-center gap-3 rounded-xl bg-lemon-yellow px-8 py-4 text-xs font-black tracking-widest text-primary uppercase shadow-xl shadow-lemon-yellow/10 transition-all hover:scale-105 active:scale-95"
                         >
-                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg class="h-5 w-5 transition-transform group-hover:rotate-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                             </svg>
                             {{ exam.questions.length > 0 ? 'Update Allocated Pool' : 'Allocate Questions' }}
