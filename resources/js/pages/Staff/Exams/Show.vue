@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import { manageQuestions, edit as editExamAction, generateHardCopy as generateHardCopyAction, generateAnswerSheet as generateAnswerSheetAction } from '@/actions/App/Http/Controllers/Staff/ExamController';
+import { manageQuestions, edit as editExamAction, showHardCopy as showHardCopyAction, showAnswerSheet as showAnswerSheetAction } from '@/actions/App/Http/Controllers/Staff/ExamController';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import StaffLayout from '@/layouts/StaffLayout.vue';
 
@@ -75,7 +75,7 @@ const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
                     </div>
                     <div class="flex flex-wrap items-center gap-3 sm:gap-4">
                         <a
-                            :href="generateHardCopyAction(exam.id).url"
+                            :href="showHardCopyAction(exam.id).url"
                             target="_blank"
                             class="flex items-center gap-3 whitespace-nowrap rounded-xl border-2 border-white/20 bg-white/10 px-4 py-3 text-[10px] font-black tracking-widest text-white uppercase transition-all hover:bg-white hover:text-slate-900 active:scale-95 sm:px-6 sm:py-4 sm:text-xs"
                         >
@@ -90,7 +90,7 @@ const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
                             Hard Copy
                         </a>
                         <a
-                            :href="generateAnswerSheetAction(exam.id).url"
+                            :href="showAnswerSheetAction(exam.id).url"
                             target="_blank"
                             class="flex items-center gap-3 whitespace-nowrap rounded-xl border-2 border-white/20 bg-white/10 px-4 py-3 text-[10px] font-black tracking-widest text-white uppercase transition-all hover:bg-white hover:text-slate-900 active:scale-95 sm:px-6 sm:py-4 sm:text-xs"
                         >
