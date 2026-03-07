@@ -354,9 +354,9 @@ class ExamController extends Controller
     }
 
     /**
-     * Print the examination paper.
+     * Generate the hard copy examination paper.
      */
-    public function printExamPaper(Exam $exam): \Illuminate\Contracts\View\View
+    public function generateHardCopy(Exam $exam): \Illuminate\Contracts\View\View
     {
         $exam->load([
             'subject',
@@ -374,9 +374,9 @@ class ExamController extends Controller
     }
 
     /**
-     * Print the examination answer sheet.
+     * Generate the examination answer sheet.
      */
-    public function printAnswerSheet(Exam $exam): \Illuminate\Contracts\View\View
+    public function generateAnswerSheet(Exam $exam): \Illuminate\Contracts\View\View
     {
         $exam->load([
             'subject',
