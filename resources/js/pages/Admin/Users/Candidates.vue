@@ -22,6 +22,7 @@ interface CandidateUser {
     school_class?: { name: string };
     latest_attempt?: {
         score: number;
+        violations: Array<{ type: string; timestamp: string }> | null;
         exam: {
             questions_count?: number;
         };
@@ -135,6 +136,37 @@ const handleSearch = () => {
     router.get(index().url, { search: search.value }, { preserveState: true });
 };
 
+// Violation Log Modal
+const isViolationModalOpen = ref(false);
+const activeViolations = ref<Array<{ type: string; timestamp: string }>>([]);
+const activeCandidateName = ref('');
+
+const openViolationLog = (candidate: CandidateUser) => {
+    activeCandidateName.value = candidate.name;
+    activeViolations.value = candidate.latest_attempt?.violations || [];
+    isViolationModalOpen.value = true;
+};
+
+const formatViolationDate = (timestamp: string) => {
+    return new Date(timestamp).toLocaleString('en-NG', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+};
+
+const getViolationLabel = (type: string) => {
+    switch(type) {
+        case 'fullscreen_exit': return 'Fullscreen Exited';
+        case 'tab_switch': return 'Tab Switched';
+        case 'window_blur': return 'Lost Focus';
+        default: return 'Security Breach';
+    }
+};
+
 // Import
 const isImportModalOpen = ref(false);
 const importForm = useForm({
@@ -229,6 +261,7 @@ const handleImport = () => {
                                 <th class="px-6 py-5 text-[10px] font-black tracking-widest whitespace-nowrap text-slate-400 uppercase">
                                     Entrance Score
                                 </th>
+                                <th class="px-6 py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase text-center">Security Log</th>
                                 <th class="px-6 py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase">Status</th>
                                 <th class="px-8 py-5 text-right text-[10px] font-black tracking-widest text-slate-400 uppercase">Actions</th>
                             </tr>
@@ -288,6 +321,23 @@ const handleImport = () => {
                                         </div>
                                     </div>
                                     <span v-else class="text-[9px] font-black tracking-widest text-slate-300 uppercase italic">Awaiting Exam</span>
+                                </td>
+                                <td class="px-6 py-6 whitespace-nowrap text-center">
+                                    <div v-if="user.latest_attempt?.violations && user.latest_attempt.violations.length > 0" class="flex flex-col items-center gap-1">
+                                        <span class="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 text-[10px] font-black text-red-600 uppercase">
+                                            {{ user.latest_attempt.violations.length }} Violations
+                                        </span>
+                                        <button 
+                                            @click="openViolationLog(user)"
+                                            class="text-[9px] font-black text-primary uppercase underline hover:text-slate-900 transition-colors"
+                                        >
+                                            View Details
+                                        </button>
+                                    </div>
+                                    <span v-else-if="user.latest_attempt" class="text-[10px] font-black text-green-500 uppercase tracking-widest">
+                                        Secure
+                                    </span>
+                                    <span v-else class="text-[9px] font-black text-slate-200 uppercase">-</span>
                                 </td>
                                 <td class="px-6 py-6 whitespace-nowrap">
                                     <span
@@ -528,6 +578,60 @@ const handleImport = () => {
                             Process Import
                         </button>
                     </form>
+                </div>
+            </div>
+
+            <!-- Violation Log Modal -->
+            <div v-if="isViolationModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+                <div @click="isViolationModalOpen = false" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+                <div class="animate-in zoom-in-95 relative w-full max-w-xl overflow-hidden rounded-2xl bg-white shadow-2xl">
+                    <div class="border-b border-slate-100 bg-slate-50 px-10 py-6 flex items-center justify-between">
+                        <div>
+                            <h3 class="text-xl font-black text-slate-900 italic leading-none">Security Violation Log</h3>
+                            <p class="mt-2 text-[10px] font-black tracking-widest text-slate-400 uppercase">Candidate: {{ activeCandidateName }}</p>
+                        </div>
+                        <button @click="isViolationModalOpen = false" class="text-slate-400 hover:text-slate-600 transition-colors">
+                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <div class="max-h-[60vh] overflow-y-auto p-10 custom-scrollbar">
+                        <div v-if="activeViolations.length === 0" class="text-center py-10">
+                            <p class="font-bold text-slate-400">No violations recorded for this attempt.</p>
+                        </div>
+                        <div v-else class="space-y-4">
+                            <div 
+                                v-for="(v, idx) in activeViolations" 
+                                :key="idx"
+                                class="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 p-5 group hover:border-red-200 hover:bg-red-50/30 transition-all"
+                            >
+                                <div class="flex items-center gap-4">
+                                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-red-100 text-red-600 font-black text-xs">
+                                        {{ idx + 1 }}
+                                    </div>
+                                    <div>
+                                        <h4 class="text-sm font-black text-slate-800 uppercase tracking-tight">{{ getViolationLabel(v.type) }}</h4>
+                                        <p class="text-[10px] font-bold text-slate-400 uppercase">{{ v.type.replace('_', ' ') }}</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-[11px] font-black text-slate-600">{{ formatViolationDate(v.timestamp) }}</p>
+                                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Logged Instance</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-slate-100 bg-white p-8 flex justify-center">
+                        <button
+                            @click="isViolationModalOpen = false"
+                            class="rounded-xl bg-slate-900 px-10 py-4 text-xs font-black tracking-widest text-white uppercase transition-all hover:bg-black active:scale-95"
+                        >
+                            Close Security Log
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

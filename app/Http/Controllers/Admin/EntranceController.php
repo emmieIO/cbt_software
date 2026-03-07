@@ -26,8 +26,10 @@ class EntranceController extends Controller
     public function index(Request $request): Response
     {
         $query = User::role('candidate')
-            ->with(['schoolClass', 'prospectiveClass', 'latestAttempt.exam' => function ($q) {
-                $q->withCount('questions');
+            ->with(['schoolClass', 'prospectiveClass', 'latestAttempt' => function ($q) {
+                $q->with('exam', function ($eq) {
+                    $eq->withCount('questions');
+                });
             }]);
 
         if ($request->search) {
@@ -62,7 +64,7 @@ class EntranceController extends Controller
         $dto = UserDTO::fromRequest($request);
         // Explicitly set school_id to the provided username (Application ID)
         $dto->school_id = $request->username;
-        
+
         $user = $this->userService->createUser($dto, 'candidate');
 
         $user->update([

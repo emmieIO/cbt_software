@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import StaffLayout from '@/layouts/StaffLayout.vue';
 
@@ -8,6 +8,7 @@ interface Attempt {
     id: string;
     score: number;
     submitted_at: string;
+    violations: Array<{ type: string; timestamp: string }> | null;
     metadata: {
         termination_reason?: string;
         violation_count?: number;
@@ -40,6 +41,37 @@ const getPercentage = (score: number) => {
     return Math.round((score / props.totalQuestions) * 100);
 };
 
+// Violation Log Modal
+const isViolationModalOpen = ref(false);
+const activeViolations = ref<Array<{ type: string; timestamp: string }>>([]);
+const activeCandidateName = ref('');
+
+const openViolationLog = (attempt: Attempt) => {
+    activeCandidateName.value = attempt.user.name;
+    activeViolations.value = attempt.violations || [];
+    isViolationModalOpen.value = true;
+};
+
+const formatViolationDate = (timestamp: string) => {
+    return new Date(timestamp).toLocaleString('en-NG', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+};
+
+const getViolationLabel = (type: string) => {
+    switch(type) {
+        case 'fullscreen_exit': return 'Fullscreen Exited';
+        case 'tab_switch': return 'Tab Switched';
+        case 'window_blur': return 'Lost Focus';
+        default: return 'Security Breach';
+    }
+};
+
 // Analytics
 const stats = computed(() => {
     if (props.attempts.length === 0) return { avg: 0, passRate: 0, alerts: 0, top: 0 };
@@ -47,7 +79,7 @@ const stats = computed(() => {
     const scores = props.attempts.map(a => a.score);
     const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
     const passes = props.attempts.filter(a => getPercentage(a.score) >= 50).length;
-    const alerts = props.attempts.filter(a => !!a.metadata?.termination_reason).length;
+    const alerts = props.attempts.filter(a => (a.violations?.length || 0) > 0 || !!a.metadata?.termination_reason).length;
     const top = Math.max(...scores);
 
     return {
@@ -175,7 +207,19 @@ const handleExport = () => {
                                     </div>
                                 </td>
                                 <td class="px-6 py-6">
-                                    <div v-if="attempt.metadata?.termination_reason" class="flex flex-col max-w-[200px]">
+                                    <div v-if="(attempt.violations?.length || 0) > 0" class="flex flex-col max-w-[200px]">
+                                        <span class="inline-flex w-fit items-center gap-1.5 rounded-full bg-red-100 px-2 py-0.5 text-[8px] font-black text-red-600 uppercase">
+                                            <div class="h-1 w-1 animate-pulse rounded-full bg-red-500"></div>
+                                            {{ attempt.violations.length }} Violations
+                                        </span>
+                                        <button 
+                                            @click="openViolationLog(attempt)"
+                                            class="mt-1 text-left text-[9px] font-black text-primary uppercase underline hover:text-slate-900 transition-colors"
+                                        >
+                                            View Detailed Log
+                                        </button>
+                                    </div>
+                                    <div v-else-if="attempt.metadata?.termination_reason" class="flex flex-col max-w-[200px]">
                                         <span class="inline-flex w-fit items-center gap-1.5 rounded-full bg-red-100 px-2 py-0.5 text-[8px] font-black text-red-600 uppercase">
                                             <div class="h-1 w-1 animate-pulse rounded-full bg-red-500"></div>
                                             Violation
@@ -212,6 +256,60 @@ const handleExport = () => {
                             </tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Violation Log Modal -->
+        <div v-if="isViolationModalOpen" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <div @click="isViolationModalOpen = false" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"></div>
+            <div class="animate-in zoom-in-95 relative w-full max-w-xl overflow-hidden rounded-2xl bg-white shadow-2xl">
+                <div class="border-b border-slate-100 bg-slate-50 px-10 py-6 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-xl font-black text-slate-900 italic leading-none">Security Violation Log</h3>
+                        <p class="mt-2 text-[10px] font-black tracking-widest text-slate-400 uppercase">Student: {{ activeCandidateName }}</p>
+                    </div>
+                    <button @click="isViolationModalOpen = false" class="text-slate-400 hover:text-slate-600 transition-colors">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="max-h-[60vh] overflow-y-auto p-10 custom-scrollbar">
+                    <div v-if="activeViolations.length === 0" class="text-center py-10">
+                        <p class="font-bold text-slate-400">No violations recorded for this attempt.</p>
+                    </div>
+                    <div v-else class="space-y-4">
+                        <div 
+                            v-for="(v, idx) in activeViolations" 
+                            :key="idx"
+                            class="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 p-5 group hover:border-red-200 hover:bg-red-50/30 transition-all"
+                        >
+                            <div class="flex items-center gap-4">
+                                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-red-100 text-red-600 font-black text-xs">
+                                    {{ idx + 1 }}
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-black text-slate-800 uppercase tracking-tight">{{ getViolationLabel(v.type) }}</h4>
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase">{{ v.type.replace('_', ' ') }}</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[11px] font-black text-slate-600">{{ formatViolationDate(v.timestamp) }}</p>
+                                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Instance Logged</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-t border-slate-100 bg-white p-8 flex justify-center">
+                    <button
+                        @click="isViolationModalOpen = false"
+                        class="rounded-xl bg-slate-900 px-10 py-4 text-xs font-black tracking-widest text-white uppercase transition-all hover:bg-black active:scale-95"
+                    >
+                        Close Security Log
+                    </button>
                 </div>
             </div>
         </div>

@@ -36,7 +36,7 @@ const currentQuestionIndex = ref(0);
 const answers = ref<Record<string, string>>({ ...props.savedAnswers });
 const timeLeft = ref(0);
 const timerInterval = ref<any>(null);
-const violations = ref<number>(0);
+const violations = ref<Array<{ type: string; timestamp: string }>>([]);
 const showViolationWarning = ref(false);
 const isInExamHall = ref(false);
 const isFullscreen = ref(false);
@@ -89,16 +89,23 @@ const enterFullscreen = () => {
 
 const handleFullscreenHallEntry = () => {
     enterFullscreen();
-    isInExamHall.value = true;
+    // We set a tiny delay to allow the browser to initiate the transition 
+    // before we start enforcing the fullscreen state
+    setTimeout(() => {
+        isInExamHall.value = true;
+        isFullscreen.value = !!document.fullscreenElement;
+    }, 300);
 };
 
 const handleFullscreenChange = () => {
     const wasFullscreen = isFullscreen.value;
     isFullscreen.value = !!document.fullscreenElement;
 
-    // If they were in the hall and exited fullscreen, log it as a violation
+    // If they were in the hall and exited fullscreen, log it and prompt for submission
     if (isInExamHall.value && wasFullscreen && !isFullscreen.value && !isSubmitting.value) {
+        isExitTriggered.value = true;
         logViolation('fullscreen_exit');
+        isSubmitModalOpen.value = true;
     }
 };
 
@@ -127,7 +134,11 @@ const violationReason = ref('');
 const logViolation = (type: string) => {
     if (isSubmitting.value || !isInExamHall.value) return;
 
-    violations.value++;
+    // Track detailed violation
+    violations.value.push({
+        type,
+        timestamp: new Date().toISOString(),
+    });
     
     // Set descriptive reason based on type
     switch(type) {
@@ -137,13 +148,17 @@ const logViolation = (type: string) => {
         default: violationReason.value = 'Security protocol breach.';
     }
 
-    // Show the blocking alert
-    showViolationWarning.value = true;
+    // Only show the general alert if we're not currently prompting for exit-submission
+    if (type !== 'fullscreen_exit' && type !== 'tab_switch') {
+        showViolationWarning.value = true;
+    }
 };
 
 const handleVisibilityChange = () => {
-    if (document.visibilityState === 'hidden' && isInExamHall.value) {
+    if (document.visibilityState === 'hidden' && isInExamHall.value && !isSubmitting.value) {
+        isExitTriggered.value = true;
         logViolation('tab_switch');
+        isSubmitModalOpen.value = true;
     }
 };
 
@@ -177,8 +192,19 @@ const selectOption = (questionId: string, optionId: string) => {
 // Submission
 const isSubmitting = ref(false);
 const isSubmitModalOpen = ref(false);
+const isExitTriggered = ref(false);
 
+const handleCancelSubmit = () => {
+    isSubmitModalOpen.value = false;
+    if (isExitTriggered.value && !isFullscreen.value) {
+        // If they cancelled but are still not in fullscreen, 
+        // the red security wall will be visible, which is correct.
+        // We ensure they stay in the hall state.
+    }
+    isExitTriggered.value = false;
+};
 const confirmSubmit = () => {
+    isExitTriggered.value = false;
     isSubmitModalOpen.value = true;
 };
 
@@ -197,6 +223,7 @@ const handleFinalSubmit = () => {
     import('@inertiajs/vue3').then(({ router }) => {
         router.post(`/student/exams/${props.attempt.id}/submit`, {
             answers: answers.value,
+            violations: violations.value,
         });
     });
 };
@@ -214,6 +241,7 @@ const submitExam = () => {
     import('@inertiajs/vue3').then(({ router }) => {
         router.post(`/student/exams/${props.attempt.id}/submit`, {
             answers: answers.value,
+            violations: violations.value,
         });
     });
 };
@@ -231,8 +259,28 @@ onMounted(() => {
     window.addEventListener('blur', () => logViolation('window_blur'));
     window.addEventListener('keydown', handleKeydown);
 
-    // Prevent right-click
+    // Prevent right-click, copy, and cut
     document.addEventListener('contextmenu', (e) => e.preventDefault());
+    document.addEventListener('copy', (e) => {
+        if (isInExamHall.value) {
+            e.preventDefault();
+            return false;
+        }
+    });
+    document.addEventListener('cut', (e) => {
+        if (isInExamHall.value) {
+            e.preventDefault();
+            return false;
+        }
+    });
+
+    // Prevent drag and drop of content
+    document.addEventListener('dragstart', (e) => {
+        if (isInExamHall.value) {
+            e.preventDefault();
+            return false;
+        }
+    });
 
     // Prevent accidental back navigation
     window.onbeforeunload = () => 'Examination in progress. Are you sure you want to leave?';
@@ -253,7 +301,10 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div class="min-h-screen bg-[#F8F9FB] font-sans text-slate-900 overflow-hidden">
+    <div 
+        class="min-h-screen bg-[#F8F9FB] font-sans text-slate-900 overflow-hidden"
+        :class="isInExamHall ? 'select-none' : ''"
+    >
         <Head :title="attempt.exam.title" />
 
         <!-- Exam Hall Entry Overlay -->
@@ -280,34 +331,48 @@ onBeforeUnmount(() => {
         <!-- Fullscreen Enforcement Overlay (The Wall) -->
         <div 
             v-if="isInExamHall && !isFullscreen && !isSubmitting" 
-            class="fixed inset-0 z-[200] flex items-center justify-center bg-red-600 p-6 text-white overflow-hidden select-none"
+            class="fixed inset-0 z-[80] flex flex-col items-center justify-center bg-red-600 p-6 text-white select-none overflow-hidden"
         >
-            <div class="text-center max-w-xl">
-                <div class="mx-auto mb-8 h-32 w-32 flex items-center justify-center rounded-full bg-white/20 animate-pulse">
-                    <svg class="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div class="flex h-full w-full max-w-lg flex-col items-center justify-between py-4 sm:py-10">
+                <!-- Header Icon -->
+                <div class="shrink-0 h-16 w-16 sm:h-24 sm:w-24 flex items-center justify-center rounded-full bg-white/20 animate-pulse">
+                    <svg class="h-8 w-8 sm:h-12 sm:w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
                 </div>
-                <h2 class="text-5xl font-black uppercase tracking-tighter italic leading-none">Security Lock Active</h2>
-                <p class="mt-8 text-2xl font-bold leading-relaxed">
-                    Access to examination content has been revoked: {{ violationReason }}
-                </p>
                 
-                <div class="mt-10 inline-flex flex-col items-center rounded-3xl bg-black/20 px-10 py-6 backdrop-blur-sm">
-                    <span class="text-[10px] font-black tracking-[0.3em] uppercase opacity-60">Violation Count</span>
-                    <span class="text-4xl font-black tabular-nums">{{ violations }}</span>
+                <!-- Main Message -->
+                <div class="text-center space-y-2 sm:space-y-4">
+                    <h2 class="text-2xl sm:text-4xl font-black uppercase tracking-tighter italic leading-none">Security Lock Active</h2>
+                    <p class="text-sm sm:text-lg font-bold opacity-90">Access revoked: {{ violationReason }}</p>
+                </div>
+                
+                <!-- Violation Info -->
+                <div class="flex flex-col items-center rounded-2xl bg-black/20 px-6 py-3 sm:px-10 sm:py-4 backdrop-blur-sm border border-white/5">
+                    <span class="text-[8px] sm:text-[9px] font-black tracking-[0.2em] uppercase opacity-60">Violations</span>
+                    <span class="text-2xl sm:text-3xl font-black tabular-nums">{{ violations.length }}</span>
                 </div>
 
-                <p class="mt-10 text-sm font-black tracking-widest uppercase opacity-75 animate-bounce">
-                    Re-enter Fullscreen to Resume
-                </p>
-                
-                <button
-                    @click="enterFullscreen"
-                    class="mt-6 w-full rounded-2xl bg-white px-12 py-6 text-base font-black tracking-widest text-red-600 uppercase shadow-2xl transition-all hover:scale-105 active:scale-95"
-                >
-                    Return to Exam
-                </button>
+                <!-- Policy & Call to Action -->
+                <div class="w-full space-y-6 sm:space-y-8 text-center">
+                    <div class="p-4 rounded-xl bg-white/10 border border-white/10 mx-auto max-w-sm">
+                        <p class="text-[10px] font-medium opacity-80 leading-tight">
+                            Exiting fullscreen is a security breach. You must return to fullscreen to resume or submit your test.
+                        </p>
+                    </div>
+
+                    <div class="space-y-3">
+                        <p class="text-[9px] sm:text-[10px] font-black tracking-[0.3em] uppercase opacity-60 animate-bounce">
+                            Action Required
+                        </p>
+                        <button
+                            @click="enterFullscreen"
+                            class="w-full rounded-xl bg-white px-8 py-4 sm:py-5 text-xs sm:text-sm font-black tracking-widest text-red-600 uppercase shadow-2xl transition-all hover:scale-[1.02] active:scale-95"
+                        >
+                            Return to Exam
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -500,11 +565,13 @@ onBeforeUnmount(() => {
 
         <ConfirmationModal
             :show="isSubmitModalOpen"
-            title="Submit Your Test?"
-            message="Are you sure you want to finish and submit your exam? You cannot change your answers once you proceed."
+            :title="isExitTriggered ? 'Submit and Exit?' : 'Submit Your Test?'"
+            :message="isExitTriggered 
+                ? 'You have attempt to leave the secure examination environment. If you are finished, you may submit your test now. Otherwise, click cancel and return to fullscreen to continue.' 
+                : 'Are you sure you want to finish and submit your exam? You cannot change your answers once you proceed.'"
             confirm-label="Submit Now"
             variant="primary"
-            @close="isSubmitModalOpen = false"
+            @close="handleCancelSubmit"
             @confirm="handleFinalSubmit"
         />
 

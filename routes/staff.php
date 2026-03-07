@@ -13,6 +13,8 @@ Route::middleware('guest:staff,admin')->group(function () {
 Route::middleware(['auth:staff,admin'])->group(function () {
     Route::get('/dashboard', StaffDashboardController::class)->name('dashboard')->middleware('role_or_permission:staff|admin|subject_lead');
 
+    Route::get('/students', [\App\Http\Controllers\Staff\StudentController::class, 'index'])->name('students.index')->middleware('role_or_permission:staff|admin|subject_lead');
+
     Route::prefix('questions')->name('questions.')->middleware('role_or_permission:staff|admin|subject_lead|view questions')->group(function () {
         Route::get('/', [StaffQuestionController::class, 'index'])->name('index');
         Route::get('/generate', [StaffQuestionController::class, 'generate'])->name('generate');

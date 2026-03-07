@@ -20,6 +20,7 @@ class ExamAttempt extends Model
         'score',
         'status',
         'metadata',
+        'violations',
     ];
 
     protected function casts(): array
@@ -27,6 +28,7 @@ class ExamAttempt extends Model
         return [
             'status' => AttemptStatus::class,
             'metadata' => 'array',
+            'violations' => 'array',
             'started_at' => 'datetime',
             'submitted_at' => 'datetime',
         ];

@@ -285,9 +285,9 @@ class ExamService
     /**
      * Submit an exam attempt and calculate the score.
      */
-    public function submitAttempt(\App\Models\ExamAttempt $attempt, array $answers, array $additionalMetadata = []): void
+    public function submitAttempt(\App\Models\ExamAttempt $attempt, array $answers, array $additionalMetadata = [], array $violations = []): void
     {
-        DB::transaction(function () use ($attempt, $answers, $additionalMetadata) {
+        DB::transaction(function () use ($attempt, $answers, $additionalMetadata, $violations) {
             if ($attempt->status !== \App\Enums\AttemptStatus::ONGOING) {
                 return;
             }
@@ -343,6 +343,7 @@ class ExamService
                 'submitted_at' => now(),
                 'score' => $totalScore,
                 'metadata' => $finalMetadata,
+                'violations' => $violations,
             ]);
         });
     }

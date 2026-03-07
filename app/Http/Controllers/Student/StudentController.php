@@ -193,7 +193,8 @@ class StudentController extends Controller
         $this->examService->submitAttempt(
             $attempt,
             $request->array('answers'),
-            $request->only(['termination_reason', 'violation_count'])
+            $request->only(['termination_reason']),
+            $request->array('violations')
         );
 
         return redirect()->route('student.exams.result', $attempt->id);
