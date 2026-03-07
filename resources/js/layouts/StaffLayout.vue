@@ -4,8 +4,8 @@ import { h, defineComponent, computed } from 'vue';
 import { index as examIndex, create as createExam, results as resultsIndex } from '@/actions/App/Http/Controllers/Staff/ExamController';
 import { logout } from '@/actions/App/Http/Controllers/Staff/StaffAuthController';
 import StaffDashboardController from '@/actions/App/Http/Controllers/Staff/StaffDashboardController';
-import { index as studentIndex } from '@/actions/App/Http/Controllers/Staff/StudentController';
 import { index as questionIndex, generate as aiLabGenerate, create as createQuestion } from '@/actions/App/Http/Controllers/Staff/StaffQuestionController';
+import { index as studentIndex } from '@/actions/App/Http/Controllers/Staff/StudentController';
 import DashboardLayout from '@/layouts/DashboardLayout.vue';
 
 const page = usePage();

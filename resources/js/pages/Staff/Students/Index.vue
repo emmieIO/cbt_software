@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
 import { index } from '@/actions/App/Http/Controllers/Staff/StudentController';
 import StaffLayout from '@/layouts/StaffLayout.vue';
 import type { PaginatedData, SchoolClass } from '@/types/academics';
