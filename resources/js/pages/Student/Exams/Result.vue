@@ -25,8 +25,9 @@ const props = defineProps<{
 const hasViolation = computed(() => !!props.attempt.metadata?.termination_reason);
 
 const percentage = computed(() => {
-    if (props.totalQuestions === 0) return 0;
-    return Math.round((props.attempt.score / props.totalQuestions) * 100);
+    const total = Number(props.totalQuestions) || 0;
+    if (total === 0) return 0;
+    return Math.round((Number(props.attempt.score) / total) * 100);
 });
 
 const getGrade = computed(() => {

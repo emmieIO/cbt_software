@@ -37,8 +37,9 @@ const isAdmin = computed(() => (page.props.auth.user as any).roles.includes('adm
 const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
 
 const getPercentage = (score: number) => {
-    if (props.totalQuestions === 0) return 0;
-    return Math.round((score / props.totalQuestions) * 100);
+    const total = Number(props.totalQuestions) || 0;
+    if (total === 0) return 0;
+    return Math.round((score / total) * 100);
 };
 
 // Violation Log Modal
@@ -74,13 +75,14 @@ const getViolationLabel = (type: string) => {
 
 // Analytics
 const stats = computed(() => {
-    if (props.attempts.length === 0) return { avg: 0, passRate: 0, alerts: 0, top: 0 };
+    if (!props.attempts || props.attempts.length === 0) return { avg: 0, avgPerc: 0, passRate: 0, alerts: 0, top: 0 };
     
-    const scores = props.attempts.map(a => a.score);
-    const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
-    const passes = props.attempts.filter(a => getPercentage(a.score) >= 50).length;
+    const scores = props.attempts.map(a => Number(a.score) || 0);
+    const sum = scores.reduce((a, b) => a + b, 0);
+    const avg = sum / scores.length;
+    const passes = props.attempts.filter(a => getPercentage(Number(a.score) || 0) >= 50).length;
     const alerts = props.attempts.filter(a => (a.violations?.length || 0) > 0 || !!a.metadata?.termination_reason).length;
-    const top = Math.max(...scores);
+    const top = Math.max(...scores, 0);
 
     return {
         avg: Math.round(avg * 10) / 10,
