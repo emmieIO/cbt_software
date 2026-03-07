@@ -63,7 +63,7 @@ jobs:
     needs: quality-assurance
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
-    
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -77,6 +77,9 @@ jobs:
           port: ${{ secrets.VPS_PORT || 22 }}
           script: |
             cd /var/www/cbt_software
+            # 1. Clean up existing build and generated types
+            rm -rf public/build
+            rm -rf resources/js/actions # This forces Wayfinder to regenerate them
             if [ -f "deploy.sh" ]; then
               ./deploy.sh
             else
@@ -88,6 +91,7 @@ jobs:
               php artisan config:cache
               php artisan route:cache
               php artisan view:cache
+              php artisan wayfinder:generate
               npm install
               npm run build
               php artisan octane:reload || php artisan queue:restart
