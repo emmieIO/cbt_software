@@ -38,6 +38,8 @@ const timeLeft = ref(0);
 const timerInterval = ref<any>(null);
 const violations = ref<number>(0);
 const showViolationWarning = ref(false);
+const isInExamHall = ref(false);
+const isFullscreen = ref(false);
 
 const currentQuestion = computed(() => props.questions[currentQuestionIndex.value]);
 
@@ -75,37 +77,65 @@ const isTimeLow = computed(() => timeLeft.value < 5 * 60 * 1000); // 5 minutes
 
 // Security Logic
 const enterFullscreen = () => {
-    const elem = document.documentElement;
-    if (elem.requestFullscreen) {
-        elem.requestFullscreen().catch(() => {
-            console.warn('Fullscreen request failed');
+    const elem = document.documentElement as any;
+    const requestMethod = elem.requestFullscreen || elem.webkitRequestFullscreen || elem.mozRequestFullScreen || elem.msRequestFullscreen;
+    
+    if (requestMethod) {
+        requestMethod.call(elem).catch((err: any) => {
+            console.error(`Error attempting to enable full-screen mode: ${err.message}`);
         });
+    }
+};
+
+const handleFullscreenHallEntry = () => {
+    enterFullscreen();
+    isInExamHall.value = true;
+};
+
+const handleFullscreenChange = () => {
+    const wasFullscreen = isFullscreen.value;
+    isFullscreen.value = !!document.fullscreenElement;
+
+    // If they were in the hall and exited fullscreen, log it as a violation
+    if (isInExamHall.value && wasFullscreen && !isFullscreen.value && !isSubmitting.value) {
+        logViolation('fullscreen_exit');
+    }
+};
+
+const handleKeydown = (e: KeyboardEvent) => {
+    if (!isInExamHall.value || isSubmitting.value) return;
+
+    // Prevent Esc key if possible (browsers usually protect this, but we try)
+    if (e.key === 'Escape' && isFullscreen.value) {
+        e.preventDefault();
+        return false;
+    }
+
+    // Prevent F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
+    if (
+        e.key === 'F12' || 
+        (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) ||
+        (e.ctrlKey && e.key === 'u')
+    ) {
+        e.preventDefault();
+        return false;
     }
 };
 
 const logViolation = (type: string) => {
-    if (isSubmitting.value) return;
+    if (isSubmitting.value || !isInExamHall.value) return;
 
     violations.value++;
 
-    // Auto-submit immediately on violation
-    isSubmitting.value = true;
+    // Show the blocking alert
+    showViolationWarning.value = true;
 
-    if (document.fullscreenElement) {
-        document.exitFullscreen();
-    }
-
-    import('@inertiajs/vue3').then(({ router }) => {
-        router.post(`/student/exams/${props.attempt.id}/submit`, {
-            answers: answers.value,
-            termination_reason: `Security Violation: ${type === 'tab_switch' ? 'Tab Switched' : 'Window Blurred'}`,
-            violation_count: violations.value,
-        });
-    });
+    // Optional: Log to backend immediately if you have a logging endpoint
+    // This provides a paper trail for the invigilator
 };
 
 const handleVisibilityChange = () => {
-    if (document.visibilityState === 'hidden') {
+    if (document.visibilityState === 'hidden' && isInExamHall.value) {
         logViolation('tab_switch');
     }
 };
@@ -153,7 +183,7 @@ const handleFinalSubmit = () => {
 
     // Exit fullscreen on submit
     if (document.fullscreenElement) {
-        document.exitFullscreen();
+        document.exitFullscreen().catch(() => {});
     }
 
     // Using Inertia router directly
@@ -171,7 +201,7 @@ const submitExam = () => {
     isSubmitting.value = true;
 
     if (document.fullscreenElement) {
-        document.exitFullscreen();
+        document.exitFullscreen().catch(() => {});
     }
 
     import('@inertiajs/vue3').then(({ router }) => {
@@ -183,11 +213,16 @@ const submitExam = () => {
 
 onMounted(() => {
     startTimer();
-    enterFullscreen();
-
+    
     // Security Listeners
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+    
     window.addEventListener('blur', () => logViolation('window_blur'));
+    window.addEventListener('keydown', handleKeydown);
 
     // Prevent right-click
     document.addEventListener('contextmenu', (e) => e.preventDefault());
@@ -199,13 +234,75 @@ onMounted(() => {
 onBeforeUnmount(() => {
     clearInterval(timerInterval.value);
     document.removeEventListener('visibilitychange', handleVisibilityChange);
+    document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+    
+    window.removeEventListener('blur', () => logViolation('window_blur'));
+    window.removeEventListener('keydown', handleKeydown);
     window.onbeforeunload = null;
 });
 </script>
 
 <template>
-    <div class="min-h-screen bg-[#F8F9FB] font-sans text-slate-900">
+    <div class="min-h-screen bg-[#F8F9FB] font-sans text-slate-900 overflow-hidden">
         <Head :title="attempt.exam.title" />
+
+        <!-- Exam Hall Entry Overlay -->
+        <div v-if="!isInExamHall" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/95 backdrop-blur-md p-6">
+            <div class="max-w-md w-full rounded-3xl bg-white p-10 shadow-2xl text-center">
+                <div class="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                    <svg class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-black text-slate-900">Secure Examination Hall</h2>
+                <p class="mt-4 text-slate-500 font-medium leading-relaxed">
+                    By entering, you agree to follow all examination rules. The assessment will be conducted in <strong>Fullscreen Mode</strong>. Exiting or switching tabs will be logged as a violation.
+                </p>
+                <button
+                    @click="handleFullscreenHallEntry"
+                    class="mt-10 w-full rounded-2xl bg-primary py-5 text-sm font-black tracking-widest text-white uppercase shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95"
+                >
+                    Enter Examination Hall
+                </button>
+            </div>
+        </div>
+
+        <!-- Fullscreen Enforcement Overlay (The Wall) -->
+        <div 
+            v-if="isInExamHall && !isFullscreen && !isSubmitting" 
+            class="fixed inset-0 z-[200] flex items-center justify-center bg-red-600 p-6 text-white overflow-hidden select-none"
+        >
+            <div class="text-center max-w-xl">
+                <div class="mx-auto mb-8 h-32 w-32 flex items-center justify-center rounded-full bg-white/20 animate-pulse">
+                    <svg class="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </div>
+                <h2 class="text-5xl font-black uppercase tracking-tighter italic leading-none">Security Lock Active</h2>
+                <p class="mt-8 text-2xl font-bold leading-relaxed">
+                    Access to examination content has been revoked because you exited Fullscreen Mode.
+                </p>
+                
+                <div class="mt-10 inline-flex flex-col items-center rounded-3xl bg-black/20 px-10 py-6 backdrop-blur-sm">
+                    <span class="text-[10px] font-black tracking-[0.3em] uppercase opacity-60">Violation Count</span>
+                    <span class="text-4xl font-black tabular-nums">{{ violations }}</span>
+                </div>
+
+                <p class="mt-10 text-sm font-black tracking-widest uppercase opacity-75 animate-bounce">
+                    Re-enter Fullscreen to Resume
+                </p>
+                
+                <button
+                    @click="enterFullscreen"
+                    class="mt-6 w-full rounded-2xl bg-white px-12 py-6 text-base font-black tracking-widest text-red-600 uppercase shadow-2xl transition-all hover:scale-105 active:scale-95"
+                >
+                    Return to Exam
+                </button>
+            </div>
+        </div>
 
         <!-- Exam Header -->
         <header class="sticky top-0 z-30 border-b border-slate-200 bg-white px-6 py-4 shadow-sm">
