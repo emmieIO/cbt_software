@@ -122,16 +122,23 @@ const handleKeydown = (e: KeyboardEvent) => {
     }
 };
 
+const violationReason = ref('');
+
 const logViolation = (type: string) => {
     if (isSubmitting.value || !isInExamHall.value) return;
 
     violations.value++;
+    
+    // Set descriptive reason based on type
+    switch(type) {
+        case 'fullscreen_exit': violationReason.value = 'Fullscreen was exited.'; break;
+        case 'tab_switch': violationReason.value = 'Browser tab was switched.'; break;
+        case 'window_blur': violationReason.value = 'Examination window lost focus.'; break;
+        default: violationReason.value = 'Security protocol breach.';
+    }
 
     // Show the blocking alert
     showViolationWarning.value = true;
-
-    // Optional: Log to backend immediately if you have a logging endpoint
-    // This provides a paper trail for the invigilator
 };
 
 const handleVisibilityChange = () => {
@@ -283,7 +290,7 @@ onBeforeUnmount(() => {
                 </div>
                 <h2 class="text-5xl font-black uppercase tracking-tighter italic leading-none">Security Lock Active</h2>
                 <p class="mt-8 text-2xl font-bold leading-relaxed">
-                    Access to examination content has been revoked because you exited Fullscreen Mode.
+                    Access to examination content has been revoked: {{ violationReason }}
                 </p>
                 
                 <div class="mt-10 inline-flex flex-col items-center rounded-3xl bg-black/20 px-10 py-6 backdrop-blur-sm">
