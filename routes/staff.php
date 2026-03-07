@@ -35,6 +35,8 @@ Route::middleware(['auth:staff,admin'])->group(function () {
         Route::get('/create', [\App\Http\Controllers\Staff\ExamController::class, 'create'])->name('create');
         Route::post('/', [\App\Http\Controllers\Staff\ExamController::class, 'store'])->name('store');
         Route::get('/{exam}', [\App\Http\Controllers\Staff\ExamController::class, 'show'])->name('show');
+        Route::get('/{exam}/print', [\App\Http\Controllers\Staff\ExamController::class, 'print'])->name('print');
+        Route::get('/{exam}/print-answer-sheet', [\App\Http\Controllers\Staff\ExamController::class, 'printAnswerSheet'])->name('print-answer-sheet');
 
         // Question Management (Directly on Exam)
         Route::get('/{exam}/questions', [\App\Http\Controllers\Staff\ExamController::class, 'manageQuestions'])->name('questions');

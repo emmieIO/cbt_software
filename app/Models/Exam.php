@@ -20,6 +20,7 @@ class Exam extends Model
         'academic_session_id',
         'created_by',
         'title',
+        'branch',
         'description',
         'instructions',
         'duration',
@@ -33,6 +34,7 @@ class Exam extends Model
     protected function casts(): array
     {
         return [
+            'branch' => \App\Enums\Branch::class,
             'type' => ExamType::class,
             'status' => ExamStatus::class,
             'settings' => 'array',

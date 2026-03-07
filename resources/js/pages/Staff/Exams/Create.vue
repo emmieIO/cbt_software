@@ -35,6 +35,7 @@ const useGlobalSelection = ref(isAdmin.value);
 
 const form = useForm({
     title: '',
+    branch: 'primary',
     assignment_id: '', 
     subject_id: '',
     school_class_id: '',
@@ -150,7 +151,7 @@ const submit = () => {
                     <div class="space-y-8">
                         <!-- Basic Info -->
                         <div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
-                            <div class="lg:col-span-2">
+                            <div class="lg:col-span-1">
                                 <label class="mb-3 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Exam Title</label>
                                 <input
                                     v-model="form.title"
@@ -159,6 +160,18 @@ const submit = () => {
                                     class="w-full rounded-xl border-slate-100 bg-slate-50 px-6 py-5 text-lg font-black text-slate-800 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                                 />
                                 <div v-if="form.errors.title" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.title }}</div>
+                            </div>
+
+                            <div class="lg:col-span-1">
+                                <label class="mb-3 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">School Branch</label>
+                                <select
+                                    v-model="form.branch"
+                                    class="w-full rounded-xl border-slate-100 bg-slate-50 px-6 py-5 text-lg font-black text-slate-800 transition-all focus:border-primary focus:bg-white focus:ring-primary"
+                                >
+                                    <option value="primary">Chrisland Primary School VGC</option>
+                                    <option value="nursery">Chrisland Nursery School VGC</option>
+                                </select>
+                                <div v-if="form.errors.branch" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.branch }}</div>
                             </div>
 
                             <div>

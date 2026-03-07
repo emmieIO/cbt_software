@@ -15,6 +15,19 @@ return [
 
     'name' => env('APP_NAME', 'Laravel'),
 
+    'branches' => [
+        'primary' => [
+            'name' => 'Chrisland Primary School VGC',
+            'address' => "K-6-A Road 3,\nVictoria Garden City (VGC), Ajah,\nLagos, NG",
+            'phones' => '08172013145, 08023369900, 014540221',
+        ],
+        'nursery' => [
+            'name' => 'Chrisland Nursery School VGC',
+            'address' => "0-1A / 3D, Road 9,\nVictoria Garden City (VGC), Ajah,\nLagos, NG",
+            'phones' => '08172013114, 08023421214',
+        ],
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Application Environment

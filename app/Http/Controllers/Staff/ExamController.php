@@ -69,7 +69,7 @@ class ExamController extends Controller
         $user = $request->user();
 
         // Get authorized context with strict subjects (only those explicitly assigned)
-        $context = (new \App\Services\QuestionService())->getAuthorizedContext($user, false, true);
+        $context = (new \App\Services\QuestionService)->getAuthorizedContext($user, false, true);
 
         // Get only assigned loads for this teacher
         $assignments = $user->currentAssignments()
@@ -92,6 +92,7 @@ class ExamController extends Controller
     {
         $request->validate([
             'title' => ['required', 'string', 'max:255'],
+            'branch' => ['required', 'string', \Illuminate\Validation\Rule::enum(\App\Enums\Branch::class)],
             'subject_id' => ['required_unless:type,entrance', 'nullable', 'exists:subjects,id'],
             'school_class_id' => ['required', 'exists:school_classes,id'],
             'prospective_class_id' => ['required_if:type,entrance', 'nullable', 'exists:prospective_classes,id'],
@@ -188,7 +189,7 @@ class ExamController extends Controller
         $user = $request->user();
 
         // Get authorized context with strict subjects
-        $context = (new \App\Services\QuestionService())->getAuthorizedContext($user, false, true);
+        $context = (new \App\Services\QuestionService)->getAuthorizedContext($user, false, true);
 
         // Get only assigned loads for this teacher
         $assignments = $user->currentAssignments()
@@ -212,6 +213,7 @@ class ExamController extends Controller
     {
         $request->validate([
             'title' => ['required', 'string', 'max:255'],
+            'branch' => ['required', 'string', \Illuminate\Validation\Rule::enum(\App\Enums\Branch::class)],
             'subject_id' => ['required_unless:type,entrance', 'nullable', 'exists:subjects,id'],
             'school_class_id' => ['required_unless:type,entrance', 'nullable', 'exists:school_classes,id'],
             'prospective_class_id' => ['required_if:type,entrance', 'nullable', 'exists:prospective_classes,id'],
@@ -229,7 +231,7 @@ class ExamController extends Controller
 
         \Illuminate\Support\Facades\DB::transaction(function () use ($request, $exam) {
             $data = $request->only([
-                'title', 'subject_id', 'school_class_id', 'prospective_class_id',
+                'title', 'branch', 'subject_id', 'school_class_id', 'prospective_class_id',
                 'duration', 'type', 'start_time', 'end_time', 'status',
             ]);
 
@@ -349,5 +351,45 @@ class ExamController extends Controller
 
         ]);
 
+    }
+
+    /**
+     * Print the examination paper.
+     */
+    public function print(Exam $exam): \Illuminate\Contracts\View\View
+    {
+        $exam->load([
+            'subject',
+            'schoolClass',
+            'prospectiveClass',
+            'academicSession',
+            'questions' => function ($query) {
+                $query->with(['options', 'topic.subject'])->orderByPivot('order', 'asc');
+            },
+        ]);
+
+        return view('staff.exams.print', [
+            'exam' => $exam,
+        ]);
+    }
+
+    /**
+     * Print the examination answer sheet.
+     */
+    public function printAnswerSheet(Exam $exam): \Illuminate\Contracts\View\View
+    {
+        $exam->load([
+            'subject',
+            'schoolClass',
+            'prospectiveClass',
+            'academicSession',
+            'questions' => function ($query) {
+                $query->orderByPivot('order', 'asc');
+            },
+        ]);
+
+        return view('staff.exams.answer-sheet', [
+            'exam' => $exam,
+        ]);
     }
 }
