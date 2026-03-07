@@ -289,7 +289,7 @@ if (typeof window !== 'undefined') {
                                 <span v-else class="text-xs font-black text-slate-500">{{ userInitials }}</span>
                             </div>
                             <div class="hidden flex-col items-start lg:flex">
-                                <span class="text-sm leading-none font-black text-slate-800 transition-colors group-hover:text-primary">{{
+                                <span class="text-sm leading-none font-black text-slate-800 transition-colors group-hover:text-slate-900">{{
                                     user.name
                                 }}</span>
                                 <span class="mt-1 text-[10px] font-bold tracking-widest text-slate-400 uppercase">{{ user.roles?.[0] }}</span>
@@ -317,7 +317,7 @@ if (typeof window !== 'undefined') {
                             <div class="p-2">
                                 <Link
                                     href="/profile"
-                                    class="flex items-center gap-3 rounded-xl px-4 py-2.5 text-xs font-black text-slate-600 uppercase transition-colors hover:bg-slate-50 hover:text-primary"
+                                    class="flex items-center gap-3 rounded-xl px-4 py-2.5 text-xs font-black text-slate-600 uppercase transition-colors hover:bg-slate-50 hover:text-slate-900"
                                 >
                                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path

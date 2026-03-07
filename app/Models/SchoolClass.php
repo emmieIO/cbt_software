@@ -17,6 +17,7 @@ class SchoolClass extends Model
         'name',
         'slug',
         'level',
+        'branch',
     ];
 
     /**
@@ -28,6 +29,7 @@ class SchoolClass extends Model
     {
         return [
             'level' => ClassLevel::class,
+            'branch' => \App\Enums\Branch::class,
         ];
     }
 

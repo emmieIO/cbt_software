@@ -16,6 +16,7 @@ class ProspectiveClass extends Model
         'name',
         'slug',
         'description',
+        'branch',
         'pass_percentage',
         'is_active',
     ];
@@ -24,6 +25,7 @@ class ProspectiveClass extends Model
     {
         return [
             'is_active' => 'boolean',
+            'branch' => \App\Enums\Branch::class,
         ];
     }
 

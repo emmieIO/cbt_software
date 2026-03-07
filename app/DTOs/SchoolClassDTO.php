@@ -9,14 +9,16 @@ class SchoolClassDTO
 {
     public function __construct(
         public string $name,
-        public ClassLevel $level
+        public ClassLevel $level,
+        public string $branch = 'primary_vgc'
     ) {}
 
     public static function fromRequest(Request $request): self
     {
         return new self(
             name: $request->string('name'),
-            level: ClassLevel::from($request->string('level'))
+            level: ClassLevel::from($request->string('level')),
+            branch: $request->string('branch', 'primary_vgc')
         );
     }
 
@@ -25,6 +27,7 @@ class SchoolClassDTO
         return [
             'name' => $this->name,
             'level' => $this->level,
+            'branch' => $this->branch,
         ];
     }
 }

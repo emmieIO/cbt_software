@@ -8,6 +8,7 @@ import StaffLayout from '@/layouts/StaffLayout.vue';
 interface Exam {
     id: string;
     title: string;
+    branch: string;
     subject?: { name: string } | null;
     school_class?: { name: string };
     prospective_class?: { name: string };
@@ -25,6 +26,7 @@ interface Exam {
 
 defineProps<{
     exam: Exam;
+    branches: Record<string, { name: string; address: string; phones: string }>;
 }>();
 
 const page = usePage();
@@ -37,19 +39,30 @@ const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
         <Head :title="exam.title" />
 
         <div class="space-y-10">
-            <nav class="flex items-center gap-2 text-xs font-medium text-slate-400">
-                <Link href="/staff/exams" class="text-slate-400 hover:text-slate-600 transition-colors">Exams</Link>
-                <span class="text-slate-300">/</span>
-                <span class="text-slate-500 font-bold">{{ exam.title }}</span>
+            <!-- Breadcrumbs -->
+            <nav class="flex items-center gap-2 text-[10px] font-bold tracking-widest text-slate-500 uppercase">
+                <Link :href="isAdmin ? '/admin/dashboard' : '/staff/dashboard'" class="text-slate-500 transition-colors hover:text-slate-800">Dashboard</Link>
+                <svg class="h-3 w-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg>
+                <Link href="/staff/exams" class="text-slate-500 transition-colors hover:text-slate-800">Vault</Link>
+                <svg class="h-3 w-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg>
+                <span class="text-slate-900">Configuration</span>
             </nav>
 
             <div class="relative overflow-hidden rounded-xl bg-slate-900 px-10 py-12 text-white shadow-2xl">
                 <div class="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
                     <div class="space-y-6">
-                        <div class="flex items-center gap-4">
-                            <span class="rounded-full bg-primary px-3 py-1 text-[9px] font-black tracking-widest text-slate-900 uppercase">{{
-                                exam.status
-                            }}</span>
+                        <div class="flex flex-col gap-2">
+                            <div class="flex items-center gap-3">
+                                <Link href="/staff/exams" class="group flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 transition-all hover:bg-white hover:text-slate-900 active:scale-95">
+                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" /></svg>
+                                </Link>
+                                <span class="rounded-full bg-primary px-3 py-1 text-[9px] font-black tracking-widest text-slate-900 uppercase">{{
+                                    exam.status
+                                }}</span>
+                                <div v-if="branches[exam.branch]" class="rounded-full border border-white/20 bg-white/5 px-3 py-1 text-[9px] font-black tracking-widest text-white uppercase italic">
+                                    {{ branches[exam.branch].name }}
+                                </div>
+                            </div>
                             <h1 class="text-3xl font-black">{{ exam.title }}</h1>
                         </div>
                         <div class="flex flex-wrap items-center gap-x-8 gap-y-4">

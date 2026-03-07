@@ -19,23 +19,23 @@ class SchoolClassController extends Controller
     /**
      * Display a listing of the school classes.
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $query = SchoolClass::query();
+
+        if ($request->branch) {
+            $query->where('branch', $request->branch);
+        }
 
         return Inertia::render('Admin/Classes/Index', [
-
-            'classes' => SchoolClass::latest()->get(),
-
+            'classes' => $query->latest()->get(),
+            'branches' => config('app.branches'),
             'levels' => collect(ClassLevel::cases())->map(fn ($l) => [
-
                 'value' => $l->value,
-
                 'label' => Str::title($l->value),
-
             ]),
-
+            'filters' => $request->only(['branch']),
         ]);
-
     }
 
     /**
@@ -43,21 +43,19 @@ class SchoolClassController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-
         $request->validate([
-
-            'name' => ['required', 'string', 'max:255', 'unique:school_classes,name'],
-
+            'name' => [
+                'required', 'string', 'max:255',
+                \Illuminate\Validation\Rule::unique('school_classes')->where(fn ($q) => $q->where('branch', $request->branch))
+            ],
             'level' => ['required', new Enum(ClassLevel::class)],
-
+            'branch' => ['required', 'string', \Illuminate\Validation\Rule::enum(\App\Enums\Branch::class)],
         ]);
 
         $dto = \App\DTOs\SchoolClassDTO::fromRequest($request);
-
         $this->classService->createClass($dto);
 
         return back()->with('success', 'School class created successfully.');
-
     }
 
     /**
@@ -65,21 +63,21 @@ class SchoolClassController extends Controller
      */
     public function update(Request $request, SchoolClass $schoolClass): RedirectResponse
     {
-
         $request->validate([
-
-            'name' => ['required', 'string', 'max:255', 'unique:school_classes,name,'.$schoolClass->id],
-
+            'name' => [
+                'required', 'string', 'max:255',
+                \Illuminate\Validation\Rule::unique('school_classes')
+                    ->where(fn ($q) => $q->where('branch', $request->branch))
+                    ->ignore($schoolClass->id)
+            ],
             'level' => ['required', new Enum(ClassLevel::class)],
-
+            'branch' => ['required', 'string', \Illuminate\Validation\Rule::enum(\App\Enums\Branch::class)],
         ]);
 
         $dto = \App\DTOs\SchoolClassDTO::fromRequest($request);
-
         $this->classService->updateClass($schoolClass, $dto);
 
         return back()->with('success', 'School class updated successfully.');
-
     }
 
     /**

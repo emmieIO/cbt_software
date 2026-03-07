@@ -12,6 +12,7 @@ class UserDTO
         public ?string $username = null,
         public ?string $school_id = null,
         public ?string $school_class_id = null,
+        public ?string $branch = null,
         public ?string $password = null,
     ) {}
 
@@ -23,6 +24,7 @@ class UserDTO
             username: $request->username,
             school_id: $request->school_id,
             school_class_id: $request->school_class_id,
+            branch: $request->branch,
             password: $request->password,
         );
     }
@@ -35,6 +37,7 @@ class UserDTO
             'username' => $this->username,
             'school_id' => $this->school_id,
             'school_class_id' => $this->school_class_id,
+            'branch' => $this->branch,
             'password' => $this->password,
         ]);
     }

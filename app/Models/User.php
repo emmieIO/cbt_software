@@ -35,6 +35,7 @@ class User extends Authenticatable
         'school_id',
         'school_class_id',
         'prospective_class_id',
+        'branch',
         'status',
         'is_active',
     ];
@@ -109,6 +110,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'branch' => \App\Enums\Branch::class,
         ];
     }
 }

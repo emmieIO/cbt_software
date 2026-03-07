@@ -19,19 +19,34 @@ interface Exam {
     academic_session: { name: string };
     status: string;
     type: string;
+    branch: string;
     duration: number;
     questions_count: number;
     start_time: string | null;
 }
 
-defineProps<{
+const props = defineProps<{
     exams: PaginatedData<Exam>;
-    filters: any;
+    branches: Record<string, { name: string; address: string; phones: string }>;
+    filters: {
+        status?: string;
+        type?: string;
+        branch?: string;
+    };
 }>();
 
 const page = usePage();
 const isAdmin = computed(() => (page.props.auth.user as any).roles.includes('admin'));
 const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
+
+// Filters
+const branchFilter = ref(props.filters.branch || '');
+const applyFilters = () => {
+    router.get(router.page.url, { 
+        ...props.filters,
+        branch: branchFilter.value 
+    }, { preserveState: true });
+};
 
 const getStatusColor = (status: string) => {
     switch (status) {
@@ -52,10 +67,22 @@ const getStatusColor = (status: string) => {
         <Head title="My Examinations" />
 
         <div class="space-y-8">
+            <!-- Breadcrumbs -->
+            <nav class="flex items-center gap-2 text-[10px] font-bold tracking-widest text-slate-500 uppercase">
+                <Link :href="isAdmin ? '/admin/dashboard' : '/staff/dashboard'" class="text-slate-500 transition-colors hover:text-slate-800">Dashboard</Link>
+                <svg class="h-3 w-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg>
+                <span class="text-slate-900">Examination Vault</span>
+            </nav>
+
             <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h2 class="text-2xl md:text-3xl font-black tracking-tight text-slate-900">Examination Vault</h2>
-                    <p class="mt-1 text-xs md:text-sm font-bold text-slate-500">Manage your papers and student schedules.</p>
+                    <div class="flex items-center gap-3">
+                        <Link :href="isAdmin ? '/admin/dashboard' : '/staff/dashboard'" class="group flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white transition-all hover:border-slate-900 hover:text-slate-900 active:scale-95">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" /></svg>
+                        </Link>
+                        <h2 class="text-2xl md:text-3xl font-black tracking-tight text-slate-900 italic">Examination Vault</h2>
+                    </div>
+                    <p class="mt-2 text-xs md:text-sm font-bold text-slate-500 uppercase tracking-widest">Manage papers and student schedules.</p>
                 </div>
                 <Link
                     :href="createExamAction().url"
@@ -66,6 +93,22 @@ const getStatusColor = (status: string) => {
                     </svg>
                     New Examination
                 </Link>
+            </div>
+
+            <!-- Branch Filter -->
+            <div class="flex items-center gap-3 rounded-xl border border-slate-100 bg-white p-4 shadow-sm">
+                <div class="flex h-10 items-center gap-2 rounded-lg border border-slate-100 bg-slate-50 px-4">
+                    <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
+                    <select 
+                        v-model="branchFilter" 
+                        @change="applyFilters"
+                        class="cursor-pointer border-none bg-transparent text-[10px] font-black text-slate-600 uppercase focus:ring-0"
+                    >
+                        <option value="">All My Branches</option>
+                        <option v-for="(info, key) in branches" :key="key" :value="key">{{ info.name }}</option>
+                    </select>
+                </div>
+                <span class="text-[10px] font-black tracking-widest text-slate-400 uppercase italic">Filter vault by school</span>
             </div>
 
             <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -87,7 +130,10 @@ const getStatusColor = (status: string) => {
 
                         <h3 class="mb-2 line-clamp-1 text-lg md:text-xl font-black text-slate-800">{{ exam.title }}</h3>
                         <div class="mb-4 md:mb-6 flex flex-wrap items-center gap-2">
-                            <span class="rounded-xl bg-primary/5 px-2 py-0.5 md:py-1 text-[9px] md:text-[10px] font-black text-primary uppercase">
+                            <div v-if="branches[exam.branch]" class="inline-flex items-center rounded-lg border border-primary/10 bg-primary/5 px-2 py-0.5 text-[8px] font-black text-primary uppercase">
+                                {{ branches[exam.branch].name }}
+                            </div>
+                            <span class="rounded-xl bg-slate-50 px-2 py-0.5 md:py-1 text-[9px] md:text-[10px] font-black text-slate-500 uppercase border border-slate-100">
                                 {{ exam.subject?.name || 'Multi-Subject' }}
                             </span>
                             <div class="hidden sm:block rounded-lg-full h-1 w-1 bg-slate-200"></div>

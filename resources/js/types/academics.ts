@@ -19,6 +19,7 @@ export type SchoolClass = {
     name: string;
     slug: string;
     level: string;
+    branch: string;
 };
 
 export type Option = {
@@ -40,6 +41,12 @@ export type Question = {
     is_active: boolean;
     topic: Topic;
     school_class: SchoolClass;
+    prospective_class?: Batch;
+    creator?: {
+        id: string;
+        name: string;
+        branch: string;
+    };
     options: Option[];
     created_at: string;
     updated_at: string;
@@ -49,6 +56,7 @@ export type Batch = {
     id: string;
     name: string;
     slug: string;
+    branch: string;
     description?: string;
     is_active: boolean;
 };

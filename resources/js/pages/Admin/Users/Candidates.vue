@@ -12,6 +12,7 @@ interface CandidateUser {
     username: string;
     school_id: string | null;
     status: string;
+    branch: string;
     prospective_class_id: string | null;
     school_class_id: string | null;
     prospective_class?: { 
@@ -33,8 +34,10 @@ const props = defineProps<{
     candidates: PaginatedData<CandidateUser>;
     classes: SchoolClass[];
     batches: { id: string; name: string; pass_percentage: number }[];
+    branches: Record<string, { name: string; address: string; phones: string }>;
     filters: {
         search?: string;
+        branch?: string;
     };
 }>();
 
@@ -65,6 +68,7 @@ const form = useForm({
     username: '',
     school_class_id: '',
     prospective_class_id: '',
+    branch: 'primary_vgc',
 });
 
 const openCreateModal = () => {
@@ -83,6 +87,7 @@ const openEditModal = (user: CandidateUser) => {
     form.username = user.username;
     form.school_class_id = user.school_class_id || '';
     form.prospective_class_id = user.prospective_class_id || '';
+    form.branch = user.branch || 'primary_vgc';
     
     isModalOpen.value = true;
 };
@@ -132,8 +137,13 @@ const handleAdmit = () => {
 
 // Search
 const search = ref(props.filters.search || '');
+const branchFilter = ref(props.filters.branch || '');
+
 const handleSearch = () => {
-    router.get(index().url, { search: search.value }, { preserveState: true });
+    router.get(index().url, { 
+        search: search.value,
+        branch: branchFilter.value 
+    }, { preserveState: true });
 };
 
 // Violation Log Modal
@@ -188,10 +198,22 @@ const handleImport = () => {
         <Head title="Admissions & Prospective Students" />
 
         <div class="space-y-8">
+            <!-- Breadcrumbs -->
+            <nav class="flex items-center gap-2 text-[10px] font-bold tracking-widest text-slate-500 uppercase">
+                <Link href="/admin/dashboard" class="text-slate-500 transition-colors hover:text-slate-800">Dashboard</Link>
+                <svg class="h-3 w-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg>
+                <span class="text-slate-900">Admissions Portal</span>
+            </nav>
+
             <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h2 class="text-3xl font-black tracking-tight text-slate-900">Admissions Portal</h2>
-                    <p class="mt-1 text-sm font-bold tracking-widest text-slate-400 uppercase">
+                    <div class="flex items-center gap-3">
+                        <Link href="/admin/dashboard" class="group flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white transition-all hover:border-slate-900 hover:text-slate-900 active:scale-95">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" /></svg>
+                        </Link>
+                        <h2 class="text-3xl font-black tracking-tight text-slate-900 italic">Admissions Portal</h2>
+                    </div>
+                    <p class="mt-2 text-sm font-bold tracking-widest text-slate-400 uppercase">
                         Prospective Students • {{ candidates.total }} Candidates
                     </p>
                 </div>
@@ -230,7 +252,7 @@ const handleImport = () => {
                         <div class="relative flex-1">
                             <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
                                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                 </svg>
                             </span>
                             <input
@@ -241,12 +263,27 @@ const handleImport = () => {
                                 class="h-12 w-full rounded-xl border-none bg-slate-50 pl-12 text-sm font-bold text-slate-700 transition-all focus:bg-white focus:ring-2 focus:ring-primary/10"
                             />
                         </div>
-                        <button
-                            @click="handleSearch"
-                            class="h-12 rounded-xl bg-slate-900 px-8 text-xs font-black tracking-widest text-white uppercase transition-all hover:bg-black active:scale-95"
-                        >
-                            Search Portal
-                        </button>
+
+                        <div class="flex items-center gap-3">
+                            <div class="flex h-12 items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 px-4">
+                                <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
+                                <select 
+                                    v-model="branchFilter" 
+                                    @change="handleSearch"
+                                    class="cursor-pointer border-none bg-transparent text-[10px] font-black text-slate-600 uppercase focus:ring-0"
+                                >
+                                    <option value="">All Branches</option>
+                                    <option v-for="(info, key) in branches" :key="key" :value="key">{{ info.name }}</option>
+                                </select>
+                            </div>
+
+                            <button
+                                @click="handleSearch"
+                                class="h-12 rounded-xl bg-slate-900 px-8 text-xs font-black tracking-widest text-white uppercase transition-all hover:bg-black active:scale-95"
+                            >
+                                Filter
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -255,6 +292,7 @@ const handleImport = () => {
                         <thead>
                             <tr class="bg-slate-50/50">
                                 <th class="px-8 py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase">Applicant Details</th>
+                                <th class="px-6 py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase">Branch</th>
                                 <th class="px-6 py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase">Application ID</th>
                                 <th class="px-6 py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase">Target Class</th>
                                 <th class="px-6 py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase">Exam Batch</th>
@@ -280,6 +318,12 @@ const handleImport = () => {
                                             <p class="mt-1 text-xs font-bold text-slate-400">{{ user.email }}</p>
                                         </div>
                                     </div>
+                                </td>
+                                <td class="px-6 py-6 whitespace-nowrap">
+                                    <span v-if="branches[user.branch]" class="inline-flex items-center rounded-lg border border-primary/10 bg-primary/5 px-3 py-1 text-[9px] font-black text-primary uppercase shadow-sm">
+                                        {{ branches[user.branch].name }}
+                                    </span>
+                                    <span v-else class="text-[9px] font-black tracking-widest text-slate-300 uppercase">External</span>
                                 </td>
                                 <td class="px-6 py-6 whitespace-nowrap">
                                     <span
@@ -439,6 +483,18 @@ const handleImport = () => {
                                     class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                                 />
                                 <div v-if="form.errors.email" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.email }}</div>
+                            </div>
+
+                            <div class="col-span-2">
+                                <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Target School Branch</label>
+                                <select
+                                    v-model="form.branch"
+                                    required
+                                    class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
+                                >
+                                    <option v-for="(info, key) in branches" :key="key" :value="key">{{ info.name }}</option>
+                                </select>
+                                <div v-if="form.errors.branch" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.branch }}</div>
                             </div>
 
                             <div>

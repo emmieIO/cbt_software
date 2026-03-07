@@ -17,10 +17,18 @@ class ProspectiveClassController extends Controller
     /**
      * Display a listing of the prospective classes (batches).
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $query = ProspectiveClass::query();
+
+        if ($request->branch) {
+            $query->where('branch', $request->branch);
+        }
+
         return Inertia::render('Admin/Classes/Prospective', [
-            'classes' => ProspectiveClass::latest()->get(),
+            'classes' => $query->latest()->get(),
+            'branches' => config('app.branches'),
+            'filters' => $request->only(['branch']),
         ]);
     }
 
@@ -30,9 +38,13 @@ class ProspectiveClassController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:prospective_classes,name'],
+            'name' => [
+                'required', 'string', 'max:255',
+                \Illuminate\Validation\Rule::unique('prospective_classes')->where(fn ($q) => $q->where('branch', $request->branch))
+            ],
             'description' => ['nullable', 'string'],
             'pass_percentage' => ['required', 'integer', 'min:0', 'max:100'],
+            'branch' => ['required', 'string', \Illuminate\Validation\Rule::enum(\App\Enums\Branch::class)],
         ]);
 
         $this->classService->createClass($data);
@@ -46,10 +58,16 @@ class ProspectiveClassController extends Controller
     public function update(Request $request, ProspectiveClass $prospectiveClass): RedirectResponse
     {
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:prospective_classes,name,'.$prospectiveClass->id],
+            'name' => [
+                'required', 'string', 'max:255',
+                \Illuminate\Validation\Rule::unique('prospective_classes')
+                    ->where(fn ($q) => $q->where('branch', $request->branch))
+                    ->ignore($prospectiveClass->id)
+            ],
             'description' => ['nullable', 'string'],
             'pass_percentage' => ['required', 'integer', 'min:0', 'max:100'],
             'is_active' => ['required', 'boolean'],
+            'branch' => ['required', 'string', \Illuminate\Validation\Rule::enum(\App\Enums\Branch::class)],
         ]);
 
         $this->classService->updateClass($prospectiveClass, $data);

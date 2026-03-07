@@ -31,9 +31,14 @@ class StaffController extends Controller
             });
         }
 
+        if ($request->branch) {
+            $query->where('branch', $request->branch);
+        }
+
         return Inertia::render('Admin/Users/Staff', [
             'staff' => $query->latest()->paginate(10)->withQueryString(),
-            'filters' => $request->only(['search']),
+            'branches' => config('app.branches'),
+            'filters' => $request->only(['search', 'branch']),
         ]);
     }
 

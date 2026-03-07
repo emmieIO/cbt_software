@@ -19,7 +19,8 @@ const props = defineProps<{
     questions: PaginatedData<Question>;
     subjects: Subject[];
     classes: SchoolClass[];
-    batches: { id: string, name: string }[];
+    batches: Batch[];
+    branches: Record<string, { name: string; address: string; phones: string }>;
     difficulties: { value: string; label: string }[];
     filters: {
         search?: string;
@@ -128,6 +129,13 @@ const clearFilters = () => {
         <Head title="Question Repository" />
 
         <div class="w-full space-y-8 md:space-y-10">
+            <!-- Breadcrumbs -->
+            <nav class="flex items-center gap-2 text-[10px] font-bold tracking-widest text-slate-500 uppercase">
+                <Link :href="isAdmin ? '/admin/dashboard' : '/staff/dashboard'" class="text-slate-500 transition-colors hover:text-slate-800">Dashboard</Link>
+                <svg class="h-3 w-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg>
+                <span class="text-slate-900">Question Bank</span>
+            </nav>
+
             <!-- AI Processing Banner -->
             <div
                 v-if="isSeeding"
@@ -168,8 +176,13 @@ const clearFilters = () => {
             <!-- Page Header -->
             <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 class="text-2xl md:text-3xl font-black tracking-tight text-slate-900">Question Bank</h1>
-                    <p class="mt-1 text-[10px] md:text-sm font-bold tracking-widest text-slate-400 uppercase">Repository • {{ questions.total }} Verified Items</p>
+                    <div class="flex items-center gap-3">
+                        <Link :href="isAdmin ? '/admin/dashboard' : '/staff/dashboard'" class="group flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white transition-all hover:border-slate-900 hover:text-slate-900 active:scale-95">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" /></svg>
+                        </Link>
+                        <h1 class="text-2xl md:text-3xl font-black tracking-tight text-slate-900 italic">Universal Bank</h1>
+                    </div>
+                    <p class="mt-2 text-[10px] md:text-sm font-bold tracking-widest text-slate-400 uppercase">Repository • {{ questions.total }} Verified Items</p>
                 </div>
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
                     <div class="flex items-center gap-3">
@@ -341,10 +354,17 @@ const clearFilters = () => {
                                             >
                                                 {{ question.content }}
                                             </p>
-                                            <div class="mt-1 flex items-center gap-2">
+                                            <div class="mt-1 flex flex-wrap items-center gap-2">
                                                 <span class="text-[9px] font-bold tracking-widest text-slate-400 uppercase">{{
                                                     question.type.replace('_', ' ')
                                                 }}</span>
+                                                <div v-if="question.creator" class="flex items-center gap-1.5 ml-1">
+                                                    <div class="h-1 w-1 rounded-full bg-slate-200"></div>
+                                                    <span class="text-[9px] font-black text-primary uppercase italic">Contributed by {{ question.creator.name }}</span>
+                                                    <span v-if="branches[question.creator.branch]" class="rounded bg-slate-100 px-1.5 py-0.5 text-[7px] font-black text-slate-500 uppercase">
+                                                        {{ branches[question.creator.branch].name.replace('Chrisland ', '') }}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

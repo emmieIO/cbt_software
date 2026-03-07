@@ -4,7 +4,7 @@ import { ref } from 'vue';
 import { index, store, update, destroy, importMethod } from '@/actions/App/Http/Controllers/Admin/StudentController';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
-import type { PaginatedData, SchoolClass } from '@/types/academics';
+import type { PaginatedData } from '@/types/academics';
 
 interface StudentUser {
     id: string;
@@ -12,16 +12,19 @@ interface StudentUser {
     email: string;
     username: string;
     school_id: string | null;
+    branch: string;
     school_class_id: string | null;
-    school_class?: SchoolClass;
+    school_class?: { name: string };
 }
 
 const props = defineProps<{
     students: PaginatedData<StudentUser>;
-    classes: SchoolClass[];
+    classes: { id: string; name: string }[];
+    branches: Record<string, { name: string; address: string; phones: string }>;
     filters: {
         search?: string;
         school_class_id?: string;
+        branch?: string;
     };
 }>();
 
@@ -35,6 +38,7 @@ const form = useForm({
     username: '',
     school_id: '',
     school_class_id: '',
+    branch: 'primary_vgc',
 });
 
 const openCreateModal = () => {
@@ -53,6 +57,7 @@ const openEditModal = (user: StudentUser) => {
     form.username = user.username;
     form.school_id = user.school_id || '';
     form.school_class_id = user.school_class_id || '';
+    form.branch = user.branch || 'primary_vgc';
 
     isModalOpen.value = true;
 };
@@ -97,6 +102,7 @@ const handleDelete = () => {
 const filterForm = useForm({
     search: props.filters.search || '',
     school_class_id: props.filters.school_class_id || '',
+    branch: props.filters.branch || '',
 });
 
 const applyFilters = () => {
@@ -124,11 +130,25 @@ const handleImport = () => {
         <Head title="Student Management" />
 
         <div class="space-y-10">
+            <!-- Breadcrumbs -->
+            <nav class="flex items-center gap-2 text-[10px] font-bold tracking-widest text-slate-500 uppercase">
+                <Link href="/admin/dashboard" class="text-slate-500 transition-colors hover:text-slate-800">Dashboard</Link>
+                <svg class="h-3 w-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg>
+                <span class="text-slate-900">Student Directory</span>
+            </nav>
+
             <!-- Page Header -->
             <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 class="text-2xl md:text-3xl font-black tracking-tight text-slate-900">Student Body</h1>
-                    <p class="mt-1 text-[10px] md:text-sm font-bold tracking-widest text-slate-400 uppercase">Enrolled Students • {{ students.total }} Records</p>
+                    <div class="flex items-center gap-3">
+                        <Link href="/admin/dashboard" class="group flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white transition-all hover:border-slate-900 hover:text-slate-900 active:scale-95">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" /></svg>
+                        </Link>
+                        <h1 class="text-3xl font-black tracking-tight text-slate-900 italic">Student Directory</h1>
+                    </div>
+                    <p class="mt-2 text-sm font-bold tracking-widest text-slate-400 uppercase">
+                        Active Enrollments • {{ students.total }} Records
+                    </p>
                 </div>
                 <div class="flex items-center gap-3">
                     <button
@@ -217,7 +237,8 @@ const handleImport = () => {
                         <thead>
                             <tr class="bg-slate-50/50">
                                 <th class="px-4 md:px-8 py-4 md:py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase whitespace-nowrap">Student Profile</th>
-                                <th class="px-4 md:px-6 py-4 md:py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase whitespace-nowrap">Class Level</th>
+                                <th class="px-4 md:px-6 py-4 md:py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase whitespace-nowrap">Branch</th>
+                                <th class="px-4 md:px-6 py-4 md:py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase whitespace-nowrap text-center">Class</th>
                                 <th class="px-4 md:px-6 py-4 md:py-5 text-[10px] font-black tracking-widest whitespace-nowrap text-slate-400 uppercase whitespace-nowrap">
                                     Admission ID
                                 </th>
@@ -238,6 +259,12 @@ const handleImport = () => {
                                             <p class="mt-1 text-xs font-bold text-slate-400">{{ user.email }}</p>
                                         </div>
                                     </div>
+                                </td>
+                                <td class="px-6 py-6">
+                                    <span v-if="branches[user.branch]" class="inline-flex items-center rounded-lg border border-primary/10 bg-primary/5 px-3 py-1 text-[9px] font-black text-primary uppercase shadow-sm whitespace-nowrap">
+                                        {{ branches[user.branch].name }}
+                                    </span>
+                                    <span v-else class="text-[9px] font-black tracking-widest text-slate-300 uppercase">External</span>
                                 </td>
                                 <td class="px-6 py-6">
                                     <span
@@ -353,6 +380,18 @@ const handleImport = () => {
                                     class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                                 />
                                 <div v-if="form.errors.username" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.username }}</div>
+                            </div>
+
+                            <div class="col-span-2">
+                                <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Assigned School Branch</label>
+                                <select
+                                    v-model="form.branch"
+                                    required
+                                    class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
+                                >
+                                    <option v-for="(info, key) in branches" :key="key" :value="key">{{ info.name }}</option>
+                                </select>
+                                <div v-if="form.errors.branch" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.branch }}</div>
                             </div>
 
                             <div>

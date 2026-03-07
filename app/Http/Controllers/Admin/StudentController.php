@@ -22,7 +22,7 @@ class StudentController extends Controller
 
     public function index(Request $request): Response
     {
-        $query = User::role('student')->with(['roles', 'schoolClass']);
+        $query = User::role('student')->with(['schoolClass', 'roles']);
 
         if ($request->search) {
             $query->where(function ($q) use ($request) {
@@ -32,6 +32,10 @@ class StudentController extends Controller
             });
         }
 
+        if ($request->branch) {
+            $query->where('branch', $request->branch);
+        }
+
         if ($request->school_class_id) {
             $query->where('school_class_id', $request->school_class_id);
         }
@@ -39,7 +43,8 @@ class StudentController extends Controller
         return Inertia::render('Admin/Users/Students', [
             'students' => $query->latest()->paginate(10)->withQueryString(),
             'classes' => SchoolClass::all(),
-            'filters' => $request->only(['search', 'school_class_id']),
+            'branches' => config('app.branches'),
+            'filters' => $request->only(['search', 'school_class_id', 'branch']),
         ]);
     }
 

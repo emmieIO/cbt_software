@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, router, useForm } from '@inertiajs/vue3';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import ProspectiveClassController from '@/actions/App/Http/Controllers/Admin/ProspectiveClassController';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
@@ -10,12 +10,17 @@ interface ProspectiveClass {
     name: string;
     slug: string;
     description: string | null;
+    branch: string;
     pass_percentage: number;
     is_active: boolean;
 }
 
-defineProps<{
+const props = defineProps<{
     classes: ProspectiveClass[];
+    branches: Record<string, { name: string; address: string; phones: string }>;
+    filters: {
+        branch?: string;
+    };
 }>();
 
 const isModalOpen = ref(false);
@@ -27,6 +32,7 @@ const form = useForm({
     description: '',
     pass_percentage: 50,
     is_active: true,
+    branch: 'primary_vgc',
 });
 
 const openCreateModal = () => {
@@ -44,8 +50,15 @@ const openEditModal = (cls: ProspectiveClass) => {
     form.description = cls.description || '';
     form.pass_percentage = cls.pass_percentage;
     form.is_active = cls.is_active;
+    form.branch = cls.branch || 'primary_vgc';
 
     isModalOpen.value = true;
+};
+
+// Filters
+const branchFilter = ref(props.filters.branch || '');
+const applyFilters = () => {
+    router.get(router.page.url, { branch: branchFilter.value }, { preserveState: true });
 };
 
 const submit = () => {
@@ -90,11 +103,23 @@ const handleDelete = () => {
         <Head title="Entrance Batches" />
 
         <div class="space-y-10">
+            <!-- Breadcrumbs -->
+            <nav class="flex items-center gap-2 text-[10px] font-bold tracking-widest text-slate-500 uppercase">
+                <Link href="/admin/dashboard" class="text-slate-500 transition-colors hover:text-slate-800">Dashboard</Link>
+                <svg class="h-3 w-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg>
+                <span class="text-slate-900">Entrance Batches</span>
+            </nav>
+
             <!-- Page Header -->
             <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 class="text-3xl font-black tracking-tight text-slate-900">Entrance Batches</h1>
-                    <p class="mt-1 text-sm font-bold tracking-widest text-slate-400 uppercase">Prospective Students • {{ classes.length }} Batches</p>
+                    <div class="flex items-center gap-3">
+                        <Link href="/admin/dashboard" class="group flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white transition-all hover:border-slate-900 hover:text-slate-900 active:scale-95">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" /></svg>
+                        </Link>
+                        <h1 class="text-3xl font-black tracking-tight text-slate-900 italic">Entrance Batches</h1>
+                    </div>
+                    <p class="mt-2 text-sm font-bold tracking-widest text-slate-400 uppercase">Prospective Students • {{ classes.length }} Batches</p>
                 </div>
                 <button
                     @click="openCreateModal"
@@ -107,67 +132,109 @@ const handleDelete = () => {
                 </button>
             </div>
 
-            <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                <div
-                    v-for="cls in classes"
-                    :key="cls.id"
-                    class="group relative overflow-hidden rounded-xl border border-slate-100 bg-white p-8 shadow-sm transition-all hover:shadow-xl hover:shadow-primary/5"
-                >
-                    <div class="relative z-10 flex items-start justify-between gap-4">
-                        <div class="min-w-0 flex-1 space-y-4">
-                            <div
-                                class="inline-flex items-center rounded-full border border-primary/10 bg-primary/5 px-3 py-1 text-[9px] font-black tracking-widest whitespace-nowrap text-primary uppercase"
-                            >
-                                Prospective Batch
-                            </div>
-                            <h3
-                                class="truncate text-2xl leading-tight font-black text-slate-800 transition-colors group-hover:text-primary"
-                                :title="cls.name"
-                            >
-                                {{ cls.name }}
-                            </h3>
-                            <p class="truncate text-xs font-bold text-slate-400" :title="cls.description || ''">
-                                {{ cls.description || 'No description provided.' }}
-                            </p>
-                        </div>
-                        <div class="flex shrink-0 gap-2">
-                            <button
-                                @click="openEditModal(cls)"
-                                class="flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-600 active:scale-90"
-                            >
-                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2.5"
-                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                    />
-                                </svg>
-                            </button>
-                            <button
-                                @click="confirmDelete(cls)"
-                                class="flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 transition-all hover:bg-red-50 hover:text-red-600 active:scale-90"
-                            >
-                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2.5"
-                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                    />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Decorative Background Icon -->
-                    <div
-                        class="pointer-events-none absolute -right-4 -bottom-4 opacity-[0.02] transition-transform duration-500 group-hover:scale-110 group-hover:rotate-12"
+            <!-- Branch Filter -->
+            <div class="flex items-center gap-3 rounded-xl border border-slate-100 bg-white p-4 shadow-sm">
+                <div class="flex h-10 items-center gap-2 rounded-lg border border-slate-100 bg-slate-50 px-4">
+                    <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
+                    <select 
+                        v-model="branchFilter" 
+                        @change="applyFilters"
+                        class="cursor-pointer border-none bg-transparent text-[10px] font-black text-slate-600 uppercase focus:ring-0"
                     >
-                        <svg class="h-32 w-32" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                        </svg>
-                    </div>
+                        <option value="">All Branches</option>
+                        <option v-for="(info, key) in branches" :key="key" :value="key">{{ info.name }}</option>
+                    </select>
+                </div>
+                <span class="text-[10px] font-black tracking-widest text-slate-400 uppercase italic">Filter by school location</span>
+            </div>
+
+            <!-- Main Table Card -->
+            <div class="overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm">
+                <div class="overflow-x-auto">
+                    <table class="w-full border-collapse text-left">
+                        <thead>
+                            <tr class="bg-slate-50/50">
+                                <th class="px-8 py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase">Batch Details</th>
+                                <th class="px-6 py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase">School Branch</th>
+                                <th class="px-6 py-5 text-center text-[10px] font-black tracking-widest text-slate-400 uppercase">Pass Mark</th>
+                                <th class="px-6 py-5 text-center text-[10px] font-black tracking-widest text-slate-400 uppercase">Status</th>
+                                <th class="px-8 py-5 text-right text-[10px] font-black tracking-widest text-slate-400 uppercase">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50">
+                            <tr v-for="cls in classes" :key="cls.id" class="group transition-all hover:bg-[#F8F9FB]">
+                                <td class="px-8 py-6">
+                                    <div class="flex items-center gap-4">
+                                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/5 text-xs font-black text-primary">
+                                            {{ cls.name.substring(0, 2).toUpperCase() }}
+                                        </div>
+                                        <div class="min-w-0">
+                                            <h4 class="text-sm font-black text-slate-800">{{ cls.name }}</h4>
+                                            <p class="truncate text-xs font-bold text-slate-400" :title="cls.description || ''">
+                                                {{ cls.description || 'No description provided.' }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-6">
+                                    <span v-if="branches[cls.branch]" class="inline-flex items-center rounded-lg border border-slate-100 bg-slate-50 px-3 py-1 text-[9px] font-black text-slate-500 uppercase">
+                                        {{ branches[cls.branch].name }}
+                                    </span>
+                                    <span v-else class="text-[9px] font-black text-slate-300 uppercase italic">Unknown Branch</span>
+                                </td>
+                                <td class="px-6 py-6 text-center">
+                                    <span class="text-xs font-black text-slate-700 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
+                                        {{ cls.pass_percentage }}%
+                                    </span>
+                                </td>
+                                <td class="px-6 py-6 text-center">
+                                    <span 
+                                        v-if="cls.is_active"
+                                        class="inline-flex items-center gap-1.5 rounded-lg bg-green-50 px-3 py-1 text-[9px] font-black text-green-600 uppercase border border-green-100"
+                                    >
+                                        <div class="h-1 w-1 rounded-full bg-green-500"></div>
+                                        Active
+                                    </span>
+                                    <span 
+                                        v-else
+                                        class="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-3 py-1 text-[9px] font-black text-slate-400 uppercase border border-slate-200"
+                                    >
+                                        Inactive
+                                    </span>
+                                </td>
+                                <td class="px-8 py-6 text-right whitespace-nowrap">
+                                    <div class="flex justify-end gap-2">
+                                        <button
+                                            @click="openEditModal(cls)"
+                                            class="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition-all hover:border-primary hover:text-primary active:scale-90 shadow-sm"
+                                        >
+                                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                        </button>
+                                        <button
+                                            @click="confirmDelete(cls)"
+                                            class="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition-all hover:border-red-200 hover:text-red-600 active:scale-90 shadow-sm"
+                                        >
+                                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr v-if="classes.length === 0">
+                                <td colspan="5" class="px-8 py-24 text-center">
+                                    <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-50 text-slate-300 mb-4">
+                                        <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                        </svg>
+                                    </div>
+                                    <p class="text-sm font-bold tracking-widest text-slate-400 uppercase italic">No entrance batches found.</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
@@ -187,6 +254,18 @@ const handleDelete = () => {
                                 class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary/10"
                             />
                             <div v-if="form.errors.name" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.name }}</div>
+                        </div>
+
+                        <div>
+                            <label class="mb-2 block text-[10px] font-black tracking-widest text-slate-400 uppercase">School Branch Location</label>
+                            <select
+                                v-model="form.branch"
+                                required
+                                class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary/10"
+                            >
+                                <option v-for="(info, key) in branches" :key="key" :value="key">{{ info.name }}</option>
+                            </select>
+                            <div v-if="form.errors.branch" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.branch }}</div>
                         </div>
 
                         <div>

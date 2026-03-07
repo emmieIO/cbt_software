@@ -50,6 +50,7 @@ const props = defineProps<{
     batches: Batch[];
     subjects: { id: string; name: string }[];
     classes: { id: string; name: string }[];
+    branches: Record<string, { name: string; address: string; phones: string }>;
     academic_session: any | null;
 }>();
 
@@ -244,8 +245,7 @@ const handleDelete = () => {
                                 v-model="form.branch"
                                 class="w-full rounded-xl border-slate-100 bg-slate-50 px-6 py-5 text-lg font-black text-slate-800 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                             >
-                                <option value="primary">Chrisland Primary School VGC</option>
-                                <option value="nursery">Chrisland Nursery School VGC</option>
+                                <option v-for="(info, key) in branches" :key="key" :value="key">{{ info.name }}</option>
                             </select>
                             <div v-if="form.errors.branch" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.branch }}</div>
                         </div>

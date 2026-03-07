@@ -101,23 +101,34 @@ const submit = () => {
     <component :is="Layout">
         <Head title="Create Question" />
 
-        <div class="p-8">
+        <div class="space-y-8 md:space-y-10">
+            <!-- Breadcrumbs -->
+            <nav class="flex items-center gap-2 text-[10px] font-bold tracking-widest text-slate-500 uppercase">
+                <Link :href="isAdmin ? '/admin/dashboard' : '/staff/dashboard'" class="text-slate-500 transition-colors hover:text-slate-800">Dashboard</Link>
+                <svg class="h-3 w-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg>
+                <Link :href="index().url" class="text-slate-500 transition-colors hover:text-slate-800">Question Bank</Link>
+                <svg class="h-3 w-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg>
+                <span class="text-slate-900">New Addition</span>
+            </nav>
+
             <div class="w-full">
                 <!-- Back Button -->
                 <div class="mb-8">
-                    <Link :href="index().url" class="flex items-center text-sm font-bold text-slate-500 transition-colors hover:text-primary">
-                        <svg class="mr-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                        </svg>
-                        Back to Repository
-                    </Link>
+                    <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <div class="flex items-center gap-3">
+                                <Link :href="index().url" class="group flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white transition-all hover:border-slate-900 hover:text-slate-900 active:scale-95">
+                                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" /></svg>
+                                </Link>
+                                <h1 class="text-2xl md:text-3xl font-black tracking-tight text-slate-900 italic">Create Question</h1>
+                            </div>
+                            <p class="mt-2 text-[10px] md:text-sm font-bold tracking-widest text-slate-400 uppercase px-1">Define metadata, content, and valid options.</p>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="mb-8 border-b border-slate-200 bg-white p-8">
-                    <div class="mb-10 flex items-center justify-between">
-                        <h3 class="text-3xl font-bold text-slate-900">Create New Question</h3>
-                        <p class="text-sm text-slate-500">Define your question metadata, content, and options.</p>
-                    </div>
+                <div class="mb-8 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+                    <div class="p-8 md:p-12">
 
                     <form @submit.prevent="submit" class="space-y-10">
                         <!-- Metadata Row -->
@@ -348,5 +359,6 @@ const submit = () => {
                 </div>
             </div>
         </div>
-    </component>
+    </div>
+</component>
 </template>

@@ -27,7 +27,7 @@ class EntranceController extends Controller
     {
         $query = User::role('candidate')
             ->with(['schoolClass', 'prospectiveClass', 'latestAttempt' => function ($q) {
-                $q->with('exam', function ($eq) {
+                $q->with('exam' , function ($eq) {
                     $eq->withCount('questions');
                 });
             }]);
@@ -40,11 +40,16 @@ class EntranceController extends Controller
             });
         }
 
+        if ($request->branch) {
+            $query->where('branch', $request->branch);
+        }
+
         return Inertia::render('Admin/Users/Candidates', [
             'candidates' => $query->latest()->paginate(10)->withQueryString(),
-            'classes' => SchoolClass::all(), // Target Admission Classes
-            'batches' => \App\Models\ProspectiveClass::where('is_active', true)->get(),
-            'filters' => $request->only(['search']),
+            'classes' => SchoolClass::all(),
+            'batches' => ProspectiveClass::all(),
+            'branches' => config('app.branches'),
+            'filters' => $request->only(['search', 'branch']),
         ]);
     }
 

@@ -1,14 +1,18 @@
 <script setup lang="ts">
-import { Head, router, useForm } from '@inertiajs/vue3';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { store as storeAction, update as updateAction, destroy as destroyAction } from '@/actions/App/Http/Controllers/Admin/SchoolClassController';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import type { SchoolClass } from '@/types/academics';
 
-defineProps<{
+const props = defineProps<{
     classes: SchoolClass[];
     levels: { value: string; label: string }[];
+    branches: Record<string, { name: string; address: string; phones: string }>;
+    filters: {
+        branch?: string;
+    };
 }>();
 
 const isModalOpen = ref(false);
@@ -18,6 +22,7 @@ const editingClass = ref<SchoolClass | null>(null);
 const form = useForm({
     name: '',
     level: 'primary' as any,
+    branch: 'primary_vgc',
 });
 
 const openCreateModal = () => {
@@ -34,6 +39,7 @@ const openEditModal = (cls: SchoolClass) => {
 
     form.name = cls.name;
     form.level = levelValue;
+    form.branch = cls.branch || 'primary_vgc';
 
     isModalOpen.value = true;
 };
@@ -78,6 +84,12 @@ const handleDelete = () => {
 const getRawLevel = (cls: SchoolClass): string => {
     return typeof cls.level === 'object' ? (cls.level as any).value : cls.level;
 };
+
+// Filters
+const branchFilter = ref(props.filters.branch || '');
+const applyFilters = () => {
+    router.get(router.page.url, { branch: branchFilter.value }, { preserveState: true });
+};
 </script>
 
 <template>
@@ -85,11 +97,23 @@ const getRawLevel = (cls: SchoolClass): string => {
         <Head title="Class Management" />
 
         <div class="space-y-8 md:space-y-10">
+            <!-- Breadcrumbs -->
+            <nav class="flex items-center gap-2 text-[10px] font-bold tracking-widest text-slate-500 uppercase">
+                <Link href="/admin/dashboard" class="text-slate-500 transition-colors hover:text-slate-800">Dashboard</Link>
+                <svg class="h-3 w-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg>
+                <span class="text-slate-900">Academic Structure</span>
+            </nav>
+
             <!-- Page Header -->
             <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 class="text-2xl md:text-3xl font-black tracking-tight text-slate-900">School Classes</h1>
-                    <p class="mt-1 text-[10px] md:text-sm font-bold tracking-widest text-slate-400 uppercase">Grade Levels • {{ classes.length }} Active Sections</p>
+                    <div class="flex items-center gap-3">
+                        <Link href="/admin/dashboard" class="group flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white transition-all hover:border-slate-900 hover:text-slate-900 active:scale-95">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" /></svg>
+                        </Link>
+                        <h1 class="text-2xl md:text-3xl font-black tracking-tight text-slate-900 italic">School Classes</h1>
+                    </div>
+                    <p class="mt-2 text-[10px] md:text-sm font-bold tracking-widest text-slate-400 uppercase">Grade Levels • {{ classes.length }} Active Sections</p>
                 </div>
                 <button
                     @click="openCreateModal"
@@ -102,6 +126,22 @@ const getRawLevel = (cls: SchoolClass): string => {
                 </button>
             </div>
 
+            <!-- Branch Filter -->
+            <div class="flex items-center gap-3 rounded-xl border border-slate-100 bg-white p-4 shadow-sm">
+                <div class="flex h-10 items-center gap-2 rounded-lg border border-slate-100 bg-slate-50 px-4">
+                    <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
+                    <select 
+                        v-model="branchFilter" 
+                        @change="applyFilters"
+                        class="cursor-pointer border-none bg-transparent text-[10px] font-black text-slate-600 uppercase focus:ring-0"
+                    >
+                        <option value="">All Branches</option>
+                        <option v-for="(info, key) in branches" :key="key" :value="key">{{ info.name }}</option>
+                    </select>
+                </div>
+                <span class="text-[10px] font-black tracking-widest text-slate-400 uppercase italic">Filter by school location</span>
+            </div>
+
             <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                 <div
                     v-for="cls in classes"
@@ -110,14 +150,19 @@ const getRawLevel = (cls: SchoolClass): string => {
                 >
                     <div class="relative z-10 flex items-start justify-between">
                         <div class="space-y-4">
-                            <div
-                                class="inline-flex items-center rounded-full border border-slate-100 bg-slate-50 px-3 py-1 text-[9px] font-black tracking-widest uppercase"
-                                :class="{
-                                    'text-blue-600': getRawLevel(cls) === 'primary',
-                                    'text-purple-600': getRawLevel(cls) === 'secondary',
-                                }"
-                            >
-                                {{ typeof cls.level === 'object' ? (cls.level as any).label : cls.level }}
+                            <div class="flex flex-wrap items-center gap-2">
+                                <div
+                                    class="inline-flex items-center rounded-full border border-slate-100 bg-slate-50 px-3 py-1 text-[9px] font-black tracking-widest uppercase"
+                                    :class="{
+                                        'text-blue-600': getRawLevel(cls) === 'primary',
+                                        'text-purple-600': getRawLevel(cls) === 'secondary',
+                                    }"
+                                >
+                                    {{ typeof cls.level === 'object' ? (cls.level as any).label : cls.level }}
+                                </div>
+                                <div v-if="branches[cls.branch]" class="inline-flex items-center rounded-full border border-primary/10 bg-primary/5 px-3 py-1 text-[9px] font-black text-primary uppercase">
+                                    {{ branches[cls.branch].name }}
+                                </div>
                             </div>
                             <h3 class="text-xl md:text-2xl leading-none font-black text-slate-800 transition-colors group-hover:text-primary">{{ cls.name }}</h3>
                         </div>
@@ -180,6 +225,18 @@ const getRawLevel = (cls: SchoolClass): string => {
                                 class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-3.5 md:py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
                             />
                             <div v-if="form.errors.name" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.name }}</div>
+                        </div>
+
+                        <div>
+                            <label class="mb-2 block text-[10px] font-black tracking-widest text-slate-400 uppercase">School Branch Location</label>
+                            <select
+                                v-model="form.branch"
+                                required
+                                class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-3.5 md:py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
+                            >
+                                <option v-for="(info, key) in branches" :key="key" :value="key">{{ info.name }}</option>
+                            </select>
+                            <div v-if="form.errors.branch" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.branch }}</div>
                         </div>
 
                         <div>

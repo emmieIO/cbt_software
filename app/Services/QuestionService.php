@@ -153,7 +153,7 @@ class QuestionService
     public function getFilteredQuestions(array $filters, User $user): LengthAwarePaginator
     {
         $query = Question::query()
-            ->with(['topic.subject', 'schoolClass', 'prospectiveClass', 'options']);
+            ->with(['topic.subject', 'schoolClass', 'prospectiveClass', 'options', 'creator']);
 
         // Scope to teacher's assignments if they aren't an admin
         if (! $user->hasRole('admin')) {
