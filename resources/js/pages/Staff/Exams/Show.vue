@@ -181,7 +181,7 @@ const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
                                     </div>
                                     <div class="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-1.5 border border-slate-100 transition-colors group-hover:border-primary/10 group-hover:bg-primary/5">
                                         <span class="text-[9px] font-black tracking-[0.15em] text-slate-400 uppercase">Difficulty:</span>
-                                        <span 
+                                        <span
                                             class="text-[10px] font-black uppercase"
                                             :class="{
                                                 'text-emerald-500': question.difficulty === 'easy',
@@ -194,7 +194,7 @@ const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
                                     </div>
                                     <div v-if="question.topic" class="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-1.5 border border-slate-100 transition-colors group-hover:border-primary/10 group-hover:bg-primary/5">
                                         <span class="text-[9px] font-black tracking-[0.15em] text-slate-400 uppercase">Topic:</span>
-                                        <span class="text-[10px] font-black text-slate-600 uppercase truncate max-w-[200px]">{{ question.topic.name }}</span>
+                                        <span class="text-[10px] font-black text-slate-600 uppercase truncate max-w-50">{{ question.topic.name }}</span>
                                     </div>
                                 </div>
                             </div>
