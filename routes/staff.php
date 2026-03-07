@@ -39,6 +39,7 @@ Route::middleware(['auth:staff,admin'])->group(function () {
         Route::get('/{exam}', [\App\Http\Controllers\Staff\ExamController::class, 'show'])->name('show');
         Route::get('/{exam}/hard-copy', [\App\Http\Controllers\Staff\ExamController::class, 'showHardCopy'])->name('hard-copy');
         Route::get('/{exam}/answer-sheet', [\App\Http\Controllers\Staff\ExamController::class, 'showAnswerSheet'])->name('answer-sheet');
+        Route::get('/{exam}/print-results', [\App\Http\Controllers\Staff\ExamController::class, 'showResultsPrint'])->name('results.print');
 
         // Question Management (Directly on Exam)
         Route::get('/{exam}/questions', [\App\Http\Controllers\Staff\ExamController::class, 'manageQuestions'])->name('questions');

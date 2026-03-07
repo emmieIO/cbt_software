@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
+import { showResultsPrint as resultsPrintAction } from '@/actions/App/Http/Controllers/Staff/ExamController';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import StaffLayout from '@/layouts/StaffLayout.vue';
 
@@ -92,11 +93,6 @@ const stats = computed(() => {
         top: top
     };
 });
-
-const handleExport = () => {
-    // Logic for export could be added here or linked to a route
-    window.print();
-};
 </script>
 
 <template>
@@ -116,15 +112,16 @@ const handleExport = () => {
                 </div>
 
                 <div class="flex items-center gap-3">
-                    <button
-                        @click="handleExport"
+                    <a
+                        :href="resultsPrintAction(exam.id).url"
+                        target="_blank"
                         class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3 text-[10px] font-black tracking-widest text-slate-600 uppercase shadow-sm transition-all hover:bg-slate-50 active:scale-95"
                     >
                         <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                         </svg>
                         Print Report
-                    </button>
+                    </a>
                 </div>
             </div>
 

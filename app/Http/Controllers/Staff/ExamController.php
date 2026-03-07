@@ -392,4 +392,25 @@ class ExamController extends Controller
             'exam' => $exam,
         ]);
     }
+
+    /**
+     * Display the official results printout for an exam.
+     */
+    public function showResultsPrint(Exam $exam): \Illuminate\Contracts\View\View
+    {
+        $exam->load([
+            'subject',
+            'schoolClass',
+            'prospectiveClass',
+            'academicSession',
+            'attempts' => function ($query) {
+                $query->with(['user.schoolClass'])->latest('score');
+            },
+        ]);
+
+        return view('staff.exams.results-print', [
+            'exam' => $exam,
+            'totalQuestions' => $exam->questions()->count(),
+        ]);
+    }
 }
