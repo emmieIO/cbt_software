@@ -77,9 +77,12 @@ jobs:
           port: ${{ secrets.VPS_PORT || 22 }}
           script: |
             cd /var/www/cbt_software
-            # 1. Clean up existing build and generated types
-            rm -rf public/build
-            rm -rf resources/js/actions # This forces Wayfinder to regenerate them
+            
+            # 1. Immediate environment cleanup
+            # This prevents the app from trying to load removed providers during the git/composer phase
+            rm -f bootstrap/cache/*.php
+            rm -rf resources/js/actions
+            
             if [ -f "deploy.sh" ]; then
               ./deploy.sh
             else
@@ -89,12 +92,15 @@ jobs:
               git fetch origin master
               git reset --hard origin/master
               
-              # Force remove bootstrap cache to avoid "Provider not found" errors during booting
+              # Ensure cache is gone again after pull just in case
               rm -f bootstrap/cache/*.php
               
-              composer install --no-interaction --prefer-dist --optimize-autoloader
+              # Install dependencies WITHOUT running hooks (post-autoload-dump etc)
+              # This allows composer to update the autoloader even if Laravel is currently broken
+              composer install --no-interaction --prefer-dist --optimize-autoloader --no-scripts
               
-              # Clear application caches
+              # Now that autoloader is clean, we can run artisan commands
+              php artisan package:discover --ansi
               php artisan config:clear
               php artisan route:clear
               
