@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import { manageQuestions, edit as editExamAction, print as printExamAction, printAnswerSheet as printAnswerSheetAction } from '@/actions/App/Http/Controllers/Staff/ExamController';
+import { manageQuestions, edit as editExamAction, printExam as printExamAction, printAnswerSheet as printAnswerSheetAction } from '@/actions/App/Http/Controllers/Staff/ExamController';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import StaffLayout from '@/layouts/StaffLayout.vue';
 
