@@ -356,7 +356,7 @@ class ExamController extends Controller
     /**
      * Print the examination paper.
      */
-    public function printExam(Exam $exam): \Illuminate\Contracts\View\View
+    public function printExamPaper(Exam $exam): \Illuminate\Contracts\View\View
     {
         $exam->load([
             'subject',
