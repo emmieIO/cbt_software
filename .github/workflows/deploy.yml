@@ -84,11 +84,17 @@ jobs:
               ./deploy.sh
             else
               echo "deploy.sh not found, running manual deployment..."
+              
+              # Pull latest code
               git fetch origin master
               git reset --hard origin/master
+              
+              # Force remove bootstrap cache to avoid "Provider not found" errors during booting
+              rm -f bootstrap/cache/*.php
+              
               composer install --no-interaction --prefer-dist --optimize-autoloader
               
-              # Clear caches to ensure build sees latest PHP changes
+              # Clear application caches
               php artisan config:clear
               php artisan route:clear
               
