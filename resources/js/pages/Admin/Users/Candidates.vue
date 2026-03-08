@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Head, router, Link, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { Head, router, Link, useForm, usePage } from '@inertiajs/vue3';
+import { ref, computed } from 'vue';
 import { index, store, update, importMethod, admit as processAdmit } from '@/actions/App/Http/Controllers/Admin/EntranceController';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import type { PaginatedData, SchoolClass } from '@/types/academics';
@@ -34,12 +34,14 @@ const props = defineProps<{
     candidates: PaginatedData<CandidateUser>;
     classes: SchoolClass[];
     batches: { id: string; name: string; pass_percentage: number }[];
-    branches: Record<string, { name: string; address: string; phones: string }>;
     filters: {
         search?: string;
         branch?: string;
     };
 }>();
+
+const page = usePage();
+const branches = computed(() => (page.props as any).branches || {});
 
 // Helper to determine if a candidate is qualified for admission
 const getQualificationStatus = (user: CandidateUser) => {

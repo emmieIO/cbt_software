@@ -43,7 +43,6 @@ class StudentController extends Controller
         return Inertia::render('Admin/Users/Students', [
             'students' => $query->latest()->paginate(10)->withQueryString(),
             'classes' => SchoolClass::all(),
-            'branches' => config('app.branches'),
             'filters' => $request->only(['search', 'school_class_id', 'branch']),
         ]);
     }

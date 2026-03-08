@@ -27,7 +27,6 @@ class ProspectiveClassController extends Controller
 
         return Inertia::render('Admin/Classes/Prospective', [
             'classes' => $query->latest()->get(),
-            'branches' => config('app.branches'),
             'filters' => $request->only(['branch']),
         ]);
     }

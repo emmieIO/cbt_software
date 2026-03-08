@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Head, router, Link, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { Head, router, Link, useForm, usePage } from '@inertiajs/vue3';
+import { ref, computed } from 'vue';
 import { index, update, destroy, importMethod } from '@/actions/App/Http/Controllers/Admin/StaffController';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
@@ -17,12 +17,14 @@ interface StaffUser {
 
 const props = defineProps<{
     staff: PaginatedData<StaffUser>;
-    branches: Record<string, { name: string; address: string; phones: string }>;
     filters: {
         search?: string;
         branch?: string;
     };
 }>();
+
+const page = usePage();
+const branches = computed(() => (page.props as any).branches || {});
 
 const isModalOpen = ref(false);
 const isEditing = ref(false);

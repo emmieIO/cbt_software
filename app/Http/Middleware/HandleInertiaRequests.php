@@ -61,6 +61,7 @@ class HandleInertiaRequests extends Middleware
                 'is_seeding' => $user ? \Illuminate\Support\Facades\Cache::get("user_{$user->id}_seeding_status") : null,
             ],
             'academic_session' => \App\Models\AcademicSession::current()->first(),
+            'branches' => config('app.branches'),
             'flash' => [
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),

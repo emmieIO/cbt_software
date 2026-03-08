@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, usePage, useForm } from '@inertiajs/vue3';
+import { Head, Link, usePage, useForm } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import { store as storeExamAction } from '@/actions/App/Http/Controllers/Staff/ExamController';
 import AdminLayout from '@/layouts/AdminLayout.vue';
@@ -24,11 +24,11 @@ const props = defineProps<{
     batches: Batch[];
     subjects: { id: string; name: string }[];
     classes: { id: string; name: string }[];
-    branches: Record<string, { name: string; address: string; phones: string }>;
     academic_session: any | null;
 }>();
 
 const page = usePage();
+const branches = computed(() => (page.props as any).branches || {});
 const isAdmin = computed(() => (page.props.auth.user as any).roles.includes('admin'));
 const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
 
@@ -126,7 +126,15 @@ const submit = () => {
     <component :is="Layout">
         <Head title="Configure New Examination" />
 
-        <div class="mx-auto max-w-4xl space-y-10">
+        <div class="mx-auto max-w-6xl space-y-10">
+            <!-- Breadcrumbs -->
+            <nav class="flex items-center gap-2 text-[10px] font-bold tracking-widest text-slate-500 uppercase">
+                <Link :href="isAdmin ? '/admin/dashboard' : '/staff/dashboard'" class="text-slate-500 transition-colors hover:text-slate-800">Dashboard</Link>
+                <svg class="h-3 w-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg>
+                <Link href="/staff/exams" class="text-slate-500 transition-colors hover:text-slate-800">Vault</Link>
+                <svg class="h-3 w-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg>
+                <span class="text-slate-900">New Examination</span>
+            </nav>
             <div v-if="!academic_session" class="rounded-xl border border-red-200 bg-red-50 p-6 shadow-sm">
                 <div class="flex items-center gap-4 text-red-600">
                     <svg class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -142,9 +150,16 @@ const submit = () => {
                 </div>
             </div>
 
-            <div class="text-center">
-                <h2 class="text-4xl font-black tracking-tight text-slate-900 italic">New Examination</h2>
-                <p class="mt-2 text-sm font-bold tracking-widest text-slate-500 uppercase">Stage 1: Assessment Configuration</p>
+            <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <div class="flex items-center gap-3">
+                        <Link href="/staff/exams" class="group flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white transition-all hover:border-slate-900 hover:text-slate-900 active:scale-95">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" /></svg>
+                        </Link>
+                        <h2 class="text-4xl font-black tracking-tight text-slate-900 italic">New Examination</h2>
+                    </div>
+                    <p class="mt-2 text-sm font-bold tracking-widest text-slate-500 uppercase px-1">Stage 1: Assessment Configuration</p>
+                </div>
             </div>
 
             <div class="overflow-hidden rounded-xl border border-slate-100 bg-white p-12 shadow-2xl">

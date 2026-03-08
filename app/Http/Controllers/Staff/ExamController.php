@@ -61,7 +61,6 @@ class ExamController extends Controller
 
         return Inertia::render('Staff/Exams/Index', [
             'exams' => $query->latest()->paginate(10)->withQueryString(),
-            'branches' => config('app.branches'),
             'filters' => $request->only(['status', 'type', 'branch']),
         ]);
     }
@@ -87,7 +86,6 @@ class ExamController extends Controller
             'batches' => $context['batches'],
             'subjects' => $context['subjects'],
             'classes' => $context['classes'],
-            'branches' => config('app.branches'),
         ]);
     }
 
@@ -209,7 +207,6 @@ class ExamController extends Controller
             'batches' => $context['batches'],
             'subjects' => $context['subjects'],
             'classes' => $context['classes'],
-            'branches' => config('app.branches'),
         ]);
     }
 
@@ -331,7 +328,6 @@ class ExamController extends Controller
         return Inertia::render('Staff/Results/Index', [
 
             'exams' => $query->latest()->paginate(10)->withQueryString(),
-            'branches' => config('app.branches'),
             'filters' => $request->only(['branch']),
 
         ]);

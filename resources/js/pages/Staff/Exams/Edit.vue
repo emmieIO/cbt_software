@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, usePage, useForm } from '@inertiajs/vue3';
+import { Head, Link, usePage, useForm } from '@inertiajs/vue3';
 import { computed, ref, watch, onMounted } from 'vue';
 import { update as updateExamAction, destroy as deleteExamAction } from '@/actions/App/Http/Controllers/Staff/ExamController';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
@@ -50,11 +50,11 @@ const props = defineProps<{
     batches: Batch[];
     subjects: { id: string; name: string }[];
     classes: { id: string; name: string }[];
-    branches: Record<string, { name: string; address: string; phones: string }>;
     academic_session: any | null;
 }>();
 
 const page = usePage();
+const branches = computed(() => (page.props as any).branches || {});
 const isAdmin = computed(() => (page.props.auth.user as any).roles.includes('admin'));
 const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
 
@@ -176,7 +176,16 @@ const handleDelete = () => {
     <component :is="Layout">
         <Head :title="`Edit ${exam.title}`" />
 
-        <div class="mx-auto max-w-4xl space-y-10">
+        <div class="mx-auto max-w-6xl space-y-10">
+            <!-- Breadcrumbs -->
+            <nav class="flex items-center gap-2 text-[10px] font-bold tracking-widest text-slate-500 uppercase">
+                <Link :href="isAdmin ? '/admin/dashboard' : '/staff/dashboard'" class="text-slate-500 transition-colors hover:text-slate-800">Dashboard</Link>
+                <svg class="h-3 w-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg>
+                <Link href="/staff/exams" class="text-slate-500 transition-colors hover:text-slate-800">Vault</Link>
+                <svg class="h-3 w-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg>
+                <span class="text-slate-900">Edit Examination</span>
+            </nav>
+
             <div v-if="!academic_session" class="rounded-xl border border-red-200 bg-red-50 p-6 shadow-sm">
                 <div class="flex items-center gap-4 text-red-600">
                     <svg class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -194,8 +203,13 @@ const handleDelete = () => {
 
             <div class="flex items-center justify-between">
                 <div>
-                    <h2 class="text-4xl font-black tracking-tight text-slate-900 italic">Edit Examination</h2>
-                    <p class="mt-2 text-sm font-bold tracking-widest text-slate-500 uppercase">Update configuration for {{ exam.title }}</p>
+                    <div class="flex items-center gap-3">
+                        <Link :href="`/staff/exams/${exam.id}`" class="group flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white transition-all hover:border-slate-900 hover:text-slate-900 active:scale-95">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" /></svg>
+                        </Link>
+                        <h2 class="text-4xl font-black tracking-tight text-slate-900 italic">Edit Examination</h2>
+                    </div>
+                    <p class="mt-2 text-sm font-bold tracking-widest text-slate-500 uppercase px-1">Update configuration for {{ exam.title }}</p>
                 </div>
                 <button
                     @click="confirmDelete"

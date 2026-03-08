@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, router, Link, useForm } from '@inertiajs/vue3';
+import { Head, router, Link, useForm, usePage } from '@inertiajs/vue3';
 import { ref, computed, watch } from 'vue';
 import { index, store, destroy } from '@/actions/App/Http/Controllers/Admin/TeachingLoadController';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
@@ -10,6 +10,7 @@ interface Teacher {
     id: string;
     name: string;
     school_id: string | null;
+    branch: string;
 }
 
 interface Assignment {
@@ -30,9 +31,13 @@ const props = defineProps<{
     filters: {
         user_id?: string;
         school_class_id?: string;
+        branch?: string;
     };
     current_session: { name: string } | null;
 }>();
+
+const page = usePage();
+const branches = computed(() => (page.props as any).branches || {});
 
 const isModalOpen = ref(false);
 const form = useForm({
@@ -94,6 +99,7 @@ const submit = () => {
 const filterForm = useForm({
     user_id: props.filters.user_id || '',
     school_class_id: props.filters.school_class_id || '',
+    branch: props.filters.branch || '',
 });
 
 const applyFilters = () => {
@@ -144,6 +150,17 @@ const handleDelete = () => {
             <div class="flex flex-wrap items-center gap-4 rounded-xl border border-slate-100 bg-white p-6 shadow-sm">
                 <div class="flex flex-1 gap-4">
                     <div class="flex-1">
+                        <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Filter by Branch</label>
+                        <select
+                            v-model="filterForm.branch"
+                            @change="applyFilters"
+                            class="w-full rounded-xl border-slate-100 bg-slate-50 px-4 py-3 text-xs font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
+                        >
+                            <option value="">All Branches</option>
+                            <option v-for="(info, key) in branches" :key="key" :value="key">{{ info.name }}</option>
+                        </select>
+                    </div>
+                    <div class="flex-1">
                         <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Filter by Teacher</label>
                         <select
                             v-model="filterForm.user_id"
@@ -177,7 +194,8 @@ const handleDelete = () => {
                     <table class="w-full border-collapse text-left">
                         <thead>
                             <tr class="border-b border-slate-100 bg-slate-50/50">
-                                <th class="px-8 py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase">Teacher</th>
+                                <th class="px-8 py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase">School Branch</th>
+                                <th class="px-6 py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase">Teacher</th>
                                 <th class="px-6 py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase">Subject</th>
                                 <th class="px-6 py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase">Target Audience</th>
                                 <th class="px-8 py-5 text-right text-[10px] font-black tracking-widest text-slate-400 uppercase">Actions</th>
@@ -186,6 +204,11 @@ const handleDelete = () => {
                         <tbody class="divide-y divide-slate-50">
                             <tr v-for="assignment in assignments.data" :key="assignment.id" class="group transition-all hover:bg-slate-50/80">
                                 <td class="px-8 py-6 whitespace-nowrap">
+                                    <div v-if="branches[assignment.teacher.branch]" class="inline-flex items-center rounded-lg border border-slate-100 bg-slate-50 px-2.5 py-1.5 text-[9px] font-black text-slate-500 uppercase tracking-widest">
+                                        {{ branches[assignment.teacher.branch].name }}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-6 whitespace-nowrap">
                                     <div>
                                         <h4 class="text-sm font-black text-slate-800">{{ assignment.teacher.name }}</h4>
                                         <p class="text-[10px] font-bold tracking-widest text-slate-400 uppercase">

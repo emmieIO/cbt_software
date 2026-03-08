@@ -26,10 +26,10 @@ interface Exam {
 
 defineProps<{
     exam: Exam;
-    branches: Record<string, { name: string; address: string; phones: string }>;
 }>();
 
 const page = usePage();
+const branches = computed(() => (page.props as any).branches || {});
 const isAdmin = computed(() => (page.props.auth.user as any).roles.includes('admin'));
 const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
 </script>

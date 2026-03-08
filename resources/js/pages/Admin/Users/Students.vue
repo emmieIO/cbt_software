@@ -20,13 +20,15 @@ interface StudentUser {
 const props = defineProps<{
     students: PaginatedData<StudentUser>;
     classes: { id: string; name: string }[];
-    branches: Record<string, { name: string; address: string; phones: string }>;
     filters: {
         search?: string;
         school_class_id?: string;
         branch?: string;
     };
 }>();
+
+const page = usePage();
+const branches = computed(() => (page.props as any).branches || {});
 
 const isModalOpen = ref(false);
 const isEditing = ref(false);

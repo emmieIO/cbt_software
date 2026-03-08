@@ -29,7 +29,6 @@ class SchoolClassController extends Controller
 
         return Inertia::render('Admin/Classes/Index', [
             'classes' => $query->latest()->get(),
-            'branches' => config('app.branches'),
             'levels' => collect(ClassLevel::cases())->map(fn ($l) => [
                 'value' => $l->value,
                 'label' => Str::title($l->value),

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
+import { ref, computed } from 'vue';
 import ProspectiveClassController from '@/actions/App/Http/Controllers/Admin/ProspectiveClassController';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
@@ -17,11 +17,13 @@ interface ProspectiveClass {
 
 const props = defineProps<{
     classes: ProspectiveClass[];
-    branches: Record<string, { name: string; address: string; phones: string }>;
     filters: {
         branch?: string;
     };
 }>();
+
+const page = usePage();
+const branches = computed(() => (page.props as any).branches || {});
 
 const isModalOpen = ref(false);
 const isEditing = ref(false);

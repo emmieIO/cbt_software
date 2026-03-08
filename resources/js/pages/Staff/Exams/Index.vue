@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Head, Link, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { Head, Link, usePage, router } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
 import {
     create as createExamAction,
     show as showExamAction,
@@ -27,7 +27,6 @@ interface Exam {
 
 const props = defineProps<{
     exams: PaginatedData<Exam>;
-    branches: Record<string, { name: string; address: string; phones: string }>;
     filters: {
         status?: string;
         type?: string;
@@ -36,6 +35,7 @@ const props = defineProps<{
 }>();
 
 const page = usePage();
+const branches = computed(() => (page.props as any).branches || {});
 const isAdmin = computed(() => (page.props.auth.user as any).roles.includes('admin'));
 const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
 

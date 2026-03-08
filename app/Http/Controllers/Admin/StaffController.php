@@ -37,7 +37,6 @@ class StaffController extends Controller
 
         return Inertia::render('Admin/Users/Staff', [
             'staff' => $query->latest()->paginate(10)->withQueryString(),
-            'branches' => config('app.branches'),
             'filters' => $request->only(['search', 'branch']),
         ]);
     }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import StaffLayout from '@/layouts/StaffLayout.vue';
@@ -10,6 +10,7 @@ const props = defineProps<{
     user: User & {
         username: string;
         school_id: string | null;
+        branch?: string;
         school_class?: { name: string };
         assignments?: Array<{
             id: string;
@@ -21,8 +22,9 @@ const props = defineProps<{
     };
 }>();
 
+const page = usePage();
+const branches = computed(() => (page.props as any).branches || {});
 const roles = computed(() => props.user.roles || []);
-
 const Layout = computed(() => {
     if (roles.value.includes('admin')) return AdminLayout;
     if (roles.value.includes('staff') || roles.value.includes('subject_lead')) return StaffLayout;
@@ -133,6 +135,11 @@ const formatDate = (dateString: string) => {
                         </h3>
                     </div>
                     <div class="space-y-6 p-8">
+                        <div v-if="user.branch && branches[user.branch]">
+                            <p class="text-[10px] font-black tracking-widest text-slate-400 uppercase">School Branch</p>
+                            <p class="mt-1 text-lg font-black text-primary uppercase italic">{{ branches[user.branch].name }}</p>
+                        </div>
+
                         <div v-if="user.school_class">
                             <p class="text-[10px] font-black tracking-widest text-slate-400 uppercase">Regular Class</p>
                             <p class="mt-1 text-lg font-black text-slate-800">{{ user.school_class.name }}</p>

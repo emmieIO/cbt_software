@@ -12,15 +12,13 @@ import {
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import StaffLayout from '@/layouts/StaffLayout.vue';
-import type { AppPageProps } from '@/types';
-import type { Question, Subject, SchoolClass, PaginatedData } from '@/types/academics';
+import type { Question, Subject, SchoolClass, PaginatedData, Batch } from '@/types/academics';
 
 const props = defineProps<{
     questions: PaginatedData<Question>;
     subjects: Subject[];
     classes: SchoolClass[];
     batches: Batch[];
-    branches: Record<string, { name: string; address: string; phones: string }>;
     difficulties: { value: string; label: string }[];
     filters: {
         search?: string;
@@ -31,8 +29,9 @@ const props = defineProps<{
     };
 }>();
 
-const page = usePage<AppPageProps>();
-const isAdmin = computed(() => page.props.auth.user.roles.includes('admin'));
+const page = usePage();
+const branches = computed(() => (page.props as any).branches || {});
+const isAdmin = computed(() => (page.props.auth.user as any).roles.includes('admin'));
 const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
 
 const isSeeding = computed(() => (page.props.auth as any).is_seeding);

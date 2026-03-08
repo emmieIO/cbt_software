@@ -4,7 +4,6 @@ import { computed, ref, watch } from 'vue';
 import { markAllAsRead } from '@/actions/App/Http/Controllers/NotificationController';
 import ToastList from '@/components/ToastList.vue';
 import { toastStore } from '@/stores/toast';
-import type { User } from '@/types';
 
 interface NavItem {
     name: string;
@@ -27,7 +26,7 @@ defineProps<{
 }>();
 
 const page = usePage();
-const user = computed<User>(() => page.props.auth.user);
+const user = computed(() => (page.props.auth as any)?.user || {});
 const notifications = computed(() => (page.props.auth as any).notifications || []);
 const academicSession = computed(() => (page.props as any).academic_session);
 const userInitials = computed(() => {
@@ -133,6 +132,7 @@ if (typeof window !== 'undefined') {
                             <component
                                 :is="item.external ? 'a' : Link"
                                 :href="item.href"
+                                :preserve-scroll="!item.external"
                                 :class="[
                                     'group flex items-center rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200',
                                     item.active ? 'bg-white/10 text-white shadow-sm' : 'text-white/60 hover:bg-white/5 hover:text-white',
@@ -204,7 +204,9 @@ if (typeof window !== 'undefined') {
                                 />
                             </svg>
                         </div>
-                        <h2 class="truncate text-sm md:text-lg font-black text-slate-800">{{ title }}</h2>
+                        <div>
+                            <h2 class="truncate text-sm md:text-lg font-black text-slate-800">{{ title }}</h2>
+                        </div>
                     </div>
 
                     <!-- Academic Session Indicator -->
