@@ -24,10 +24,10 @@ class SchoolService
      */
     public function updateSchool(School $school, SchoolDTO $dto): bool
     {
-        return $school->update([
-            ...$dto->toArray(),
-            'slug' => Str::slug($dto->name),
-        ]);
+        $school->fill($dto->toArray());
+        $school->slug = Str::slug($dto->name);
+        
+        return $school->save();
     }
 
     /**

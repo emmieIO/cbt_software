@@ -10,9 +10,13 @@ readonly class AdminDashboardDTO
      *     totalStaff: int,
      *     totalCandidates: int,
      *     totalQuestions: int,
+     *     totalExams: int,
      *     activeExams: int,
      *     totalBranches: int,
-     *     systemStatus: string
+     *     totalClasses: int,
+     *     totalSubjects: int,
+     *     systemStatus: string,
+     *     subjectBreakdown: array<int, array{name: string, count: int}>
      * } $stats
      * @param  array<int, array<string, mixed>>  $recentExams
      * @param  array<int, array<string, mixed>>  $recentUsers

@@ -22,7 +22,8 @@ class SchoolRequest extends FormRequest
      */
     public function rules(): array
     {
-        $schoolId = $this->route('school')?->id;
+        $school = $this->route('school');
+        $schoolId = $school instanceof \App\Models\School ? $school->id : $school;
 
         return [
             'name' => [

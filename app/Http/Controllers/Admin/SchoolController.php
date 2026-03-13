@@ -23,7 +23,7 @@ class SchoolController extends Controller
     public function index(): Response
     {
         return Inertia::render('Admin/Schools/Index', [
-            'schools' => School::withCount('users')->latest()->get(),
+            'schools' => School::withCount('users')->orderBy('name')->get(),
         ]);
     }
 
@@ -42,7 +42,11 @@ class SchoolController extends Controller
      */
     public function update(SchoolRequest $request, School $school): RedirectResponse
     {
-        $this->schoolService->updateSchool($school, SchoolDTO::fromRequest($request));
+        $updated = $this->schoolService->updateSchool($school, SchoolDTO::fromRequest($request));
+
+        if (! $updated) {
+            return redirect()->back()->with('error', 'Failed to update branch. Please try again.');
+        }
 
         return redirect()->back()->with('success', 'Branch updated successfully.');
     }

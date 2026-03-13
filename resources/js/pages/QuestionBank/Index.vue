@@ -379,9 +379,11 @@ const getDifficultyClasses = (difficulty: string) => {
                                         v-for="link in questions.links"
                                         :key="link.label"
                                         :href="link.url || '#'"
-                                        class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none focus:outline-none"
+                                        class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 shadow-sm disabled:opacity-50 disabled:pointer-events-none focus:outline-none transition-all"
                                         :class="[
-                                            link.active ? 'bg-primary text-white hover:bg-primary-hover border-transparent' : '',
+                                            link.active 
+                                                ? 'bg-primary text-white border-transparent' 
+                                                : 'bg-white text-gray-800 hover:bg-gray-50',
                                             !link.url && 'opacity-50 pointer-events-none'
                                         ]"
                                     >

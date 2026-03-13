@@ -7,6 +7,8 @@ use App\Models\Exam;
 use App\Models\Question;
 use App\Models\School;
 use App\Models\User;
+use App\Models\SchoolClass;
+use App\Models\Subject;
 
 class AdminDashboardService
 {
@@ -18,12 +20,30 @@ class AdminDashboardService
         $stats = [
             'totalStudents' => User::role('candidate')->count(),
             'totalStaff' => User::role('examiner')->count(),
-            'totalCandidates' => User::role('candidate')->count(), // Both are candidate role now
+            'totalCandidates' => User::role('candidate')->count(), 
             'totalQuestions' => Question::count(),
+            'totalExams' => Exam::count(),
             'activeExams' => Exam::where('status', \App\Enums\ExamStatus::LIVE)->count(),
             'totalBranches' => School::count(),
+            'totalClasses' => SchoolClass::count(),
+            'totalSubjects' => Subject::count(),
             'systemStatus' => 'Healthy',
         ];
+
+        // Subject breakdown with question counts
+        $subjectBreakdown = Subject::all()
+            ->map(fn ($subject) => [
+                'name' => $subject->name,
+                'count' => Question::whereHas('topic', function($q) use ($subject) {
+                    $q->where('subject_id', $subject->id);
+                })->count()
+            ])
+            ->sortByDesc('count')
+            ->take(5)
+            ->values()
+            ->toArray();
+
+        $stats['subjectBreakdown'] = $subjectBreakdown;
 
         $recentExams = Exam::with(['subject', 'schoolClass', 'prospectiveClass'])
             ->withCount('attempts')
