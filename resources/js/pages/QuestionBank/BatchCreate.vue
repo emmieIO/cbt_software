@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, usePage, useForm } from '@inertiajs/vue3';
-import { computed, ref, watch } from 'vue';
+import { computed, ref } from 'vue';
 import { index as indexAction, batchStore } from '@/actions/App/Http/Controllers/Staff/StaffQuestionController';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import StaffLayout from '@/layouts/StaffLayout.vue';
@@ -68,17 +68,6 @@ const addRow = () => {
     }
     
     questions.value.push(newRow);
-};
-
-const duplicateRow = (index: number) => {
-    const row = questions.value[index];
-    const newRow = {
-        ...row,
-        options: row.options.map(o => ({ ...o })),
-        image: null,
-        imagePreview: null
-    };
-    questions.value.splice(index + 1, 0, newRow);
 };
 
 const removeRow = (index: number) => {

@@ -6,12 +6,10 @@ import {
     create,
     edit,
     index as indexAction,
-    exportMethod,
     importMethod,
     downloadTemplate,
     destroy,
 } from '@/actions/App/Http/Controllers/Staff/StaffQuestionController';
-import CustomSelect from '@/components/Form/CustomSelect.vue';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import StaffLayout from '@/layouts/StaffLayout.vue';
@@ -33,7 +31,6 @@ const props = defineProps<{
 }>();
 
 const page = usePage();
-const branches = computed(() => (page.props as any).branches || {});
 const isAdmin = computed(() => (page.props.auth.user as any).permissions.includes('sys:manage_settings'));
 const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
 
@@ -64,9 +61,6 @@ const toggleSelectAll = () => {
 
 // Dropdown State
 const activeDropdown = ref<string | null>(null);
-const toggleDropdown = (id: string) => {
-    activeDropdown.value = activeDropdown.value === id ? null : id;
-};
 
 // Close dropdown on click outside
 if (typeof window !== 'undefined') {

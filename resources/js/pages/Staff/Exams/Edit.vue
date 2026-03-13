@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, usePage, useForm } from '@inertiajs/vue3';
-import { computed, ref, watch, onMounted } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import { update as updateExamAction } from '@/actions/App/Http/Controllers/Staff/ExamController';
 import CustomSelect from '@/components/Form/CustomSelect.vue';
 import DatePicker from '@/components/Form/DatePicker.vue';
@@ -54,7 +54,6 @@ const props = defineProps<{
 }>();
 
 const page = usePage();
-const academic_session = computed(() => (page.props as any).academic_session);
 
 const branches = computed(() => {
     const rawBranches = (page.props as any).branches || {};
@@ -90,10 +89,6 @@ const form = useForm({
         available_topics: [] as Topic[]
     })),
 });
-
-const useGlobalSelection = ref(
-    isAdmin.value && !props.exam.school_class_id && !props.exam.prospective_class_id ? true : isAdmin.value
-);
 
 const addCompositionRow = () => {
     form.compositions.push({
@@ -144,11 +139,6 @@ const prevStep = () => {
 const submit = () => {
     form.put(updateExamAction(props.exam.id).url);
 };
-
-// Step Validation Helpers
-const isStep1Complete = computed(() => form.title && form.school_id && form.type && form.duration);
-const isStep2Complete = computed(() => true); // In edit, we assume initial is OK
-const isStep3Complete = computed(() => form.start_time && form.end_time);
 
 </script>
 

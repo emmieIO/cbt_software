@@ -2,9 +2,9 @@
 import { Head, useForm, Link, usePage } from '@inertiajs/vue3';
 import { ref, computed, watch } from 'vue';
 import { store, update, destroy } from '@/actions/App/Http/Controllers/Admin/SchoolClassController';
-import AdminLayout from '@/layouts/AdminLayout.vue';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
 import CustomSelect from '@/components/Form/CustomSelect.vue';
+import AdminLayout from '@/layouts/AdminLayout.vue';
 
 interface SchoolClass {
     id: string;

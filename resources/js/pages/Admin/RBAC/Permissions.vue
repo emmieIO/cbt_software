@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { index as rolesIndex } from '@/actions/App/Http/Controllers/Admin/RoleController';
 import PermissionsOverview from '@/actions/App/Http/Controllers/Admin/PermissionOverviewController';
+import { index as rolesIndex } from '@/actions/App/Http/Controllers/Admin/RoleController';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 
 interface Permission {

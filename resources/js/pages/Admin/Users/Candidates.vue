@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, router, Link, useForm, usePage } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
-import { index, store, update, importMethod, admit as processAdmit } from '@/actions/App/Http/Controllers/Admin/EntranceController';
+import { index, update, importMethod, admit as processAdmit } from '@/actions/App/Http/Controllers/Admin/EntranceController';
 import CustomSelect from '@/components/Form/CustomSelect.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import type { PaginatedData, SchoolClass } from '@/types/academics';

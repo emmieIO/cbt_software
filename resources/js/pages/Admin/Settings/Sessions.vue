@@ -7,9 +7,9 @@ import {
     setCurrent as setCurrentAction,
     destroy as destroyAction,
 } from '@/actions/App/Http/Controllers/Admin/AcademicSessionController';
+import ConfirmationModal from '@/components/ConfirmationModal.vue';
 import CustomSelect from '@/components/Form/CustomSelect.vue';
 import DatePicker from '@/components/Form/DatePicker.vue';
-import ConfirmationModal from '@/components/ConfirmationModal.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 
 interface AcademicSession {
@@ -55,9 +55,9 @@ const openCreateModal = () => {
     editingId.value = null;
     form.reset();
     isModalOpen.value = true;
-    
+
     setTimeout(() => {
-        // @ts-ignore
+        // @ts-expect-error: HSStaticMethods is globally defined by Preline
         if (window.HSStaticMethods) window.HSStaticMethods.autoInit();
     }, 100);
 };
@@ -75,10 +75,11 @@ const openEditModal = (session: AcademicSession) => {
     isModalOpen.value = true;
 
     setTimeout(() => {
-        // @ts-ignore
+        // @ts-expect-error: HSStaticMethods is globally defined by Preline
         if (window.HSStaticMethods) window.HSStaticMethods.autoInit();
     }, 100);
 };
+
 
 const submit = () => {
     if (isEditing.value && editingId.value) {

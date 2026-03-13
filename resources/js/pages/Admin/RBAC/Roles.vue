@@ -102,10 +102,6 @@ const togglePermission = (permissionName: string) => {
     }
     form.permissions = permissions;
 };
-
-const getCategoryLabel = (id: string) => {
-    return categories.find(c => c.id === id)?.name || id;
-};
 </script>
 
 <template>

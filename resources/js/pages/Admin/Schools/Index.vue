@@ -2,8 +2,8 @@
 import { Head, useForm, Link } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { store, update, destroy } from '@/actions/App/Http/Controllers/Admin/SchoolController';
-import AdminLayout from '@/layouts/AdminLayout.vue';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
+import AdminLayout from '@/layouts/AdminLayout.vue';
 
 interface Branch {
     id: string;
@@ -23,9 +23,7 @@ defineProps<{
 
 const isModalOpen = ref(false);
 const isEditing = ref(false);
-const isViewModalOpen = ref(false);
 const isDeleteModalOpen = ref(false);
-const selectedBranch = ref<Branch | null>(null);
 const editingBranch = ref<Branch | null>(null);
 const branchToDelete = ref<Branch | null>(null);
 
@@ -37,18 +35,6 @@ const form = useForm({
     contact_phone: [''], 
     is_active: true,
 });
-
-const addPhoneField = () => {
-    form.contact_phone.push('');
-};
-
-const removePhoneField = (index: number) => {
-    if (form.contact_phone.length > 1) {
-        form.contact_phone.splice(index, 1);
-    } else {
-        form.contact_phone[0] = '';
-    }
-};
 
 const openCreateModal = () => {
     isEditing.value = false;
@@ -72,11 +58,6 @@ const openEditModal = (branch: Branch) => {
     isModalOpen.value = true;
 };
 
-const openViewModal = (branch: Branch) => {
-    selectedBranch.value = branch;
-    isViewModalOpen.value = true;
-};
-
 const confirmDelete = (branch: Branch) => {
     branchToDelete.value = branch;
     isDeleteModalOpen.value = true;
@@ -85,11 +66,6 @@ const confirmDelete = (branch: Branch) => {
 const closeModal = () => {
     isModalOpen.value = false;
     form.reset();
-};
-
-const closeViewModal = () => {
-    isViewModalOpen.value = false;
-    selectedBranch.value = null;
 };
 
 const submit = () => {

@@ -6,7 +6,7 @@ import StaffLayout from '@/layouts/StaffLayout.vue';
 import StudentLayout from '@/layouts/StudentLayout.vue';
 import type { User } from '@/types/auth';
 
-const props = defineProps<{
+defineProps<{
     user: User & {
         username: string;
         school_id: string | null;

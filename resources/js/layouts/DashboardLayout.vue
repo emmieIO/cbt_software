@@ -45,7 +45,7 @@ const userInitials = computed(() => {
 // Re-initialize Preline on initial mount
 onMounted(() => {
     setTimeout(() => {
-        // @ts-ignore
+        // @ts-expect-error: HSStaticMethods is globally defined by Preline
         if (window.HSStaticMethods) window.HSStaticMethods.autoInit();
     }, 100);
 });

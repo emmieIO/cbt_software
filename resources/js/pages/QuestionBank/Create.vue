@@ -90,12 +90,12 @@ const filteredTopics = computed(() => {
         }));
 });
 
-watch(() => form.subject_id, (newVal) => {
+watch(() => form.subject_id, () => {
     form.school_class_id = '';
     form.topic_id = '';
 });
 
-watch(() => form.school_class_id, (newVal) => {
+watch(() => form.school_class_id, () => {
     form.topic_id = '';
 });
 

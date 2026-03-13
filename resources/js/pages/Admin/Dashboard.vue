@@ -12,8 +12,6 @@ defineProps<{
         totalExams: number;
     };
 }>();
-
-const iconClasses = "size-5 text-gray-400";
 </script>
 
 <template>

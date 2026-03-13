@@ -1,14 +1,14 @@
+import 'preline/dist/index.js';
 import { createInertiaApp, router } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
+import { HSStaticMethods } from 'preline';
 import type { DefineComponent } from 'vue';
 import { createApp, h } from 'vue';
-import 'preline/dist/index.js';
-import { HSStaticMethods } from 'preline';
-
-// @ts-ignore
-window.HSStaticMethods = HSStaticMethods;
 
 import '../css/app.css';
+
+// @ts-expect-error: HSStaticMethods is globally defined by Preline
+window.HSStaticMethods = HSStaticMethods;
 
 const appName = import.meta.env.VITE_APP_NAME || 'Chrisland CBT Software.';
 
