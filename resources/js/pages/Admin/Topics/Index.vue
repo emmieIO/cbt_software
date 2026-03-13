@@ -2,10 +2,10 @@
 import { Head, router, Link, useForm } from '@inertiajs/vue3';
 import { debounce } from 'lodash';
 import { ref, watch, computed } from 'vue';
-import { store, update, destroy } from '@/actions/App/Http/Controllers/Admin/TopicController';
+import { store, update, destroy, index } from '@/actions/App/Http/Controllers/Admin/TopicController';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
-import type { Subject, SchoolClass } from '@/types/academics';
+import type { Subject, SchoolClass, PaginatedData } from '@/types/academics';
 
 interface Topic {
     id: string;
@@ -19,7 +19,7 @@ interface Topic {
 }
 
 const props = defineProps<{
-    topics: Topic[];
+    topics: PaginatedData<Topic>;
     subjects: Subject[];
     classes: SchoolClass[];
     levels: { value: string; label: string }[];
@@ -27,6 +27,7 @@ const props = defineProps<{
         subject_id?: string;
         school_class_id?: string;
         level?: string;
+        search?: string;
     };
 }>();
 
@@ -58,27 +59,27 @@ watch(() => form.level, () => {
 });
 
 // Filtering logic for the main table
-const filterForm = ref({
-    subject_id: props.filters.subject_id || '',
-    school_class_id: props.filters.school_class_id || '',
-    level: props.filters.level || '',
-});
+const search = ref(props.filters.search || '');
+const levelFilter = ref(props.filters.level || '');
+const subjectFilter = ref(props.filters.subject_id || '');
+const classFilter = ref(props.filters.school_class_id || '');
 
-watch(
-    filterForm,
-    debounce((value) => {
-        router.get('/admin/curriculum/topics', value, {
-            preserveState: true,
-            replace: true,
-        });
-    }, 300),
-    { deep: true },
-);
+const applyFilters = debounce(() => {
+    router.get(index().url, {
+        search: search.value,
+        level: levelFilter.value,
+        subject_id: subjectFilter.value,
+        school_class_id: classFilter.value,
+    }, { preserveState: true, replace: true });
+}, 300);
+
+watch([search, levelFilter, subjectFilter, classFilter], () => applyFilters());
 
 const clearFilters = () => {
-    filterForm.value.subject_id = '';
-    filterForm.value.school_class_id = '';
-    filterForm.value.level = '';
+    search.value = '';
+    levelFilter.value = '';
+    subjectFilter.value = '';
+    classFilter.value = '';
 };
 
 const openCreateModal = () => {
@@ -161,7 +162,7 @@ const handleDelete = () => {
                 <div>
                     <h1 class="text-2xl font-semibold text-gray-800">Curriculum Topics</h1>
                     <p class="text-sm text-gray-500 mt-1">
-                        Syllabus Units • {{ topics.length }} Definitions
+                        Syllabus Units • {{ topics.total }} Definitions
                     </p>
                 </div>
                 <button
@@ -180,11 +181,25 @@ const handleDelete = () => {
                         <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                             <!-- Filters Header -->
                             <div class="px-6 py-4 grid gap-3 md:flex md:justify-between md:items-center border-b border-gray-200">
+                                <div class="relative flex-1 max-w-md">
+                                    <div class="absolute inset-y-0 start-0 flex items-center pointer-events-none ps-3">
+                                        <svg class="size-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
+                                    </div>
+                                    <input
+                                        v-model="search"
+                                        type="text"
+                                        placeholder="Search topics..."
+                                        class="py-2 px-3 ps-9 block w-full border-gray-200 rounded-lg text-sm focus:border-primary focus:ring-primary disabled:opacity-50"
+                                    />
+                                </div>
+
                                 <div class="flex flex-wrap items-center gap-2">
-                                    <div class="w-48">
+                                    <div class="w-36">
                                         <select 
-                                            v-model="filterForm.level"
-                                            class="py-2 px-3 block w-full border-gray-200 rounded-lg text-sm focus:border-primary focus:ring-primary disabled:opacity-50"
+                                            v-model="levelFilter"
+                                            class="py-2 px-3 block w-full border-gray-200 rounded-lg text-sm focus:border-primary focus:ring-primary"
                                         >
                                             <option value="">All Levels</option>
                                             <option v-for="l in levels" :key="l.value" :value="l.value">{{ l.label }}</option>
@@ -192,24 +207,15 @@ const handleDelete = () => {
                                     </div>
                                     <div class="w-48">
                                         <select 
-                                            v-model="filterForm.subject_id"
-                                            class="py-2 px-3 block w-full border-gray-200 rounded-lg text-sm focus:border-primary focus:ring-primary disabled:opacity-50"
+                                            v-model="subjectFilter"
+                                            class="py-2 px-3 block w-full border-gray-200 rounded-lg text-sm focus:border-primary focus:ring-primary"
                                         >
                                             <option value="">All Subjects</option>
                                             <option v-for="s in subjects" :key="s.id" :value="s.id">{{ s.name }} ({{ s.level }})</option>
                                         </select>
                                     </div>
-                                    <div class="w-48">
-                                        <select 
-                                            v-model="filterForm.school_class_id"
-                                            class="py-2 px-3 block w-full border-gray-200 rounded-lg text-sm focus:border-primary focus:ring-primary disabled:opacity-50"
-                                        >
-                                            <option value="">All Classes</option>
-                                            <option v-for="c in classes" :key="c.id" :value="c.id">{{ c.name }}</option>
-                                        </select>
-                                    </div>
                                     <button
-                                        v-if="filterForm.subject_id || filterForm.school_class_id || filterForm.level"
+                                        v-if="search || levelFilter || subjectFilter || classFilter"
                                         @click="clearFilters"
                                         class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent text-red-600 hover:bg-red-50 focus:outline-none"
                                     >
@@ -228,7 +234,7 @@ const handleDelete = () => {
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-200">
-                                    <tr v-for="topic in topics" :key="topic.id" class="hover:bg-gray-50 transition-colors">
+                                    <tr v-for="topic in topics.data" :key="topic.id" class="hover:bg-gray-50 transition-colors">
                                         <td class="px-6 py-4">
                                             <span class="block text-sm font-semibold text-gray-800">{{ topic.name }}</span>
                                             <span class="block text-xs text-gray-500 mt-0.5 line-clamp-1 max-w-xs">{{ topic.description || 'No description provided' }}</span>
@@ -260,13 +266,37 @@ const handleDelete = () => {
                                             </div>
                                         </td>
                                     </tr>
-                                    <tr v-if="topics.length === 0">
+                                    <tr v-if="topics.data.length === 0">
                                         <td colspan="4" class="px-6 py-12 text-center text-gray-500">
                                             <p class="text-sm">No curriculum topics registered yet</p>
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
+
+                            <!-- Pagination -->
+                            <div v-if="topics.total > topics.per_page" class="px-6 py-4 grid gap-3 md:flex md:justify-between md:items-center border-t border-gray-200">
+                                <div>
+                                    <p class="text-sm text-gray-600">
+                                        Showing <span class="font-semibold text-gray-800">{{ topics.from }}</span> to <span class="font-semibold text-gray-800">{{ topics.to }}</span> of <span class="font-semibold text-gray-800">{{ topics.total }}</span>
+                                    </p>
+                                </div>
+
+                                <div class="inline-flex gap-x-2">
+                                    <Link
+                                        v-for="link in topics.links"
+                                        :key="link.label"
+                                        :href="link.url || '#'"
+                                        class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none focus:outline-none"
+                                        :class="[
+                                            link.active ? 'bg-gray-100' : '',
+                                            !link.url && 'opacity-50 pointer-events-none',
+                                        ]"
+                                    >
+                                        <span v-html="link.label" />
+                                    </Link>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -348,7 +378,7 @@ const handleDelete = () => {
                             <textarea
                                 v-model="form.description"
                                 rows="3"
-                                placeholder="Provide a high-level summary of the topic scope..."
+                                placeholder="Provide a high-level summary..."
                                 class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-primary focus:ring-primary disabled:opacity-50"
                             ></textarea>
                             <p v-if="form.errors.description" class="text-sm text-red-600 mt-2">{{ form.errors.description }}</p>
@@ -378,7 +408,7 @@ const handleDelete = () => {
         <ConfirmationModal
             :show="isDeleteModalOpen"
             title="Purge Knowledge Unit?"
-            :message="`Are you sure you want to permanently remove ${topicToDelete?.name} from the curriculum vault?`"
+            :message="`Are you sure you want to permanently remove ${topicToDelete?.name}?`"
             confirm-label="Purge Record"
             variant="danger"
             @close="isDeleteModalOpen = false"

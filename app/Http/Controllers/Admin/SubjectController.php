@@ -16,15 +16,28 @@ class SubjectController extends Controller
     /**
      * Display a listing of the subjects.
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $query = Subject::withCount('topics');
+
+        // Apply level filter if provided
+        if ($request->filled('level')) {
+            $query->where('level', $request->level);
+        }
+
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
 
         return Inertia::render('Admin/Subjects/Index', [
-
-            'subjects' => Subject::withCount('topics')->latest()->get(),
-
+            'subjects' => $query->latest()->paginate(10)->withQueryString(),
+            'counts' => [
+                'nursery' => Subject::where('level', 'nursery')->count(),
+                'primary' => Subject::where('level', 'primary')->count(),
+                'secondary' => Subject::where('level', 'secondary')->count(),
+            ],
+            'filters' => $request->only(['level', 'search']),
         ]);
-
     }
 
     /**

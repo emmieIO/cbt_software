@@ -23,7 +23,6 @@ class TopicController extends Controller
     {
         $user = $request->user();
         
-        // Base Query: Load everything since we want to handle large repositories cleanly in the UI
         $query = Topic::with(['subject', 'schoolClass'])->withCount('questions');
 
         // Initial Context queries
@@ -55,15 +54,19 @@ class TopicController extends Controller
             $query->where('school_class_id', $request->school_class_id);
         }
 
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
         return Inertia::render('Admin/Topics/Index', [
-            'topics' => $query->orderBy('name')->get(),
+            'topics' => $query->orderBy('name')->paginate(10)->withQueryString(),
             'subjects' => $subjectsQuery->orderBy('name')->get(),
             'classes' => $classesQuery->orderBy('name')->get(),
             'levels' => collect(\App\Enums\ClassLevel::cases())->map(fn ($l) => [
                 'value' => $l->value,
                 'label' => \Illuminate\Support\Str::title($l->value),
             ]),
-            'filters' => $request->only(['subject_id', 'school_class_id', 'level']),
+            'filters' => $request->only(['subject_id', 'school_class_id', 'level', 'search']),
         ]);
     }
 

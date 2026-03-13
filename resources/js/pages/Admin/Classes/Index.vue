@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { Head, useForm, Link } from '@inertiajs/vue3';
-import { ref } from 'vue';
-import { store, update, destroy } from '@/actions/App/Http/Controllers/Admin/SchoolClassController';
+import { Head, router, Link, useForm } from '@inertiajs/vue3';
+import { debounce } from 'lodash';
+import { ref, watch } from 'vue';
+import { store, update, destroy, index } from '@/actions/App/Http/Controllers/Admin/SchoolClassController';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
+import type { PaginatedData } from '@/types/academics';
 
 interface SchoolClass {
     id: string;
@@ -12,9 +14,13 @@ interface SchoolClass {
     level: string;
 }
 
-defineProps<{
-    classes: SchoolClass[];
+const props = defineProps<{
+    classes: PaginatedData<SchoolClass>;
     levels: { value: string; label: string }[];
+    filters: {
+        search?: string;
+        level?: string;
+    };
 }>();
 
 const isModalOpen = ref(false);
@@ -25,6 +31,24 @@ const form = useForm({
     name: '',
     level: 'primary',
 });
+
+// Filtering
+const search = ref(props.filters.search || '');
+const levelFilter = ref(props.filters.level || '');
+
+const applyFilters = debounce(() => {
+    router.get(index().url, {
+        search: search.value,
+        level: levelFilter.value,
+    }, { preserveState: true, replace: true });
+}, 300);
+
+watch([search, levelFilter], () => applyFilters());
+
+const clearFilters = () => {
+    search.value = '';
+    levelFilter.value = '';
+};
 
 const openCreateModal = () => {
     isEditing.value = false;
@@ -68,7 +92,7 @@ const confirmDelete = (cls: SchoolClass) => {
 
 const handleDelete = () => {
     if (classToDelete.value) {
-        useForm({}).delete(destroy(classToDelete.value.id).url, {
+        router.delete(destroy(classToDelete.value.id).url, {
             onSuccess: () => {
                 isDeleteModalOpen.value = false;
                 classToDelete.value = null;
@@ -115,7 +139,7 @@ const getLevelClasses = (level: string) => {
                     @click="openCreateModal"
                     class="py-2.5 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-primary text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50"
                 >
-                    <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                    <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" /></svg>
                     Add Global Class
                 </button>
             </div>
@@ -125,16 +149,50 @@ const getLevelClasses = (level: string) => {
                 <div class="-m-1.5 overflow-x-auto">
                     <div class="p-1.5 min-w-full inline-block align-middle">
                         <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                            <!-- Search & Filter Header -->
+                            <div class="px-6 py-4 grid gap-3 md:flex md:justify-between md:items-center border-b border-gray-200">
+                                <div class="relative flex-1 max-w-md">
+                                    <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+                                        <svg class="size-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                                    </div>
+                                    <input
+                                        v-model="search"
+                                        type="text"
+                                        placeholder="Search classes..."
+                                        class="py-2 px-3 ps-10 block w-full border-gray-200 rounded-lg text-sm focus:border-primary focus:ring-primary disabled:opacity-50"
+                                    />
+                                </div>
+
+                                <div class="flex items-center gap-2">
+                                    <div class="w-40">
+                                        <select 
+                                            v-model="levelFilter"
+                                            class="py-2 px-3 block w-full border-gray-200 rounded-lg text-sm focus:border-primary focus:ring-primary"
+                                        >
+                                            <option value="">All Levels</option>
+                                            <option v-for="l in levels" :key="l.value" :value="l.value">{{ l.label }}</option>
+                                        </select>
+                                    </div>
+                                    <button
+                                        v-if="search || levelFilter"
+                                        @click="clearFilters"
+                                        class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent text-red-600 hover:bg-red-50 focus:outline-none"
+                                    >
+                                        Reset
+                                    </button>
+                                </div>
+                            </div>
+
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>
-                                        <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">Class Name</th>
-                                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Academic Level</th>
-                                        <th scope="col" class="px-6 py-3 text-end text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                        <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-widest">Class Name</th>
+                                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-widest">Academic Level</th>
+                                        <th scope="col" class="px-6 py-3 text-end text-xs font-medium text-gray-500 uppercase tracking-widest">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-200">
-                                    <tr v-for="cls in classes" :key="cls.id" class="hover:bg-gray-50 transition-colors">
+                                    <tr v-for="cls in classes.data" :key="cls.id" class="hover:bg-gray-50 transition-colors">
                                         <td class="px-6 py-4">
                                             <span class="text-sm font-semibold text-gray-800 uppercase tracking-tight">{{ cls.name }}</span>
                                         </td>
@@ -157,13 +215,39 @@ const getLevelClasses = (level: string) => {
                                             </div>
                                         </td>
                                     </tr>
-                                    <tr v-if="classes.length === 0">
+                                    <tr v-if="classes.data.length === 0">
                                         <td colspan="3" class="px-6 py-12 text-center text-gray-500">
-                                            <p class="text-sm">No class hierarchies defined yet.</p>
+                                            <p class="text-sm">No class hierarchies found.</p>
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
+
+                            <!-- Pagination -->
+                            <div v-if="classes.total > classes.per_page" class="px-6 py-4 grid gap-3 md:flex md:justify-between md:items-center border-t border-gray-200">
+                                <div>
+                                    <p class="text-sm text-gray-600">
+                                        Showing <span class="font-semibold text-gray-800">{{ classes.from }}</span> to <span class="font-semibold text-gray-800">{{ classes.to }}</span> of <span class="font-semibold text-gray-800">{{ classes.total }}</span>
+                                    </p>
+                                </div>
+
+                                <div class="inline-flex gap-x-2">
+                                    <Link
+                                        v-for="link in classes.links"
+                                        :key="link.label"
+                                        :href="link.url || '#'"
+                                        class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 shadow-sm disabled:opacity-50 disabled:pointer-events-none focus:outline-none transition-all"
+                                        :class="[
+                                            link.active 
+                                                ? 'bg-primary text-white border-transparent' 
+                                                : 'bg-white text-gray-800 hover:bg-gray-50',
+                                            !link.url && 'opacity-50 pointer-events-none'
+                                        ]"
+                                    >
+                                        <span v-html="link.label" />
+                                    </Link>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -174,7 +258,7 @@ const getLevelClasses = (level: string) => {
         <div v-if="isModalOpen" class="fixed inset-0 z-[80] overflow-y-auto overflow-x-hidden flex items-center justify-center p-4">
             <div @click="closeModal" class="absolute inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity"></div>
             <div class="relative w-full max-w-lg bg-white rounded-xl shadow-lg border border-gray-200">
-                <div class="flex justify-between items-center py-3 px-4 border-b border-gray-200">
+                <div class="flex justify-between items-center py-3 px-4 border-b border-gray-200 bg-gray-50/50">
                     <h3 class="font-semibold text-gray-800 uppercase tracking-tight text-sm">{{ isEditing ? 'Update Global Class' : 'Define New Global Class' }}</h3>
                     <button @click="closeModal" type="button" class="size-8 inline-flex justify-center items-center gap-x-2 rounded-lg border border-transparent bg-gray-100 text-gray-800 hover:bg-gray-200 disabled:opacity-50">
                         <span class="sr-only">Close</span>
@@ -214,18 +298,18 @@ const getLevelClasses = (level: string) => {
                         </div>
                     </div>
                     
-                    <div class="mt-8 flex justify-end gap-x-2">
+                    <div class="mt-8 flex justify-end gap-x-2 border-t border-gray-100 pt-4">
                         <button
                             type="button"
                             @click="closeModal"
-                            class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none"
+                            class="py-2 px-4 text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-gray-800 transition-colors"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             :disabled="form.processing"
-                            class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-primary text-white hover:bg-primary-hover focus:outline-none"
+                            class="py-2.5 px-6 inline-flex items-center gap-x-2 text-xs font-bold uppercase tracking-widest rounded-lg border border-transparent bg-primary text-white hover:bg-primary-hover shadow-sm transition-all active:scale-95 disabled:opacity-50"
                         >
                             {{ isEditing ? 'Confirm Changes' : 'Create Global Class' }}
                         </button>

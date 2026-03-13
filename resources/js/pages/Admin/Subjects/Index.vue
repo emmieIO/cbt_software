@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { Head, router, useForm, Link } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
-import { store, update, destroy } from '@/actions/App/Http/Controllers/Admin/SubjectController';
+import { debounce } from 'lodash';
+import { ref, computed, watch } from 'vue';
+import { store, update, destroy, index } from '@/actions/App/Http/Controllers/Admin/SubjectController';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
+import type { PaginatedData } from '@/types/academics';
 
 interface Subject {
     id: string;
@@ -14,10 +16,21 @@ interface Subject {
 }
 
 const props = defineProps<{
-    subjects: Subject[];
+    subjects: PaginatedData<Subject>;
+    counts: {
+        nursery: number;
+        primary: number;
+        secondary: number;
+    };
+    filters: {
+        level?: string;
+        search?: string;
+    };
 }>();
 
-const selectedLevel = ref<string | null>(null);
+const selectedLevel = ref<string | null>(props.filters.level || null);
+const search = ref(props.filters.search || '');
+
 const isModalOpen = ref(false);
 const isEditing = ref(false);
 const editingSubject = ref<Subject | null>(null);
@@ -28,23 +41,32 @@ const form = useForm({
     level: 'primary',
 });
 
-// Level Summaries
+// Level Summaries for Overview
 const levelStats = computed(() => {
     const levels = ['nursery', 'primary', 'secondary'];
     return levels.map(level => ({
         id: level,
         name: level.charAt(0).toUpperCase() + level.slice(1),
-        count: props.subjects.filter(s => s.level === level).length,
-        color: level === 'nursery' ? 'pink' : (level === 'secondary' ? 'indigo' : 'orange')
+        count: (props.counts as any)[level] || 0,
+        iconBg: level === 'nursery' ? 'bg-pink-100 text-pink-600' : (level === 'secondary' ? 'bg-indigo-100 text-indigo-600' : 'bg-orange-100 text-orange-600')
     }));
 });
 
-const filteredSubjects = computed(() => {
-    if (!selectedLevel.value) return [];
-    return props.subjects
-        .filter(s => s.level === selectedLevel.value)
-        .sort((a, b) => a.name.localeCompare(b.name));
-});
+// Filtering
+const applyFilters = debounce(() => {
+    router.get(index().url, { 
+        level: selectedLevel.value,
+        search: search.value 
+    }, { preserveState: true, replace: true });
+}, 300);
+
+watch(selectedLevel, () => applyFilters());
+watch(search, () => applyFilters());
+
+const clearFilters = () => {
+    selectedLevel.value = null;
+    search.value = '';
+};
 
 const openCreateModal = () => {
     isEditing.value = false;
@@ -104,7 +126,7 @@ const handleDelete = () => {
     <AdminLayout>
         <Head title="Curriculum Directory" />
 
-        <div class="space-y-8">
+        <div class="space-y-6 sm:space-y-10">
             <!-- Breadcrumbs -->
             <nav class="flex items-center gap-2 text-xs font-medium text-gray-500">
                 <Link href="/admin/dashboard" class="hover:text-primary transition-colors">Dashboard</Link>
@@ -116,121 +138,183 @@ const handleDelete = () => {
                 </template>
             </nav>
 
-            <!-- 1. LEVEL OVERVIEW (Initial View) -->
-            <div v-if="!selectedLevel" class="space-y-10">
-                <div class="max-w-2xl">
-                    <h1 class="text-3xl font-black text-slate-800 tracking-tight uppercase">Curriculum Vault</h1>
-                    <p class="text-sm font-semibold text-slate-400 uppercase tracking-widest mt-2">
+            <!-- 1. TIER OVERVIEW (Cards) -->
+            <div v-if="!selectedLevel && !search" class="space-y-8">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800">Curriculum Vault</h1>
+                    <p class="text-sm text-gray-500 mt-1">
                         Select an academic tier to manage specialized subjects and syllabi.
                     </p>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <button 
+                <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div 
                         v-for="stat in levelStats" 
                         :key="stat.id"
-                        @click="selectedLevel = stat.id"
-                        class="group relative bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm transition-all hover:shadow-xl hover:-translate-y-1 text-left"
+                        class="group flex flex-col bg-white border border-gray-200 shadow-sm rounded-xl transition-all hover:shadow-md"
                     >
-                        <div 
-                            class="size-14 rounded-2xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110"
-                            :class="`bg-${stat.color}-50 text-${stat.color}-600`"
-                        >
-                            <svg class="size-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+                        <div class="p-4 md:p-8 flex-1">
+                            <div class="size-12 rounded-lg flex items-center justify-center mb-6" :class="stat.iconBg">
+                                <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+                            </div>
+                            <h3 class="text-lg font-bold text-gray-800 uppercase tracking-tight">
+                                {{ stat.name }} School
+                            </h3>
+                            <p class="mt-2 text-gray-500 text-sm leading-relaxed">
+                                Portal for global subjects within the {{ stat.name.toLowerCase() }} framework.
+                            </p>
+                            <div class="mt-4 inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                {{ stat.count }} Active Subjects
+                            </div>
                         </div>
-                        <h3 class="text-xl font-black text-slate-800 uppercase tracking-tight">{{ stat.name }} School</h3>
-                        <p class="text-sm font-bold text-slate-400 uppercase tracking-widest mt-1">{{ stat.count }} Active Subjects</p>
-                        
-                        <div class="mt-8 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary group-hover:gap-3 transition-all">
-                            Open Subjects
-                            <svg class="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+                        <div class="bg-gray-50 border-t border-gray-200 rounded-b-xl py-3 px-4 md:px-8">
+                            <button 
+                                @click="selectedLevel = stat.id"
+                                class="w-full inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent text-primary hover:text-primary-hover focus:outline-none transition-all"
+                            >
+                                Open Registry
+                                <svg class="flex-shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                            </button>
                         </div>
-                    </button>
+                    </div>
                 </div>
             </div>
 
-            <!-- 2. SUBJECT LIST (Detailed View) -->
+            <!-- 2. SUBJECT LIST (Standard Preline Layout) -->
             <div v-else class="space-y-6">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div class="flex items-center gap-4">
-                        <button @click="selectedLevel = null" class="size-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary transition-all active:scale-90">
-                            <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" /></svg>
+                        <button @click="clearFilters" class="size-9 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-gray-400 hover:text-primary transition-all shadow-sm">
+                            <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7" /></svg>
                         </button>
                         <div>
-                            <h1 class="text-2xl font-black text-slate-800 tracking-tight uppercase">{{ selectedLevel }} Subjects</h1>
-                            <p class="text-xs font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">Registry • {{ filteredSubjects.length }} Specialized Items</p>
+                            <h1 class="text-xl font-bold text-gray-800 uppercase tracking-tight">
+                                {{ selectedLevel ? `${selectedLevel} Subjects` : 'All Subjects' }}
+                            </h1>
+                            <p class="text-xs text-gray-500 mt-1 uppercase tracking-widest">{{ subjects.total }} Global Records</p>
                         </div>
                     </div>
                     <button
                         @click="openCreateModal"
-                        class="py-3 px-6 inline-flex items-center gap-x-2 text-xs font-black uppercase tracking-widest rounded-xl border border-transparent bg-primary text-white hover:bg-primary-hover transition-all shadow-md shadow-primary/20 active:scale-95"
+                        class="py-2.5 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-primary text-white hover:bg-primary-hover transition-all shadow-sm active:scale-95"
                     >
                         <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" /></svg>
-                        Register Subject
+                        Add Subject
                     </button>
                 </div>
 
-                <div class="bg-white border border-slate-100 rounded-[32px] shadow-sm overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left">
-                            <thead class="bg-slate-50/50">
-                                <tr>
-                                    <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Core Information</th>
-                                    <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Curriculum Units</th>
-                                    <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-end">Control</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-50">
-                                <tr v-for="subject in filteredSubjects" :key="subject.id" class="hover:bg-slate-50/30 transition-colors group">
-                                    <td class="px-8 py-5">
-                                        <div class="flex items-center gap-x-5">
-                                            <div class="size-12 flex-shrink-0 flex items-center justify-center rounded-2xl bg-white border border-slate-100 shadow-sm text-xs font-black text-slate-400 group-hover:text-primary transition-colors">
-                                                {{ subject.name.substring(0, 2).toUpperCase() }}
-                                            </div>
-                                            <div class="flex flex-col">
-                                                <span class="text-sm font-black text-slate-800 uppercase tracking-tight">{{ subject.name }}</span>
-                                                <span class="text-[10px] font-bold text-slate-400 line-clamp-1 max-w-sm mt-1 uppercase tracking-wider">
-                                                    {{ subject.description || 'No detailed syllabus overview provided.' }}
+                <!-- Main Table Card -->
+                <div class="flex flex-col">
+                    <div class="-m-1.5 overflow-x-auto">
+                        <div class="p-1.5 min-w-full inline-block align-middle">
+                            <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                                <!-- Search & Filter Header -->
+                                <div class="px-6 py-4 grid gap-3 md:flex md:justify-between md:items-center border-b border-gray-200">
+                                    <div class="relative flex-1 max-w-md">
+                                        <div class="absolute inset-y-0 start-0 flex items-center pointer-events-none ps-3">
+                                            <svg class="size-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                            </svg>
+                                        </div>
+                                        <input
+                                            v-model="search"
+                                            type="text"
+                                            placeholder="Search subjects..."
+                                            class="py-2 px-3 ps-9 block w-full border-gray-200 rounded-lg text-sm focus:border-primary focus:ring-primary disabled:opacity-50"
+                                        />
+                                    </div>
+
+                                    <div class="inline-flex gap-x-2">
+                                        <select 
+                                            v-model="selectedLevel"
+                                            class="py-2 px-3 block w-full border-gray-200 rounded-lg text-sm focus:border-primary focus:ring-primary"
+                                        >
+                                            <option :value="null">All Levels</option>
+                                            <option value="nursery">Nursery</option>
+                                            <option value="primary">Primary</option>
+                                            <option value="secondary">Secondary</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th scope="col" class="px-6 py-3 text-start text-[10px] font-bold text-gray-400 uppercase tracking-widest">Syllabus Identity</th>
+                                            <th scope="col" class="px-6 py-3 text-start text-[10px] font-bold text-gray-400 uppercase tracking-widest">Academic Level</th>
+                                            <th scope="col" class="px-6 py-3 text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">Topics</th>
+                                            <th scope="col" class="px-6 py-3 text-end text-[10px] font-bold text-gray-400 uppercase tracking-widest">Control</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-200">
+                                        <tr v-for="subject in subjects.data" :key="subject.id" class="hover:bg-gray-50 transition-colors group">
+                                            <td class="px-6 py-4">
+                                                <div class="flex items-center gap-x-4">
+                                                    <div class="size-10 flex-shrink-0 flex items-center justify-center rounded-lg bg-gray-50 text-[10px] font-bold text-gray-400 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                                                        {{ subject.name.substring(0, 2).toUpperCase() }}
+                                                    </div>
+                                                    <div class="flex flex-col">
+                                                        <span class="text-sm font-semibold text-gray-800 uppercase tracking-tight">{{ subject.name }}</span>
+                                                        <span class="text-xs text-gray-400 line-clamp-1 max-w-sm">
+                                                            {{ subject.description || 'No detailed syllabus summary provided.' }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <span class="inline-flex items-center py-1 px-2.5 rounded-md text-xs font-medium uppercase"
+                                                    :class="subject.level === 'nursery' ? 'bg-pink-100 text-pink-800' : (subject.level === 'secondary' ? 'bg-indigo-100 text-indigo-800' : 'bg-orange-100 text-orange-800')"
+                                                >
+                                                    {{ subject.level }}
                                                 </span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="px-8 py-5">
-                                        <div class="flex flex-col items-center">
-                                            <span class="text-sm font-black text-slate-800">{{ subject.topics_count }}</span>
-                                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-tighter mt-0.5">Verified Topics</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-8 py-5 text-end">
-                                        <div class="flex justify-end items-center gap-x-3 opacity-0 group-hover:opacity-100 transition-all">
-                                            <button 
-                                                @click="openEditModal(subject)"
-                                                class="size-9 inline-flex justify-center items-center rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-primary hover:border-primary transition-all"
-                                            >
-                                                <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                                            </button>
-                                            <button 
-                                                @click="confirmDelete(subject)"
-                                                class="size-9 inline-flex justify-center items-center rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-red-500 hover:border-red-200 transition-all"
-                                            >
-                                                <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr v-if="filteredSubjects.length === 0">
-                                    <td colspan="3" class="px-8 py-20 text-center">
-                                        <div class="flex flex-col items-center">
-                                            <div class="size-20 bg-slate-50 rounded-[32px] flex items-center justify-center text-slate-200 mb-6">
-                                                <svg class="size-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
-                                            </div>
-                                            <p class="text-sm font-black text-slate-400 uppercase tracking-[0.2em]">Tier Registry Empty</p>
-                                            <p class="text-xs font-bold text-slate-300 mt-2 uppercase">No subjects have been defined for the {{ selectedLevel }} tier.</p>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                                            </td>
+                                            <td class="px-6 py-4 text-center">
+                                                <span class="text-xs font-medium text-gray-600">{{ subject.topics_count }}</span>
+                                            </td>
+                                            <td class="px-6 py-4 text-end text-sm font-medium">
+                                                <div class="flex justify-end items-center gap-x-2">
+                                                    <button @click="openEditModal(subject)" class="text-gray-500 hover:text-primary transition-colors focus:outline-none">
+                                                        <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                                    </button>
+                                                    <button @click="confirmDelete(subject)" class="text-gray-500 hover:text-red-500 transition-colors focus:outline-none">
+                                                        <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr v-if="subjects.data.length === 0">
+                                            <td colspan="4" class="px-6 py-20 text-center">
+                                                <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">No subjects matching your criteria.</p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <!-- Pagination -->
+                                <div v-if="subjects.total > subjects.per_page" class="px-6 py-4 grid gap-3 md:flex md:justify-between md:items-center border-t border-gray-200">
+                                    <div>
+                                        <p class="text-sm text-gray-600">
+                                            Showing <span class="font-semibold text-gray-800">{{ subjects.from }}</span> to <span class="font-semibold text-gray-800">{{ subjects.to }}</span> of <span class="font-semibold text-gray-800">{{ subjects.total }}</span>
+                                        </p>
+                                    </div>
+
+                                    <div class="inline-flex gap-x-2">
+                                        <Link
+                                            v-for="link in subjects.links"
+                                            :key="link.label"
+                                            :href="link.url || '#'"
+                                            class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none focus:outline-none"
+                                            :class="[
+                                                link.active ? 'bg-gray-100' : '',
+                                                !link.url && 'opacity-50 pointer-events-none',
+                                            ]"
+                                        >
+                                            <span v-html="link.label" />
+                                        </Link>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -238,70 +322,62 @@ const handleDelete = () => {
 
         <!-- Create/Edit Modal -->
         <div v-if="isModalOpen" class="fixed inset-0 z-[80] overflow-y-auto overflow-x-hidden flex items-center justify-center p-4">
-            <div @click="closeModal" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"></div>
-            <div class="relative w-full max-w-lg bg-white rounded-[40px] shadow-2xl border border-slate-100 overflow-hidden">
-                <div class="flex justify-between items-center py-6 px-8 border-b border-slate-50">
-                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest">{{ isEditing ? 'Update Subject Record' : 'Initialize New Subject' }}</h3>
-                    <button @click="closeModal" type="button" class="size-10 inline-flex justify-center items-center rounded-2xl bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-all active:scale-90">
-                        <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/></svg>
+            <div @click="closeModal" class="absolute inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity"></div>
+            <div class="relative w-full max-w-lg bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+                <div class="flex justify-between items-center py-3 px-4 border-b border-gray-200 bg-gray-50/50">
+                    <h3 class="text-sm font-bold text-gray-800 uppercase tracking-widest">{{ isEditing ? 'Edit Subject' : 'New Subject' }}</h3>
+                    <button @click="closeModal" type="button" class="size-8 inline-flex justify-center items-center rounded-lg bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all active:scale-90">
+                        <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
 
-                <form @submit.prevent="submit" class="p-8 space-y-8">
+                <form @submit.prevent="submit" class="p-6 space-y-6">
                     <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Academic Nomenclature</label>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Subject Nomenclature</label>
                         <input
                             v-model="form.name"
                             type="text"
                             required
                             placeholder="e.g. CORE MATHEMATICS"
-                            class="py-4 px-6 block w-full bg-slate-50 border-none rounded-[20px] text-sm font-black text-slate-800 focus:ring-4 focus:ring-primary/10 transition-all uppercase tracking-tight placeholder:text-slate-300"
+                            class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm font-medium text-gray-800 focus:border-primary focus:ring-primary disabled:opacity-50 uppercase tracking-tight"
                         />
-                        <div v-if="form.errors.name" class="text-[10px] font-bold text-red-500 mt-2 uppercase tracking-wide">{{ form.errors.name }}</div>
+                        <div v-if="form.errors.name" class="text-xs text-red-500 mt-2 font-bold uppercase tracking-wide">{{ form.errors.name }}</div>
                     </div>
 
                     <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Institutional Tier</label>
-                        <div class="grid grid-cols-3 gap-3">
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Mandatory Academic Tier</label>
+                        <div class="flex p-1 bg-gray-50 rounded-lg border border-gray-200">
                             <button
                                 v-for="level in ['nursery', 'primary', 'secondary']"
                                 :key="level"
                                 type="button"
                                 @click="form.level = level"
-                                class="py-4 px-2 text-center text-[10px] font-black uppercase rounded-2xl border-2 transition-all"
-                                :class="form.level === level ? 'bg-slate-900 border-slate-900 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400 hover:border-slate-200'"
+                                class="flex-1 py-2 text-[10px] font-black uppercase rounded-md transition-all"
+                                :class="form.level === level 
+                                    ? 'bg-white text-gray-800 shadow-sm border border-gray-200' 
+                                    : 'text-gray-400 hover:text-gray-600'"
                             >
                                 {{ level }}
                             </button>
                         </div>
-                        <div v-if="form.errors.level" class="text-[10px] font-bold text-red-500 mt-2 uppercase tracking-wide">{{ form.errors.level }}</div>
+                        <div v-if="form.errors.level" class="text-xs text-red-500 mt-2 font-bold uppercase tracking-wide">{{ form.errors.level }}</div>
                     </div>
 
                     <div>
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Syllabus Context (Optional)</label>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Curriculum Context (Optional)</label>
                         <textarea
                             v-model="form.description"
                             rows="4"
-                            placeholder="Provide a high-level summary of the subject scope..."
-                            class="py-4 px-6 block w-full bg-slate-50 border-none rounded-[20px] text-sm font-bold text-slate-600 focus:ring-4 focus:ring-primary/10 transition-all placeholder:text-slate-300"
+                            placeholder="Provide a high-level summary..."
+                            class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm font-medium text-gray-600 focus:border-primary focus:ring-primary disabled:opacity-50"
                         ></textarea>
-                        <div v-if="form.errors.description" class="text-[10px] font-bold text-red-500 mt-2 uppercase tracking-wide">{{ form.errors.description }}</div>
+                        <div v-if="form.errors.description" class="text-xs text-red-500 mt-2 font-bold uppercase tracking-wide">{{ form.errors.description }}</div>
                     </div>
 
-                    <div class="pt-4 flex justify-end gap-x-3">
-                        <button
-                            type="button"
-                            @click="closeModal"
-                            class="py-4 px-8 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-800 transition-colors"
-                        >
-                            Abort
-                        </button>
-                        <button
-                            type="submit"
-                            :disabled="form.processing"
-                            class="py-4 px-8 inline-flex items-center gap-x-2 text-[10px] font-black uppercase tracking-widest rounded-2xl border border-transparent bg-primary text-white hover:bg-primary-hover shadow-xl shadow-primary/20 transition-all active:scale-95 disabled:opacity-50"
-                        >
-                            {{ isEditing ? 'Update Registry' : 'Confirm Entry' }}
+                    <div class="pt-4 flex justify-end gap-x-2 border-t border-gray-100">
+                        <button type="button" @click="closeModal" class="py-2 px-4 text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-gray-800 transition-colors">Abort</button>
+                        <button type="submit" :disabled="form.processing" class="py-2.5 px-6 inline-flex items-center gap-x-2 text-xs font-bold uppercase tracking-widest rounded-lg border border-transparent bg-primary text-white hover:bg-primary-hover shadow-sm transition-all active:scale-95 disabled:opacity-50">
+                            {{ isEditing ? 'Save Changes' : 'Confirm Entry' }}
                         </button>
                     </div>
                 </form>
@@ -311,7 +387,7 @@ const handleDelete = () => {
         <ConfirmationModal
             :show="isDeleteModalOpen"
             title="Purge Subject Record?"
-            :message="`Are you sure you want to delete ${subjectToDelete?.name}? This action is irreversible and will only succeed if the subject has no associated curriculum units (topics).`"
+            :message="`Are you sure you want to delete ${subjectToDelete?.name}? This action is irreversible.`"
             confirm-label="Purge Permanently"
             variant="danger"
             @close="isDeleteModalOpen = false"
@@ -319,12 +395,3 @@ const handleDelete = () => {
         />
     </AdminLayout>
 </template>
-
-<style scoped>
-.bg-orange-50 { background-color: rgb(255 247 237); }
-.text-orange-600 { color: rgb(234 88 12); }
-.bg-pink-50 { background-color: rgb(253 242 248); }
-.text-pink-600 { color: rgb(219 39 119); }
-.bg-indigo-50 { background-color: rgb(238 242 255); }
-.text-indigo-600 { color: rgb(79 70 229); }
-</style>

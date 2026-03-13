@@ -23,7 +23,7 @@ class SchoolController extends Controller
     public function index(): Response
     {
         return Inertia::render('Admin/Schools/Index', [
-            'schools' => School::withCount('users')->orderBy('name')->get(),
+            'schools' => School::withCount('users')->orderBy('name')->paginate(10)->withQueryString(),
         ]);
     }
 

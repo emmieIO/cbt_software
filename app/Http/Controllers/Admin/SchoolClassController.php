@@ -23,12 +23,21 @@ class SchoolClassController extends Controller
     {
         $query = SchoolClass::query();
 
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        if ($request->filled('level')) {
+            $query->where('level', $request->level);
+        }
+
         return Inertia::render('Admin/Classes/Index', [
-            'classes' => $query->orderBy('level')->orderBy('name')->get(),
-            'levels' => collect(ClassLevel::cases())->map(fn ($l) => [
+            'classes' => $query->orderBy('level')->orderBy('name')->paginate(10)->withQueryString(),
+            'levels' => collect(\App\Enums\ClassLevel::cases())->map(fn ($l) => [
                 'value' => $l->value,
                 'label' => Str::title($l->value),
             ]),
+            'filters' => $request->only(['search', 'level']),
         ]);
     }
 
@@ -42,7 +51,7 @@ class SchoolClassController extends Controller
                 'required', 'string', 'max:255',
                 \Illuminate\Validation\Rule::unique('school_classes')->where(fn ($q) => $q->where('level', $request->level)),
             ],
-            'level' => ['required', new Enum(ClassLevel::class)],
+            'level' => ['required', new Enum(\App\Enums\ClassLevel::class)],
         ]);
 
         $dto = \App\DTOs\SchoolClassDTO::fromRequest($request);
@@ -63,7 +72,7 @@ class SchoolClassController extends Controller
                     ->where(fn ($q) => $q->where('level', $request->level))
                     ->ignore($schoolClass->id),
             ],
-            'level' => ['required', new Enum(ClassLevel::class)],
+            'level' => ['required', new Enum(\App\Enums\ClassLevel::class)],
         ]);
 
         $dto = \App\DTOs\SchoolClassDTO::fromRequest($request);

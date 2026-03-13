@@ -4,6 +4,7 @@ import { ref } from 'vue';
 import { store, update, destroy } from '@/actions/App/Http/Controllers/Admin/SchoolController';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
+import type { PaginatedData } from '@/types/academics';
 
 interface Branch {
     id: string;
@@ -18,7 +19,7 @@ interface Branch {
 }
 
 defineProps<{
-    schools: Branch[];
+    schools: PaginatedData<Branch>;
 }>();
 
 const isModalOpen = ref(false);
@@ -138,7 +139,7 @@ const getTypeClasses = (type: string) => {
                 <div>
                     <h1 class="text-2xl font-semibold text-gray-800">Campus Directory</h1>
                     <p class="text-sm text-gray-500 mt-1">
-                        Institutional Branches • {{ schools.length }} Locations
+                        Institutional Branches • {{ schools.total }} Locations
                     </p>
                 </div>
                 <button
@@ -166,7 +167,7 @@ const getTypeClasses = (type: string) => {
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-200">
-                                    <tr v-for="school in schools" :key="school.id" class="hover:bg-gray-50 transition-colors">
+                                    <tr v-for="school in schools.data" :key="school.id" class="hover:bg-gray-50 transition-colors">
                                         <td class="px-6 py-4">
                                             <span class="block text-sm font-semibold text-gray-800">{{ school.name }}</span>
                                             <span class="block text-xs text-gray-500 mt-0.5 truncate max-w-xs">{{ school.address || 'No address provided' }}</span>
@@ -215,13 +216,37 @@ const getTypeClasses = (type: string) => {
                                             </div>
                                         </td>
                                     </tr>
-                                    <tr v-if="schools.length === 0">
+                                    <tr v-if="schools.data.length === 0">
                                         <td colspan="5" class="px-6 py-12 text-center text-gray-500">
                                             <p class="text-sm">No branches registered yet</p>
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
+
+                            <!-- Pagination -->
+                            <div v-if="schools.total > schools.per_page" class="px-6 py-4 grid gap-3 md:flex md:justify-between md:items-center border-t border-gray-200">
+                                <div>
+                                    <p class="text-sm text-gray-600">
+                                        Showing <span class="font-semibold text-gray-800">{{ schools.from }}</span> to <span class="font-semibold text-gray-800">{{ schools.to }}</span> of <span class="font-semibold text-gray-800">{{ schools.total }}</span>
+                                    </p>
+                                </div>
+
+                                <div class="inline-flex gap-x-2">
+                                    <Link
+                                        v-for="link in schools.links"
+                                        :key="link.label"
+                                        :href="link.url || '#'"
+                                        class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none focus:outline-none"
+                                        :class="[
+                                            link.active ? 'bg-gray-100' : '',
+                                            !link.url && 'opacity-50 pointer-events-none',
+                                        ]"
+                                    >
+                                        <span v-html="link.label" />
+                                    </Link>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
