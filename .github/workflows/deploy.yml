@@ -20,7 +20,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php-version }}
-          extensions: mbstring, xml, bcmath, gd, zip, mysql
+          extensions: mbstring, xml, bcmath, gd, zip, pgsql, pdo_pgsql
           tools: composer:v2
           coverage: none
 
@@ -47,11 +47,19 @@ jobs:
       - name: Install PHP Dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
 
+      - name: Prepare Environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
       - name: Check PHP Code Style (Pint)
         run: composer run lint
 
       - name: Lint Frontend (ESLint)
         run: npm run lint
+
+      - name: Generate Wayfinder Types
+        run: php artisan wayfinder:generate --with-form
 
       - name: Build Assets
         run: npm run build
@@ -78,42 +86,45 @@ jobs:
           script: |
             cd /var/www/cbt_software
             
-            # 1. Immediate environment cleanup
-            # This prevents the app from trying to load removed providers during the git/composer phase
+            # Immediate environment cleanup to prevent boot errors during git pull/composer install
             rm -f bootstrap/cache/*.php
             rm -rf resources/js/actions
             
             if [ -f "deploy.sh" ]; then
+              chmod +x deploy.sh
               ./deploy.sh
             else
-              echo "deploy.sh not found, running manual deployment..."
+              echo "deploy.sh not found, running manual fallback deployment..."
               
-              # Pull latest code
               git fetch origin master
               git reset --hard origin/master
               
-              # Ensure cache is gone again after pull just in case
               rm -f bootstrap/cache/*.php
               
-              # Install dependencies WITHOUT running hooks (post-autoload-dump etc)
-              # This allows composer to update the autoloader even if Laravel is currently broken
               composer install --no-interaction --prefer-dist --optimize-autoloader --no-scripts
               
-              # Now that autoloader is clean, we can run artisan commands
               php artisan package:discover --ansi
               php artisan config:clear
               php artisan route:clear
+              php artisan optimize:clear
               
               php artisan migrate --force
-              php artisan wayfinder:generate
+              php artisan db:seed --class=RolesAndPermissionsSeeder --force
+              php artisan permission:cache-reset
+              
+              rm -rf resources/js/actions
+              php artisan wayfinder:generate --with-form
               
               npm install
               npm run build
               
-              # Re-cache for production performance
+              php artisan storage:link || true
               php artisan config:cache
               php artisan route:cache
               php artisan view:cache
               
-              php artisan octane:reload || php artisan queue:restart
+              sudo chown -R www-data:www-data storage bootstrap/cache public/build
+              sudo chmod -R 775 storage bootstrap/cache
+              
+              sudo systemctl restart frankenphp || php artisan queue:restart
             fi

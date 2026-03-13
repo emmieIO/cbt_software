@@ -9,12 +9,17 @@ cd /var/www/cbt_software
 # 1. Pull latest code
 git pull origin master
 
-# Clean up stale Wayfinder types to fix build errors
-rm -rf resources/js/actions
-php artisan wayfinder:generate
-
 # 2. Dependencies
 composer install --no-dev --optimize-autoloader
+
+# Clear stale caches that might block wayfinder:generate boot
+php artisan optimize:clear || true
+
+# Clean up stale Wayfinder types to fix build errors
+# We run this before npm run build to ensure types are available for Vite
+rm -rf resources/js/actions
+php artisan wayfinder:generate --with-form
+
 npm install
 npm run build
 
