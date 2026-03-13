@@ -12,7 +12,7 @@ interface SchoolClass {
     level: string;
 }
 
-const props = defineProps<{
+defineProps<{
     classes: SchoolClass[];
     levels: { value: string; label: string }[];
 }>();

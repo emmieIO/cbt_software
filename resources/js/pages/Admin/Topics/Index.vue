@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, router, Link, useForm } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
 import { debounce } from 'lodash';
+import { ref, watch } from 'vue';
 import { store, update, destroy } from '@/actions/App/Http/Controllers/Admin/TopicController';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';

@@ -98,14 +98,6 @@ const handleDelete = () => {
         });
     }
 };
-
-const getLevelClasses = (level: string) => {
-    switch (level) {
-        case 'nursery': return 'bg-pink-100 text-pink-800 border-pink-200';
-        case 'secondary': return 'bg-indigo-100 text-indigo-800 border-indigo-200';
-        default: return 'bg-orange-100 text-orange-800 border-orange-200';
-    }
-};
 </script>
 
 <template>
