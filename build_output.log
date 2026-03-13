@@ -1,0 +1,81 @@
+
+> build
+> vite build
+
+vite v7.3.1 building client environment for production...
+[plugin @laravel/vite-plugin-wayfinder] Types generated for actions, routes, form variants
+transforming...
+✓ 928 modules transformed.
+rendering chunks...
+computing gzip size...
+public/build/manifest.json                                                              29.17 kB │ gzip:  2.34 kB
+public/build/assets/Create-C562L-Y7.css                                                  0.05 kB │ gzip:  0.07 kB
+public/build/assets/Edit-DhhWs5np.css                                                    0.05 kB │ gzip:  0.07 kB
+public/build/assets/Create-QPe_LpUU.css                                                  0.09 kB │ gzip:  0.08 kB
+public/build/assets/Edit-Dkm7J5NX.css                                                    0.09 kB │ gzip:  0.08 kB
+public/build/assets/Show-D-zApoMr.css                                                    0.17 kB │ gzip:  0.12 kB
+public/build/assets/Result-Qfe0zbEU.css                                                  0.23 kB │ gzip:  0.14 kB
+public/build/assets/Roles-NojImlY3.css                                                   0.25 kB │ gzip:  0.14 kB
+public/build/assets/Promotion-CfO7qNHu.css                                               0.25 kB │ gzip:  0.14 kB
+public/build/assets/Generate-B85DfnHf.css                                                0.25 kB │ gzip:  0.13 kB
+public/build/assets/Show-Q4oy2mJ6.css                                                    0.25 kB │ gzip:  0.14 kB
+public/build/assets/Questions-DcUF-9wr.css                                               0.25 kB │ gzip:  0.14 kB
+public/build/assets/CustomSelect-BMw_rZ7H.css                                            0.25 kB │ gzip:  0.14 kB
+public/build/assets/BatchCreate-HN_Wj2cF.css                                             0.41 kB │ gzip:  0.20 kB
+public/build/assets/DashboardLayout-CxJb_z3k.css                                         0.53 kB │ gzip:  0.23 kB
+public/build/assets/app-Boe1tOw7.css                                                    90.22 kB │ gzip: 14.58 kB
+public/build/assets/_plugin-vue_export-helper-DlAUqK2U.js                                0.09 kB │ gzip:  0.10 kB
+public/build/assets/index-CSEUMRIG.js                                                    0.92 kB │ gzip:  0.53 kB
+public/build/assets/StaffAuthController-COC6oSol.js                                      1.02 kB │ gzip:  0.35 kB
+public/build/assets/AdminController-BDFn1Rwv.js                                          1.47 kB │ gzip:  0.41 kB
+public/build/assets/StudentLayout.vue_vue_type_script_setup_true_lang-DSsrDLTw.js        1.78 kB │ gzip:  0.74 kB
+public/build/assets/Index-CDYYuQoB.js                                                    2.98 kB │ gzip:  1.37 kB
+public/build/assets/Login-6Z2VDoS6.js                                                    3.77 kB │ gzip:  1.53 kB
+public/build/assets/Login-lV2EvUpd.js                                                    3.86 kB │ gzip:  1.67 kB
+public/build/assets/Login-CRzh3wcV.js                                                    3.88 kB │ gzip:  1.68 kB
+public/build/assets/ConfirmationModal.vue_vue_type_script_setup_true_lang-Ct7TNVQS.js    4.02 kB │ gzip:  1.63 kB
+public/build/assets/Permissions-DY_3EIgz.js                                              4.40 kB │ gzip:  1.83 kB
+public/build/assets/StaffLayout.vue_vue_type_script_setup_true_lang-Dyrb88Zi.js          4.58 kB │ gzip:  1.59 kB
+public/build/assets/Index-BvR7T-RA.js                                                    4.93 kB │ gzip:  2.03 kB
+public/build/assets/PermissionsOverview-Bk-O4oaZ.js                                      5.20 kB │ gzip:  2.16 kB
+public/build/assets/DatePicker.vue_vue_type_script_setup_true_lang-CI3jkLLh.js           5.28 kB │ gzip:  2.15 kB
+public/build/assets/Dashboard-MCzcxsxM.js                                                5.51 kB │ gzip:  2.17 kB
+public/build/assets/Index-DkSsuXne.js                                                    5.58 kB │ gzip:  2.16 kB
+public/build/assets/StudentController-ny0c6N0O.js                                        5.96 kB │ gzip:  1.04 kB
+public/build/assets/Index-DRigYMpm.js                                                    7.06 kB │ gzip:  2.61 kB
+public/build/assets/Result-CCpQO2ui.js                                                   7.13 kB │ gzip:  2.63 kB
+public/build/assets/Show-zBHfxzCj.js                                                     7.41 kB │ gzip:  2.48 kB
+public/build/assets/Index-CtcILY9C.js                                                    7.49 kB │ gzip:  2.78 kB
+public/build/assets/Roles-DINMih2z.js                                                    7.52 kB │ gzip:  2.83 kB
+public/build/assets/CustomSelect-DiwU6UEY.js                                             8.13 kB │ gzip:  3.41 kB
+public/build/assets/Dashboard-4hKhRrLe.js                                                8.30 kB │ gzip:  2.94 kB
+public/build/assets/Index-z3R_LrNg.js                                                    8.35 kB │ gzip:  2.79 kB
+public/build/assets/Promotion-8y9AZpIq.js                                                9.61 kB │ gzip:  3.55 kB
+public/build/assets/Questions-B1NBk2sf.js                                               10.84 kB │ gzip:  3.74 kB
+public/build/assets/Generate-DynuV-Kz.js                                                11.05 kB │ gzip:  3.83 kB
+public/build/assets/BatchCreate-D3EIj3BQ.js                                             11.34 kB │ gzip:  3.68 kB
+public/build/assets/Dashboard-E9qeu6J-.js                                               11.70 kB │ gzip:  2.94 kB
+public/build/assets/Show-CDSJTZuk.js                                                    12.09 kB │ gzip:  3.31 kB
+public/build/assets/Create-DKfONMry.js                                                  12.41 kB │ gzip:  3.86 kB
+public/build/assets/Index-DgR29_jm.js                                                   12.69 kB │ gzip:  3.68 kB
+public/build/assets/Index-BarHqROv.js                                                   12.69 kB │ gzip:  3.84 kB
+public/build/assets/Show-B_U0C6Wa.js                                                    12.96 kB │ gzip:  4.13 kB
+public/build/assets/Prospective-DnpLxCqY.js                                             13.21 kB │ gzip:  3.98 kB
+public/build/assets/Create-C-AEayMn.js                                                  13.24 kB │ gzip:  4.00 kB
+public/build/assets/Edit-kIrkVapT.js                                                    13.49 kB │ gzip:  4.11 kB
+public/build/assets/Edit-7GgztybQ.js                                                    13.63 kB │ gzip:  4.19 kB
+public/build/assets/TeachingLoads-CDC7ctjM.js                                           13.77 kB │ gzip:  4.06 kB
+public/build/assets/Sessions-CtoNd_hM.js                                                15.17 kB │ gzip:  4.96 kB
+public/build/assets/DashboardLayout-DQ5KN-F_.js                                         15.31 kB │ gzip:  4.98 kB
+public/build/assets/Show-CqnnmK6_.js                                                    16.03 kB │ gzip:  5.15 kB
+public/build/assets/Staff-BaPLp0pu.js                                                   16.61 kB │ gzip:  4.76 kB
+public/build/assets/StaffQuestionController-UdfXoWrl.js                                 17.03 kB │ gzip:  2.18 kB
+public/build/assets/Index-Cr4owR4o.js                                                   17.19 kB │ gzip:  4.69 kB
+public/build/assets/Students-CvziXtRd.js                                                17.46 kB │ gzip:  4.94 kB
+public/build/assets/Candidates-CjduNH1f.js                                              25.07 kB │ gzip:  6.38 kB
+public/build/assets/AdminLayout.vue_vue_type_script_setup_true_lang-C5PG5Yev.js         35.47 kB │ gzip:  5.69 kB
+public/build/assets/Welcome-DLuG1Lyq.js                                                 64.23 kB │ gzip:  9.43 kB
+public/build/assets/Index-Dat58hV0.js                                                   93.14 kB │ gzip: 32.67 kB
+public/build/assets/app-BPfffV7t.js                                                    262.78 kB │ gzip: 93.03 kB
+public/build/assets/index-CEs5Ynmd.js                                                  406.05 kB │ gzip: 96.05 kB
+✓ built in 20.42s

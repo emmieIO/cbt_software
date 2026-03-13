@@ -3,19 +3,27 @@
 use App\Http\Controllers\Student\StudentController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('guest:student')->group(function () {
+Route::middleware(['guest'])->group(function () {
     Route::get('/login', [StudentController::class, 'login'])->name('login');
     Route::post('/login', [StudentController::class, 'store'])->name('login.store');
 });
 
-Route::middleware(['auth:student', 'role:student|candidate'])->group(function () {
+// Primary Student Portal Protection
+Route::middleware(['auth', 'role:candidate'])->group(function () {
     Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard');
-    Route::get('/exams', [StudentController::class, 'index'])->name('exams.index');
-    Route::get('/results', [StudentController::class, 'results'])->name('results.index');
-    Route::post('/exams/{exam}/start', [StudentController::class, 'startExam'])->name('exams.start');
-    Route::get('/exams/{attempt}', [StudentController::class, 'showExam'])->name('exams.show');
-    Route::patch('/exams/{attempt}/answer', [StudentController::class, 'saveAnswer'])->name('exams.save-answer');
-    Route::post('/exams/{attempt}/submit', [StudentController::class, 'submitExam'])->name('exams.submit');
-    Route::get('/exams/{attempt}/result', [StudentController::class, 'showResult'])->name('exams.result');
+
+    // Examination Interface
+    Route::prefix('exams')->name('exams.')->group(function () {
+        Route::get('/', [StudentController::class, 'index'])->name('index')->middleware('permission:exam:view');
+        Route::post('/{exam}/start', [StudentController::class, 'startExam'])->name('start')->middleware('permission:exam:take');
+        Route::get('/{attempt}', [StudentController::class, 'showExam'])->name('show')->middleware('permission:exam:take');
+        Route::patch('/{attempt}/answer', [StudentController::class, 'saveAnswer'])->name('save-answer')->middleware('permission:exam:take');
+        Route::post('/{attempt}/submit', [StudentController::class, 'submitExam'])->name('submit')->middleware('permission:exam:take');
+        Route::get('/{attempt}/result', [StudentController::class, 'showResult'])->name('result')->middleware('permission:results:view');
+    });
+
+    // History & Records
+    Route::get('/results', [StudentController::class, 'results'])->name('results.index')->middleware('permission:results:view');
+
     Route::post('/logout', [StudentController::class, 'logout'])->name('logout');
 });

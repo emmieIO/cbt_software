@@ -11,6 +11,7 @@ interface Option {
 interface Question {
     id: string;
     content: string;
+    image_path?: string;
     options: Option[];
 }
 
@@ -302,26 +303,26 @@ onBeforeUnmount(() => {
 
 <template>
     <div 
-        class="min-h-screen bg-[#F8F9FB] font-sans text-slate-900 overflow-hidden"
+        class="min-h-screen bg-gray-50 font-sans text-gray-900 overflow-hidden"
         :class="isInExamHall ? 'select-none' : ''"
     >
         <Head :title="attempt.exam.title" />
 
         <!-- Exam Hall Entry Overlay -->
-        <div v-if="!isInExamHall" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/95 backdrop-blur-md p-6">
-            <div class="max-w-md w-full rounded-3xl bg-white p-10 shadow-2xl text-center">
-                <div class="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                    <svg class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        <div v-if="!isInExamHall" class="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/95 backdrop-blur-sm p-6">
+            <div class="max-w-md w-full rounded-2xl bg-white p-8 shadow-lg text-center border border-gray-200">
+                <div class="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
                 </div>
-                <h2 class="text-2xl font-black text-slate-900">Secure Examination Hall</h2>
-                <p class="mt-4 text-slate-500 font-medium leading-relaxed">
+                <h2 class="text-xl font-bold text-gray-900">Secure Examination Hall</h2>
+                <p class="mt-4 text-gray-600 text-sm leading-relaxed">
                     By entering, you agree to follow all examination rules. The assessment will be conducted in <strong>Fullscreen Mode</strong>. Exiting or switching tabs will be logged as a violation.
                 </p>
                 <button
                     @click="handleFullscreenHallEntry"
-                    class="mt-10 w-full rounded-2xl bg-primary py-5 text-sm font-black tracking-widest text-white uppercase shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95"
+                    class="mt-8 w-full inline-flex items-center justify-center gap-x-2 rounded-xl bg-primary px-4 py-4 text-sm font-semibold text-white hover:bg-primary/90 focus:bg-primary/90 focus:outline-none disabled:pointer-events-none disabled:opacity-50 shadow-sm"
                 >
                     Enter Examination Hall
                 </button>
@@ -333,41 +334,41 @@ onBeforeUnmount(() => {
             v-if="isInExamHall && !isFullscreen && !isSubmitting" 
             class="fixed inset-0 z-[80] flex flex-col items-center justify-center bg-red-600 p-6 text-white select-none overflow-hidden"
         >
-            <div class="flex h-full w-full max-w-lg flex-col items-center justify-between py-4 sm:py-10">
+            <div class="flex h-full w-full max-w-lg flex-col items-center justify-between py-6">
                 <!-- Header Icon -->
-                <div class="shrink-0 h-16 w-16 sm:h-24 sm:w-24 flex items-center justify-center rounded-full bg-white/20 animate-pulse">
-                    <svg class="h-8 w-8 sm:h-12 sm:w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                <div class="shrink-0 h-20 w-20 flex items-center justify-center rounded-full bg-white/20 animate-pulse">
+                    <svg class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
                 </div>
                 
                 <!-- Main Message -->
-                <div class="text-center space-y-2 sm:space-y-4">
-                    <h2 class="text-2xl sm:text-4xl font-black uppercase tracking-tighter italic leading-none">Security Lock Active</h2>
-                    <p class="text-sm sm:text-lg font-bold opacity-90">Access revoked: {{ violationReason }}</p>
+                <div class="text-center space-y-3">
+                    <h2 class="text-3xl font-bold uppercase tracking-tight">Security Lock Active</h2>
+                    <p class="text-lg font-medium opacity-90">Access revoked: {{ violationReason }}</p>
                 </div>
                 
                 <!-- Violation Info -->
-                <div class="flex flex-col items-center rounded-2xl bg-black/20 px-6 py-3 sm:px-10 sm:py-4 backdrop-blur-sm border border-white/5">
-                    <span class="text-[8px] sm:text-[9px] font-black tracking-[0.2em] uppercase opacity-60">Violations</span>
-                    <span class="text-2xl sm:text-3xl font-black tabular-nums">{{ violations.length }}</span>
+                <div class="flex flex-col items-center rounded-2xl bg-black/20 px-8 py-4 backdrop-blur-sm border border-white/10">
+                    <span class="text-xs font-semibold uppercase opacity-60">Violations</span>
+                    <span class="text-3xl font-bold tabular-nums">{{ violations.length }}</span>
                 </div>
 
                 <!-- Policy & Call to Action -->
-                <div class="w-full space-y-6 sm:space-y-8 text-center">
+                <div class="w-full space-y-6 text-center">
                     <div class="p-4 rounded-xl bg-white/10 border border-white/10 mx-auto max-w-sm">
-                        <p class="text-[10px] font-medium opacity-80 leading-tight">
+                        <p class="text-xs font-medium opacity-80 leading-tight">
                             Exiting fullscreen is a security breach. You must return to fullscreen to resume or submit your test.
                         </p>
                     </div>
 
                     <div class="space-y-3">
-                        <p class="text-[9px] sm:text-[10px] font-black tracking-[0.3em] uppercase opacity-60 animate-bounce">
+                        <p class="text-xs font-semibold uppercase opacity-60 animate-bounce">
                             Action Required
                         </p>
                         <button
                             @click="enterFullscreen"
-                            class="w-full rounded-xl bg-white px-8 py-4 sm:py-5 text-xs sm:text-sm font-black tracking-widest text-red-600 uppercase shadow-2xl transition-all hover:scale-[1.02] active:scale-95"
+                            class="inline-flex w-full items-center justify-center gap-x-2 rounded-xl bg-white px-4 py-4 text-sm font-bold text-red-600 hover:bg-gray-100 focus:outline-none transition-all shadow-lg"
                         >
                             Return to Exam
                         </button>
@@ -377,13 +378,13 @@ onBeforeUnmount(() => {
         </div>
 
         <!-- Exam Header -->
-        <header class="sticky top-0 z-30 border-b border-slate-200 bg-white px-6 py-4 shadow-sm">
+        <header class="sticky top-0 z-30 border-b border-gray-200 bg-white px-6 py-4 shadow-sm">
             <div class="mx-auto flex max-w-7xl items-center justify-between">
-                <div class="flex items-center space-x-4">
+                <div class="flex items-center gap-x-4">
                     <img src="/assets/img/chrisland-school-logo.png" alt="Logo" class="h-10 w-auto" />
                     <div>
-                        <h1 class="text-lg font-black tracking-tight text-slate-900">{{ attempt.exam.title }}</h1>
-                        <p class="text-[10px] font-bold tracking-widest text-slate-400 uppercase">
+                        <h1 class="text-lg font-bold text-gray-900">{{ attempt.exam.title }}</h1>
+                        <p class="text-xs font-medium text-gray-500">
                             {{ attempt.exam.subject?.name || 'Multi-Subject Assessment' }} • {{ questions.length }} Questions
                         </p>
                     </div>
@@ -391,35 +392,35 @@ onBeforeUnmount(() => {
 
                 <!-- Timer -->
                 <div
-                    class="flex items-center space-x-3 rounded-xl px-6 py-3 transition-all"
-                    :class="isTimeLow ? 'animate-pulse bg-red-50 text-red-600' : 'bg-slate-900 text-white'"
+                    class="flex items-center gap-x-3 rounded-xl px-6 py-2.5 transition-all"
+                    :class="isTimeLow ? 'animate-pulse bg-red-50 text-red-600' : 'bg-gray-900 text-white'"
                 >
                     <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span class="text-xl font-black tracking-tighter tabular-nums">{{ formattedTime }}</span>
+                    <span class="text-xl font-bold tracking-tight tabular-nums">{{ formattedTime }}</span>
                 </div>
 
                 <button
                     @click="confirmSubmit"
-                    class="rounded-xl bg-primary px-8 py-3 text-xs font-black tracking-widest text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
+                    class="inline-flex items-center gap-x-2 rounded-lg border border-transparent bg-primary px-6 py-2.5 text-sm font-semibold text-white hover:bg-primary/90 focus:bg-primary/90 focus:outline-none disabled:pointer-events-none disabled:opacity-50 shadow-md"
                 >
                     Submit Test
                 </button>
             </div>
         </header>
 
-        <main class="mx-auto max-w-7xl px-6 py-10">
-            <div class="grid grid-cols-1 gap-10 lg:grid-cols-12">
+        <main class="mx-auto max-w-7xl px-6 py-8">
+            <div class="grid grid-cols-1 gap-8 lg:grid-cols-12">
                 <!-- Main Question Display -->
                 <div class="lg:col-span-8">
-                    <div class="rounded-2xl border border-slate-100 bg-white p-10 shadow-xl">
+                    <div class="rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
                         <!-- Question Progress -->
                         <div class="mb-8 flex items-center justify-between">
-                            <span class="text-xs font-black tracking-widest text-primary uppercase"
+                            <span class="text-xs font-semibold text-primary"
                                 >Question {{ currentQuestionIndex + 1 }} of {{ questions.length }}</span
                             >
-                            <div class="h-1.5 w-48 overflow-hidden rounded-full bg-slate-100">
+                            <div class="h-1.5 w-48 overflow-hidden rounded-full bg-gray-100">
                                 <div
                                     class="h-full bg-primary transition-all duration-500"
                                     :style="{ width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` }"
@@ -428,77 +429,80 @@ onBeforeUnmount(() => {
                         </div>
 
                         <!-- Question Content -->
-                        <div class="mb-12">
-                            <h2 class="text-2xl leading-snug font-black text-slate-800">
+                        <div class="mb-10">
+                            <div v-if="currentQuestion.image_path" class="mb-8 overflow-hidden rounded-xl border border-gray-200">
+                                <img :src="`/storage/${currentQuestion.image_path}`" class="max-h-[400px] w-full object-contain bg-gray-50" />
+                            </div>
+                            <h2 class="text-xl leading-relaxed font-semibold text-gray-800">
                                 {{ currentQuestion.content }}
                             </h2>
                         </div>
 
                         <!-- Options -->
-                        <div class="space-y-4">
+                        <div class="space-y-3">
                             <button
                                 v-for="(option, idx) in currentQuestion.options"
                                 :key="option.id"
                                 @click="selectOption(currentQuestion.id, option.id)"
-                                class="group flex w-full items-center space-x-4 rounded-2xl border-2 p-6 text-left transition-all"
+                                class="group flex w-full items-center gap-x-4 rounded-xl border p-5 text-left transition-all"
                                 :class="
                                     answers[currentQuestion.id] === option.id
                                         ? 'border-primary bg-primary/5'
-                                        : 'border-slate-100 hover:border-slate-200 hover:bg-slate-50'
+                                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                                 "
                             >
                                 <div
-                                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 font-black transition-all"
+                                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border-2 font-semibold transition-all"
                                     :class="
                                         answers[currentQuestion.id] === option.id
                                             ? 'border-primary bg-primary text-white'
-                                            : 'border-slate-200 text-slate-400 group-hover:border-primary group-hover:text-primary'
+                                            : 'border-gray-200 text-gray-400 group-hover:border-primary group-hover:text-primary'
                                     "
                                 >
                                     {{ String.fromCharCode(65 + idx) }}
                                 </div>
-                                <span class="text-lg font-bold text-slate-700">{{ option.content }}</span>
+                                <span class="text-base font-medium text-gray-700">{{ option.content }}</span>
                             </button>
                         </div>
 
                         <!-- Footer Navigation -->
-                        <div class="mt-12 flex items-center justify-between border-t border-slate-50 pt-8">
+                        <div class="mt-10 flex items-center justify-between border-t border-gray-100 pt-8">
                             <button
                                 @click="goToQuestion(currentQuestionIndex - 1)"
                                 :disabled="currentQuestionIndex === 0"
-                                class="flex items-center space-x-2 text-sm font-black tracking-widest text-slate-400 uppercase transition-all hover:text-slate-900 disabled:opacity-30"
+                                class="inline-flex items-center gap-x-2 text-sm font-semibold text-gray-500 hover:text-gray-800 transition-all disabled:opacity-30 disabled:pointer-events-none"
                             >
                                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                                 </svg>
                                 <span>Previous</span>
                             </button>
 
                             <div class="flex items-center gap-2">
-                                <span v-if="answers[currentQuestion.id]" class="text-[10px] font-black tracking-widest text-green-500 uppercase"
+                                <span v-if="answers[currentQuestion.id]" class="text-xs font-semibold text-emerald-500"
                                     >Answered</span
                                 >
-                                <span v-else class="text-[10px] font-black tracking-widest text-amber-500 uppercase">Not Answered</span>
+                                <span v-else class="text-xs font-semibold text-amber-500">Not Answered</span>
                             </div>
 
                             <button
                                 v-if="currentQuestionIndex < questions.length - 1"
                                 @click="goToQuestion(currentQuestionIndex + 1)"
-                                class="flex items-center space-x-2 text-sm font-black tracking-widest text-primary uppercase transition-all hover:translate-x-1"
+                                class="inline-flex items-center gap-x-2 text-sm font-semibold text-primary hover:translate-x-1 transition-all"
                             >
                                 <span>Next Question</span>
                                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                                 </svg>
                             </button>
                             <button
                                 v-else
                                 @click="confirmSubmit"
-                                class="flex items-center space-x-2 text-sm font-black tracking-widest text-green-600 uppercase transition-all hover:scale-105"
+                                class="inline-flex items-center gap-x-2 text-sm font-semibold text-emerald-600 hover:scale-105 transition-all"
                             >
                                 <span>Finish Test</span>
                                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                                 </svg>
                             </button>
                         </div>
@@ -507,43 +511,43 @@ onBeforeUnmount(() => {
 
                 <!-- Sidebar: Navigation Grid -->
                 <div class="lg:col-span-4">
-                    <div class="sticky top-32 space-y-6">
-                        <div class="rounded-2xl border border-slate-100 bg-white p-8 shadow-xl">
-                            <h3 class="mb-6 text-sm font-black tracking-widest text-slate-400 uppercase">Question Navigator</h3>
-                            <div class="grid grid-cols-5 gap-3">
+                    <div class="sticky top-28 space-y-6">
+                        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                            <h3 class="mb-6 text-sm font-semibold text-gray-500 uppercase tracking-wider">Question Navigator</h3>
+                            <div class="grid grid-cols-5 gap-2">
                                 <button
                                     v-for="(q, idx) in questions"
                                     :key="q.id"
                                     @click="goToQuestion(idx)"
-                                    class="flex h-10 w-full items-center justify-center rounded-lg text-xs font-black transition-all"
+                                    class="inline-flex h-10 items-center justify-center rounded-lg text-sm font-semibold transition-all border"
                                     :class="[
-                                        currentQuestionIndex === idx ? 'ring-2 ring-primary ring-offset-2' : '',
+                                        currentQuestionIndex === idx ? 'border-primary ring-1 ring-primary' : 'border-transparent',
                                         answers[q.id]
-                                            ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                                            : 'bg-slate-100 text-slate-400 hover:bg-slate-200',
+                                            ? 'bg-primary text-white'
+                                            : 'bg-gray-100 text-gray-500 hover:bg-gray-200',
                                     ]"
                                 >
                                     {{ idx + 1 }}
                                 </button>
                             </div>
 
-                            <div class="mt-8 border-t border-slate-50 pt-6">
-                                <div class="flex items-center justify-between text-[10px] font-black tracking-widest uppercase">
+                            <div class="mt-8 border-t border-gray-100 pt-6">
+                                <div class="flex items-center justify-between text-xs font-semibold text-gray-400">
                                     <div class="flex items-center gap-2">
                                         <div class="h-2 w-2 rounded-full bg-primary"></div>
-                                        <span class="text-slate-400">Answered</span>
+                                        <span>Answered</span>
                                     </div>
                                     <div class="flex items-center gap-2">
-                                        <div class="h-2 w-2 rounded-full bg-slate-200"></div>
-                                        <span class="text-slate-400">Remaining</span>
+                                        <div class="h-2 w-2 rounded-full bg-gray-200"></div>
+                                        <span>Remaining</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Focus Reminder -->
-                        <div class="rounded-2xl border-2 border-dashed border-slate-200 p-8 text-center">
-                            <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-slate-400">
+                        <div class="rounded-xl border-2 border-dashed border-gray-200 p-8 text-center bg-white/50">
+                            <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gray-50 text-gray-400">
                                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path
                                         stroke-linecap="round"
@@ -553,8 +557,8 @@ onBeforeUnmount(() => {
                                     />
                                 </svg>
                             </div>
-                            <p class="text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Security Mode Active</p>
-                            <p class="mt-2 text-xs leading-relaxed font-bold text-slate-500">
+                            <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest">Security Mode Active</p>
+                            <p class="mt-2 text-xs leading-relaxed font-medium text-gray-500">
                                 Leaving this page or switching tabs may be flagged as a security violation.
                             </p>
                         </div>

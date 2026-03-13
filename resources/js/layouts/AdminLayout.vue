@@ -9,6 +9,7 @@ import { index as promotionIndex } from '@/actions/App/Http/Controllers/Admin/Pr
 import { index as prospectiveIndex } from '@/actions/App/Http/Controllers/Admin/ProspectiveClassController';
 import { index as rolesIndex } from '@/actions/App/Http/Controllers/Admin/RoleController';
 import { index as classesIndex } from '@/actions/App/Http/Controllers/Admin/SchoolClassController';
+import { index as schoolsIndex } from '@/actions/App/Http/Controllers/Admin/SchoolController';
 import { index as staffIndex } from '@/actions/App/Http/Controllers/Admin/StaffController';
 import { index as studentIndex } from '@/actions/App/Http/Controllers/Admin/StudentController';
 import { index as subjectsIndex } from '@/actions/App/Http/Controllers/Admin/SubjectController';
@@ -18,11 +19,17 @@ import { index as examsIndex, create as createExam, results as resultsIndex } fr
 import { index as questionsIndex, generate as aiLabGenerate, create as createQuestion } from '@/actions/App/Http/Controllers/Staff/StaffQuestionController';
 import DashboardLayout from '@/layouts/DashboardLayout.vue';
 
+withDefaults(defineProps<{
+    wide?: boolean;
+}>(), {
+    wide: false
+});
+
 const page = usePage();
 
 const IconDashboard = defineComponent({
     render: () =>
-        h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor' }, [
+        h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', class: 'w-5 h-5' }, [
             h('path', {
                 'stroke-linecap': 'round',
                 'stroke-linejoin': 'round',
@@ -34,7 +41,7 @@ const IconDashboard = defineComponent({
 
 const IconUsers = defineComponent({
     render: () =>
-        h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor' }, [
+        h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', class: 'w-5 h-5' }, [
             h('path', {
                 'stroke-linecap': 'round',
                 'stroke-linejoin': 'round',
@@ -46,7 +53,7 @@ const IconUsers = defineComponent({
 
 const IconExams = defineComponent({
     render: () =>
-        h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor' }, [
+        h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', class: 'w-5 h-5' }, [
             h('path', {
                 'stroke-linecap': 'round',
                 'stroke-linejoin': 'round',
@@ -58,7 +65,7 @@ const IconExams = defineComponent({
 
 const IconSchool = defineComponent({
     render: () =>
-        h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor' }, [
+        h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', class: 'w-5 h-5' }, [
             h('path', {
                 'stroke-linecap': 'round',
                 'stroke-linejoin': 'round',
@@ -70,7 +77,7 @@ const IconSchool = defineComponent({
 
 const IconSubject = defineComponent({
     render: () =>
-        h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor' }, [
+        h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', class: 'w-5 h-5' }, [
             h('path', {
                 'stroke-linecap': 'round',
                 'stroke-linejoin': 'round',
@@ -82,7 +89,7 @@ const IconSubject = defineComponent({
 
 const IconTopic = defineComponent({
     render: () =>
-        h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor' }, [
+        h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', class: 'w-5 h-5' }, [
             h('path', {
                 'stroke-linecap': 'round',
                 'stroke-linejoin': 'round',
@@ -94,7 +101,7 @@ const IconTopic = defineComponent({
 
 const IconBank = defineComponent({
     render: () =>
-        h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor' }, [
+        h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', class: 'w-5 h-5' }, [
             h('path', {
                 'stroke-linecap': 'round',
                 'stroke-linejoin': 'round',
@@ -106,7 +113,7 @@ const IconBank = defineComponent({
 
 const IconAI = defineComponent({
     render: () =>
-        h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor' }, [
+        h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', class: 'w-5 h-5' }, [
             h('path', {
                 'stroke-linecap': 'round',
                 'stroke-linejoin': 'round',
@@ -118,7 +125,7 @@ const IconAI = defineComponent({
 
 const IconResults = defineComponent({
     render: () =>
-        h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor' }, [
+        h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', class: 'w-5 h-5' }, [
             h('path', {
                 'stroke-linecap': 'round',
                 'stroke-linejoin': 'round',
@@ -130,7 +137,7 @@ const IconResults = defineComponent({
 
 const navigation = [
     {
-        section: 'Main',
+        section: 'Overview',
         items: [
             {
                 name: 'Dashboard',
@@ -141,54 +148,66 @@ const navigation = [
         ],
     },
     {
-        section: 'Question Management',
+        section: 'Management',
         items: [
             {
-                name: 'Question Bank',
+                name: 'Schools & Branches',
+                href: schoolsIndex().url,
+                active: page.component === 'Admin/Schools/Index',
+                icon: IconSchool,
+                permission: 'sys:manage_schools',
+            },
+        ],
+    },
+    {
+        section: 'Question Bank',
+        items: [
+            {
+                name: 'All Questions',
                 href: questionsIndex().url,
                 active: page.component === 'QuestionBank/Index',
                 icon: IconBank,
-                permission: 'manage question bank',
+                permission: 'bank:view',
             },
             {
-                name: 'Create Question',
+                name: 'Add Question',
                 href: createQuestion().url,
                 active: page.component === 'QuestionBank/Create',
                 icon: IconBank,
-                permission: 'create questions',
+                permission: 'bank:create',
             },
             {
                 name: 'AI Question Lab',
                 href: aiLabGenerate().url,
                 active: page.component === 'QuestionBank/Generate',
                 icon: IconAI,
-                permission: 'use ai lab',
+                permission: 'bank:use_ai',
             },
         ],
     },
     {
-        section: 'Exam Operations',
+        section: 'Exams & Results',
         items: [
             {
                 name: 'Manage Exams',
                 href: examsIndex().url,
                 active: page.component === 'Staff/Exams/Index',
                 icon: IconExams,
-                permission: 'view exams',
+                permission: 'exam:view',
             },
             {
-                name: 'New Examination',
+                name: 'Create Exam',
                 href: createExam().url,
                 active: page.component === 'Staff/Exams/Create',
                 icon: IconExams,
-                permission: 'create exams',
+                permission: 'exam:create',
             },
             {
-                name: 'Results & Grading',
+                name: 'View Results',
                 href: resultsIndex().url,
                 active: page.component === 'Staff/Results/Index',
                 icon: IconResults,
-                permission: 'view results',
+                permission: 'results:view',
             },
         ],
     },
@@ -196,98 +215,98 @@ const navigation = [
         section: 'Academic Setup',
         items: [
             {
-                name: 'School Classes',
+                name: 'Classes',
                 href: classesIndex().url,
                 active: page.component === 'Admin/Classes/Index',
                 icon: IconSchool,
-                permission: 'manage school setup',
+                permission: 'admin:manage_setup',
             },
             {
                 name: 'Entrance Batches',
                 href: prospectiveIndex().url,
                 active: page.component === 'Admin/Classes/Prospective',
                 icon: IconSchool,
-                permission: 'manage prospective batches',
+                permission: 'admin:manage_batches',
             },
             {
                 name: 'Subjects',
                 href: subjectsIndex().url,
                 active: page.component === 'Admin/Subjects/Index',
                 icon: IconSubject,
-                permission: 'manage curriculum',
+                permission: 'admin:manage_curriculum',
             },
             {
                 name: 'Topics',
                 href: topicsIndex().url,
                 active: page.component === 'Admin/Topics/Index',
                 icon: IconTopic,
-                permission: 'manage curriculum',
+                permission: 'admin:manage_curriculum',
             },
         ],
     },
     {
-        section: 'Personnel & Enrollment',
+        section: 'Users & Enrollment',
         items: [
             {
-                name: 'Staff Management',
+                name: 'Staff',
                 href: staffIndex().url,
                 active: page.component === 'Admin/Users/Staff',
                 icon: IconUsers,
-                permission: 'manage users',
+                permission: 'admin:manage_users',
             },
             {
-                name: 'Student Records',
+                name: 'Students',
                 href: studentIndex().url,
                 active: page.component === 'Admin/Users/Students',
                 icon: IconUsers,
-                permission: 'manage users',
+                permission: 'admin:manage_users',
             },
             {
                 name: 'Teaching Loads',
                 href: teachingLoadsIndex().url,
                 active: page.component === 'Admin/Users/TeachingLoads',
                 icon: IconBank,
-                permission: 'manage users',
+                permission: 'admin:manage_users',
             },
             {
-                name: 'Admissions',
+                name: 'Entrance Candidates',
                 href: entranceIndex().url,
                 active: page.component === 'Admin/Users/Candidates',
                 icon: IconExams,
-                permission: 'manage admissions',
+                permission: 'admin:manage_admissions',
             },
             {
                 name: 'Promotions',
                 href: promotionIndex().url,
                 active: page.component === 'Admin/Users/Promotion',
                 icon: IconSchool,
-                permission: 'manage enrollment',
+                permission: 'admin:manage_enrollment',
             },
         ],
     },
     {
-        section: 'System Controls',
+        section: 'Settings',
         items: [
             {
-                name: 'Academic Sessions',
+                name: 'Sessions',
                 href: sessionsIndex().url,
                 active: page.component === 'Admin/Settings/Sessions',
                 icon: IconDashboard,
-                permission: 'manage school setup',
+                permission: 'admin:manage_setup',
             },
             {
-                name: 'System Roles',
+                name: 'Roles',
                 href: rolesIndex().url,
                 active: page.component === 'Admin/RBAC/Roles',
                 icon: IconUsers,
-                permission: 'manage settings',
+                permission: 'sys:manage_settings',
             },
             {
                 name: 'Permissions',
                 href: permissionsIndex().url,
                 active: page.component === 'Admin/RBAC/Permissions',
                 icon: IconDashboard,
-                permission: 'manage settings',
+                permission: 'sys:manage_settings',
             },
         ],
     },
@@ -299,7 +318,7 @@ const filteredNavigation = computed(() => {
             ...section,
             items: section.items.filter((item) => {
                 if (!item.permission) return true;
-                const userPermissions = (page.props.auth.user as any).permissions || [];
+                const userPermissions = (page.props.auth.user as any)?.permissions || [];
                 return userPermissions.includes(item.permission);
             }),
         }))
@@ -308,7 +327,7 @@ const filteredNavigation = computed(() => {
 </script>
 
 <template>
-    <DashboardLayout title="Admin Control Panel" :navigation="filteredNavigation" :logout-action="logout().url">
+    <DashboardLayout title="Institutional HQ" :navigation="filteredNavigation" :logout-action="logout().url" :wide="wide">
         <slot />
     </DashboardLayout>
 </template>

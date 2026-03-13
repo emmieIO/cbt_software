@@ -3,79 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $exam->title }} - Answer Sheet</title>
+    <title>Answer Sheet: {{ $exam->title }}</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
 
         body {
             font-family: 'Inter', sans-serif;
-            color: #1a202c;
-            margin: 0;
-            padding: 40px;
             background-color: #fff;
+            margin: 0;
+            padding: 30px;
+            color: #000;
         }
 
+        /* Top Action Bar - Non-blocking */
         .no-print {
-            margin-bottom: 20px;
+            margin-bottom: 30px;
             display: flex;
-            justify-content: flex-end;
             gap: 10px;
+            border-bottom: 1px solid #000;
+            padding-bottom: 15px;
         }
 
         .print-btn {
-            background-color: #000;
+            background: #000;
             color: #fff;
-            padding: 10px 20px;
             border: none;
-            border-radius: 6px;
+            padding: 10px 20px;
+            font-weight: 800;
+            font-size: 11px;
+            text-transform: uppercase;
             cursor: pointer;
-            font-weight: 600;
-            font-size: 14px;
-            text-decoration: none;
         }
 
         .back-btn {
-            background-color: #edf2f7;
-            color: #4a5568;
+            background: #fff;
+            color: #000;
+            border: 1px solid #000;
             padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 14px;
+            font-weight: 800;
+            font-size: 11px;
+            text-transform: uppercase;
             text-decoration: none;
         }
 
         .header {
-            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px double #000;
+            margin-bottom: 25px;
         }
 
         .header-content {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            text-align: right;
-            margin-bottom: 20px;
         }
 
         .logo {
-            height: 100px;
+            height: 80px;
             width: auto;
+        }
+
+        .school-info {
+            text-align: right;
         }
 
         .school-info h2 {
             margin: 0;
-            font-size: 24px;
-            font-weight: 800;
+            font-size: 20px;
+            font-weight: 900;
             text-transform: uppercase;
         }
 
         .school-info p {
-            margin: 5px 0;
-            font-size: 11px;
-            color: #4a5568;
+            margin: 2px 0 0;
+            font-size: 10px;
             font-weight: 600;
-            white-space: pre-line;
+            color: #000;
         }
 
         .exam-title {
@@ -107,7 +110,7 @@
             font-size: 10px;
             font-weight: 800;
             text-transform: uppercase;
-            color: #718096;
+            color: #444;
         }
 
         .answer-grid {
@@ -122,7 +125,7 @@
             align-items: center;
             gap: 10px;
             padding: 5px 0;
-            border-bottom: 1px solid #edf2f7;
+            border-bottom: 1px solid #eee;
         }
 
         .question-num {
@@ -160,27 +163,29 @@
         @media print {
             .no-print { display: none; }
             body { padding: 0; }
+            .header { border-bottom: 3px double #000; }
         }
     </style>
 </head>
 <body>
     <div class="no-print">
-        <a href="{{ route('staff.exams.show', $exam->id) }}" class="back-btn">Back to Exam</a>
+        <a href="{{ route('staff.exams.show', $exam->id) }}" class="back-btn">← Back to Exam</a>
         <button onclick="window.print()" class="print-btn">Print Answer Sheet</button>
     </div>
 
     @php
-        $branchKey = $exam->branch->value ?? 'primary';
-        $branch = config("app.branches.$branchKey");
+        $school = $exam->school;
     @endphp
 
     <div class="header">
         <div class="header-content">
             <img src="{{ asset('assets/img/chrisland-school-logo.png') }}" alt="Chrisland Logo" class="logo">
             <div class="school-info">
-                <h2>{{ $branch['name'] }}</h2>
-                <p>{{ $branch['address'] }}</p>
-                <p>TEL: {{ $branch['phones'] }}</p>
+                <h2>{{ $school->name ?? 'Chrisland Schools' }}</h2>
+                <p>{{ $school->address ?? 'Lagos, Nigeria' }}</p>
+                @if($school && $school->contact_phone)
+                    <p>TEL: {{ is_array($school->contact_phone) ? implode(', ', $school->contact_phone) : $school->contact_phone }}</p>
+                @endif
             </div>
         </div>
 
@@ -200,34 +205,30 @@
         </div>
     </div>
 
-    <div class="student-details" style="grid-template-columns: repeat(3, 1fr);">
-        <div>
+    <div class="meta-grid" style="display: flex; gap: 40px; margin-bottom: 30px;">
+        <div style="flex: 1;">
             <span class="label">Subject:</span>
             <div class="field">{{ $exam->subject?->name ?? 'Multi-Subject' }}</div>
         </div>
-        <div>
+        <div style="flex: 1;">
             <span class="label">Class:</span>
             <div class="field">{{ $exam->schoolClass?->name ?? $exam->prospectiveClass?->name }}</div>
         </div>
-        <div>
+        <div style="flex: 1;">
             <span class="label">Date:</span>
-            <div class="field">{{ date('d M, Y') }}</div>
+            <div class="field">{{ now()->format('d/m/Y') }}</div>
         </div>
-    </div>
-
-    <div style="font-size: 10px; font-weight: 800; text-transform: uppercase; background: #000; color: #fff; padding: 5px 10px; margin-bottom: 20px;">
-        Instructions: Shade the bubble corresponding to the correct option for each question.
     </div>
 
     <div class="answer-grid">
         @foreach($exam->questions as $index => $question)
             <div class="answer-row">
-                <span class="question-num">{{ $index + 1 }}.</span>
+                <span class="question-num">{{ $index + 1 }}</span>
                 <div class="bubbles">
-                    @php $labels = ['A', 'B', 'C', 'D', 'E']; @endphp
-                    @foreach($labels as $label)
-                        <div class="bubble">{{ $label }}</div>
-                    @endforeach
+                    <div class="bubble">A</div>
+                    <div class="bubble">B</div>
+                    <div class="bubble">C</div>
+                    <div class="bubble">D</div>
                 </div>
             </div>
         @endforeach
@@ -235,21 +236,13 @@
 
     <div class="score-section">
         <div>
-            <span class="label">Supervisor's Signature:</span>
+            <span class="label">Invigilator Name & Signature:</span>
             <div class="field" style="margin-top: 30px;"></div>
         </div>
         <div style="text-align: right;">
-            <div style="display: inline-block; text-align: left; border: 2px solid #000; padding: 15px; min-width: 150px;">
-                <span class="label">Official Score:</span>
-                <div style="font-size: 32px; font-weight: 800; text-align: center; margin-top: 10px;">
-                    / {{ $exam->questions->count() }}
-                </div>
-            </div>
+            <span class="label">Official Score:</span>
+            <div style="font-size: 48px; font-weight: 900; margin-top: 10px; opacity: 0.1;">/ {{ count($exam->questions) }}</div>
         </div>
-    </div>
-
-    <div style="margin-top: 50px; text-align: center; font-size: 10px; color: #718096;">
-        Answer Sheet generated via {{ config('app.name') }} | {{ date('d M, Y H:i') }}
     </div>
 </body>
 </html>

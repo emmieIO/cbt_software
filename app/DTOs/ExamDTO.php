@@ -14,7 +14,7 @@ class ExamDTO
         public string $academic_session_id,
         public int $duration,
         public string $type,
-        public string $branch = 'primary',
+        public ?string $school_id = null,
         public ?string $subject_id = null,
         public ?string $school_class_id = null,
         public ?string $prospective_class_id = null,
@@ -39,7 +39,7 @@ class ExamDTO
             academic_session_id: $academicSessionId,
             duration: $request->integer('duration'),
             type: $request->string('type'),
-            branch: $request->string('branch', 'primary'),
+            school_id: $request->input('school_id'),
             subject_id: $request->input('subject_id'),
             school_class_id: $request->input('school_class_id'),
             prospective_class_id: $request->input('prospective_class_id'),
@@ -55,7 +55,7 @@ class ExamDTO
     {
         return [
             'title' => $this->title,
-            'branch' => $this->branch,
+            'school_id' => $this->school_id,
             'subject_id' => $this->subject_id,
             'school_class_id' => $this->school_class_id,
             'prospective_class_id' => $this->prospective_class_id,

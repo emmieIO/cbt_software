@@ -2,6 +2,8 @@
 import { Head, Link, usePage, useForm } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import { store as storeExamAction } from '@/actions/App/Http/Controllers/Staff/ExamController';
+import CustomSelect from '@/components/Form/CustomSelect.vue';
+import DatePicker from '@/components/Form/DatePicker.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import StaffLayout from '@/layouts/StaffLayout.vue';
 import type { Batch } from '@/types/academics';
@@ -24,20 +26,31 @@ const props = defineProps<{
     batches: Batch[];
     subjects: { id: string; name: string }[];
     classes: { id: string; name: string }[];
-    academic_session: any | null;
+    sessions: any[];
 }>();
 
 const page = usePage();
-const branches = computed(() => (page.props as any).branches || {});
-const isAdmin = computed(() => (page.props.auth.user as any).roles.includes('admin'));
+const academic_session = computed(() => (page.props as any).academic_session);
+
+const branches = computed(() => {
+    const rawBranches = (page.props as any).branches || {};
+    return Object.entries(rawBranches).map(([id, info]: [string, any]) => ({
+        id,
+        name: info.name
+    }));
+});
+
+const isAdmin = computed(() => (page.props.auth.user as any).permissions.includes('sys:manage_settings'));
 const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
 
-const useGlobalSelection = ref(isAdmin.value);
+// Multi-Step Logic
+const currentStep = ref(1);
+const totalSteps = computed(() => (form.type === 'entrance' ? 4 : 3));
 
 const form = useForm({
     title: '',
-    branch: 'primary_vgc',
-    assignment_id: '', 
+    school_id: '',
+    assignment_id: '',
     subject_id: '',
     school_class_id: '',
     prospective_class_id: '',
@@ -56,21 +69,7 @@ const form = useForm({
     }>,
 });
 
-// For entrance exams, filter subjects based on what is taught at the target level
-// Note: In this system, subjects aren't strictly locked to classes in the DB, 
-// but we can look at "assignments" to see what is typical for that level.
-const filteredSubjects = computed(() => {
-    if (form.type !== 'entrance' || !form.school_class_id) return props.subjects;
-    
-    // Extract subject IDs assigned to this class level from teacher assignments
-    const assignedToLevel = props.assignments
-        .filter(a => a.school_class?.id === form.school_class_id)
-        .map(a => a.subject.id);
-    
-    if (assignedToLevel.length === 0) return props.subjects; // Fallback
-    
-    return props.subjects.filter(s => assignedToLevel.includes(s.id));
-});
+const useGlobalSelection = ref(isAdmin.value);
 
 const addCompositionRow = () => {
     form.compositions.push({
@@ -111,260 +110,382 @@ const handleAssignmentChange = () => {
         }
     }
 };
+
 watch(() => form.type, (newType) => {
     if (newType === 'entrance' && form.compositions.length === 0) {
         addCompositionRow();
     }
 });
 
+const nextStep = () => {
+    if (currentStep.value < totalSteps.value) {
+        currentStep.value++;
+    }
+};
+
+const prevStep = () => {
+    if (currentStep.value > 1) {
+        currentStep.value--;
+    }
+};
+
 const submit = () => {
     form.post(storeExamAction().url);
 };
+
+// Step Validation Helpers
+const isStep1Complete = computed(() => form.title && form.school_id && form.type && form.duration);
+const isStep2Complete = computed(() => {
+    if (useGlobalSelection.value) {
+        return form.school_class_id && (form.type === 'entrance' ? form.prospective_class_id : form.subject_id);
+    }
+    return form.assignment_id;
+});
+const isStep3Complete = computed(() => form.start_time && form.end_time);
+
 </script>
 
 <template>
     <component :is="Layout">
         <Head title="Configure New Examination" />
 
-        <div class="mx-auto max-w-6xl space-y-10">
-            <!-- Breadcrumbs -->
-            <nav class="flex items-center gap-2 text-[10px] font-bold tracking-widest text-slate-500 uppercase">
-                <Link :href="isAdmin ? '/admin/dashboard' : '/staff/dashboard'" class="text-slate-500 transition-colors hover:text-slate-800">Dashboard</Link>
-                <svg class="h-3 w-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg>
-                <Link href="/staff/exams" class="text-slate-500 transition-colors hover:text-slate-800">Vault</Link>
-                <svg class="h-3 w-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg>
-                <span class="text-slate-900">New Examination</span>
-            </nav>
-            <div v-if="!academic_session" class="rounded-xl border border-red-200 bg-red-50 p-6 shadow-sm">
-                <div class="flex items-center gap-4 text-red-600">
-                    <svg class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                    <div>
-                        <h4 class="text-sm font-black uppercase tracking-widest">Action Required: No Active Session</h4>
-                        <p class="mt-1 text-xs font-bold leading-relaxed opacity-80">
-                            Exams must be linked to an active academic session. 
-                            Please contact an administrator to set a current session in Settings before creating exams.
-                        </p>
-                    </div>
-                </div>
-            </div>
+        <div class="max-w-7xl mx-auto pb-24">
+            <div class="space-y-6 sm:space-y-10">
+                <!-- Breadcrumbs -->
+                <nav class="flex items-center gap-2 text-xs font-medium text-gray-500">
+                    <Link :href="isAdmin ? '/admin/dashboard' : '/staff/dashboard'" class="hover:text-primary transition-colors">Dashboard</Link>
+                    <svg class="size-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                    <Link href="/staff/exams" class="hover:text-primary transition-colors">Examinations</Link>
+                    <svg class="size-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                    <span class="text-gray-800">Configure New</span>
+                </nav>
 
-            <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+                <!-- Page Header -->
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <div class="flex items-center gap-3">
-                        <Link href="/staff/exams" class="group flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white transition-all hover:border-slate-900 hover:text-slate-900 active:scale-95">
-                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" /></svg>
-                        </Link>
-                        <h2 class="text-4xl font-black tracking-tight text-slate-900 italic">New Examination</h2>
-                    </div>
-                    <p class="mt-2 text-sm font-bold tracking-widest text-slate-500 uppercase px-1">Stage 1: Assessment Configuration</p>
+                    <h1 class="text-2xl font-semibold text-gray-800">Configure Examination</h1>
+                    <p class="text-sm text-gray-500 mt-1">
+                        Step {{ currentStep }} of {{ totalSteps }} • {{
+                            currentStep === 1 ? 'Primary Configuration' :
+                            currentStep === 2 ? 'Contextual Logic' :
+                            currentStep === 3 ? 'Scheduling & Rules' : 'Structural Breakdown'
+                        }}
+                    </p>
                 </div>
             </div>
 
-            <div class="overflow-hidden rounded-xl border border-slate-100 bg-white p-12 shadow-2xl">
-                <form @submit.prevent="submit" class="space-y-10">
-                    <div class="space-y-8">
-                        <!-- Basic Info -->
-                        <div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
-                            <div class="lg:col-span-1">
-                                <label class="mb-3 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Exam Title</label>
+            <!-- Global Error Alert -->
+            <div v-if="Object.keys(form.errors).length > 0" class="bg-red-50 border border-red-200 text-sm text-red-800 rounded-lg p-4 flex flex-col gap-2" role="alert">
+                <div class="flex items-center gap-3">
+                    <svg class="size-4 shrink-0" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+                    <span class="font-bold">Please correct the following errors:</span>
+                </div>
+                <ul class="list-disc list-inside ml-7">
+                    <li v-for="(error, key) in form.errors" :key="key">{{ error }}</li>
+                </ul>
+            </div>
+
+            <!-- Wizard Steps Layout -->
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                <!-- Step Indicators -->
+                <nav class="flex border-b border-gray-200">
+                    <button
+                        v-for="step in totalSteps"
+                        :key="step"
+                        @click="step < currentStep ? currentStep = step : null"
+                        class="flex-1 py-4 px-2 text-center border-b-2 transition-colors focus:outline-none"
+                        :class="[
+                            currentStep === step ? 'border-primary text-primary font-semibold' :
+                            currentStep > step ? 'border-teal-500 text-teal-600 font-medium' : 'border-transparent text-gray-400'
+                        ]"
+                    >
+                        <div class="flex items-center justify-center gap-2">
+                            <span v-if="currentStep > step" class="size-5 flex items-center justify-center rounded-full bg-teal-100 text-teal-600">
+                                <svg class="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
+                            </span>
+                            <span v-else :class="currentStep === step ? 'text-primary' : ''" class="text-xs">{{ step }}</span>
+                            <span class="hidden sm:inline text-xs uppercase tracking-wider">
+                                {{ step === 1 ? 'Identity' : step === 2 ? 'Context' : step === 3 ? 'Scheduling' : 'Structure' }}
+                            </span>
+                        </div>
+                    </button>
+                </nav>
+
+                <div class="p-6 sm:p-10">
+                    <!-- STEP 1: IDENTITY -->
+                    <div v-if="currentStep === 1" class="space-y-8">
+                        <div>
+                            <h2 class="text-lg font-semibold text-gray-800">Assessment Identity</h2>
+                            <p class="text-sm text-gray-500 mt-1">Define the core metadata of this examination</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-800">Official Examination Title</label>
                                 <input
                                     v-model="form.title"
                                     type="text"
-                                    placeholder="Enter Examination Title (e.g. First Term Mathematics Exam)"
-                                    class="w-full rounded-xl border-slate-100 bg-slate-50 px-6 py-5 text-lg font-black text-slate-800 transition-all focus:border-primary focus:bg-white focus:ring-primary"
+                                    placeholder="e.g. 2026 First Term Mock Examination"
+                                    class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-primary focus:ring-primary disabled:opacity-50 disabled:pointer-events-none"
                                 />
-                                <div v-if="form.errors.title" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.title }}</div>
+                                <div v-if="form.errors.title" class="text-xs text-red-500 mt-1">{{ form.errors.title }}</div>
                             </div>
 
-                            <div class="lg:col-span-1">
-                                <label class="mb-3 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">School Branch</label>
-                                <select
-                                    v-model="form.branch"
-                                    class="w-full rounded-xl border-slate-100 bg-slate-50 px-6 py-5 text-lg font-black text-slate-800 transition-all focus:border-primary focus:bg-white focus:ring-primary"
-                                >
-                                    <option v-for="(info, key) in branches" :key="key" :value="key">{{ info.name }}</option>
-                                </select>
-                                <div v-if="form.errors.branch" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.branch }}</div>
+                            <div class="space-y-2">
+                                <CustomSelect
+                                    v-model="form.school_id"
+                                    label="Target Campus Branch"
+                                    :options="branches"
+                                    placeholder="Select Location"
+                                    size="md"
+                                    :error="form.errors.school_id"
+                                />
                             </div>
 
-                            <div>
-                                <label class="mb-3 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Duration (Minutes)</label>
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-800">Examination Category</label>
+                                <div class="flex flex-wrap gap-2">
+                                    <button
+                                        v-for="type in [
+                                            { id: 'ca', name: 'C.A Test' },
+                                            { id: 'terminal', name: 'Terminal' },
+                                            { id: 'entrance', name: 'Entrance' }
+                                        ]"
+                                        :key="type.id"
+                                        type="button"
+                                        @click="form.type = type.id"
+                                        class="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border transition-colors focus:outline-none"
+                                        :class="form.type === type.id ? 'bg-primary text-white border-transparent' : 'bg-white text-gray-800 border-gray-200 hover:bg-gray-50'"
+                                    >
+                                        {{ type.name }}
+                                    </button>
+                                </div>
+                                <div v-if="form.errors.type" class="text-xs text-red-500 mt-1">{{ form.errors.type }}</div>
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-800">Time Allocation (Minutes)</label>
+                                <div class="relative">
+                                    <input
+                                        v-model="form.duration"
+                                        type="number"
+                                        class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-primary focus:ring-primary disabled:opacity-50 disabled:pointer-events-none"
+                                    />
+                                    <div class="absolute inset-y-0 right-0 flex items-center pointer-events-none pr-4">
+                                        <span class="text-xs text-gray-400">MINS</span>
+                                    </div>
+                                </div>
+                                <div v-if="form.errors.duration" class="text-xs text-red-500 mt-1">{{ form.errors.duration }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- STEP 2: CONTEXT -->
+                    <div v-if="currentStep === 2" class="space-y-8">
+                        <div>
+                            <h2 class="text-lg font-semibold text-gray-800">Contextual Blueprint</h2>
+                            <p class="text-sm text-gray-500 mt-1">Map this assessment to the academic structure</p>
+                        </div>
+
+                        <div v-if="useGlobalSelection" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <CustomSelect
+                                v-model="form.school_class_id"
+                                :label="form.type === 'entrance' ? 'Target Entry Level' : 'Academic Class'"
+                                :options="classes"
+                                placeholder="Choose Level"
+                                :error="form.errors.school_class_id"
+                                size="md"
+                            />
+
+                            <CustomSelect
+                                v-if="form.type === 'entrance'"
+                                v-model="form.prospective_class_id"
+                                label="Candidate Batch"
+                                :options="batches"
+                                placeholder="Choose Batch"
+                                :error="form.errors.prospective_class_id"
+                                size="md"
+                            />
+
+                            <CustomSelect
+                                v-if="form.type !== 'entrance'"
+                                v-model="form.subject_id"
+                                label="Primary Subject Area"
+                                :options="subjects"
+                                placeholder="Choose Subject"
+                                :error="form.errors.subject_id"
+                                size="md"
+                            />
+                        </div>
+
+                        <div v-else class="space-y-6">
+                            <CustomSelect
+                                v-model="form.assignment_id"
+                                label="Verified Teaching Load"
+                                :options="assignments.map(a => ({
+                                    id: a.id,
+                                    name: `${a.subject?.name || 'All Subjects'} — ${a.school_class?.name || a.prospective_class?.name}`
+                                }))"
+                                placeholder="Select assigned context"
+                                :error="form.errors.assignment_id"
+                                size="md"
+                                @change="handleAssignmentChange"
+                            />
+                        </div>
+
+                        <!-- Toggle for Admins -->
+                        <div v-if="isAdmin" class="pt-6 border-t border-gray-200 mt-4">
+                            <div class="flex items-center">
                                 <input
-                                    v-model="form.duration"
-                                    type="number"
-                                    class="w-full rounded-xl border-slate-100 bg-slate-50 px-6 py-5 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
+                                    v-model="useGlobalSelection"
+                                    type="checkbox"
+                                    id="bypass_assignments"
+                                    class="shrink-0 mt-0.5 border-gray-200 rounded text-primary focus:ring-primary"
                                 />
-                                <div v-if="form.errors.duration" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.duration }}</div>
-                            </div>
-
-                            <div>
-                                <label class="mb-3 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Examination Type</label>
-                                <select
-                                    v-model="form.type"
-                                    class="w-full rounded-xl border-slate-100 bg-slate-50 px-6 py-5 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
-                                >
-                                    <option value="terminal">Terminal Exam</option>
-                                    <option value="ca">Continuous Assessment (CA)</option>
-                                    <option value="entrance">Entrance Exam (Multi-Subject)</option>
-                                </select>
-                                <div v-if="form.errors.type" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.type }}</div>
+                                <label for="bypass_assignments" class="text-sm text-gray-500 ms-3">Bypass restricted assignments (Admin Override)</label>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Target Context Selection -->
-                        <div class="rounded-2xl bg-slate-50 p-8 space-y-6">
-                            <h3 class="text-xs font-black tracking-[0.2em] text-slate-400 uppercase italic">Target Context</h3>
-                            
-                            <div v-if="useGlobalSelection" class="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                <div>
-                                    <label class="mb-3 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                                        {{ form.type === 'entrance' ? 'Target Entry Level' : 'Target School Class' }}
-                                    </label>
-                                    <select v-model="form.school_class_id" class="w-full rounded-xl border-slate-100 bg-white px-6 py-4 text-sm font-bold text-slate-700 shadow-sm transition-all focus:border-primary focus:ring-primary">
-                                        <option value="">Select Level</option>
-                                        <option v-for="c in classes" :key="c.id" :value="c.id">{{ c.name }}</option>
-                                    </select>
-                                    <div v-if="form.errors.school_class_id" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.school_class_id }}</div>
-                                </div>
-
-                                <div v-if="form.type === 'entrance'">
-                                    <label class="mb-3 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Entrance Batch</label>
-                                    <select v-model="form.prospective_class_id" class="w-full rounded-xl border-slate-100 bg-white px-6 py-4 text-sm font-bold text-slate-700 shadow-sm transition-all focus:border-primary focus:ring-primary">
-                                        <option value="">Select Batch</option>
-                                        <option v-for="b in batches" :key="b.id" :value="b.id">{{ b.name }}</option>
-                                    </select>
-                                    <div v-if="form.errors.prospective_class_id" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.prospective_class_id }}</div>
-                                </div>
-
-                                <div v-if="form.type !== 'entrance'">
-                                    <label class="mb-3 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Academic Subject</label>
-                                    <select v-model="form.subject_id" class="w-full rounded-xl border-slate-100 bg-white px-6 py-4 text-sm font-bold text-slate-700 shadow-sm transition-all focus:border-primary focus:ring-primary">
-                                        <option value="">Select Subject</option>
-                                        <option v-for="s in subjects" :key="s.id" :value="s.id">{{ s.name }}</option>
-                                    </select>
-                                    <div v-if="form.errors.subject_id" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.subject_id }}</div>
-                                </div>
-                            </div>
-
-                            <div v-else>
-                                <label class="mb-3 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Assigned Load</label>
-                                <select
-                                    v-model="form.assignment_id"
-                                    @change="handleAssignmentChange"
-                                    required
-                                    class="w-full rounded-xl border-slate-100 bg-white px-6 py-5 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
-                                >
-                                    <option value="" disabled>Choose Subject & Class</option>
-                                    <option v-for="load in assignments" :key="load.id" :value="load.id">
-                                        {{ load.subject?.name || 'All Subjects (Coordinator)' }} — {{ load.school_class?.name || load.prospective_class?.name }}
-                                    </option>
-                                </select>
-                                <div v-if="form.errors.assignment_id" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.assignment_id }}</div>
-                            </div>
+                    <!-- STEP 3: SCHEDULING -->
+                    <div v-if="currentStep === 3" class="space-y-8">
+                        <div>
+                            <h2 class="text-lg font-semibold text-gray-800">Scheduling & Rules</h2>
+                            <p class="text-sm text-gray-500 mt-1">Define the window of availability for this assessment</p>
                         </div>
 
-                        <!-- Entrance Exam Blueprint Builder -->
-                        <div v-if="form.type === 'entrance'" class="rounded-2xl border-2 border-dashed border-primary/20 bg-primary/5 p-8 space-y-8">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <DatePicker
+                                v-model="form.start_time"
+                                label="Examination Start Date & Time"
+                                placeholder="Select Date"
+                                size="md"
+                                :error="form.errors.start_time"
+                            />
+                            <DatePicker
+                                v-model="form.end_time"
+                                label="Automatic Closure (Deadline)"
+                                placeholder="Select Date"
+                                size="md"
+                                :error="form.errors.end_time"
+                            />
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="block text-sm font-medium text-gray-800">Special Instructions for Candidates</label>
+                            <textarea
+                                v-model="form.instructions"
+                                rows="4"
+                                placeholder="e.g. Ensure your camera is active throughout. No calculators allowed."
+                                class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-primary focus:ring-primary disabled:opacity-50 disabled:pointer-events-none"
+                            ></textarea>
+                        </div>
+                    </div>
+
+                    <!-- STEP 4: STRUCTURE -->
+                    <div v-if="currentStep === 4 && form.type === 'entrance'" class="space-y-8">
+                        <div class="flex items-center justify-between">
                             <div>
-                                <h3 class="text-sm font-black tracking-[0.2em] text-primary uppercase italic">Assessment Blueprint</h3>
-                                <p class="text-[10px] font-bold text-slate-400 uppercase mt-1">Configure sections for {{ form.school_class_id ? classes.find(c => c.id === form.school_class_id)?.name : 'selected level' }}</p>
+                                <h2 class="text-lg font-semibold text-gray-800">Exam Structure</h2>
+                                <p class="text-sm text-gray-500 mt-1">Break down the question distribution by subject</p>
                             </div>
+                            <button
+                                type="button"
+                                @click="addCompositionRow"
+                                class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-gray-100 text-gray-800 hover:bg-gray-200 focus:outline-none focus:bg-gray-200 disabled:opacity-50 disabled:pointer-events-none transition-all"
+                            >
+                                <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                                Add Row
+                            </button>
+                        </div>
 
-                            <div class="space-y-4">
-                                <div v-if="form.errors.compositions" class="p-4 bg-red-50 rounded-lg text-xs font-bold text-red-600 border border-red-100">
-                                    {{ form.errors.compositions }}
-                                </div>
-
-                                <div v-for="(comp, index) in form.compositions" :key="index" class="group relative grid grid-cols-12 gap-4 items-end bg-white p-6 rounded-xl border border-primary/10 shadow-sm">
-                                    <div class="col-span-4">
-                                        <label class="mb-2 block text-[9px] font-black tracking-widest text-slate-400 uppercase">Subject</label>
-                                        <select 
-                                            v-model="comp.subject_id" 
+                        <div class="space-y-4">
+                            <div v-for="(comp, index) in form.compositions" :key="index" class="p-4 bg-gray-50 rounded-xl border border-gray-200 relative">
+                                <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+                                    <div class="md:col-span-5">
+                                        <CustomSelect
+                                            v-model="comp.subject_id"
+                                            label="Subject Area"
+                                            :options="subjects"
+                                            placeholder="Choose Area"
+                                            size="sm"
                                             @change="fetchTopicsForComposition(index)"
-                                            class="w-full rounded-lg border-slate-100 bg-slate-50 px-4 py-3 text-xs font-bold text-slate-700 focus:bg-white focus:ring-primary"
-                                        >
-                                            <option value="">Choose Subject</option>
-                                            <option v-for="s in filteredSubjects" :key="s.id" :value="s.id">{{ s.name }}</option>
-                                        </select>
-                                        <div v-if="form.errors[`compositions.${index}.subject_id`]" class="mt-1 text-[9px] font-bold text-red-500">
-                                            Required
-                                        </div>
-                                    </div>
-                                    <div class="col-span-4">
-                                        <label class="mb-2 block text-[9px] font-black tracking-widest text-slate-400 uppercase">Specific Topic (Optional)</label>
-                                        <select 
-                                            v-model="comp.topic_id"
-                                            class="w-full rounded-lg border-slate-100 bg-slate-50 px-4 py-3 text-xs font-bold text-slate-700 focus:bg-white focus:ring-primary"
-                                        >
-                                            <option value="">Entire Subject pool</option>
-                                            <option v-for="t in comp.available_topics" :key="t.id" :value="t.id">{{ t.name }}</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-span-2">
-                                        <label class="mb-2 block text-[9px] font-black tracking-widest text-slate-400 uppercase">Questions</label>
-                                        <input 
-                                            v-model="comp.question_count" 
-                                            type="number" 
-                                            class="w-full rounded-lg border-slate-100 bg-slate-50 px-4 py-3 text-xs font-bold text-slate-700 focus:bg-white focus:ring-primary text-center" 
                                         />
-                                        <div v-if="form.errors[`compositions.${index}.question_count`]" class="mt-1 text-[9px] font-bold text-red-500">
-                                            Min 1
-                                        </div>
                                     </div>
-                                    <div class="col-span-2 flex justify-end gap-2">
-                                        <button 
-                                            type="button" 
+                                    <div class="md:col-span-4">
+                                        <CustomSelect
+                                            v-model="comp.topic_id"
+                                            label="Topic Context"
+                                            :options="comp.available_topics"
+                                            placeholder="Universal Coverage"
+                                            size="sm"
+                                        />
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <label class="block text-sm font-medium text-gray-800 mb-1">Questions</label>
+                                        <input
+                                            v-model="comp.question_count"
+                                            type="number"
+                                            class="py-2 px-3 block w-full border-gray-200 rounded-lg text-sm focus:border-primary focus:ring-primary"
+                                        />
+                                    </div>
+                                    <div class="md:col-span-1 flex justify-end">
+                                        <button
+                                            v-if="form.compositions.length > 1"
+                                            type="button"
                                             @click="removeCompositionRow(index)"
-                                            class="h-10 w-10 flex items-center justify-center rounded-lg bg-red-50 text-red-400 hover:bg-red-500 hover:text-white transition-all"
+                                            class="p-2 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent text-gray-400 hover:bg-red-50 hover:text-red-500 focus:outline-none"
                                         >
-                                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
+                                            <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                         </button>
                                     </div>
                                 </div>
-
-                                <button 
-                                    type="button" 
-                                    @click="addCompositionRow"
-                                    class="w-full py-4 border-2 border-dashed border-primary/20 rounded-xl text-[10px] font-black tracking-widest text-primary uppercase hover:bg-primary hover:text-white transition-all"
-                                >
-                                    + Add Assessment Section
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Timing -->
-                        <div class="grid grid-cols-2 gap-6">
-                            <div>
-                                <label class="mb-3 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Schedule Start</label>
-                                <input v-model="form.start_time" type="datetime-local" class="w-full rounded-xl border-slate-100 bg-slate-50 px-6 py-5 text-sm font-bold text-slate-700 focus:bg-white focus:ring-primary" />
-                                <div v-if="form.errors.start_time" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.start_time }}</div>
-                            </div>
-                            <div>
-                                <label class="mb-3 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Schedule End</label>
-                                <input v-model="form.end_time" type="datetime-local" class="w-full rounded-xl border-slate-100 bg-slate-50 px-6 py-5 text-sm font-bold text-slate-700 focus:bg-white focus:ring-primary" />
-                                <div v-if="form.errors.end_time" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.end_time }}</div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="flex gap-4 border-t border-slate-50 pt-8">
+                    <!-- Step Navigation -->
+                    <div class="mt-10 flex justify-between items-center pt-6 border-t border-gray-200">
                         <button
-                            type="submit"
-                            :disabled="form.processing || !academic_session"
-                            class="flex flex-1 items-center justify-center gap-3 rounded-xl bg-primary py-5 text-sm font-black tracking-[0.2em] text-white uppercase shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+                            @click="prevStep"
+                            :disabled="currentStep === 1"
+                            class="py-2.5 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-0 disabled:pointer-events-none transition-all"
                         >
-                            Create Assessment Configuration
-                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                            </svg>
+                            <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                            Back
                         </button>
+
+                        <div class="flex items-center gap-4">
+                            <button
+                                v-if="currentStep < totalSteps"
+                                @click="nextStep"
+                                :disabled="currentStep === 1 && !isStep1Complete || currentStep === 2 && !isStep2Complete || currentStep === 3 && !isStep3Complete"
+                                class="py-2.5 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-primary text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none transition-all"
+                            >
+                                Continue
+                                <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                            </button>
+
+                            <button
+                                v-else
+                                @click="submit"
+                                :disabled="form.processing || !academic_session"
+                                class="py-2.5 px-6 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-primary text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none transition-all"
+                            >
+                                <span v-if="form.processing" class="loading loading-spinner loading-xs"></span>
+                                Finalize Exam
+                            </button>
+                        </div>
                     </div>
-                </form>
+                </div>
             </div>
         </div>
+    </div>
     </component>
 </template>
+
+<style scoped>
+input:focus {
+    outline: none !important;
+}
+</style>

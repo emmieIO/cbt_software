@@ -11,24 +11,46 @@ class UpdateQuestionRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('edit questions');
+        return $this->user()->can('bank:edit');
     }
 
     public function rules(): array
     {
         return [
+            'subject_id' => ['required', 'exists:subjects,id'],
             'topic_id' => ['required', 'exists:topics,id'],
             'school_class_id' => ['required', 'exists:school_classes,id'],
             'prospective_class_id' => ['nullable', 'exists:prospective_classes,id'],
-            'content' => ['required', 'string'],
+            'content' => ['required', 'string', 'min:10'],
             'explanation' => ['nullable', 'string'],
             'type' => ['required', new Enum(QuestionType::class)],
             'difficulty' => ['required', new Enum(QuestionDifficulty::class)],
+            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:2048'],
+            'remove_image' => ['nullable', 'boolean'],
             'is_active' => ['boolean'],
-            'options' => ['required', 'array', 'min:2'],
+            'options' => ['required', 'array', 'min:2', 'max:6'],
             'options.*.id' => ['nullable', 'string'], // Existing options might have IDs
             'options.*.content' => ['required', 'string'],
             'options.*.is_correct' => ['boolean'],
+        ];
+    }
+
+    /**
+     * Get custom messages for validator errors.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'subject_id.required' => 'Please select a subject area.',
+            'topic_id.required' => 'A curriculum topic must be selected.',
+            'school_class_id.required' => 'Target academic level is required.',
+            'content.required' => 'The question body cannot be empty.',
+            'content.min' => 'The question content seems too short. Please provide more detail.',
+            'options.required' => 'You must provide response choices.',
+            'options.min' => 'Each question needs at least 2 options.',
+            'options.*.content.required' => 'Option content is required for all choices.',
         ];
     }
 

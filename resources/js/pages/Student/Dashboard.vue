@@ -1,166 +1,147 @@
 <script setup lang="ts">
-import { Head, router, usePage, Link } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
-import { index as examIndex, results as resultsIndex } from '@/actions/App/Http/Controllers/Student/StudentController';
-import ConfirmationModal from '@/components/ConfirmationModal.vue';
+import { Head, Link } from '@inertiajs/vue3';
 import StudentLayout from '@/layouts/StudentLayout.vue';
 
-const page = usePage();
-const userName = computed(() => page.props.auth.user.name);
+interface Exam {
+    id: string;
+    title: string;
+    start_time: string;
+    duration: number;
+    subject: { name: string };
+}
 
 defineProps<{
-    availableExams: Array<{
-        id: string;
-        title: string;
-        duration: number;
-        subject: { name: string } | null;
-        questions_count: number;
-        attempts: Array<{ id: string; status: string }>;
-    }>;
-    completedExamsCount: number;
+    upcomingExams: Exam[];
+    recentResults: any[];
+    stats: {
+        examsTaken: number;
+        averageScore: number;
+        pendingExams: number;
+    };
 }>();
 
-const isStartModalOpen = ref(false);
-const examToStart = ref<string | null>(null);
-
-const confirmStartExam = (examId: string) => {
-    examToStart.value = examId;
-    isStartModalOpen.value = true;
-};
-
-const handleStartExam = () => {
-    if (examToStart.value) {
-        router.post(`/student/exams/${examToStart.value}/start`);
-        isStartModalOpen.value = false;
-    }
+const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-GB', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
 };
 </script>
 
 <template>
     <StudentLayout>
-        <Head title="Student Hub" />
+        <Head title="Student Dashboard" />
 
         <div class="space-y-10">
-            <!-- Page Header -->
-            <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-2xl font-black tracking-tight text-slate-900">Student Hub</h1>
-                    <p class="mt-1 text-sm font-bold text-slate-400">Your examination command center</p>
-                </div>
-                <div class="flex items-center gap-3">
-                    <div class="h-3 w-3 animate-pulse rounded-full bg-green-500"></div>
-                    <span class="text-[10px] font-black tracking-widest text-slate-400 uppercase">System Active</span>
-                </div>
-            </div>
-
-            <!-- Welcome Section -->
-            <div class="relative overflow-hidden rounded-xl bg-slate-900 px-6 py-10 md:px-12 md:py-16 text-white shadow-2xl">
-                <div class="relative z-10 max-w-2xl">
-                    <h1 class="text-3xl md:text-5xl font-black tracking-tighter italic">Hello, {{ userName }}!</h1>
-                    <p class="mt-4 text-base md:text-xl leading-relaxed font-medium text-slate-400">
-                        Ready for your next challenge? Below are the live examinations currently available for your academic level.
-                    </p>
-                </div>
-                <!-- Abstract Design -->
-                <div class="rounded-lg-full absolute -top-24 -right-24 h-64 w-64 md:h-96 md:w-96 bg-primary/10 blur-3xl"></div>
-                <div class="rounded-lg-full absolute right-0 bottom-0 h-48 w-48 md:h-64 md:w-64 bg-lemon-yellow/5 blur-2xl"></div>
+            <!-- Header -->
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">Welcome Back</h1>
+                <p class="text-sm text-gray-500 mt-1">Review your upcoming assessments and recent academic performance.</p>
             </div>
 
             <!-- Stats Grid -->
-            <div class="grid grid-cols-1 gap-4 md:gap-6 md:grid-cols-2">
-                <Link
-                    :href="examIndex().url"
-                    class="group rounded-xl border border-slate-100 bg-white p-6 md:p-8 shadow-sm transition-all hover:border-primary/20 hover:shadow-lg"
-                >
-                    <p class="text-[10px] font-black tracking-widest text-slate-400 uppercase transition-colors group-hover:text-primary">
-                        Live Assessments
-                    </p>
-                    <p class="mt-4 text-3xl md:text-4xl font-black tracking-tighter text-primary">{{ availableExams.length }}</p>
-                </Link>
-                <Link
-                    :href="resultsIndex().url"
-                    class="group rounded-xl border border-slate-100 bg-white p-6 md:p-8 shadow-sm transition-all hover:border-primary/20 hover:shadow-lg"
-                >
-                    <p class="text-[10px] font-black tracking-widest text-slate-400 uppercase transition-colors group-hover:text-primary">
-                        Completed Tests
-                    </p>
-                    <p class="mt-4 text-3xl md:text-4xl font-black tracking-tighter text-slate-800">{{ completedExamsCount }}</p>
-                </Link>
+            <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                <div class="flex flex-col bg-white border border-gray-200 shadow-sm rounded-xl p-4 md:p-5">
+                    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Assessments Completed</p>
+                    <div class="mt-2 flex items-center gap-x-2">
+                        <h3 class="text-2xl font-bold text-gray-800">{{ stats.examsTaken }}</h3>
+                    </div>
+                </div>
+
+                <div class="flex flex-col bg-white border border-gray-200 shadow-sm rounded-xl p-4 md:p-5">
+                    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Average Performance</p>
+                    <div class="mt-2 flex items-center gap-x-2">
+                        <h3 class="text-2xl font-bold text-primary">{{ stats.averageScore }}%</h3>
+                    </div>
+                </div>
+
+                <div class="flex flex-col bg-white border border-gray-200 shadow-sm rounded-xl p-4 md:p-5">
+                    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Pending Schedule</p>
+                    <div class="mt-2 flex items-center gap-x-2">
+                        <h3 class="text-2xl font-bold text-orange-600">{{ stats.pendingExams }}</h3>
+                    </div>
+                </div>
             </div>
 
-            <!-- Exam Table -->
-            <div class="space-y-6">
-                <div class="ml-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <h3 class="flex items-center gap-3 text-sm font-black tracking-[0.2em] text-slate-400 uppercase">
-                        <div class="h-2 w-2 animate-ping rounded-full bg-primary"></div>
-                        Recent Assessments
-                    </h3>
-                    <Link :href="examIndex().url" class="text-[10px] font-black tracking-widest text-primary uppercase hover:underline"
-                        >View All Assessments &rarr;</Link
-                    >
-                </div>
-
-                <div
-                    v-if="availableExams.length === 0"
-                    class="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 bg-white py-12 md:py-20 text-center"
-                >
-                    <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-50 text-slate-300">
-                        <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
+            <div class="grid lg:grid-cols-2 gap-8">
+                <!-- Upcoming Exams -->
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between px-1">
+                        <h2 class="text-sm font-bold text-gray-800 uppercase tracking-wider">Immediate Schedule</h2>
+                        <Link href="/student/exams" class="text-xs font-semibold text-primary hover:underline">View Full Calendar</Link>
                     </div>
-                    <p class="px-6 text-sm font-bold tracking-widest text-slate-400 uppercase italic">No active examinations at this hour.</p>
+
+                    <div class="space-y-3">
+                        <div v-for="exam in upcomingExams" :key="exam.id" class="bg-white border border-gray-200 shadow-sm rounded-xl p-5 hover:border-primary/30 transition-all">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <span class="inline-flex items-center gap-1.5 py-1 px-2 rounded-md text-[10px] font-bold bg-primary/10 text-primary uppercase mb-2">
+                                        {{ exam.subject.name }}
+                                    </span>
+                                    <h3 class="text-base font-bold text-gray-800">{{ exam.title }}</h3>
+                                    <div class="mt-2 flex items-center gap-4 text-xs text-gray-500 font-medium">
+                                        <span class="flex items-center gap-1.5">
+                                            <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                            {{ formatDate(exam.start_time) }}
+                                        </span>
+                                        <span class="flex items-center gap-1.5">
+                                            <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                            {{ exam.duration }} Mins
+                                        </span>
+                                    </div>
+                                </div>
+                                <Link :href="`/student/exams/${exam.id}`" class="py-2 px-4 text-xs font-bold rounded-lg bg-gray-900 text-white hover:bg-black transition-colors">
+                                    Access Hall
+                                </Link>
+                            </div>
+                        </div>
+
+                        <div v-if="upcomingExams.length === 0" class="py-12 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                            <svg class="size-10 mx-auto text-gray-300 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                            <p class="text-sm font-medium text-gray-400">No examinations scheduled for you currently.</p>
+                        </div>
+                    </div>
                 </div>
 
-                <div v-else class="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-xl">
-                    <div class="overflow-x-auto">
-                        <table class="w-full border-collapse text-left">
-                            <thead>
-                                <tr class="bg-[#FBFBFC]">
-                                    <th class="px-8 py-5 text-[9px] font-black tracking-widest text-slate-400 uppercase">Examination</th>
-                                    <th class="px-6 py-5 text-[9px] font-black tracking-widest text-slate-400 uppercase">Subject</th>
-                                    <th class="px-6 py-5 text-[9px] font-black tracking-widest text-slate-400 uppercase">Details</th>
-                                    <th class="px-8 py-5 text-right text-[9px] font-black tracking-widest text-slate-400 uppercase">Status</th>
+                <!-- Recent Activity -->
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between px-1">
+                        <h2 class="text-sm font-bold text-gray-800 uppercase tracking-wider">Recent Performance</h2>
+                        <Link href="/student/results" class="text-xs font-semibold text-primary hover:underline">Transcript Archive</Link>
+                    </div>
+
+                    <div class="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-start text-xs font-semibold text-gray-500 uppercase">Assessment</th>
+                                    <th class="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Score</th>
+                                    <th class="px-6 py-3 text-end text-xs font-semibold text-gray-500 uppercase">Status</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-slate-50">
-                                <tr v-for="exam in availableExams.slice(0, 5)" :key="exam.id" class="group transition-all hover:bg-[#F8F9FB]">
-                                    <td class="px-8 py-6 whitespace-nowrap">
-                                        <div class="flex items-center gap-4">
-                                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/5 text-primary">
-                                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01m-.01 4h.01" />
-                                                </svg>
-                                            </div>
-                                            <div class="min-w-0">
-                                                <span class="block truncate text-sm font-black text-slate-800">{{ exam.title }}</span>
-                                                <span class="text-[10px] font-bold text-slate-400 uppercase">{{ exam.questions_count }} Questions</span>
-                                            </div>
-                                        </div>
+                            <tbody class="divide-y divide-gray-200">
+                                <tr v-for="result in recentResults" :key="result.id" class="hover:bg-gray-50 transition-colors">
+                                    <td class="px-6 py-4">
+                                        <span class="text-sm font-bold text-gray-800">{{ result.exam.title }}</span>
+                                        <p class="text-xs text-gray-500">{{ result.exam.subject.name }}</p>
                                     </td>
-                                    <td class="px-6 py-6 whitespace-nowrap">
-                                        <span class="rounded-lg bg-primary/5 px-2.5 py-1 text-[10px] font-black text-primary uppercase">
-                                            {{ exam.subject?.name || 'Multi-Subject' }}
+                                    <td class="px-6 py-4 text-center">
+                                        <span class="text-sm font-bold" :class="result.score >= (result.exam.questions_count / 2) ? 'text-primary' : 'text-orange-600'">
+                                            {{ result.score }} / {{ result.exam.questions_count }}
                                         </span>
                                     </td>
-                                    <td class="px-6 py-6 whitespace-nowrap text-[10px] font-black text-slate-500 uppercase">
-                                        {{ exam.duration }} Mins Allotted
+                                    <td class="px-6 py-4 text-end">
+                                        <span class="inline-flex items-center gap-1.5 py-1 px-2 rounded-md text-[10px] font-bold bg-teal-100 text-teal-800 uppercase">
+                                            Released
+                                        </span>
                                     </td>
-                                    <td class="px-8 py-6 text-right whitespace-nowrap">
-                                        <div
-                                            v-if="exam.attempts.some((a) => a.status === 'submitted')"
-                                            class="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-3 py-1 text-[9px] font-black text-green-600 uppercase border border-green-100"
-                                        >
-                                            <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
-                                            Completed
-                                        </div>
-                                        <button
-                                            v-else
-                                            @click="confirmStartExam(exam.id)"
-                                            class="rounded-lg bg-slate-900 px-4 py-2 text-[9px] font-black tracking-widest text-white uppercase shadow-lg transition-all hover:bg-black active:scale-95"
-                                        >
-                                            {{ exam.attempts.some((a) => a.status === 'ongoing') ? 'Continue' : 'Start' }}
-                                        </button>
+                                </tr>
+                                <tr v-if="recentResults.length === 0">
+                                    <td colspan="3" class="px-6 py-10 text-center text-sm text-gray-400">
+                                        No results released yet.
                                     </td>
                                 </tr>
                             </tbody>
@@ -168,35 +149,6 @@ const handleStartExam = () => {
                     </div>
                 </div>
             </div>
-
-            <!-- Pro Tip / Security Info -->
-            <div class="rounded-2xl border-2 border-dashed border-primary/20 bg-primary/5 p-10 text-center">
-                <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-white shadow-lg shadow-primary/20">
-                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                        />
-                    </svg>
-                </div>
-                <h4 class="text-sm font-black tracking-widest text-primary uppercase">Security Reminder</h4>
-                <p class="mx-auto mt-2 max-w-lg text-xs leading-relaxed font-bold text-slate-500">
-                    Once an examination begins, you must not leave the window or switch browser tabs. All activities are monitored and logged for
-                    integrity assurance.
-                </p>
-            </div>
         </div>
-
-        <ConfirmationModal
-            :show="isStartModalOpen"
-            title="Begin Examination?"
-            message="You are about to start this assessment. The timer will begin immediately once the interface loads. Ensure you have a stable internet connection."
-            confirm-label="Start Now"
-            variant="primary"
-            @close="isStartModalOpen = false"
-            @confirm="handleStartExam"
-        />
     </StudentLayout>
 </template>

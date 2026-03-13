@@ -21,7 +21,7 @@ class StaffController extends Controller
 
     public function index(Request $request): Response
     {
-        $query = User::role('staff')->with('roles');
+        $query = User::role(['examiner'])->with('roles');
 
         if ($request->search) {
             $query->where(function ($q) use ($request) {
@@ -31,13 +31,14 @@ class StaffController extends Controller
             });
         }
 
-        if ($request->branch) {
-            $query->where('branch', $request->branch);
+        if ($request->school_id) {
+            $query->where('school_id', $request->school_id);
         }
 
         return Inertia::render('Admin/Users/Staff', [
             'staff' => $query->latest()->paginate(10)->withQueryString(),
-            'filters' => $request->only(['search', 'branch']),
+            'roles' => \Spatie\Permission\Models\Role::where('category', 'staff')->get(),
+            'filters' => $request->only(['search', 'school_id']),
         ]);
     }
 
@@ -47,13 +48,14 @@ class StaffController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'username' => ['required', 'string', 'max:255', 'unique:users'],
-            'school_id' => ['nullable', 'string', 'max:255', 'unique:users'],
+            'school_id' => ['required', 'exists:schools,id'],
+            'role' => ['required', 'string', 'exists:roles,name'],
         ]);
 
         $dto = UserDTO::fromRequest($request);
-        $this->userService->createUser($dto, 'staff');
+        $this->userService->createUser($dto, $request->role);
 
-        return back()->with('success', 'Staff member created successfully.');
+        return back()->with('success', 'Account created successfully.');
     }
 
     public function update(Request $request, User $staff): RedirectResponse
@@ -62,20 +64,23 @@ class StaffController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,'.$staff->id],
             'username' => ['required', 'string', 'max:255', 'unique:users,username,'.$staff->id],
-            'school_id' => ['nullable', 'string', 'max:255', 'unique:users,school_id,'.$staff->id],
+            'school_id' => ['required', 'exists:schools,id'],
+            'role' => ['required', 'string', 'exists:roles,name'],
         ]);
 
         $dto = UserDTO::fromRequest($request);
         $this->userService->updateUser($staff, $dto);
 
-        return back()->with('success', 'Staff member updated successfully.');
+        $staff->syncRoles([$request->role]);
+
+        return back()->with('success', 'Personnel details updated.');
     }
 
     public function destroy(User $staff): RedirectResponse
     {
         $this->userService->deleteUser($staff);
 
-        return back()->with('success', 'Staff member deleted successfully.');
+        return back()->with('success', 'Personnel record removed.');
     }
 
     public function import(Request $request): RedirectResponse
@@ -84,8 +89,8 @@ class StaffController extends Controller
             'file' => ['required', 'file', 'mimes:csv,xlsx'],
         ]);
 
-        $count = $this->userImportService->import($request->file('file'), 'staff');
+        $count = $this->userImportService->import($request->file('file'), 'examiner');
 
-        return back()->with('success', "$count staff members imported successfully.");
+        return back()->with('success', "$count personnel records imported successfully.");
     }
 }

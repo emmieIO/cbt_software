@@ -8,6 +8,12 @@ import { index as questionIndex, generate as aiLabGenerate, create as createQues
 import { index as studentIndex } from '@/actions/App/Http/Controllers/Staff/StudentController';
 import DashboardLayout from '@/layouts/DashboardLayout.vue';
 
+withDefaults(defineProps<{
+    wide?: boolean;
+}>(), {
+    wide: false
+});
+
 const page = usePage();
 
 const IconDashboard = defineComponent({
@@ -84,10 +90,10 @@ const IconResults = defineComponent({
 
 const navigation = [
     {
-        section: 'Main',
+        section: 'Dashboard',
         items: [
             {
-                name: 'Dashboard',
+                name: 'Overview',
                 href: StaffDashboardController().url,
                 active: page.component === 'Staff/Dashboard',
                 icon: IconDashboard,
@@ -101,49 +107,54 @@ const navigation = [
         ],
     },
     {
-        section: 'Question Management',
+        section: 'Question Bank',
         items: [
             {
-                name: 'Question Bank',
+                name: 'All Questions',
                 href: questionIndex().url,
                 active: page.component === 'QuestionBank/Index',
                 icon: IconBank,
+                permission: 'bank:view',
             },
             {
-                name: 'Create Question',
+                name: 'Add Question',
                 href: createQuestion().url,
                 active: page.component === 'QuestionBank/Create',
                 icon: IconBank,
+                permission: 'bank:create',
             },
             {
-                name: 'AI Question Lab',
+                name: 'AI Generator',
                 href: aiLabGenerate().url,
                 active: page.component === 'QuestionBank/Generate',
                 icon: IconAI,
-                permission: 'use ai lab',
+                permission: 'bank:use_ai',
             },
         ],
     },
     {
-        section: 'Exam Operations',
+        section: 'Exams & Results',
         items: [
             {
                 name: 'Manage Exams',
                 href: examIndex().url,
                 active: page.component === 'Staff/Exams/Index',
                 icon: IconExams,
+                permission: 'exam:view',
             },
             {
-                name: 'New Examination',
+                name: 'Create Exam',
                 href: createExam().url,
                 active: page.component === 'Staff/Exams/Create',
                 icon: IconExams,
+                permission: 'exam:create',
             },
             {
-                name: 'Results & Grading',
+                name: 'View Results',
                 href: resultsIndex().url,
                 active: page.component === 'Staff/Results/Index',
                 icon: IconResults,
+                permission: 'results:view',
             },
         ],
     },
@@ -155,7 +166,7 @@ const filteredNavigation = computed(() => {
             ...section,
             items: section.items.filter((item) => {
                 if (!item.permission) return true;
-                const userPermissions = (page.props.auth.user as any).permissions || [];
+                const userPermissions = (page.props.auth.user as any)?.permissions || [];
                 return userPermissions.includes(item.permission);
             }),
         }))
@@ -164,7 +175,7 @@ const filteredNavigation = computed(() => {
 </script>
 
 <template>
-    <DashboardLayout title="Staff Portal" :navigation="filteredNavigation" :logout-action="logout().url">
+    <DashboardLayout title="Examiner Console" :navigation="filteredNavigation" :logout-action="logout().url" :wide="wide">
         <slot />
     </DashboardLayout>
 </template>

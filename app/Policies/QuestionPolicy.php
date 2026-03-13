@@ -12,7 +12,7 @@ class QuestionPolicy
      */
     public function before(User $user, string $ability): ?bool
     {
-        if ($user->hasRole('admin')) {
+        if ($user->can('bank:manage')) {
             return true;
         }
 
@@ -24,7 +24,7 @@ class QuestionPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasRole('staff') || $user->hasRole('subject_lead');
+        return $user->can('bank:view');
     }
 
     /**
@@ -40,7 +40,7 @@ class QuestionPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasRole('staff') || $user->hasRole('subject_lead');
+        return $user->can('bank:create');
     }
 
     /**

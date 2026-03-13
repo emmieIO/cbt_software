@@ -13,6 +13,7 @@ class ProspectiveClass extends Model
     use HasFactory, HasUlids;
 
     protected $fillable = [
+        'school_id',
         'name',
         'slug',
         'description',
@@ -21,11 +22,18 @@ class ProspectiveClass extends Model
         'is_active',
     ];
 
+    /**
+     * Get the school this batch belongs to.
+     */
+    public function school(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(School::class);
+    }
+
     protected function casts(): array
     {
         return [
             'is_active' => 'boolean',
-            'branch' => \App\Enums\Branch::class,
         ];
     }
 

@@ -16,14 +16,15 @@ class StudentController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user();
-        
+
         // Get classes assigned to this staff member
         $assignedClassIds = $user->currentAssignments()
             ->pluck('school_class_id')
             ->filter()
             ->unique();
 
-        $query = User::role('student')
+        $query = User::role('candidate')
+            ->where('status', 'active')
             ->whereIn('school_class_id', $assignedClassIds)
             ->with(['schoolClass']);
 

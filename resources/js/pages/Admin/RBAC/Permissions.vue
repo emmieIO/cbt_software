@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 import { index as rolesIndex } from '@/actions/App/Http/Controllers/Admin/RoleController';
+import PermissionsOverview from '@/actions/App/Http/Controllers/Admin/PermissionOverviewController';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 
 interface Permission {
@@ -17,23 +18,46 @@ defineProps<{
     <AdminLayout>
         <Head title="System Permissions" />
 
-        <div class="space-y-8">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-8">
+        <div class="space-y-6 sm:space-y-10">
+            <!-- Breadcrumbs -->
+            <nav class="flex items-center gap-2 text-xs font-medium text-gray-500">
+                <Link href="/admin/dashboard" class="hover:text-primary transition-colors">Dashboard</Link>
+                <svg class="size-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                <span class="text-gray-800">RBAC</span>
+                <svg class="size-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                <span class="text-gray-800">Permissions</span>
+            </nav>
+
+            <!-- Page Header -->
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <h2 class="text-3xl font-black tracking-tight text-slate-900">System Permissions</h2>
-                    <p class="mt-1 text-sm font-bold text-slate-500">A read-only repository of permissions hard-coded into the application logic.</p>
+                    <h1 class="text-2xl font-semibold text-gray-800">System Permissions</h1>
+                    <p class="text-sm text-gray-500 mt-1">
+                        A read-only repository of permissions hard-coded into the application logic.
+                    </p>
                 </div>
-                <div
-                    class="flex items-center gap-2 rounded-xl border border-amber-100 bg-amber-50 px-4 py-2 text-[10px] font-black tracking-widest text-amber-600 uppercase"
-                >
-                    <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path
-                            fill-rule="evenodd"
-                            d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-                            clip-rule="evenodd"
-                        />
-                    </svg>
-                    System Locked
+                <div class="flex items-center gap-2">
+                    <Link
+                        :href="PermissionsOverview().url"
+                        class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none focus:outline-none"
+                    >
+                        <svg class="size-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m5.618-4.016A3.333 3.333 0 0118 3.333a3.333 3.333 0 01-3.333 3.333 3.333 3.333 0 01-3.334-3.333C11.333 3.333 11.333 3.333 11.333 3.333c0 .001 0 .001 0 .001a3.333 3.333 0 01-3.333 3.333 3.333 3.333 0 01-3.333-3.333 3.333 3.333 0 01-3.334 3.333C1.333 3.333 1.333 3.333 1.333 3.333" />
+                        </svg>
+                        <span class="text-xs font-semibold uppercase tracking-wider">Governance Overview</span>
+                    </Link>
+                    <div
+                        class="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-lg border border-amber-100 bg-amber-50 text-amber-600"
+                    >
+                        <svg class="size-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path
+                                fill-rule="evenodd"
+                                d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                                clip-rule="evenodd"
+                            />
+                        </svg>
+                        <span class="text-[10px] font-semibold uppercase tracking-widest">System Locked</span>
+                    </div>
                 </div>
             </div>
 
@@ -41,19 +65,19 @@ defineProps<{
                 <div
                     v-for="permission in permissions"
                     :key="permission.id"
-                    class="group relative overflow-hidden rounded-xl border border-slate-100 bg-white p-5 shadow-sm transition-all hover:border-primary/20"
+                    class="group flex flex-col bg-white border border-gray-200 shadow-sm rounded-xl hover:shadow-md transition-all p-4 md:p-5"
                 >
                     <div class="flex items-center gap-3">
-                        <div class="rounded-lg-full h-2 w-2 bg-slate-200 transition-colors group-hover:bg-primary"></div>
-                        <span class="text-[11px] font-black tracking-widest text-slate-700 uppercase">{{ permission.name }}</span>
+                        <div class="size-2 rounded-full bg-gray-300 transition-colors group-hover:bg-primary"></div>
+                        <span class="text-xs font-semibold text-gray-800 uppercase tracking-widest">{{ permission.name }}</span>
                     </div>
                 </div>
             </div>
 
-            <div class="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-8">
-                <div class="flex items-start gap-4">
-                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-slate-400 shadow-sm">
-                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 md:p-6">
+                <div class="flex">
+                    <div class="shrink-0">
+                        <svg class="size-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
@@ -62,12 +86,12 @@ defineProps<{
                             />
                         </svg>
                     </div>
-                    <div>
-                        <h4 class="text-sm font-black tracking-tight text-slate-900 uppercase">Developer Note</h4>
-                        <p class="mt-1 text-xs leading-relaxed font-medium text-slate-500">
+                    <div class="ms-3">
+                        <h4 class="text-sm font-semibold text-gray-800 uppercase tracking-tight">Developer Note</h4>
+                        <p class="mt-2 text-xs text-gray-500 leading-relaxed">
                             Permissions are immutable via the dashboard to ensure system stability. New permissions must be defined in code and seeded
                             during feature development. Admins can still map these permissions to custom roles in the
-                            <Link :href="rolesIndex().url" class="font-black text-primary hover:underline">System Roles</Link> section.
+                            <Link :href="rolesIndex().url" class="font-semibold text-primary hover:underline">System Roles</Link> section.
                         </p>
                     </div>
                 </div>

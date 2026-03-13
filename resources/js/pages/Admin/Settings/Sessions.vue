@@ -7,6 +7,8 @@ import {
     setCurrent as setCurrentAction,
     destroy as destroyAction,
 } from '@/actions/App/Http/Controllers/Admin/AcademicSessionController';
+import CustomSelect from '@/components/Form/CustomSelect.vue';
+import DatePicker from '@/components/Form/DatePicker.vue';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 
@@ -53,6 +55,11 @@ const openCreateModal = () => {
     editingId.value = null;
     form.reset();
     isModalOpen.value = true;
+    
+    setTimeout(() => {
+        // @ts-ignore
+        if (window.HSStaticMethods) window.HSStaticMethods.autoInit();
+    }, 100);
 };
 
 const openEditModal = (session: AcademicSession) => {
@@ -66,6 +73,11 @@ const openEditModal = (session: AcademicSession) => {
     form.is_current = session.is_current;
 
     isModalOpen.value = true;
+
+    setTimeout(() => {
+        // @ts-ignore
+        if (window.HSStaticMethods) window.HSStaticMethods.autoInit();
+    }, 100);
 };
 
 const submit = () => {
@@ -117,15 +129,15 @@ const handleDelete = () => {
         <div class="space-y-8">
             <div class="flex items-center justify-between">
                 <div>
-                    <h2 class="text-3xl font-black tracking-tight text-slate-900">Academic Sessions</h2>
-                    <p class="mt-1 text-sm font-bold text-slate-500">Define academic years and set the current active session.</p>
+                    <h2 class="text-2xl font-semibold text-gray-800">Academic Sessions</h2>
+                    <p class="mt-1 text-sm text-gray-500">Define academic years and set the current active session.</p>
                 </div>
                 <button
                     @click="openCreateModal"
-                    class="flex h-12 items-center gap-3 rounded-xl bg-primary px-6 text-sm font-black tracking-wider text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
+                    class="inline-flex items-center gap-x-2 rounded-lg border border-transparent bg-primary px-4 py-3 text-sm font-medium text-white hover:bg-primary/90 focus:bg-primary/90 focus:outline-none disabled:pointer-events-none disabled:opacity-50"
                 >
-                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
                     New Session
                 </button>
@@ -135,24 +147,29 @@ const handleDelete = () => {
                 <div
                     v-for="session in sessions"
                     :key="session.id"
-                    class="group relative overflow-hidden rounded-xl border border-slate-100 bg-white p-8 shadow-sm transition-all hover:shadow-xl hover:shadow-primary/5"
-                    :class="{ 'border-primary/20 ring-2 ring-primary': session.is_current }"
+                    class="group relative overflow-hidden rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:shadow-md"
+                    :class="{ 'border-primary ring-1 ring-primary': session.is_current }"
                 >
                     <div class="relative z-10">
                         <div class="mb-6 flex items-start justify-between">
                             <div>
                                 <div class="flex items-center gap-3">
-                                    <h3 class="text-2xl font-black tracking-tight text-slate-800">{{ session.name }}</h3>
-                                    <span class="rounded-lg bg-slate-100 px-3 py-1 text-[10px] font-black tracking-widest text-slate-500 uppercase">
+                                    <h3 class="text-xl font-semibold text-gray-800">{{ session.name }}</h3>
+                                    <span class="rounded-lg bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600">
                                         {{ getTermLabel(session.term) }}
                                     </span>
                                     <span
                                         v-if="session.is_current"
-                                        class="animate-pulse rounded-full bg-primary px-3 py-1 text-[9px] font-black tracking-widest text-white uppercase"
-                                        >Current Session</span
+                                        class="inline-flex items-center gap-x-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary"
                                     >
+                                        <span class="relative flex h-2 w-2">
+                                          <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75"></span>
+                                          <span class="relative inline-flex h-2 w-2 rounded-full bg-primary"></span>
+                                        </span>
+                                        Current Session
+                                    </span>
                                 </div>
-                                <p class="mt-1 text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                                <p class="mt-1 text-xs font-medium text-gray-400">
                                     {{ formatDate(session.start_date) }} — {{ formatDate(session.end_date) }}
                                 </p>
                             </div>
@@ -160,19 +177,19 @@ const handleDelete = () => {
                                 <button
                                     v-if="!session.is_current"
                                     @click="setAsCurrent(session)"
-                                    class="flex h-10 items-center gap-2 rounded-xl bg-slate-50 px-4 text-[10px] font-black text-slate-500 uppercase transition-all hover:bg-primary hover:text-white"
+                                    class="inline-flex items-center gap-x-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm hover:bg-gray-50 focus:bg-gray-50 focus:outline-none disabled:pointer-events-none disabled:opacity-50"
                                 >
                                     Set Current
                                 </button>
                                 <button
                                     @click="openEditModal(session)"
-                                    class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-400 transition-all hover:bg-slate-900 hover:text-white"
+                                    class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-500 shadow-sm hover:bg-gray-50 focus:bg-gray-50 focus:outline-none disabled:pointer-events-none disabled:opacity-50"
                                 >
                                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path
                                             stroke-linecap="round"
                                             stroke-linejoin="round"
-                                            stroke-width="2.5"
+                                            stroke-width="2"
                                             d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                                         />
                                     </svg>
@@ -180,13 +197,13 @@ const handleDelete = () => {
                                 <button
                                     v-if="!session.is_current"
                                     @click="confirmDelete(session)"
-                                    class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-400 transition-all hover:bg-red-500 hover:text-white"
+                                    class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-500 shadow-sm hover:bg-red-50 hover:text-white focus:outline-none disabled:pointer-events-none disabled:opacity-50"
                                 >
-                                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path
                                             stroke-linecap="round"
                                             stroke-linejoin="round"
-                                            stroke-width="2.5"
+                                            stroke-width="2"
                                             d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                                         />
                                     </svg>
@@ -196,13 +213,13 @@ const handleDelete = () => {
 
                         <!-- Info Grid -->
                         <div class="grid grid-cols-2 gap-4">
-                            <div class="rounded-xl bg-slate-50 p-4">
-                                <span class="mb-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Start Date</span>
-                                <span class="text-sm font-bold text-slate-700">{{ formatDate(session.start_date) }}</span>
+                            <div class="rounded-lg bg-gray-50 p-4">
+                                <span class="mb-1 block text-xs font-medium text-gray-400">Start Date</span>
+                                <span class="text-sm font-semibold text-gray-700">{{ formatDate(session.start_date) }}</span>
                             </div>
-                            <div class="rounded-xl bg-slate-50 p-4">
-                                <span class="mb-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">End Date</span>
-                                <span class="text-sm font-bold text-slate-700">{{ formatDate(session.end_date) }}</span>
+                            <div class="rounded-lg bg-gray-50 p-4">
+                                <span class="mb-1 block text-xs font-medium text-gray-400">End Date</span>
+                                <span class="text-sm font-semibold text-gray-700">{{ formatDate(session.end_date) }}</span>
                             </div>
                         </div>
                     </div>
@@ -210,81 +227,70 @@ const handleDelete = () => {
             </div>
 
             <!-- Modal -->
-            <div v-if="isModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-                <div @click="isModalOpen = false" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"></div>
-                <div class="animate-in zoom-in-95 relative w-full max-w-md overflow-hidden rounded-xl bg-white p-10 shadow-2xl">
-                    <h3 class="mb-8 text-2xl font-black text-slate-900">{{ isEditing ? 'Edit Session' : 'Define New Session' }}</h3>
+            <div v-if="isModalOpen" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                <div @click="isModalOpen = false" class="absolute inset-0 bg-gray-900/50 transition-opacity"></div>
+                <div class="animate-in zoom-in-95 relative w-full max-w-md rounded-xl border border-gray-200 bg-white p-6 shadow-lg">
+                    <h3 class="mb-6 text-xl font-semibold text-gray-900">{{ isEditing ? 'Edit Session' : 'Define New Session' }}</h3>
 
-                    <form @submit.prevent="submit" class="space-y-6">
-                        <div class="grid grid-cols-2 gap-4">
+                    <form @submit.prevent="submit" class="space-y-4">
+                        <div class="space-y-4">
                             <div>
-                                <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Session Name</label>
+                                <label class="mb-2 block text-sm font-medium text-gray-800">Session Name</label>
                                 <input
                                     v-model="form.name"
                                     type="text"
                                     required
                                     placeholder="Enter Session Name (e.g. 2026/2027)"
-                                    class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
+                                    class="block w-full rounded-lg border-gray-200 px-4 py-3 text-sm focus:border-primary focus:ring-primary disabled:pointer-events-none disabled:opacity-50"
                                 />
-                                <div v-if="form.errors.name" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.name }}</div>
+                                <div v-if="form.errors.name" class="mt-2 text-xs text-red-500">{{ form.errors.name }}</div>
                             </div>
-                            <div>
-                                <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Academic Term</label>
-                                <select
-                                    v-model="form.term"
-                                    required
-                                    class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
-                                >
-                                    <option v-for="term in terms" :key="term.value" :value="term.value">{{ term.label }}</option>
-                                </select>
-                                <div v-if="form.errors.term" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.term }}</div>
-                            </div>
+                            
+                            <CustomSelect
+                                v-model="form.term"
+                                label="Academic Term"
+                                :options="terms.map(t => ({ id: t.value, name: t.label }))"
+                                placeholder="Select Term"
+                                :error="form.errors.term"
+                            />
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Start Date</label>
-                                <input
-                                    v-model="form.start_date"
-                                    type="date"
-                                    required
-                                    class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
-                                />
-                                <div v-if="form.errors.start_date" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.start_date }}</div>
-                            </div>
-                            <div>
-                                <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">End Date</label>
-                                <input
-                                    v-model="form.end_date"
-                                    type="date"
-                                    required
-                                    class="w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
-                                />
-                                <div v-if="form.errors.end_date" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.end_date }}</div>
-                            </div>
+                            <DatePicker
+                                v-model="form.start_date"
+                                label="Start Date"
+                                placeholder="Select Start"
+                                :error="form.errors.start_date"
+                            />
+                            <DatePicker
+                                v-model="form.end_date"
+                                label="End Date"
+                                placeholder="Select End"
+                                :error="form.errors.end_date"
+                            />
                         </div>
 
-                        <label class="ml-1 flex cursor-pointer items-center gap-3">
+                        <label class="flex cursor-pointer items-center gap-3">
                             <input
                                 type="checkbox"
                                 v-model="form.is_current"
-                                class="h-5 w-5 rounded border-slate-200 text-primary focus:ring-primary/20"
+                                class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary disabled:pointer-events-none"
                             />
-                            <span class="text-xs font-bold text-slate-600">Set as current active session</span>
+                            <span class="text-sm text-gray-600">Set as current active session</span>
                         </label>
 
-                        <div class="flex gap-3 border-t border-slate-50 pt-4">
+                        <div class="flex items-center justify-end gap-x-2 border-t border-gray-200 pt-4">
                             <button
                                 type="button"
                                 @click="isModalOpen = false"
-                                class="flex-1 rounded-xl border border-slate-100 py-4 text-sm font-black tracking-widest text-slate-400 uppercase transition-all hover:bg-slate-50"
+                                class="inline-flex items-center gap-x-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-800 shadow-sm hover:bg-gray-50 focus:bg-gray-50 focus:outline-none disabled:pointer-events-none disabled:opacity-50"
                             >
                                 Cancel
                             </button>
                             <button
                                 type="submit"
                                 :disabled="form.processing"
-                                class="flex-1 rounded-xl bg-primary py-4 text-sm font-black tracking-widest text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+                                class="inline-flex items-center gap-x-2 rounded-lg border border-transparent bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 focus:bg-primary/90 focus:outline-none disabled:pointer-events-none disabled:opacity-50"
                             >
                                 {{ isEditing ? 'Update Session' : 'Create Session' }}
                             </button>

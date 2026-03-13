@@ -44,10 +44,10 @@ const IconResults = defineComponent({
 
 const navigation = [
     {
-        section: 'Main',
+        section: 'Candidate Portal',
         items: [
             {
-                name: 'Dashboard',
+                name: 'Performance Overview',
                 href: dashboard().url,
                 active: page.component === 'Student/Dashboard',
                 icon: IconDashboard,
@@ -55,16 +55,16 @@ const navigation = [
         ],
     },
     {
-        section: 'Academic',
+        section: 'Evaluation Center',
         items: [
             {
-                name: 'Available Exams',
+                name: 'Assessment Schedule',
                 href: examIndex().url,
                 active: page.component.startsWith('Student/Exams/'),
                 icon: IconExams,
             },
             {
-                name: 'My Results',
+                name: 'Academic Records',
                 href: resultsIndex().url,
                 active: page.component.startsWith('Student/Results/'),
                 icon: IconResults,

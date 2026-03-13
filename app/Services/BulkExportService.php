@@ -22,31 +22,46 @@ class BulkExportService
 
             // Header
             $writer->addRow(Row::fromValues([
-                'topic_id',
-                'school_class_id',
+                'subject_name',
+                'class_name',
+                'topic_name',
                 'content',
                 'explanation',
                 'type',
                 'difficulty',
-                'options_csv',
-                'correct_option_index',
+                'option_a',
+                'option_b',
+                'option_c',
+                'option_d',
+                'correct_option_letter', // A, B, C, or D
             ]));
 
             // Data
-            Question::with(['options'])->chunk(100, function ($questions) use ($writer) {
+            Question::with(['topic.subject', 'schoolClass', 'options'])->chunk(100, function ($questions) use ($writer) {
                 foreach ($questions as $question) {
-                    $optionsStr = $question->options->pluck('content')->implode('|');
+                    $options = $question->options->values();
                     $correctIndex = $question->options->search(fn ($opt) => $opt->is_correct);
+                    $correctLetter = match ($correctIndex) {
+                        0 => 'A',
+                        1 => 'B',
+                        2 => 'C',
+                        3 => 'D',
+                        default => 'A',
+                    };
 
                     $writer->addRow(Row::fromValues([
-                        $question->topic_id,
-                        $question->school_class_id,
+                        $question->topic->subject->name,
+                        $question->schoolClass->name,
+                        $question->topic->name,
                         $question->content,
                         $question->explanation,
                         $question->type->value,
                         $question->difficulty->value,
-                        $optionsStr,
-                        $correctIndex !== false ? $correctIndex : 0,
+                        $options[0]?->content ?? '',
+                        $options[1]?->content ?? '',
+                        $options[2]?->content ?? '',
+                        $options[3]?->content ?? '',
+                        $correctLetter,
                     ]));
                 }
             });
@@ -68,26 +83,34 @@ class BulkExportService
 
             // Header
             $writer->addRow(Row::fromValues([
-                'topic_id',
-                'school_class_id',
+                'subject_name',
+                'class_name',
+                'topic_name',
                 'content',
                 'explanation',
                 'type',
                 'difficulty',
-                'options_csv',
-                'correct_option_index',
+                'option_a',
+                'option_b',
+                'option_c',
+                'option_d',
+                'correct_option_letter',
             ]));
 
             // Add one example row
             $writer->addRow(Row::fromValues([
-                'ULID_OF_TOPIC',
-                'ULID_OF_CLASS',
-                'What is the capital of Nigeria?',
-                'Abuja is the federal capital territory.',
+                'Mathematics',
+                'JSS 1',
+                'Number Bases',
+                'What is the value of 10 in binary?',
+                '10 in base 10 is equal to 1010 in binary.',
                 'multiple_choice',
                 'easy',
-                'Lagos|Abuja|Kano|Ibadan',
-                '1',
+                '1010',
+                '1100',
+                '1111',
+                '1001',
+                'A',
             ]));
 
             $writer->close();

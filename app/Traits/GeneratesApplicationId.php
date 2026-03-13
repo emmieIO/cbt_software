@@ -14,11 +14,6 @@ trait GeneratesApplicationId
             if (empty($user->username)) {
                 $user->username = self::generateUniqueApplicationId();
             }
-
-            // 2. Always sync school_id with username for consistency in entrance records
-            if (empty($user->school_id)) {
-                $user->school_id = $user->username;
-            }
         });
     }
 
@@ -28,9 +23,9 @@ trait GeneratesApplicationId
         $prefix = "APP/{$year}/";
 
         $lastId = DB::table('users')
-            ->where('school_id', 'like', "{$prefix}%")
-            ->orderBy('school_id', 'desc')
-            ->value('school_id');
+            ->where('username', 'like', "{$prefix}%")
+            ->orderBy('username', 'desc')
+            ->value('username');
 
         $sequence = 1;
         if ($lastId && str_contains($lastId, '/')) {

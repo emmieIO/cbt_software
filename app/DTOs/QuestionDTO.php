@@ -25,6 +25,8 @@ class QuestionDTO
 
     public ?string $prospective_class_id;
 
+    public ?string $image_path;
+
     public function __construct(
         string $topic_id,
         string $school_class_id,
@@ -33,7 +35,8 @@ class QuestionDTO
         QuestionType|string $type,
         QuestionDifficulty|string $difficulty,
         ?string $prospective_class_id = null,
-        array $options = []
+        array $options = [],
+        ?string $image_path = null
     ) {
         $this->topic_id = $topic_id;
         $this->school_class_id = $school_class_id;
@@ -43,6 +46,7 @@ class QuestionDTO
         $this->difficulty = is_string($difficulty) ? QuestionDifficulty::from($difficulty) : $difficulty;
         $this->prospective_class_id = $prospective_class_id;
         $this->options = $options;
+        $this->image_path = $image_path;
     }
 
     public static function fromRequest(Request $request): self
@@ -59,6 +63,7 @@ class QuestionDTO
                 fn (array $option) => OptionDTO::fromArray($option),
                 $request->array('options')
             ),
+            image_path: $request->input('image_path')
         );
     }
 
@@ -74,6 +79,7 @@ class QuestionDTO
             'school_class_id' => $this->school_class_id,
             'prospective_class_id' => $this->prospective_class_id,
             'content' => $this->content,
+            'image_path' => $this->image_path,
             'explanation' => $this->explanation,
             'type' => $this->type,
             'difficulty' => $this->difficulty,

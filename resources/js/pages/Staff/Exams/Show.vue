@@ -30,7 +30,7 @@ defineProps<{
 
 const page = usePage();
 const branches = computed(() => (page.props as any).branches || {});
-const isAdmin = computed(() => (page.props.auth.user as any).roles.includes('admin'));
+const isAdmin = computed(() => (page.props.auth.user as any).permissions.includes('sys:manage_settings'));
 const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
 </script>
 
@@ -38,177 +38,145 @@ const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
     <component :is="Layout">
         <Head :title="exam.title" />
 
-        <div class="space-y-10">
+        <div class="space-y-6">
             <!-- Breadcrumbs -->
-            <nav class="flex items-center gap-2 text-[10px] font-bold tracking-widest text-slate-500 uppercase">
-                <Link :href="isAdmin ? '/admin/dashboard' : '/staff/dashboard'" class="text-slate-500 transition-colors hover:text-slate-800">Dashboard</Link>
-                <svg class="h-3 w-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg>
-                <Link href="/staff/exams" class="text-slate-500 transition-colors hover:text-slate-800">Vault</Link>
-                <svg class="h-3 w-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg>
-                <span class="text-slate-900">Configuration</span>
+            <nav class="flex items-center gap-2 text-xs font-medium text-gray-500">
+                <Link :href="isAdmin ? '/admin/dashboard' : '/staff/dashboard'" class="hover:text-primary transition-colors">Dashboard</Link>
+                <svg class="h-3 w-3 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                <Link href="/staff/exams" class="hover:text-primary transition-colors">Vault</Link>
+                <svg class="h-3 w-3 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                <span class="text-gray-800">Configuration</span>
             </nav>
 
-            <div class="relative overflow-hidden rounded-xl bg-slate-900 px-10 py-12 text-white shadow-2xl">
-                <div class="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
-                    <div class="space-y-6">
+            <div class="relative overflow-hidden rounded-xl bg-gray-900 p-6 md:p-10 text-white shadow-sm">
+                <div class="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                    <div class="space-y-4">
                         <div class="flex flex-col gap-2">
                             <div class="flex items-center gap-3">
-                                <Link href="/staff/exams" class="group flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 transition-all hover:bg-white hover:text-slate-900 active:scale-95">
-                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" /></svg>
+                                <Link href="/staff/exams" class="inline-flex items-center justify-center size-8 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 transition-all">
+                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
                                 </Link>
-                                <span class="rounded-full bg-primary px-3 py-1 text-[9px] font-black tracking-widest text-slate-900 uppercase">{{
-                                    exam.status
-                                }}</span>
-                                <div v-if="branches[exam.branch]" class="rounded-full border border-white/20 bg-white/5 px-3 py-1 text-[9px] font-black tracking-widest text-white uppercase italic">
+                                <span class="inline-flex items-center py-0.5 px-2 rounded-full text-xs font-medium bg-primary text-gray-900">
+                                    {{ exam.status }}
+                                </span>
+                                <div v-if="branches[exam.branch]" class="inline-flex items-center py-0.5 px-2 rounded-full text-xs font-medium bg-white/10 text-white">
                                     {{ branches[exam.branch].name }}
                                 </div>
                             </div>
-                            <h1 class="text-3xl font-black">{{ exam.title }}</h1>
+                            <h1 class="text-2xl md:text-3xl font-semibold">{{ exam.title }}</h1>
                         </div>
-                        <div class="flex flex-wrap items-center gap-x-8 gap-y-4">
-                            <div class="flex items-center gap-2 border-r border-white/10 pr-8 last:border-0 last:pr-0">
-                                <span class="text-[10px] font-black tracking-widest text-slate-400 uppercase">Subject:</span>
-                                <span class="text-sm font-bold text-lemon-yellow">
+                        <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-medium text-gray-400 uppercase tracking-wider">Subject:</span>
+                                <span class="text-sm font-medium text-primary">
                                     {{ exam.type === 'entrance' ? 'Multi-Subject Assessment' : (exam.subject?.name || 'N/A') }}
                                 </span>
                             </div>
-                            <div class="flex items-center gap-2 border-r border-white/10 pr-8 last:border-0 last:pr-0">
-                                <span class="text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-medium text-gray-400 uppercase tracking-wider">
                                     {{ exam.type === 'entrance' ? 'Admission Batch:' : 'Class:' }}
                                 </span>
-                                <span class="text-sm font-bold text-lemon-yellow">
+                                <span class="text-sm font-medium text-primary">
                                     {{ exam.type === 'entrance' ? exam.prospective_class?.name : exam.school_class?.name }}
                                 </span>
                             </div>
-                            <div class="flex items-center gap-2 border-r border-white/10 pr-8 last:border-0 last:pr-0">
-                                <span class="text-[10px] font-black tracking-widest text-slate-400 uppercase">Time Allotted:</span>
-                                <span class="text-sm font-bold text-lemon-yellow">{{ exam.duration }} Mins</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-medium text-gray-400 uppercase tracking-wider">Time:</span>
+                                <span class="text-sm font-medium text-primary">{{ exam.duration }} Mins</span>
                             </div>
                         </div>
                     </div>
-                    <div class="flex flex-wrap items-center gap-3 sm:gap-4">
+                    <div class="flex flex-wrap items-center gap-2 md:gap-3">
                         <a
                             :href="showHardCopyAction(exam.id).url"
                             target="_blank"
-                            class="flex items-center gap-3 whitespace-nowrap rounded-xl border-2 border-white/20 bg-white/10 px-4 py-3 text-[10px] font-black tracking-widest text-white uppercase transition-all hover:bg-white hover:text-slate-900 active:scale-95 sm:px-6 sm:py-4 sm:text-xs"
+                            class="py-2 px-3 inline-flex items-center gap-x-2 text-xs font-semibold rounded-lg border border-white/20 bg-white/5 text-white hover:bg-white/10 disabled:opacity-50 disabled:pointer-events-none"
                         >
-                            <svg class="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2.5"
-                                    d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
-                                />
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                             </svg>
                             Hard Copy
                         </a>
                         <a
                             :href="showAnswerSheetAction(exam.id).url"
                             target="_blank"
-                            class="flex items-center gap-3 whitespace-nowrap rounded-xl border-2 border-white/20 bg-white/10 px-4 py-3 text-[10px] font-black tracking-widest text-white uppercase transition-all hover:bg-white hover:text-slate-900 active:scale-95 sm:px-6 sm:py-4 sm:text-xs"
+                            class="py-2 px-3 inline-flex items-center gap-x-2 text-xs font-semibold rounded-lg border border-white/20 bg-white/5 text-white hover:bg-white/10 disabled:opacity-50 disabled:pointer-events-none"
                         >
-                            <svg class="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2.5"
-                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
-                                />
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                             </svg>
                             Answer Sheet
                         </a>
                         <Link
                             :href="editExamAction(exam.id).url"
-                            class="flex items-center gap-3 whitespace-nowrap rounded-xl border-2 border-white/20 bg-white/10 px-4 py-3 text-[10px] font-black tracking-widest text-white uppercase transition-all hover:bg-white hover:text-slate-900 active:scale-95 sm:px-6 sm:py-4 sm:text-xs"
+                            class="py-2 px-3 inline-flex items-center gap-x-2 text-xs font-semibold rounded-lg border border-white/20 bg-white/5 text-white hover:bg-white/10 disabled:opacity-50 disabled:pointer-events-none"
                         >
-                            <svg class="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2.5"
-                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                />
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                             </svg>
                             Edit
                         </Link>
                         <Link
                             :href="manageQuestions(exam.id).url"
-                            class="group flex items-center gap-3 whitespace-nowrap rounded-xl bg-lemon-yellow px-4 py-3 text-[10px] font-black tracking-widest text-primary uppercase shadow-xl shadow-lemon-yellow/10 transition-all hover:scale-105 active:scale-95 sm:px-6 sm:py-4 sm:text-xs lg:px-8"
+                            class="py-2 px-4 inline-flex items-center gap-x-2 text-xs font-semibold rounded-lg border border-transparent bg-primary text-gray-900 hover:bg-primary/90 disabled:opacity-50 disabled:pointer-events-none"
                         >
-                            <svg class="h-4 w-4 transition-transform group-hover:rotate-12 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                             </svg>
                             {{ exam.questions.length > 0 ? 'Questions' : 'Allocate' }}
                         </Link>
                     </div>
                 </div>
-                <div class="rounded-full absolute -top-24 -right-24 h-64 w-64 bg-primary/20 blur-3xl"></div>
+                <div class="absolute -top-24 -right-24 h-64 w-64 bg-primary/10 blur-3xl rounded-full"></div>
             </div>
 
             <!-- Blueprint Summary for Entrance -->
-            <div v-if="exam.type === 'entrance' && exam.compositions?.length" class="space-y-6">
-                <h3 class="flex items-center gap-3 text-xs font-black tracking-[0.2em] text-slate-400 uppercase italic">
-                    <svg class="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                    </svg>
-                    Assessment Blueprint (Compositions)
-                </h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div v-for="comp in exam.compositions" :key="comp.id" class="group relative bg-white p-6 rounded-2xl border border-slate-100 shadow-sm transition-all hover:border-primary/20 hover:shadow-lg">
-                        <div class="space-y-3">
-                            <span class="text-[10px] font-black tracking-widest text-primary uppercase block">{{ comp.subject?.name || 'Multi-Subject' }}</span>
-                            <p class="text-[11px] font-bold text-slate-500 italic line-clamp-1">{{ comp.topic?.name || 'General Subject Pool' }}</p>
-                            <div class="flex items-center justify-between pt-4 border-t border-slate-50 transition-colors group-hover:border-primary/10">
-                                <span class="text-[9px] font-black text-slate-400 uppercase">Target:</span>
-                                <span class="text-xs font-black text-slate-800 bg-slate-50 px-2 py-1 rounded-lg">{{ comp.question_count }} Questions</span>
-                            </div>
+            <div v-if="exam.type === 'entrance' && exam.compositions?.length" class="space-y-4">
+                <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Assessment Blueprint</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div v-for="comp in exam.compositions" :key="comp.id" class="flex flex-col bg-white border border-gray-200 rounded-xl shadow-sm p-5 hover:border-primary/30 transition-colors">
+                        <span class="text-xs font-semibold text-primary uppercase tracking-wider mb-1">{{ comp.subject?.name || 'Multi-Subject' }}</span>
+                        <p class="text-xs font-medium text-gray-600 line-clamp-1 mb-4">{{ comp.topic?.name || 'General Subject Pool' }}</p>
+                        <div class="mt-auto pt-3 border-t border-gray-100 flex items-center justify-between">
+                            <span class="text-xs text-gray-400 uppercase tracking-wider">Target</span>
+                            <span class="text-xs font-semibold text-gray-800">{{ comp.question_count }} Qs</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="space-y-6">
-                <div class="ml-2 flex items-center justify-between">
-                    <h3 class="flex items-center gap-3 text-sm font-black tracking-[0.2em] text-slate-400 uppercase">
-                        <div class="rounded-lg-full h-2 w-2 bg-primary"></div>
-                        Allocated Questions ({{ exam.questions.length }})
-                    </h3>
-                </div>
+            <div class="space-y-4">
+                <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Allocated Questions ({{ exam.questions.length }})</h3>
 
-                <div v-if="exam.questions.length > 0" class="grid grid-cols-1 gap-4">
+                <div v-if="exam.questions.length > 0" class="space-y-3">
                     <div
                         v-for="(question, index) in exam.questions"
                         :key="question.id"
-                        class="group flex items-center justify-between rounded-2xl border border-slate-100 bg-white p-6 transition-all hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5"
+                        class="flex flex-col bg-white border border-gray-200 rounded-xl shadow-sm p-5 hover:bg-gray-50 transition-colors"
                     >
-                        <div class="flex items-start gap-6 w-full">
-                            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-50 text-sm font-black text-slate-400 transition-colors group-hover:bg-primary group-hover:text-white">
+                        <div class="flex items-start gap-4">
+                            <div class="size-8 flex-shrink-0 flex items-center justify-center rounded-lg bg-gray-100 text-xs font-semibold text-gray-500">
                                 {{ index + 1 }}
                             </div>
-                            <div class="w-full">
-                                <p class="text-[15px] leading-relaxed font-bold text-slate-700">{{ question.content }}</p>
-                                <div class="mt-4 flex flex-wrap items-center gap-4">
-                                    <div class="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-1.5 border border-slate-100 transition-colors group-hover:border-primary/10 group-hover:bg-primary/5">
-                                        <span class="text-[9px] font-black tracking-[0.15em] text-slate-400 uppercase">Type:</span>
-                                        <span class="text-[10px] font-black text-slate-600 uppercase">{{ question.type.replace('_', ' ') }}</span>
-                                    </div>
-                                    <div class="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-1.5 border border-slate-100 transition-colors group-hover:border-primary/10 group-hover:bg-primary/5">
-                                        <span class="text-[9px] font-black tracking-[0.15em] text-slate-400 uppercase">Difficulty:</span>
-                                        <span
-                                            class="text-[10px] font-black uppercase"
-                                            :class="{
-                                                'text-emerald-500': question.difficulty === 'easy',
-                                                'text-amber-500': question.difficulty === 'medium',
-                                                'text-rose-500': question.difficulty === 'hard'
-                                            }"
-                                        >
-                                            {{ question.difficulty }}
-                                        </span>
-                                    </div>
-                                    <div v-if="question.topic" class="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-1.5 border border-slate-100 transition-colors group-hover:border-primary/10 group-hover:bg-primary/5">
-                                        <span class="text-[9px] font-black tracking-[0.15em] text-slate-400 uppercase">Topic:</span>
-                                        <span class="text-[10px] font-black text-slate-600 uppercase truncate max-w-50">{{ question.topic.name }}</span>
-                                    </div>
+                            <div class="grow">
+                                <p class="text-sm font-medium text-gray-800 leading-relaxed">{{ question.content }}</p>
+                                <div class="mt-4 flex flex-wrap gap-2">
+                                    <span class="inline-flex items-center py-1 px-2 rounded-lg text-xs font-medium bg-gray-100 text-gray-600 uppercase tracking-wider">
+                                        {{ question.type.replace('_', ' ') }}
+                                    </span>
+                                    <span
+                                        class="inline-flex items-center py-1 px-2 rounded-lg text-xs font-medium uppercase tracking-wider"
+                                        :class="{
+                                            'bg-teal-100 text-teal-800': question.difficulty === 'easy',
+                                            'bg-blue-100 text-blue-800': question.difficulty === 'medium',
+                                            'bg-red-100 text-red-800': question.difficulty === 'hard'
+                                        }"
+                                    >
+                                        {{ question.difficulty }}
+                                    </span>
+                                    <span v-if="question.topic" class="inline-flex items-center py-1 px-2 rounded-lg text-xs font-medium bg-gray-100 text-gray-600 uppercase tracking-wider max-w-[200px] truncate">
+                                        {{ question.topic.name }}
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -218,20 +186,15 @@ const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
                 <!-- Empty State -->
                 <div
                     v-else
-                    class="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 py-20 text-center"
+                    class="p-12 flex flex-col items-center justify-center bg-gray-50 border border-dashed border-gray-200 rounded-xl text-center"
                 >
-                    <div class="rounded-lg-full mb-4 flex h-20 w-20 items-center justify-center bg-white text-slate-200 shadow-sm">
-                        <svg class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                            />
+                    <div class="inline-flex items-center justify-center h-16 w-16 rounded-full bg-white text-gray-400 shadow-sm mb-4">
+                        <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                         </svg>
                     </div>
-                    <h4 class="text-xl font-black tracking-widest text-slate-400 uppercase">No Questions Allocated</h4>
-                    <p class="mt-2 text-sm font-bold text-slate-400">Click "Manage Questions" to start adding questions to this exam.</p>
+                    <h4 class="text-base font-semibold text-gray-800">No Questions Allocated</h4>
+                    <p class="mt-1 text-sm text-gray-500">Click "Manage Questions" to start adding questions to this exam.</p>
                 </div>
             </div>
         </div>

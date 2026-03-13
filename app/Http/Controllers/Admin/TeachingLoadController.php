@@ -24,9 +24,9 @@ class TeachingLoadController extends Controller
 
         $query = TeacherAssignment::with(['teacher', 'subject', 'schoolClass', 'prospectiveClass', 'academicSession']);
 
-        if ($request->filled('branch')) {
+        if ($request->filled('school_id')) {
             $query->whereHas('teacher', function ($q) use ($request) {
-                $q->where('branch', $request->branch);
+                $q->where('school_id', $request->school_id);
             });
         }
 
@@ -38,24 +38,24 @@ class TeachingLoadController extends Controller
             $query->where('school_class_id', $request->school_class_id);
         }
 
-        // Scope dropdowns by branch if filtered
-        $teacherQuery = User::role(['staff', 'subject_lead', 'admin']);
+        // Scope dropdowns by school if filtered
+        $teacherQuery = User::role(['examiner', 'super_admin']);
         $classQuery = SchoolClass::query();
         $batchQuery = \App\Models\ProspectiveClass::where('is_active', true);
 
-        if ($request->filled('branch')) {
-            $teacherQuery->where('branch', $request->branch);
-            $classQuery->where('branch', $request->branch);
-            $batchQuery->where('branch', $request->branch);
+        if ($request->filled('school_id')) {
+            $teacherQuery->where('school_id', $request->school_id);
+            $classQuery->where('school_id', $request->school_id);
+            $batchQuery->where('school_id', $request->school_id);
         }
 
         return Inertia::render('Admin/Users/TeachingLoads', [
             'assignments' => $query->latest()->paginate(15)->withQueryString(),
-            'teachers' => $teacherQuery->get(['id', 'name', 'school_id', 'branch']),
+            'teachers' => $teacherQuery->get(['id', 'name', 'school_id']),
             'subjects' => Subject::with(['topics' => fn ($q) => $q->select('id', 'subject_id', 'school_class_id')])->get(['id', 'name']),
-            'classes' => $classQuery->get(['id', 'name', 'branch']),
-            'batches' => $batchQuery->get(['id', 'name', 'branch']),
-            'filters' => $request->only(['user_id', 'school_class_id', 'branch']),
+            'classes' => $classQuery->get(['id', 'name', 'school_id']),
+            'batches' => $batchQuery->get(['id', 'name', 'school_id']),
+            'filters' => $request->only(['user_id', 'school_class_id', 'school_id']),
             'current_session' => $currentSession,
         ]);
     }
@@ -81,15 +81,15 @@ class TeachingLoadController extends Controller
         // Validate branch consistency
         if ($request->school_class_id) {
             $class = SchoolClass::findOrFail($request->school_class_id);
-            if ($class->branch !== $teacher->branch) {
-                return back()->withErrors(['school_class_id' => "This class belongs to the {$class->branch} branch, but the teacher is at {$teacher->branch}."]);
+            if ($class->school_id !== $teacher->school_id) {
+                return back()->withErrors(['school_class_id' => 'This class and teacher belong to different branches.']);
             }
         }
 
         if ($request->prospective_class_id) {
             $batch = \App\Models\ProspectiveClass::findOrFail($request->prospective_class_id);
-            if ($batch->branch !== $teacher->branch) {
-                return back()->withErrors(['prospective_class_id' => "This batch belongs to the {$batch->branch} branch, but the teacher is at {$teacher->branch}."]);
+            if ($batch->school_id !== $teacher->school_id) {
+                return back()->withErrors(['prospective_class_id' => 'This batch and teacher belong to different branches.']);
             }
         }
 

@@ -21,10 +21,10 @@ class SchoolClassController extends Controller
      */
     public function index(Request $request): Response
     {
-        $query = SchoolClass::query();
+        $query = SchoolClass::with('school');
 
-        if ($request->branch) {
-            $query->where('branch', $request->branch);
+        if ($request->school_id) {
+            $query->where('school_id', $request->school_id);
         }
 
         return Inertia::render('Admin/Classes/Index', [
@@ -33,7 +33,7 @@ class SchoolClassController extends Controller
                 'value' => $l->value,
                 'label' => Str::title($l->value),
             ]),
-            'filters' => $request->only(['branch']),
+            'filters' => $request->only(['school_id']),
         ]);
     }
 
@@ -45,10 +45,10 @@ class SchoolClassController extends Controller
         $request->validate([
             'name' => [
                 'required', 'string', 'max:255',
-                \Illuminate\Validation\Rule::unique('school_classes')->where(fn ($q) => $q->where('branch', $request->branch))
+                \Illuminate\Validation\Rule::unique('school_classes')->where(fn ($q) => $q->where('school_id', $request->school_id)),
             ],
             'level' => ['required', new Enum(ClassLevel::class)],
-            'branch' => ['required', 'string', \Illuminate\Validation\Rule::enum(\App\Enums\Branch::class)],
+            'school_id' => ['required', 'exists:schools,id'],
         ]);
 
         $dto = \App\DTOs\SchoolClassDTO::fromRequest($request);
@@ -66,11 +66,11 @@ class SchoolClassController extends Controller
             'name' => [
                 'required', 'string', 'max:255',
                 \Illuminate\Validation\Rule::unique('school_classes')
-                    ->where(fn ($q) => $q->where('branch', $request->branch))
-                    ->ignore($schoolClass->id)
+                    ->where(fn ($q) => $q->where('school_id', $request->school_id))
+                    ->ignore($schoolClass->id),
             ],
             'level' => ['required', new Enum(ClassLevel::class)],
-            'branch' => ['required', 'string', \Illuminate\Validation\Rule::enum(\App\Enums\Branch::class)],
+            'school_id' => ['required', 'exists:schools,id'],
         ]);
 
         $dto = \App\DTOs\SchoolClassDTO::fromRequest($request);

@@ -18,34 +18,43 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call(RolesAndPermissionsSeeder::class);
-
-        // Create Admin
-        $admin = User::factory()->create([
-            'name' => 'System Admin',
-            'username' => 'admin_root',
-            'email' => 'admin@chrisland.org',
-            'password' => bcrypt('password'),
+        $this->call([
+            RolesAndPermissionsSeeder::class,
+            SchoolSeeder::class,
         ]);
-        $admin->assignRole('admin');
 
-        // Create Staff
-        $staff = User::factory()->create([
-            'name' => 'Teacher Staff',
-            'username' => 'STAFF/2026/001',
-            'email' => 'staff@chrisland.org',
-            'password' => bcrypt('password'),
-        ]);
-        $staff->assignRole('staff');
+        // Create Super Admin
+        $admin = User::updateOrCreate(
+            ['username' => 'admin_root'],
+            [
+                'name' => 'System Admin',
+                'email' => 'admin@chrisland.org',
+                'password' => bcrypt('password'),
+            ]
+        );
+        $admin->syncRoles(['super_admin']);
 
-        // Create Student
-        $student = User::factory()->create([
-            'name' => 'John Student',
-            'username' => 'CHS/2026/001',
-            'email' => 'student@chrisland.org',
-            'password' => bcrypt('password'),
-        ]);
-        $student->assignRole('student');
+        // Create Examiner
+        $staff = User::updateOrCreate(
+            ['username' => 'STAFF/2026/001'],
+            [
+                'name' => 'Teacher Staff',
+                'email' => 'staff@chrisland.org',
+                'password' => bcrypt('password'),
+            ]
+        );
+        $staff->syncRoles(['examiner']);
+
+        // Create Candidate
+        $student = User::updateOrCreate(
+            ['username' => 'CHS/2026/001'],
+            [
+                'name' => 'John Candidate',
+                'email' => 'candidate@chrisland.org',
+                'password' => bcrypt('password'),
+            ]
+        );
+        $student->syncRoles(['candidate']);
 
         // Create Classes
         $classDefinitions = [
@@ -63,15 +72,17 @@ class DatabaseSeeder extends Seeder
             ['name' => 'SS 3', 'level' => 'secondary'],
         ];
 
-        $classes = collect();
         foreach ($classDefinitions as $class) {
-            $classes->push(SchoolClass::create([
-                'name' => $class['name'],
-                'slug' => Str::slug($class['name']),
-                'level' => $class['level'],
-            ]));
+            SchoolClass::updateOrCreate(
+                ['name' => $class['name']],
+                [
+                    'slug' => Str::slug($class['name']),
+                    'level' => $class['level'],
+                ]
+            );
         }
 
+        $classes = SchoolClass::all();
         $p1 = $classes->where('name', 'Primary 1')->first();
         $p2 = $classes->where('name', 'Primary 2')->first();
         $p3 = $classes->where('name', 'Primary 3')->first();
@@ -167,18 +178,22 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($curriculum as $subjectName => $topics) {
-            $subject = Subject::create([
-                'name' => $subjectName,
-                'slug' => Str::slug($subjectName),
-            ]);
+            $subject = Subject::updateOrCreate(
+                ['name' => $subjectName],
+                ['slug' => Str::slug($subjectName)]
+            );
 
             foreach ($topics as $topicData) {
-                Topic::create([
-                    'subject_id' => $subject->id,
-                    'school_class_id' => $topicData['class']->id,
-                    'name' => $topicData['name'],
-                    'slug' => Str::slug($topicData['name'].'-'.$topicData['class']->name),
-                ]);
+                if ($topicData['class']) {
+                    Topic::updateOrCreate(
+                        [
+                            'subject_id' => $subject->id,
+                            'school_class_id' => $topicData['class']->id,
+                            'name' => $topicData['name'],
+                        ],
+                        ['slug' => Str::slug($topicData['name'].'-'.$topicData['class']->name)]
+                    );
+                }
             }
         }
 
@@ -187,20 +202,24 @@ class DatabaseSeeder extends Seeder
         $algebra = $math->topics()->where('name', 'Quadratic Equations')->first();
 
         if ($algebra && $ss1) {
-            $question = Question::create([
-                'topic_id' => $algebra->id,
-                'school_class_id' => $ss1->id,
-                'content' => 'What is the discriminant of the quadratic equation ax² + bx + c = 0?',
-                'explanation' => 'The discriminant is the part of the quadratic formula under the square root: b² - 4ac.',
-                'type' => 'multiple_choice',
-                'difficulty' => 'medium',
-                'created_by' => $staff->id,
-            ]);
+            $question = Question::updateOrCreate(
+                [
+                    'topic_id' => $algebra->id,
+                    'school_class_id' => $ss1->id,
+                    'content' => 'What is the discriminant of the quadratic equation ax² + bx + c = 0?',
+                ],
+                [
+                    'explanation' => 'The discriminant is the part of the quadratic formula under the square root: b² - 4ac.',
+                    'type' => 'multiple_choice',
+                    'difficulty' => 'medium',
+                    'created_by' => $staff->id,
+                ]
+            );
 
-            Option::create(['question_id' => $question->id, 'content' => 'b² - 4ac', 'is_correct' => true]);
-            Option::create(['question_id' => $question->id, 'content' => 'b² + 4ac', 'is_correct' => false]);
-            Option::create(['question_id' => $question->id, 'content' => '2a \/ -b', 'is_correct' => false]);
-            Option::create(['question_id' => $question->id, 'content' => '4ac - b²', 'is_correct' => false]);
+            Option::updateOrCreate(['question_id' => $question->id, 'content' => 'b² - 4ac'], ['is_correct' => true]);
+            Option::updateOrCreate(['question_id' => $question->id, 'content' => 'b² + 4ac'], ['is_correct' => false]);
+            Option::updateOrCreate(['question_id' => $question->id, 'content' => '2a \/ -b'], ['is_correct' => false]);
+            Option::updateOrCreate(['question_id' => $question->id, 'content' => '4ac - b²'], ['is_correct' => false]);
         }
     }
 }

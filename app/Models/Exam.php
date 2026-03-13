@@ -14,13 +14,13 @@ class Exam extends Model
     use HasUlids;
 
     protected $fillable = [
+        'school_id',
         'subject_id',
         'school_class_id',
         'prospective_class_id',
         'academic_session_id',
         'created_by',
         'title',
-        'branch',
         'description',
         'instructions',
         'duration',
@@ -31,10 +31,17 @@ class Exam extends Model
         'settings',
     ];
 
+    /**
+     * Get the school this exam belongs to.
+     */
+    public function school(): BelongsTo
+    {
+        return $this->belongsTo(School::class);
+    }
+
     protected function casts(): array
     {
         return [
-            'branch' => \App\Enums\Branch::class,
             'type' => ExamType::class,
             'status' => ExamStatus::class,
             'settings' => 'array',

@@ -39,11 +39,11 @@ class ProspectiveClassController extends Controller
         $data = $request->validate([
             'name' => [
                 'required', 'string', 'max:255',
-                \Illuminate\Validation\Rule::unique('prospective_classes')->where(fn ($q) => $q->where('branch', $request->branch))
+                \Illuminate\Validation\Rule::unique('prospective_classes')->where(fn ($q) => $q->where('school_id', $request->school_id)),
             ],
             'description' => ['nullable', 'string'],
             'pass_percentage' => ['required', 'integer', 'min:0', 'max:100'],
-            'branch' => ['required', 'string', \Illuminate\Validation\Rule::enum(\App\Enums\Branch::class)],
+            'school_id' => ['required', 'exists:schools,id'],
         ]);
 
         $this->classService->createClass($data);
@@ -60,13 +60,13 @@ class ProspectiveClassController extends Controller
             'name' => [
                 'required', 'string', 'max:255',
                 \Illuminate\Validation\Rule::unique('prospective_classes')
-                    ->where(fn ($q) => $q->where('branch', $request->branch))
-                    ->ignore($prospectiveClass->id)
+                    ->where(fn ($q) => $q->where('school_id', $request->school_id))
+                    ->ignore($prospectiveClass->id),
             ],
             'description' => ['nullable', 'string'],
             'pass_percentage' => ['required', 'integer', 'min:0', 'max:100'],
             'is_active' => ['required', 'boolean'],
-            'branch' => ['required', 'string', \Illuminate\Validation\Rule::enum(\App\Enums\Branch::class)],
+            'school_id' => ['required', 'exists:schools,id'],
         ]);
 
         $this->classService->updateClass($prospectiveClass, $data);

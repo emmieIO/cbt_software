@@ -16,13 +16,6 @@ class User extends Authenticatable
     use GeneratesApplicationId, HasFactory, HasRoles, HasUlids, Notifiable;
 
     /**
-     * The guard name for Spatie permissions.
-     *
-     * @var string
-     */
-    protected $guard_name = 'web';
-
-    /**
      * The attributes that are mass assignable.
      *
      * @var list<string>
@@ -35,10 +28,17 @@ class User extends Authenticatable
         'school_id',
         'school_class_id',
         'prospective_class_id',
-        'branch',
         'status',
         'is_active',
     ];
+
+    /**
+     * Get the school the user belongs to.
+     */
+    public function school(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(School::class);
+    }
 
     /**
      * Get the class the user (student) belongs to.
@@ -110,7 +110,6 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
-            'branch' => \App\Enums\Branch::class,
         ];
     }
 }

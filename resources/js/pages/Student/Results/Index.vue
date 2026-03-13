@@ -25,8 +25,8 @@ defineProps<{
             <!-- Page Header -->
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-2xl font-black tracking-tight text-slate-900">Academic History</h1>
-                    <p class="mt-1 text-sm font-bold tracking-widest text-slate-400 uppercase italic">
+                    <h1 class="text-2xl font-semibold tracking-tight text-slate-900">Academic History</h1>
+                    <p class="mt-1 text-sm font-semibold tracking-widest text-slate-400 uppercase ">
                         Performance records for all completed assessments
                     </p>
                 </div>
@@ -35,9 +35,9 @@ defineProps<{
             <!-- Results Grid -->
             <div
                 v-if="attempts.length === 0"
-                class="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 bg-white py-24 text-center"
+                class="flex flex-col items-center justify-center bg-white border border-gray-200 shadow-sm rounded-xl py-24 text-center"
             >
-                <div class="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-slate-50 text-slate-300">
+                <div class="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-gray-50 text-slate-300">
                     <svg class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path
                             stroke-linecap="round"
@@ -47,26 +47,26 @@ defineProps<{
                         />
                     </svg>
                 </div>
-                <h3 class="text-xl font-black text-slate-400">No results found.</h3>
-                <p class="mt-2 text-sm font-bold tracking-widest text-slate-400 uppercase">You haven't completed any assessments yet.</p>
+                <h3 class="text-xl font-semibold text-slate-400">No results found.</h3>
+                <p class="mt-2 text-sm font-semibold tracking-widest text-slate-400 uppercase">You haven't completed any assessments yet.</p>
             </div>
 
             <div v-else class="grid grid-cols-1 gap-6">
                 <div
                     v-for="attempt in attempts"
                     :key="attempt.id"
-                    class="group relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-8 shadow-sm transition-all hover:border-primary/20 hover:shadow-2xl"
+                    class="group relative overflow-hidden bg-white border border-gray-200 shadow-sm rounded-xl p-8 transition-all hover:shadow-md"
                 >
                     <div class="relative z-10 flex items-center justify-between">
                         <div class="flex items-center gap-6">
-                            <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-2xl font-black text-white">
+                            <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-2xl font-semibold text-white">
                                 {{ attempt.score }}
                             </div>
                             <div>
-                                <h4 class="text-xl leading-tight font-black text-slate-800 transition-colors group-hover:text-primary">
+                                <h4 class="text-xl leading-tight font-semibold text-slate-800 transition-colors group-hover:text-primary">
                                     {{ attempt.exam.title }}
                                 </h4>
-                                <p class="mt-1 text-xs font-bold tracking-widest text-slate-400 uppercase">
+                                <p class="mt-1 text-xs font-semibold tracking-widest text-slate-400 uppercase">
                                     {{ attempt.exam.subject?.name || 'Multi-Subject' }} • Submitted on {{ new Date(attempt.submitted_at).toLocaleDateString() }}
                                 </p>
                             </div>
@@ -74,7 +74,7 @@ defineProps<{
 
                         <Link
                             :href="`/student/exams/${attempt.id}/result`"
-                            class="rounded-xl border-2 border-slate-100 px-6 py-3 text-[10px] font-black tracking-widest text-slate-600 uppercase transition-all hover:border-slate-900 hover:bg-slate-900 hover:text-white active:scale-95"
+                            class="py-2 px-3 inline-flex items-center gap-x-2 text-xs font-semibold rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 uppercase tracking-widest"
                         >
                             View Details
                         </Link>

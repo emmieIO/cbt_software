@@ -7,10 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Models\AcademicSession;
 use App\Models\Exam;
 use App\Services\ExamService;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Inertia\Response;
 
 class ExamController extends Controller
 {
@@ -21,18 +19,18 @@ class ExamController extends Controller
     /**
      * List all exams the teacher is authorized to see.
      */
-    public function index(Request $request): Response
+    public function index(Request $request): \Inertia\Response
     {
         $user = $request->user();
         $query = Exam::with(['subject', 'schoolClass', 'academicSession', 'prospectiveClass'])
             ->withCount('questions');
 
-        if ($request->branch) {
-            $query->where('branch', $request->branch);
+        if ($request->school_id) {
+            $query->where('school_id', $request->school_id);
         }
 
         // Scoping: Staff only see their own exams or exams for their assigned loads
-        if (! $user->hasRole('admin')) {
+        if (! $user->can('sys:manage_settings')) {
             $assignments = $user->currentAssignments()->get();
             $assignedClassIds = $assignments->pluck('school_class_id')->filter()->unique();
             $assignedSubjectIds = $assignments->pluck('subject_id')->filter()->unique();
@@ -61,14 +59,14 @@ class ExamController extends Controller
 
         return Inertia::render('Staff/Exams/Index', [
             'exams' => $query->latest()->paginate(10)->withQueryString(),
-            'filters' => $request->only(['status', 'type', 'branch']),
+            'filters' => $request->only(['status', 'type', 'school_id']),
         ]);
     }
 
     /**
      * Show create form with assigned classes/subjects.
      */
-    public function create(Request $request): Response
+    public function create(Request $request): \Inertia\Response
     {
         $user = $request->user();
 
@@ -92,12 +90,16 @@ class ExamController extends Controller
     /**
      * Store a new exam.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): \Illuminate\Http\RedirectResponse
     {
         $request->validate([
             'title' => ['required', 'string', 'max:255'],
-            'branch' => ['required', 'string', \Illuminate\Validation\Rule::enum(\App\Enums\Branch::class)],
-            'subject_id' => ['required_unless:type,entrance', 'nullable', 'exists:subjects,id'],
+            'school_id' => ['required', 'exists:schools,id'],
+            'subject_id' => [
+                'required_unless:type,entrance',
+                'nullable',
+                'exists:subjects,id',
+            ],
             'school_class_id' => ['required', 'exists:school_classes,id'],
             'prospective_class_id' => ['required_if:type,entrance', 'nullable', 'exists:prospective_classes,id'],
             'duration' => ['required', 'integer', 'min:1'],
@@ -126,7 +128,7 @@ class ExamController extends Controller
     /**
      * Show exam details.
      */
-    public function show(Exam $exam): Response
+    public function show(Exam $exam): \Inertia\Response
     {
         $exam->load(['subject', 'schoolClass', 'prospectiveClass', 'questions']);
 
@@ -138,7 +140,7 @@ class ExamController extends Controller
     /**
      * Show the question management page for an exam.
      */
-    public function manageQuestions(Exam $exam): Response
+    public function manageQuestions(Exam $exam): \Inertia\Response
     {
         $exam->load(['subject', 'schoolClass', 'questions']);
 
@@ -154,7 +156,7 @@ class ExamController extends Controller
     /**
      * Update questions for an exam.
      */
-    public function updateQuestions(Request $request, Exam $exam): RedirectResponse
+    public function updateQuestions(Request $request, Exam $exam): \Illuminate\Http\RedirectResponse
     {
         $request->validate([
             'question_ids' => ['required', 'array'],
@@ -170,25 +172,21 @@ class ExamController extends Controller
     /**
      * Auto-select questions using AI/Random logic.
      */
-    public function aiSelectQuestions(Request $request, Exam $exam): RedirectResponse
+    public function aiSelectQuestions(Request $request, Exam $exam): \Illuminate\Http\RedirectResponse
     {
-
         $request->validate([
-
             'count' => ['required', 'integer', 'min:1', 'max:100'],
-
         ]);
 
         $count = $this->examService->autoSelectQuestions($exam, $request->count);
 
         return back()->with('success', 'AI has balanced and selected '.$count.' questions following the biennial rotation policy.');
-
     }
 
     /**
      * Show the edit form.
      */
-    public function edit(Request $request, Exam $exam): Response
+    public function edit(Request $request, Exam $exam): \Inertia\Response
     {
         $user = $request->user();
 
@@ -213,12 +211,16 @@ class ExamController extends Controller
     /**
      * Update the exam.
      */
-    public function update(Request $request, Exam $exam): RedirectResponse
+    public function update(Request $request, Exam $exam): \Illuminate\Http\RedirectResponse
     {
         $request->validate([
             'title' => ['required', 'string', 'max:255'],
-            'branch' => ['required', 'string', \Illuminate\Validation\Rule::enum(\App\Enums\Branch::class)],
-            'subject_id' => ['required_unless:type,entrance', 'nullable', 'exists:subjects,id'],
+            'school_id' => ['required', 'exists:schools,id'],
+            'subject_id' => [
+                'required_unless:type,entrance',
+                'nullable',
+                'exists:subjects,id',
+            ],
             'school_class_id' => ['required_unless:type,entrance', 'nullable', 'exists:school_classes,id'],
             'prospective_class_id' => ['required_if:type,entrance', 'nullable', 'exists:prospective_classes,id'],
             'duration' => ['required', 'integer', 'min:1'],
@@ -235,7 +237,7 @@ class ExamController extends Controller
 
         \Illuminate\Support\Facades\DB::transaction(function () use ($request, $exam) {
             $data = $request->only([
-                'title', 'branch', 'subject_id', 'school_class_id', 'prospective_class_id',
+                'title', 'school_id', 'subject_id', 'school_class_id', 'prospective_class_id',
                 'duration', 'type', 'start_time', 'end_time', 'status',
             ]);
 
@@ -262,44 +264,35 @@ class ExamController extends Controller
     /**
      * Delete the exam.
      */
-    public function destroy(Exam $exam): RedirectResponse
+    public function destroy(Exam $exam): \Illuminate\Http\RedirectResponse
     {
-
         // Safety: Prevent deletion if there are already attempts
-
         if ($exam->attempts()->exists()) {
-
             return back()->with('error', 'Cannot delete an exam that already has student attempts.');
-
         }
 
         $exam->questions()->detach();
-
         $exam->delete();
 
         return redirect()->route('staff.exams.index')
-
             ->with('success', 'Exam deleted successfully.');
-
     }
 
     /**
      * Display a listing of exam results.
      */
-    public function results(Request $request): Response
+    public function results(Request $request): \Inertia\Response
     {
-
         $user = $request->user();
 
         $query = Exam::with(['subject', 'schoolClass', 'prospectiveClass'])
-
             ->withCount('attempts');
 
-        if ($request->branch) {
-            $query->where('branch', $request->branch);
+        if ($request->school_id) {
+            $query->where('school_id', $request->school_id);
         }
 
-        if (! $user->hasRole('admin')) {
+        if (! $user->can('sys:manage_settings')) {
             $assignments = $user->currentAssignments()->get();
             $assignedClassIds = $assignments->pluck('school_class_id')->filter()->unique();
             $assignedSubjectIds = $assignments->pluck('subject_id')->filter()->unique();
@@ -326,48 +319,56 @@ class ExamController extends Controller
         }
 
         return Inertia::render('Staff/Results/Index', [
-
             'exams' => $query->latest()->paginate(10)->withQueryString(),
-            'filters' => $request->only(['branch']),
-
+            'filters' => $request->only(['school_id']),
         ]);
-
     }
 
     /**
      * Show detailed results for a specific exam.
      */
-    public function showResults(Exam $exam): Response
+    public function showResults(Exam $exam): \Inertia\Response
     {
-
         $exam->load(['subject', 'schoolClass', 'prospectiveClass']);
 
         $attempts = $exam->attempts()
-
             ->with(['user.schoolClass'])
-
             ->latest('submitted_at')
-
             ->get();
 
         return Inertia::render('Staff/Results/Show', [
-
             'exam' => $exam,
-
             'attempts' => $attempts,
-
             'totalQuestions' => $exam->questions()->count(),
-
         ]);
+    }
 
+    /**
+     * Show specific student result details.
+     */
+    public function showStudentResult(Exam $exam, \App\Models\User $student): \Inertia\Response
+    {
+        $exam->load(['subject', 'schoolClass']);
+
+        $attempt = $exam->attempts()
+            ->where('user_id', $student->id)
+            ->with(['answers.question.options', 'answers.option'])
+            ->firstOrFail();
+
+        return Inertia::render('Staff/Results/StudentDetails', [
+            'exam' => $exam,
+            'student' => $student,
+            'attempt' => $attempt,
+        ]);
     }
 
     /**
      * Display the hard copy examination paper.
      */
-    public function showHardCopy(Exam $exam): \Illuminate\Contracts\View\View
+    public function showHardCopy(Exam $exam): \Illuminate\View\View
     {
         $exam->load([
+            'school',
             'subject',
             'schoolClass',
             'prospectiveClass',
@@ -385,9 +386,10 @@ class ExamController extends Controller
     /**
      * Display the examination answer sheet.
      */
-    public function showAnswerSheet(Exam $exam): \Illuminate\Contracts\View\View
+    public function showAnswerSheet(Exam $exam): \Illuminate\View\View
     {
         $exam->load([
+            'school',
             'subject',
             'schoolClass',
             'prospectiveClass',
@@ -405,9 +407,10 @@ class ExamController extends Controller
     /**
      * Display the official results printout for an exam.
      */
-    public function showResultsPrint(Exam $exam): \Illuminate\Contracts\View\View
+    public function showResultsPrint(Exam $exam): \Illuminate\View\View
     {
         $exam->load([
+            'school',
             'subject',
             'schoolClass',
             'prospectiveClass',

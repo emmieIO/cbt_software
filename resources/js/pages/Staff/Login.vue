@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { authenticate } from '@/actions/App/Http/Controllers/Staff/StaffAuthController';
+import { store } from '@/actions/App/Http/Controllers/Staff/StaffAuthController';
 
 const form = useForm({
     login_id: '',
@@ -9,7 +9,7 @@ const form = useForm({
 });
 
 const submit = () => {
-    form.post(authenticate().url, {
+    form.post(store().url, {
         onFinish: () => form.reset('password'),
     });
 };
@@ -18,49 +18,49 @@ const submit = () => {
 <template>
     <Head title="Staff Login" />
 
-    <div class="flex min-h-screen items-center justify-center bg-[#F8F9FB] p-6 font-sans">
-        <div class="w-full max-w-md space-y-8 rounded-2xl border border-slate-100 bg-white p-8 shadow-xl md:p-12">
+    <div class="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6">
+        <div class="w-full max-w-md bg-white border border-gray-200 rounded-xl shadow-sm p-8 md:p-10">
             <!-- Header -->
             <div class="flex flex-col items-center text-center">
                 <Link href="/">
                     <img
                         src="/assets/img/chrisland-school-logo.png"
                         alt="Chrisland School Logo"
-                        class="h-20 w-auto object-contain transition-transform hover:scale-105"
+                        class="h-16 w-auto object-contain mb-6"
                     />
                 </Link>
-                <h1 class="mt-6 text-2xl font-black tracking-tight text-slate-900 uppercase">Staff Portal</h1>
-                <p class="mt-2 text-sm font-bold tracking-widest text-slate-400 uppercase">Educators & Academic Admin</p>
+                <h1 class="text-2xl font-semibold text-gray-800">Staff Portal</h1>
+                <p class="mt-1 text-sm text-gray-500">Educators & Academic Admin</p>
             </div>
 
             <!-- Login Form -->
-            <form @submit.prevent="submit" class="mt-8 space-y-6">
+            <form @submit.prevent="submit" class="mt-8 space-y-5">
                 <div class="space-y-4">
                     <div>
-                        <label for="username" class="mb-2 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Username / ID</label>
+                        <label for="username" class="block text-sm font-medium text-gray-700 mb-2">Username / ID</label>
                         <input
                             id="username"
                             v-model="form.login_id"
                             type="text"
                             required
                             autofocus
-                            class="block w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary/10"
+                            class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-primary focus:ring-primary disabled:opacity-50 disabled:pointer-events-none bg-gray-50"
                             placeholder="Enter Staff ID or Username"
                         />
-                        <div v-if="form.errors.login_id" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.login_id }}</div>
+                        <div v-if="form.errors.login_id" class="mt-1 text-xs text-red-600">{{ form.errors.login_id }}</div>
                     </div>
 
                     <div>
-                        <label for="password" class="mb-2 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Password</label>
+                        <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
                         <input
                             id="password"
                             v-model="form.password"
                             type="password"
                             required
-                            class="block w-full rounded-xl border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary/10"
+                            class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-primary focus:ring-primary disabled:opacity-50 disabled:pointer-events-none bg-gray-50"
                             placeholder="••••••••"
                         />
-                        <div v-if="form.errors.password" class="mt-1 text-xs font-bold text-red-500">{{ form.errors.password }}</div>
+                        <div v-if="form.errors.password" class="mt-1 text-xs text-red-600">{{ form.errors.password }}</div>
                     </div>
                 </div>
 
@@ -70,18 +70,18 @@ const submit = () => {
                             id="remember"
                             v-model="form.remember"
                             type="checkbox"
-                            class="h-5 w-5 rounded border-slate-300 text-primary transition-all focus:ring-primary/20"
+                            class="shrink-0 mt-0.5 border-gray-200 rounded text-primary focus:ring-primary"
                         />
-                        <label for="remember" class="ml-3 text-sm font-bold text-slate-500">Stay signed in</label>
+                        <label for="remember" class="ml-3 text-sm text-gray-600">Stay signed in</label>
                     </div>
                 </div>
 
                 <button
                     type="submit"
                     :disabled="form.processing"
-                    class="flex w-full items-center justify-center rounded-xl bg-primary py-5 text-sm font-black tracking-[0.2em] text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+                    class="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:pointer-events-none"
                 >
-                    <span v-if="form.processing" class="mr-3 h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white"></span>
+                    <span v-if="form.processing" class="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-white rounded-full"></span>
                     Sign Into Portal
                 </button>
             </form>
@@ -89,7 +89,7 @@ const submit = () => {
             <div class="mt-8 text-center">
                 <Link
                     href="/"
-                    class="text-[10px] font-black tracking-widest text-slate-400 uppercase underline underline-offset-8 transition-colors hover:text-primary"
+                    class="text-xs font-medium text-gray-500 hover:text-primary transition-colors"
                 >
                     &larr; Return to main site
                 </Link>

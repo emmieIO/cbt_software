@@ -8,10 +8,12 @@ Route::middleware(['guest'])->group(function () {
     Route::post('/login', [AdminController::class, 'store'])->name('login.store');
 });
 
-Route::middleware(['auth:admin', 'role_or_permission:admin|manage settings|manage school setup|manage curriculum|manage users|manage prospective batches|manage admissions'])->group(function () {
+// Primary Admin Portal Protection: Require super_admin role
+Route::middleware(['auth', 'can:admin:manage_users'])->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
 
-    Route::prefix('school-setup')->middleware('permission:manage school setup')->group(function () {
+    // 01. School Architecture (Academic Sessions, Classes, Batches)
+    Route::prefix('school-setup')->middleware('permission:admin:manage_setup')->group(function () {
         Route::name('classes.')->group(function () {
             Route::get('/classes', [\App\Http\Controllers\Admin\SchoolClassController::class, 'index'])->name('index');
             Route::post('/classes', [\App\Http\Controllers\Admin\SchoolClassController::class, 'store'])->name('store');
@@ -19,7 +21,7 @@ Route::middleware(['auth:admin', 'role_or_permission:admin|manage settings|manag
             Route::delete('/classes/{schoolClass}', [\App\Http\Controllers\Admin\SchoolClassController::class, 'destroy'])->name('destroy');
         });
 
-        Route::name('prospective-classes.')->middleware('permission:manage prospective batches')->group(function () {
+        Route::name('prospective-classes.')->middleware('permission:admin:manage_batches')->group(function () {
             Route::get('/prospective-batches', [\App\Http\Controllers\Admin\ProspectiveClassController::class, 'index'])->name('index');
             Route::post('/prospective-batches', [\App\Http\Controllers\Admin\ProspectiveClassController::class, 'store'])->name('store');
             Route::put('/prospective-batches/{prospectiveClass}', [\App\Http\Controllers\Admin\ProspectiveClassController::class, 'update'])->name('update');
@@ -35,7 +37,8 @@ Route::middleware(['auth:admin', 'role_or_permission:admin|manage settings|manag
         });
     });
 
-    Route::prefix('curriculum')->middleware('permission:manage curriculum')->group(function () {
+    // 02. Academic Curriculum
+    Route::prefix('curriculum')->middleware('permission:admin:manage_curriculum')->group(function () {
         Route::get('/subjects', [\App\Http\Controllers\Admin\SubjectController::class, 'index'])->name('subjects.index');
         Route::post('/subjects', [\App\Http\Controllers\Admin\SubjectController::class, 'store'])->name('subjects.store');
         Route::put('/subjects/{subject}', [\App\Http\Controllers\Admin\SubjectController::class, 'update'])->name('subjects.update');
@@ -47,17 +50,28 @@ Route::middleware(['auth:admin', 'role_or_permission:admin|manage settings|manag
         Route::delete('/topics/{topic}', [\App\Http\Controllers\Admin\TopicController::class, 'destroy'])->name('topics.destroy');
     });
 
-    Route::prefix('rbac')->middleware('permission:manage settings')->group(function () {
+    // 03. Global Governance (RBAC)
+    Route::prefix('rbac')->middleware('permission:sys:manage_settings')->group(function () {
         Route::get('/roles', [\App\Http\Controllers\Admin\RoleController::class, 'index'])->name('roles.index');
         Route::post('/roles', [\App\Http\Controllers\Admin\RoleController::class, 'store'])->name('roles.store');
         Route::put('/roles/{role}', [\App\Http\Controllers\Admin\RoleController::class, 'update'])->name('roles.update');
         Route::delete('/roles/{role}', [\App\Http\Controllers\Admin\RoleController::class, 'destroy'])->name('roles.destroy');
 
         Route::get('/permissions', [\App\Http\Controllers\Admin\PermissionController::class, 'index'])->name('permissions.index');
+        Route::get('/permissions/overview', \App\Http\Controllers\Admin\PermissionOverviewController::class)->name('permissions.overview');
     });
 
+    // 04. Multi-Campus Establishment (Super Admin Only)
+    Route::prefix('super-admin')->middleware('permission:sys:manage_schools')->group(function () {
+        Route::get('/branches', [\App\Http\Controllers\Admin\SchoolController::class, 'index'])->name('schools.index');
+        Route::post('/branches', [\App\Http\Controllers\Admin\SchoolController::class, 'store'])->name('schools.store');
+        Route::put('/branches/{school}', [\App\Http\Controllers\Admin\SchoolController::class, 'update'])->name('schools.update');
+        Route::delete('/branches/{school}', [\App\Http\Controllers\Admin\SchoolController::class, 'destroy'])->name('schools.destroy');
+    });
+
+    // 05. Personnel Management
     Route::prefix('users')->group(function () {
-        Route::middleware('permission:manage users')->group(function () {
+        Route::middleware('permission:admin:manage_users')->group(function () {
             Route::get('/staff', [\App\Http\Controllers\Admin\StaffController::class, 'index'])->name('staff.index');
             Route::post('/staff', [\App\Http\Controllers\Admin\StaffController::class, 'store'])->name('staff.store');
             Route::put('/staff/{staff}', [\App\Http\Controllers\Admin\StaffController::class, 'update'])->name('staff.update');
@@ -75,13 +89,13 @@ Route::middleware(['auth:admin', 'role_or_permission:admin|manage settings|manag
             Route::delete('/teaching-loads/{assignment}', [\App\Http\Controllers\Admin\TeachingLoadController::class, 'destroy'])->name('teaching-loads.destroy');
         });
 
-        Route::name('promotion.')->group(function () {
+        Route::name('promotion.')->middleware('permission:admin:manage_enrollment')->group(function () {
             Route::get('/promotion', [\App\Http\Controllers\Admin\PromotionController::class, 'index'])->name('index');
             Route::get('/promotion/students/{schoolClass}', [\App\Http\Controllers\Admin\PromotionController::class, 'students'])->name('students');
             Route::post('/promotion/process', [\App\Http\Controllers\Admin\PromotionController::class, 'promote'])->name('process');
         });
 
-        Route::middleware('permission:manage admissions')->group(function () {
+        Route::middleware('permission:admin:manage_admissions')->group(function () {
             Route::get('/entrance', [\App\Http\Controllers\Admin\EntranceController::class, 'index'])->name('entrance.index');
             Route::post('/entrance', [\App\Http\Controllers\Admin\EntranceController::class, 'store'])->name('entrance.store');
             Route::put('/entrance/{candidate}', [\App\Http\Controllers\Admin\EntranceController::class, 'update'])->name('entrance.update');

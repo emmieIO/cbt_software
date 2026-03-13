@@ -21,6 +21,7 @@ class Question extends Model
         'school_class_id',
         'prospective_class_id',
         'content',
+        'image_path',
         'explanation',
         'type',
         'difficulty',

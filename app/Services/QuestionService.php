@@ -17,7 +17,7 @@ class QuestionService
      */
     public function getAuthorizedContext(User $user, bool $withTopics = false, bool $strict = false): array
     {
-        $isAdmin = $user->hasRole('admin');
+        $isAdmin = $user->can('bank:manage');
 
         if ($isAdmin) {
             $subjectsQuery = Subject::query();
@@ -71,6 +71,27 @@ class QuestionService
     }
 
     /**
+     * Create multiple questions in a single transaction.
+     *
+     * @param  QuestionDTO[]  $dtos
+     */
+    public function createBatchQuestions(array $dtos, string $userId): void
+    {
+        DB::transaction(function () use ($dtos, $userId) {
+            foreach ($dtos as $dto) {
+                $question = Question::create([
+                    ...$dto->toArray(),
+                    'created_by' => $userId,
+                ]);
+
+                foreach ($dto->options as $optionDto) {
+                    $question->options()->create($optionDto->toArray());
+                }
+            }
+        });
+    }
+
+    /**
      * Create a batch of questions with their options.
      *
      * @param  QuestionDTO[]  $dtos
@@ -90,6 +111,7 @@ class QuestionService
                     'topic_id' => $dto->topic_id,
                     'school_class_id' => $dto->school_class_id,
                     'content' => $dto->content,
+                    'image_path' => $dto->image_path,
                     'explanation' => $dto->explanation,
                     'type' => $dto->type instanceof \BackedEnum ? $dto->type->value : $dto->type,
                     'difficulty' => $dto->difficulty instanceof \BackedEnum ? $dto->difficulty->value : $dto->difficulty,
@@ -156,7 +178,7 @@ class QuestionService
             ->with(['topic.subject', 'schoolClass', 'prospectiveClass', 'options', 'creator']);
 
         // Scope to teacher's assignments if they aren't an admin
-        if (! $user->hasRole('admin')) {
+        if (! $user->can('bank:manage')) {
             $assignments = $user->currentAssignments()->get();
 
             if ($assignments->isEmpty()) {

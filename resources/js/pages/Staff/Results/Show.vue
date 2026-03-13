@@ -34,7 +34,7 @@ const props = defineProps<{
 }>();
 
 const page = usePage();
-const isAdmin = computed(() => (page.props.auth.user as any).roles.includes('admin'));
+const isAdmin = computed(() => (page.props.auth.user as any).permissions.includes('sys:manage_settings'));
 const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
 
 const getPercentage = (score: number) => {
@@ -101,24 +101,24 @@ const stats = computed(() => {
 
         <div class="space-y-10">
             <!-- Header -->
-            <div class="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+            <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
-                    <Link href="/staff/exams/results" class="mb-2 inline-flex items-center gap-2 text-[10px] font-black tracking-widest text-primary uppercase hover:underline">
-                        <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                    <Link href="/staff/exams/results" class="mb-2 inline-flex items-center gap-2 text-xs font-medium text-primary hover:underline">
+                        <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
                         Back to Results
                     </Link>
-                    <h1 class="text-3xl font-black tracking-tight text-slate-900">{{ exam.title }}</h1>
-                    <p class="mt-1 text-sm font-bold tracking-widest text-slate-400 uppercase">{{ exam.subject?.name || 'Multi-Subject' }} • Performance Analytics</p>
+                    <h1 class="text-2xl font-semibold text-gray-800">{{ exam.title }}</h1>
+                    <p class="mt-1 text-sm text-gray-500">{{ exam.subject?.name || 'Multi-Subject' }} • Performance Analytics</p>
                 </div>
 
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-x-2">
                     <a
                         :href="resultsPrintAction(exam.id).url"
                         target="_blank"
-                        class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3 text-[10px] font-black tracking-widest text-slate-600 uppercase shadow-sm transition-all hover:bg-slate-50 active:scale-95"
+                        class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-50"
                     >
-                        <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                         </svg>
                         Print Report
                     </a>
@@ -126,189 +126,202 @@ const stats = computed(() => {
             </div>
 
             <!-- Analytics Grid -->
-            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                <div class="rounded-2xl border border-slate-100 bg-white p-8 shadow-sm transition-all hover:shadow-md">
-                    <span class="text-[10px] font-black tracking-widest text-slate-400 uppercase">Average Score</span>
-                    <div class="mt-4 flex items-baseline gap-2">
-                        <span class="text-4xl font-black tracking-tighter text-slate-900">{{ stats.avg }}</span>
-                        <span class="text-lg font-bold text-primary">{{ stats.avgPerc }}%</span>
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div class="flex flex-col bg-white border border-gray-200 shadow-sm rounded-xl p-4 md:p-5">
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase">Average Score</h3>
+                    <div class="mt-2 flex items-baseline gap-2">
+                        <span class="text-3xl font-semibold text-gray-800">{{ stats.avg }}</span>
+                        <span class="text-sm font-medium text-primary">{{ stats.avgPerc }}%</span>
                     </div>
                 </div>
 
-                <div class="rounded-2xl border border-slate-100 bg-white p-8 shadow-sm transition-all hover:shadow-md">
-                    <span class="text-[10px] font-black tracking-widest text-slate-400 uppercase">Pass Rate</span>
-                    <div class="mt-4 flex items-baseline gap-2">
-                        <span class="text-4xl font-black tracking-tighter" :class="stats.passRate >= 70 ? 'text-green-600' : 'text-orange-500'">{{ stats.passRate }}%</span>
-                        <div class="h-2 w-2 rounded-full" :class="stats.passRate >= 70 ? 'bg-green-500' : 'bg-orange-500'"></div>
+                <div class="flex flex-col bg-white border border-gray-200 shadow-sm rounded-xl p-4 md:p-5">
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase">Pass Rate</h3>
+                    <div class="mt-2 flex items-baseline gap-2">
+                        <span class="text-3xl font-semibold" :class="stats.passRate >= 70 ? 'text-teal-600' : 'text-orange-500'">{{ stats.passRate }}%</span>
+                        <div class="h-2 w-2 rounded-full" :class="stats.passRate >= 70 ? 'bg-teal-500' : 'bg-orange-500'"></div>
                     </div>
                 </div>
 
-                <div class="rounded-2xl border border-slate-100 bg-white p-8 shadow-sm transition-all hover:shadow-md">
-                    <span class="text-[10px] font-black tracking-widest text-slate-400 uppercase">Top Score</span>
-                    <div class="mt-4 flex items-baseline gap-1">
-                        <span class="text-4xl font-black tracking-tighter text-slate-900">{{ stats.top }}</span>
-                        <span class="text-sm font-bold text-slate-300">/ {{ totalQuestions }}</span>
+                <div class="flex flex-col bg-white border border-gray-200 shadow-sm rounded-xl p-4 md:p-5">
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase">Top Score</h3>
+                    <div class="mt-2 flex items-baseline gap-1">
+                        <span class="text-3xl font-semibold text-gray-800">{{ stats.top }}</span>
+                        <span class="text-sm text-gray-400">/ {{ totalQuestions }}</span>
                     </div>
                 </div>
 
-                <div class="rounded-2xl border border-slate-100 bg-white p-8 shadow-sm transition-all hover:shadow-md" :class="{'ring-2 ring-red-100 bg-red-50/30': stats.alerts > 0}">
-                    <span class="text-[10px] font-black tracking-widest text-slate-400 uppercase">Integrity Alerts</span>
-                    <div class="mt-4 flex items-baseline gap-2">
-                        <span class="text-4xl font-black tracking-tighter" :class="stats.alerts > 0 ? 'text-red-600' : 'text-slate-900'">{{ stats.alerts }}</span>
-                        <span v-if="stats.alerts > 0" class="text-[10px] font-bold text-red-400 uppercase">Violations</span>
+                <div class="flex flex-col bg-white border border-gray-200 shadow-sm rounded-xl p-4 md:p-5" :class="{'bg-red-50 border-red-200': stats.alerts > 0}">
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase" :class="stats.alerts > 0 ? 'text-red-600' : 'text-gray-500'">Integrity Alerts</h3>
+                    <div class="mt-2 flex items-baseline gap-2">
+                        <span class="text-3xl font-semibold" :class="stats.alerts > 0 ? 'text-red-600' : 'text-gray-800'">{{ stats.alerts }}</span>
+                        <span v-if="stats.alerts > 0" class="text-xs font-medium text-red-500">Violations</span>
                     </div>
                 </div>
             </div>
 
             <!-- Detailed Submissions Table -->
-            <div class="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-xl">
-                <div class="bg-slate-50/50 px-8 py-5 border-b border-slate-100">
-                    <h3 class="text-xs font-black tracking-[0.2em] text-slate-500 uppercase">Candidate Submissions • {{ attempts.length }} Records</h3>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full border-collapse text-left">
-                        <thead>
-                            <tr class="bg-[#FBFBFC]">
-                                <th class="px-8 py-5 text-[9px] font-black tracking-widest text-slate-400 uppercase">Student Personnel</th>
-                                <th class="px-6 py-5 text-center text-[9px] font-black tracking-widest text-slate-400 uppercase">Performance</th>
-                                <th class="px-6 py-5 text-[9px] font-black tracking-widest text-slate-400 uppercase">Security Status</th>
-                                <th class="px-8 py-5 text-right text-[9px] font-black tracking-widest text-slate-400 uppercase">Submitted At</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-50">
-                            <tr v-for="attempt in attempts" :key="attempt.id" class="group transition-all hover:bg-[#F8F9FB]" :class="{'bg-red-50/20': !!attempt.metadata?.termination_reason}">
-                                <td class="px-8 py-6">
-                                    <div class="flex flex-col">
-                                        <span class="text-sm font-black text-slate-800 group-hover:text-primary transition-colors">{{ attempt.user.name }}</span>
-                                        <span class="text-[10px] font-bold tracking-tighter text-slate-400 uppercase">
-                                            {{ attempt.user.school_id || 'NOT ASSIGNED' }} • {{ attempt.user.school_class?.name || 'CANDIDATE' }}
-                                        </span>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-6">
-                                    <div class="flex flex-col items-center">
-                                        <div class="flex items-baseline gap-1">
-                                            <span class="text-lg font-black text-slate-900">{{ attempt.score }}</span>
-                                            <span class="text-[10px] font-bold text-slate-300">/ {{ totalQuestions }}</span>
-                                        </div>
-                                        <div class="mt-2 flex items-center gap-2">
-                                            <div class="h-1 w-16 overflow-hidden rounded-full bg-slate-100">
-                                                <div
-                                                    class="h-full transition-all"
-                                                    :class="getPercentage(attempt.score) >= 50 ? 'bg-primary' : 'bg-orange-400'"
-                                                    :style="{ width: `${getPercentage(attempt.score)}%` }"
-                                                ></div>
+            <div class="flex flex-col">
+                <div class="-m-1.5 overflow-x-auto">
+                    <div class="p-1.5 min-w-full inline-block align-middle">
+                        <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                            <!-- Table Header -->
+                            <div class="px-6 py-4 grid gap-3 md:flex md:justify-between md:items-center border-b border-gray-200">
+                                <div>
+                                    <h2 class="text-lg font-semibold text-gray-800">Candidate Submissions</h2>
+                                    <p class="text-sm text-gray-500">{{ attempts.length }} Records</p>
+                                </div>
+                            </div>
+
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">Student Personnel</th>
+                                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Performance</th>
+                                        <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">Security Status</th>
+                                        <th scope="col" class="px-6 py-3 text-end text-xs font-medium text-gray-500 uppercase">Submitted At</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    <tr v-for="attempt in attempts" :key="attempt.id" class="hover:bg-gray-50 transition-colors" :class="{'bg-red-50/50': !!attempt.metadata?.termination_reason}">
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex flex-col">
+                                                <span class="text-sm font-semibold text-gray-800">{{ attempt.user.name }}</span>
+                                                <span class="text-xs text-gray-500">
+                                                    {{ attempt.user.school_id || 'NOT ASSIGNED' }} • {{ attempt.user.school_class?.name || 'CANDIDATE' }}
+                                                </span>
                                             </div>
-                                            <span class="text-[9px] font-black" :class="getPercentage(attempt.score) >= 50 ? 'text-primary' : 'text-orange-500'">
-                                                {{ getPercentage(attempt.score) }}%
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex flex-col items-center">
+                                                <div class="flex items-baseline gap-1">
+                                                    <span class="text-base font-semibold text-gray-800">{{ attempt.score }}</span>
+                                                    <span class="text-xs text-gray-400">/ {{ totalQuestions }}</span>
+                                                </div>
+                                                <div class="mt-1 flex items-center gap-x-2">
+                                                    <div class="flex w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                                                        <div
+                                                            class="flex flex-col justify-center overflow-hidden transition-all"
+                                                            :class="getPercentage(attempt.score) >= 50 ? 'bg-primary' : 'bg-orange-500'"
+                                                            :style="{ width: `${getPercentage(attempt.score)}%` }"
+                                                            role="progressbar"
+                                                            :aria-valuenow="getPercentage(attempt.score)"
+                                                            aria-valuemin="0"
+                                                            aria-valuemax="100"
+                                                        ></div>
+                                                    </div>
+                                                    <span class="text-xs font-medium" :class="getPercentage(attempt.score) >= 50 ? 'text-primary' : 'text-orange-600'">
+                                                        {{ getPercentage(attempt.score) }}%
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div v-if="(attempt.violations?.length || 0) > 0" class="flex flex-col">
+                                                <span class="inline-flex items-center gap-x-1.5 py-1 px-2.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                    <span class="size-1.5 inline-block rounded-full bg-red-800"></span>
+                                                    {{ attempt.violations.length }} Violations
+                                                </span>
+                                                <button 
+                                                    @click="openViolationLog(attempt)"
+                                                    class="mt-1 text-start text-xs font-medium text-primary hover:underline"
+                                                >
+                                                    View Detailed Log
+                                                </button>
+                                            </div>
+                                            <div v-else-if="attempt.metadata?.termination_reason" class="flex flex-col">
+                                                <span class="inline-flex items-center gap-x-1.5 py-1 px-2.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                    <span class="size-1.5 inline-block rounded-full bg-red-800"></span>
+                                                    Violation
+                                                </span>
+                                                <span class="mt-1 text-xs text-red-600 truncate max-w-[150px]">
+                                                    {{ attempt.metadata.termination_reason }}
+                                                </span>
+                                            </div>
+                                            <span v-else class="inline-flex items-center gap-x-1.5 py-1 px-2.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800">
+                                                <svg class="size-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                                                </svg>
+                                                Validated
                                             </span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-6">
-                                    <div v-if="(attempt.violations?.length || 0) > 0" class="flex flex-col max-w-[200px]">
-                                        <span class="inline-flex w-fit items-center gap-1.5 rounded-full bg-red-100 px-2 py-0.5 text-[8px] font-black text-red-600 uppercase">
-                                            <div class="h-1 w-1 animate-pulse rounded-full bg-red-500"></div>
-                                            {{ attempt.violations.length }} Violations
-                                        </span>
-                                        <button 
-                                            @click="openViolationLog(attempt)"
-                                            class="mt-1 text-left text-[9px] font-black text-primary uppercase underline hover:text-slate-900 transition-colors"
-                                        >
-                                            View Detailed Log
-                                        </button>
-                                    </div>
-                                    <div v-else-if="attempt.metadata?.termination_reason" class="flex flex-col max-w-[200px]">
-                                        <span class="inline-flex w-fit items-center gap-1.5 rounded-full bg-red-100 px-2 py-0.5 text-[8px] font-black text-red-600 uppercase">
-                                            <div class="h-1 w-1 animate-pulse rounded-full bg-red-500"></div>
-                                            Violation
-                                        </span>
-                                        <span class="mt-1 text-[9px] leading-tight font-bold tracking-tight text-red-400 line-clamp-1 group-hover:line-clamp-none transition-all">
-                                            {{ attempt.metadata.termination_reason }}
-                                        </span>
-                                    </div>
-                                    <span v-else class="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2.5 py-1 text-[8px] font-black text-green-600 uppercase border border-green-100">
-                                        <svg class="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
-                                        </svg>
-                                        Validated
-                                    </span>
-                                </td>
-                                <td class="px-8 py-6 text-right">
-                                    <div class="flex flex-col items-end">
-                                        <span class="text-[10px] font-black text-slate-600 uppercase">
-                                            {{ new Date(attempt.submitted_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) }}
-                                        </span>
-                                        <span class="text-[9px] font-bold text-slate-400 uppercase">
-                                            {{ new Date(attempt.submitted_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) }}
-                                        </span>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr v-if="attempts.length === 0">
-                                <td colspan="4" class="px-8 py-24 text-center">
-                                    <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-50 text-slate-300 mb-4">
-                                        <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                                    </div>
-                                    <p class="text-sm font-bold tracking-widest text-slate-400 uppercase italic">No active submissions recorded.</p>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-end">
+                                            <div class="flex flex-col items-end">
+                                                <span class="text-xs font-medium text-gray-800">
+                                                    {{ new Date(attempt.submitted_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) }}
+                                                </span>
+                                                <span class="text-xs text-gray-500">
+                                                    {{ new Date(attempt.submitted_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) }}
+                                                </span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr v-if="attempts.length === 0">
+                                        <td colspan="4" class="px-6 py-12 text-center">
+                                            <svg class="size-10 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                            <p class="text-sm font-medium text-gray-500">No active submissions recorded.</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Violation Log Modal -->
-        <div v-if="isViolationModalOpen" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <div @click="isViolationModalOpen = false" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"></div>
-            <div class="animate-in zoom-in-95 relative w-full max-w-xl overflow-hidden rounded-2xl bg-white shadow-2xl">
-                <div class="border-b border-slate-100 bg-slate-50 px-10 py-6 flex items-center justify-between">
-                    <div>
-                        <h3 class="text-xl font-black text-slate-900 italic leading-none">Security Violation Log</h3>
-                        <p class="mt-2 text-[10px] font-black tracking-widest text-slate-400 uppercase">Student: {{ activeCandidateName }}</p>
-                    </div>
-                    <button @click="isViolationModalOpen = false" class="text-slate-400 hover:text-slate-600 transition-colors">
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
+        <div v-if="isViolationModalOpen" class="fixed inset-0 z-[100] overflow-y-auto">
+            <div class="flex items-center justify-center min-h-screen p-4">
+                <div @click="isViolationModalOpen = false" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity"></div>
                 
-                <div class="max-h-[60vh] overflow-y-auto p-10 custom-scrollbar">
-                    <div v-if="activeViolations.length === 0" class="text-center py-10">
-                        <p class="font-bold text-slate-400">No violations recorded for this attempt.</p>
+                <div class="bg-white border border-gray-200 rounded-xl shadow-lg w-full max-w-lg overflow-hidden relative z-10">
+                    <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-800">Security Violation Log</h3>
+                            <p class="text-xs text-gray-500">Student: {{ activeCandidateName }}</p>
+                        </div>
+                        <button @click="isViolationModalOpen = false" class="text-gray-400 hover:text-gray-500 transition-colors">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
                     </div>
-                    <div v-else class="space-y-4">
-                        <div 
-                            v-for="(v, idx) in activeViolations" 
-                            :key="idx"
-                            class="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 p-5 group hover:border-red-200 hover:bg-red-50/30 transition-all"
-                        >
-                            <div class="flex items-center gap-4">
-                                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-red-100 text-red-600 font-black text-xs">
-                                    {{ idx + 1 }}
+                    
+                    <div class="p-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
+                        <div v-if="activeViolations.length === 0" class="text-center py-6">
+                            <p class="text-sm text-gray-500">No violations recorded for this attempt.</p>
+                        </div>
+                        <div v-else class="space-y-3">
+                            <div 
+                                v-for="(v, idx) in activeViolations" 
+                                :key="idx"
+                                class="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg p-3 hover:bg-red-50 hover:border-red-200 transition-all"
+                            >
+                                <div class="flex items-center gap-3">
+                                    <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-100 text-red-600 font-semibold text-xs">
+                                        {{ idx + 1 }}
+                                    </div>
+                                    <div>
+                                        <h4 class="text-sm font-semibold text-gray-800">{{ getViolationLabel(v.type) }}</h4>
+                                        <p class="text-xs text-gray-500">{{ v.type.replace('_', ' ') }}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h4 class="text-sm font-black text-slate-800 uppercase tracking-tight">{{ getViolationLabel(v.type) }}</h4>
-                                    <p class="text-[10px] font-bold text-slate-400 uppercase">{{ v.type.replace('_', ' ') }}</p>
+                                <div class="text-right">
+                                    <p class="text-xs font-medium text-gray-800">{{ formatViolationDate(v.timestamp) }}</p>
                                 </div>
-                            </div>
-                            <div class="text-right">
-                                <p class="text-[11px] font-black text-slate-600">{{ formatViolationDate(v.timestamp) }}</p>
-                                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Instance Logged</p>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="border-t border-slate-100 bg-white p-8 flex justify-center">
-                    <button
-                        @click="isViolationModalOpen = false"
-                        class="rounded-xl bg-slate-900 px-10 py-4 text-xs font-black tracking-widest text-white uppercase transition-all hover:bg-black active:scale-95"
-                    >
-                        Close Security Log
-                    </button>
+                    <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end">
+                        <button
+                            @click="isViolationModalOpen = false"
+                            class="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-gray-800 text-white hover:bg-black disabled:opacity-50 disabled:pointer-events-none"
+                        >
+                            Close
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

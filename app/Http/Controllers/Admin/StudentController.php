@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\DTOs\UserDTO;
 use App\Http\Controllers\Controller;
-use App\Models\SchoolClass;
 use App\Models\User;
 use App\Services\UserImportService;
 use App\Services\UserService;
@@ -22,18 +21,20 @@ class StudentController extends Controller
 
     public function index(Request $request): Response
     {
-        $query = User::role('student')->with(['schoolClass', 'roles']);
+        $query = User::role('candidate')
+            ->where('status', 'active')
+            ->with(['schoolClass', 'roles']);
 
         if ($request->search) {
             $query->where(function ($q) use ($request) {
                 $q->where('name', 'like', "%{$request->search}%")
                     ->orWhere('email', 'like', "%{$request->search}%")
-                    ->orWhere('school_id', 'like', "%{$request->search}%");
+                    ->orWhere('username', 'like', "%{$request->search}%");
             });
         }
 
-        if ($request->branch) {
-            $query->where('branch', $request->branch);
+        if ($request->school_id) {
+            $query->where('school_id', $request->school_id);
         }
 
         if ($request->school_class_id) {
@@ -42,8 +43,9 @@ class StudentController extends Controller
 
         return Inertia::render('Admin/Users/Students', [
             'students' => $query->latest()->paginate(10)->withQueryString(),
-            'classes' => SchoolClass::all(),
-            'filters' => $request->only(['search', 'school_class_id', 'branch']),
+            'classes' => \App\Models\SchoolClass::all(),
+            'roles' => \Spatie\Permission\Models\Role::where('category', 'student')->get(),
+            'filters' => $request->only(['search', 'school_class_id', 'school_id']),
         ]);
     }
 
@@ -53,14 +55,16 @@ class StudentController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'username' => ['required', 'string', 'max:255', 'unique:users'],
-            'school_id' => ['nullable', 'string', 'max:255', 'unique:users'],
+            'school_id' => ['required', 'exists:schools,id'],
             'school_class_id' => ['required', 'exists:school_classes,id'],
+            'role' => ['required', 'string', 'exists:roles,name'],
         ]);
 
         $dto = UserDTO::fromRequest($request);
-        $this->userService->createUser($dto, 'student');
+        $dto->status = 'active';
+        $user = $this->userService->createUser($dto, $request->role);
 
-        return back()->with('success', 'Student created successfully.');
+        return back()->with('success', 'Candidate record created successfully.');
     }
 
     public function update(Request $request, User $student): RedirectResponse
@@ -69,21 +73,23 @@ class StudentController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,'.$student->id],
             'username' => ['required', 'string', 'max:255', 'unique:users,username,'.$student->id],
-            'school_id' => ['nullable', 'string', 'max:255', 'unique:users,school_id,'.$student->id],
+            'school_id' => ['required', 'exists:schools,id'],
             'school_class_id' => ['required', 'exists:school_classes,id'],
+            'role' => ['required', 'string', 'exists:roles,name'],
         ]);
 
         $dto = UserDTO::fromRequest($request);
         $this->userService->updateUser($student, $dto);
+        $student->syncRoles([$request->role]);
 
-        return back()->with('success', 'Student updated successfully.');
+        return back()->with('success', 'Candidate record updated successfully.');
     }
 
     public function destroy(User $student): RedirectResponse
     {
         $this->userService->deleteUser($student);
 
-        return back()->with('success', 'Student deleted successfully.');
+        return back()->with('success', 'Candidate record deleted successfully.');
     }
 
     public function import(Request $request): RedirectResponse
@@ -92,8 +98,8 @@ class StudentController extends Controller
             'file' => ['required', 'file', 'mimes:csv,xlsx'],
         ]);
 
-        $count = $this->userImportService->import($request->file('file'), 'student');
+        $count = $this->userImportService->import($request->file('file'), 'candidate');
 
-        return back()->with('success', "$count students imported successfully.");
+        return back()->with('success', "$count candidates imported successfully.");
     }
 }

@@ -15,12 +15,8 @@ class AuthService
      */
     public function login(array $credentials, bool $remember = false, ?string $requiredRole = null): User
     {
-        $guard = match ($requiredRole) {
-            'admin' => 'admin',
-            'staff' => 'staff',
-            'student' => 'student',
-            default => 'web',
-        };
+        // Unify all logins under the 'web' guard
+        $guard = 'web';
 
         if (! Auth::guard($guard)->attempt($credentials, $remember)) {
             throw ValidationException::withMessages([
@@ -30,13 +26,13 @@ class AuthService
 
         $user = Auth::guard($guard)->user();
 
-        // Portal-specific security: Ensure the user belongs to this portal
+        // Portal-specific security: Ensure the user belongs to this portal via Permissions
         if ($requiredRole) {
             $hasAccess = match ($requiredRole) {
-                'student' => $user->hasRole('student') || $user->hasRole('candidate'),
-                'staff' => $user->hasRole('staff') || $user->hasRole('subject_lead'),
-                'admin' => $user->hasRole('admin'),
-                default => $user->hasRole($requiredRole),
+                'student', 'candidate' => $user->can('exam:take'),
+                'staff', 'examiner' => $user->can('bank:view'),
+                'admin', 'super_admin' => $user->can('sys:manage_settings'),
+                default => $user->can($requiredRole), // Fallback to permission check if string is passed
             };
 
             if (! $hasAccess) {
@@ -64,19 +60,19 @@ class AuthService
     }
 
     /**
-     * Get the appropriate dashboard URL based on the user's roles.
+     * Get the appropriate dashboard URL based on the user's permissions.
      */
     public function getRedirectUrl(User $user): string
     {
-        if ($user->hasRole('admin')) {
+        if ($user->can('sys:manage_settings')) {
             return route('admin.dashboard');
         }
 
-        if ($user->hasRole('staff') || $user->hasRole('subject_lead')) {
+        if ($user->can('bank:view')) {
             return route('staff.dashboard');
         }
 
-        if ($user->hasRole('student') || $user->hasRole('candidate')) {
+        if ($user->can('exam:take')) {
             return route('student.dashboard');
         }
 
@@ -88,12 +84,8 @@ class AuthService
      */
     public function logout(): void
     {
-        // Logout from all possible guards to be safe
-        foreach (['admin', 'staff', 'student', 'web'] as $guard) {
-            if (Auth::guard($guard)->check()) {
-                Auth::guard($guard)->logout();
-            }
-        }
+        // Unified logout from web guard
+        Auth::guard('web')->logout();
 
         request()->session()->invalidate();
         request()->session()->regenerateToken();

@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\ClassLevel;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -14,11 +13,20 @@ class SchoolClass extends Model
     use HasFactory, HasUlids;
 
     protected $fillable = [
+        'school_id',
         'name',
         'slug',
         'level',
         'branch',
     ];
+
+    /**
+     * Get the school this class belongs to.
+     */
+    public function school(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(School::class);
+    }
 
     /**
      * Get the attributes that should be cast.
@@ -28,8 +36,7 @@ class SchoolClass extends Model
     protected function casts(): array
     {
         return [
-            'level' => ClassLevel::class,
-            'branch' => \App\Enums\Branch::class,
+            'level' => \App\Enums\ClassLevel::class,
         ];
     }
 

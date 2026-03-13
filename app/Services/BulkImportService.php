@@ -6,6 +6,9 @@ use App\DTOs\OptionDTO;
 use App\DTOs\QuestionDTO;
 use App\Enums\QuestionDifficulty;
 use App\Enums\QuestionType;
+use App\Models\SchoolClass;
+use App\Models\Subject;
+use App\Models\Topic;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -49,22 +52,52 @@ class BulkImportService
 
                     $data = $row->toArray();
 
-                    // Header expectation: topic_id, school_class_id, content, explanation, type, difficulty, options_csv (pipe separated), correct_option_index
-                    // OpenSpout returns an array of cells.
-                    if (count($data) < 8) {
+                    // Header expectation: subject_name, class_name, topic_name, content, explanation, type, difficulty, option_a, option_b, option_c, option_d, correct_option_letter
+                    if (count($data) < 12) {
                         continue;
-                    } // Basic skip for empty or invalid rows
+                    }
 
-                    [$topicId, $classId, $content, $explanation, $type, $difficulty, $optionsStr, $correctIndex] = $data;
+                    [$subjectName, $className, $topicName, $content, $explanation, $type, $difficulty, $optA, $optB, $optC, $optD, $correctLetter] = $data;
 
-                    $options = array_map(fn ($opt, $index) => new OptionDTO(
-                        content: trim((string) $opt),
-                        is_correct: (int) $index === (int) $correctIndex
-                    ), explode('|', (string) $optionsStr), array_keys(explode('|', (string) $optionsStr)));
+                    // Resolve Subject
+                    $subject = Subject::where('name', trim((string) $subjectName))->first();
+                    if (! $subject) {
+                        throw new \Exception("Subject '{$subjectName}' not found.");
+                    }
+
+                    // Resolve Class
+                    $class = SchoolClass::where('name', trim((string) $className))->first();
+                    if (! $class) {
+                        throw new \Exception("Class '{$className}' not found.");
+                    }
+
+                    // Resolve Topic (filtered by subject and class)
+                    $topic = Topic::where('subject_id', $subject->id)
+                        ->where('school_class_id', $class->id)
+                        ->where('name', trim((string) $topicName))
+                        ->first();
+
+                    if (! $topic) {
+                        throw new \Exception("Topic '{$topicName}' for subject '{$subjectName}' and class '{$className}' not found.");
+                    }
+
+                    $correctLetter = strtoupper(trim((string) $correctLetter));
+
+                    $optionsData = [
+                        ['content' => trim((string) $optA), 'letter' => 'A'],
+                        ['content' => trim((string) $optB), 'letter' => 'B'],
+                        ['content' => trim((string) $optC), 'letter' => 'C'],
+                        ['content' => trim((string) $optD), 'letter' => 'D'],
+                    ];
+
+                    $options = array_map(fn ($opt) => new OptionDTO(
+                        content: $opt['content'],
+                        is_correct: $opt['letter'] === $correctLetter
+                    ), $optionsData);
 
                     $dto = new QuestionDTO(
-                        topic_id: trim((string) $topicId),
-                        school_class_id: trim((string) $classId),
+                        topic_id: $topic->id,
+                        school_class_id: $class->id,
                         content: trim((string) $content),
                         explanation: trim((string) $explanation),
                         type: QuestionType::from(trim((string) $type)),

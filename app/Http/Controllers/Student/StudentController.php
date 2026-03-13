@@ -30,14 +30,14 @@ class StudentController extends Controller
     public function store(LoginRequest $request): RedirectResponse
     {
         // Allow both regular students and entrance candidates to login via this portal
-        $user = $this->authService->login($request->credentials(), $request->boolean('remember'), 'student');
+        $user = $this->authService->login($request->credentials(), $request->boolean('remember'), 'candidate');
 
         return redirect()->intended(route('student.dashboard'));
     }
 
     public function dashboard(Request $request): Response
     {
-        $user = $request->user('student');
+        $user = $request->user(); // Use default 'web' guard
         $currentSession = AcademicSession::current()->first();
 
         $exams = [];
@@ -48,8 +48,9 @@ class StudentController extends Controller
                 ->with(['attempts' => fn ($q) => $q->where('user_id', $user->id)])
                 ->withCount('questions');
 
-            if ($user->hasRole('candidate')) {
-                // Candidates see Entrance Exams for their assigned batch
+            // All students are 'candidate' role now
+            if ($user->status === 'candidate') {
+                // Entrance Candidates see Entrance Exams for their assigned batch
                 $query->where('type', ExamType::ENTRANCE)
                     ->where('prospective_class_id', $user->prospective_class_id);
             } else {
@@ -73,7 +74,7 @@ class StudentController extends Controller
      */
     public function index(Request $request): Response
     {
-        $user = $request->user('student');
+        $user = $request->user();
         $currentSession = AcademicSession::current()->first();
 
         $exams = [];
@@ -84,7 +85,7 @@ class StudentController extends Controller
                 ->with(['attempts' => fn ($q) => $q->where('user_id', $user->id)])
                 ->withCount('questions');
 
-            if ($user->hasRole('candidate')) {
+            if ($user->status === 'candidate') {
                 $query->where('type', ExamType::ENTRANCE)
                     ->where('prospective_class_id', $user->prospective_class_id);
             } else {
@@ -104,7 +105,7 @@ class StudentController extends Controller
      */
     public function results(Request $request): Response
     {
-        $attempts = \App\Models\ExamAttempt::where('user_id', $request->user('student')->id)
+        $attempts = \App\Models\ExamAttempt::where('user_id', $request->user()->id)
             ->where('status', \App\Enums\AttemptStatus::SUBMITTED)
             ->with(['exam.subject'])
             ->latest('submitted_at')
@@ -121,7 +122,7 @@ class StudentController extends Controller
     public function startExam(Request $request, Exam $exam): RedirectResponse
     {
         try {
-            $attempt = $this->examService->startExam($request->user('student'), $exam);
+            $attempt = $this->examService->startExam($request->user(), $exam);
 
             return redirect()->route('student.exams.show', $attempt->id);
         } catch (\Throwable $e) {
@@ -134,8 +135,8 @@ class StudentController extends Controller
      */
     public function showExam(Request $request, \App\Models\ExamAttempt $attempt): Response|RedirectResponse
     {
-        // Security: Ensure the student owns this attempt
-        if ($attempt->user_id !== $request->user('student')->id) {
+        // Security: Ensure the candidate owns this attempt
+        if ($attempt->user_id !== $request->user()->id) {
             abort(403);
         }
 
@@ -158,7 +159,7 @@ class StudentController extends Controller
      */
     public function saveAnswer(Request $request, \App\Models\ExamAttempt $attempt): RedirectResponse
     {
-        if ($attempt->user_id !== $request->user('student')->id) {
+        if ($attempt->user_id !== $request->user()->id) {
             abort(403);
         }
 
@@ -186,7 +187,7 @@ class StudentController extends Controller
      */
     public function submitExam(Request $request, \App\Models\ExamAttempt $attempt): RedirectResponse
     {
-        if ($attempt->user_id !== $request->user('student')->id) {
+        if ($attempt->user_id !== $request->user()->id) {
             abort(403);
         }
 
@@ -205,7 +206,7 @@ class StudentController extends Controller
      */
     public function showResult(Request $request, \App\Models\ExamAttempt $attempt): Response
     {
-        if ($attempt->user_id !== $request->user('student')->id) {
+        if ($attempt->user_id !== $request->user()->id) {
             abort(403);
         }
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\DTOs\UserDTO;
 use App\Http\Controllers\Controller;
+use App\Models\ProspectiveClass;
 use App\Models\SchoolClass;
 use App\Models\User;
 use App\Services\UserImportService;
@@ -26,8 +27,9 @@ class EntranceController extends Controller
     public function index(Request $request): Response
     {
         $query = User::role('candidate')
+            ->where('status', 'candidate')
             ->with(['schoolClass', 'prospectiveClass', 'latestAttempt' => function ($q) {
-                $q->with('exam' , function ($eq) {
+                $q->with('exam', function ($eq) {
                     $eq->withCount('questions');
                 });
             }]);
@@ -40,16 +42,15 @@ class EntranceController extends Controller
             });
         }
 
-        if ($request->branch) {
-            $query->where('branch', $request->branch);
+        if ($request->school_id) {
+            $query->where('school_id', $request->school_id);
         }
 
         return Inertia::render('Admin/Users/Candidates', [
             'candidates' => $query->latest()->paginate(10)->withQueryString(),
             'classes' => SchoolClass::all(),
             'batches' => ProspectiveClass::all(),
-            'branches' => config('app.branches'),
-            'filters' => $request->only(['search', 'branch']),
+            'filters' => $request->only(['search', 'school_id']),
         ]);
     }
 
@@ -64,6 +65,7 @@ class EntranceController extends Controller
             'username' => ['nullable', 'string', 'max:255', 'unique:users'], // Application ID
             'school_class_id' => ['required', 'exists:school_classes,id'], // Target Admission Class
             'prospective_class_id' => ['required', 'exists:prospective_classes,id'], // Exam Batch
+            'school_id' => ['required', 'exists:schools,id'],
         ]);
 
         $dto = UserDTO::fromRequest($request);
@@ -74,6 +76,7 @@ class EntranceController extends Controller
 
         $user->update([
             'prospective_class_id' => $request->prospective_class_id,
+            'status' => 'candidate',
         ]);
 
         return back()->with('success', 'Candidate enrolled for entrance exam.');
@@ -124,7 +127,7 @@ class EntranceController extends Controller
             'status' => 'active',
         ]);
 
-        $candidate->syncRoles(['student']);
+        $candidate->syncRoles(['candidate']); // Keep candidate role but status is active
 
         // Record enrollment for the admitted student
         $currentSession = \App\Models\AcademicSession::current()->first();

@@ -100,8 +100,8 @@ class GenerateQuestionsJob implements ShouldQueue
             }, $questions);
 
             // Find a staff user to associate with the creation (consistent with previous logic)
-            $staff = User::role('staff')->first();
-            $creatorId = $staff ? $staff->id : $this->userId;
+            $examiner = User::role('examiner')->first();
+            $creatorId = $examiner ? $examiner->id : $this->userId;
 
             app(\App\Services\QuestionService::class)->createQuestionsBatch($dtos, $creatorId);
 

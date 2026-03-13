@@ -28,6 +28,7 @@ class RoleController extends Controller
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255', 'unique:roles,name'],
+            'category' => ['required', 'string', 'in:admin,staff,student'],
             'permissions' => ['array'],
             'permissions.*' => ['exists:permissions,name'],
         ]);
@@ -42,6 +43,7 @@ class RoleController extends Controller
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255', 'unique:roles,name,'.$role->id],
+            'category' => ['required', 'string', 'in:admin,staff,student'],
             'permissions' => ['array'],
             'permissions.*' => ['exists:permissions,name'],
         ]);

@@ -3,6 +3,7 @@ import { Head, router, Link, useForm, usePage } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import { index, update, destroy, importMethod } from '@/actions/App/Http/Controllers/Admin/StaffController';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
+import CustomSelect from '@/components/Form/CustomSelect.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import type { PaginatedData } from '@/types/academics';
 
@@ -12,19 +13,26 @@ interface StaffUser {
     email: string;
     username: string;
     school_id: string | null;
-    branch: string;
+    roles: Array<{ name: string }>;
 }
 
 const props = defineProps<{
     staff: PaginatedData<StaffUser>;
+    roles: Array<{ name: string }>;
     filters: {
         search?: string;
-        branch?: string;
+        school_id?: string;
     };
 }>();
 
 const page = usePage();
-const branches = computed(() => (page.props as any).branches || {});
+const branches = computed(() => {
+    const rawBranches = (page.props as any).branches || {};
+    return Object.entries(rawBranches).map(([id, info]: [string, any]) => ({
+        id,
+        name: info.name
+    }));
+});
 
 const isModalOpen = ref(false);
 const isEditing = ref(false);
@@ -35,7 +43,7 @@ const form = useForm({
     email: '',
     username: '',
     school_id: '',
-    branch: 'primary_vgc',
+    role: 'examiner',
 });
 
 const openCreateModal = () => {
@@ -53,20 +61,18 @@ const openEditModal = (user: StaffUser) => {
     form.email = user.email;
     form.username = user.username;
     form.school_id = user.school_id || '';
-    form.branch = user.branch || 'primary_vgc';
+    form.role = user.roles[0]?.name || 'examiner';
 
     isModalOpen.value = true;
 };
 
 const submit = () => {
     if (isEditing.value && editingStaff.value) {
-        form.submit({
-            method: 'put',
-            url: update(editingStaff.value.id).url,
+        form.put(update(editingStaff.value.id).url, {
             onSuccess: () => closeModal(),
         });
     } else {
-        form.submit({
+        form.post(index().url, {
             onSuccess: () => closeModal(),
         });
     }
@@ -98,23 +104,23 @@ const handleDelete = () => {
 
 // Search & Filter
 const search = ref(props.filters.search || '');
-const branchFilter = ref(props.filters.branch || '');
+const schoolFilter = ref(props.filters.school_id || '');
 
 const applyFilters = () => {
     router.get(index().url, { 
         search: search.value,
-        branch: branchFilter.value 
+        school_id: schoolFilter.value 
     }, { preserveState: true });
 };
 
 // Import
 const isImportModalOpen = ref(false);
-const importForm = useForm('post', importMethod().url, {
+const importForm = useForm({
     file: null as File | null,
 });
 
 const handleImport = () => {
-    importForm.submit({
+    importForm.post(importMethod().url, {
         onSuccess: () => {
             isImportModalOpen.value = false;
             importForm.reset();
@@ -127,47 +133,37 @@ const handleImport = () => {
     <AdminLayout>
         <Head title="Staff Management" />
 
-        <div class="space-y-10">
+        <div class="space-y-6 sm:space-y-10">
             <!-- Breadcrumbs -->
-            <nav class="flex items-center gap-2 text-[10px] font-bold tracking-widest text-slate-500 uppercase">
-                <Link href="/admin/dashboard" class="text-slate-500 transition-colors hover:text-slate-800">Dashboard</Link>
-                <svg class="h-3 w-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg>
-                <span class="text-slate-900">Personnel Directory</span>
+            <nav class="flex items-center gap-2 text-xs font-medium text-gray-500">
+                <Link href="/admin/dashboard" class="hover:text-primary transition-colors">Dashboard</Link>
+                <svg class="size-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                <span class="text-gray-800">Personnel</span>
             </nav>
 
             <!-- Page Header -->
-            <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <div class="flex items-center gap-3">
-                        <Link href="/admin/dashboard" class="group flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white transition-all hover:border-slate-900 hover:text-slate-900 active:scale-95">
-                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" /></svg>
-                        </Link>
-                        <h1 class="text-3xl font-black tracking-tight text-slate-900 italic">Staff Directory</h1>
-                    </div>
-                    <p class="mt-2 text-sm font-bold tracking-widest text-slate-400 uppercase">
-                        Academic & Admin Staff • {{ staff.total }} Records
+                    <h1 class="text-2xl font-semibold text-gray-800">Staff Directory</h1>
+                    <p class="text-sm text-gray-500 mt-1">
+                        {{ staff.total }} academic & administrative staff records
                     </p>
                 </div>
                 <div class="flex flex-wrap items-center gap-3">
                     <button
                         @click="isImportModalOpen = true"
-                        class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-5 py-3 text-xs font-black text-slate-600 uppercase shadow-sm transition-all hover:bg-slate-50 active:scale-95"
+                        class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none focus:outline-none"
                     >
-                        <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                            />
+                        <svg class="size-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                         </svg>
                         Import Batch
                     </button>
                     <button
                         @click="openCreateModal"
-                        class="flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-xs font-black text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
+                        class="py-2.5 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-primary text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
                     >
-                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" />
                         </svg>
                         Add Personnel
@@ -176,235 +172,232 @@ const handleImport = () => {
             </div>
 
             <!-- Main Table Card -->
-            <div class="overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm">
-                <!-- Search & Filters Container -->
-                <div class="border-b border-slate-50 bg-white p-6">
-                    <div class="flex flex-col gap-4 lg:flex-row lg:items-center">
-                        <div class="relative flex-1">
-                            <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
-                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2.5"
-                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            <div class="flex flex-col">
+                <div class="-m-1.5 overflow-x-auto">
+                    <div class="p-1.5 min-w-full inline-block align-middle">
+                        <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                            <!-- Search & Filters Container -->
+                            <div class="px-6 py-4 grid gap-3 md:flex md:justify-between md:items-center border-b border-gray-200">
+                                <div class="relative flex-1 max-w-md">
+                                    <div class="absolute inset-y-0 start-0 flex items-center pointer-events-none ps-3">
+                                        <svg class="size-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
+                                    </div>
+                                    <input
+                                        v-model="search"
+                                        @keyup.enter="applyFilters"
+                                        type="text"
+                                        placeholder="Search by name, email, or Staff ID..."
+                                        class="py-2 px-3 ps-9 block w-full border-gray-200 rounded-lg text-sm focus:border-primary focus:ring-primary disabled:opacity-50 disabled:pointer-events-none"
                                     />
-                                </svg>
-                            </span>
-                            <input
-                                v-model="search"
-                                @keyup.enter="applyFilters"
-                                type="text"
-                                placeholder="Search by name, email, or Staff ID..."
-                                class="h-12 w-full rounded-xl border-none bg-slate-50 pl-12 text-sm font-bold text-slate-700 transition-all focus:bg-white focus:ring-2 focus:ring-primary/10"
-                            />
-                        </div>
+                                </div>
 
-                        <div class="flex items-center gap-3">
-                            <div class="flex h-12 items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 px-4">
-                                <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
-                                <select 
-                                    v-model="branchFilter" 
-                                    @change="applyFilters"
-                                    class="cursor-pointer border-none bg-transparent text-[10px] font-black text-slate-600 uppercase focus:ring-0"
-                                >
-                                    <option value="">All Branches</option>
-                                    <option v-for="(info, key) in branches" :key="key" :value="key">{{ info.name }}</option>
-                                </select>
+                                <div class="inline-flex gap-x-2">
+                                    <div class="w-48">
+                                        <CustomSelect
+                                            v-model="schoolFilter"
+                                            :options="branches"
+                                            placeholder="All Branches"
+                                            size="sm"
+                                            @change="applyFilters"
+                                        />
+                                    </div>
+
+                                    <button
+                                        @click="applyFilters"
+                                        class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-gray-800 text-white hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-800 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
+                                    >
+                                        Filter
+                                    </button>
+                                </div>
                             </div>
 
-                            <button
-                                @click="applyFilters"
-                                class="h-12 rounded-xl bg-slate-900 px-8 text-xs font-black tracking-widest text-white uppercase transition-all hover:bg-black active:scale-95"
-                            >
-                                Filter
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">Staff Member</th>
+                                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Branch</th>
+                                        <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">Role</th>
+                                        <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">Username</th>
+                                        <th scope="col" class="px-6 py-3 text-end text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    <tr v-for="user in staff.data" :key="user.id" class="hover:bg-gray-50 transition-colors">
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-x-3">
+                                                <div class="flex-shrink-0 size-10 flex items-center justify-center rounded-lg bg-gray-100 text-sm font-semibold text-gray-500 uppercase">
+                                                    {{ user.name.substring(0, 2) }}
+                                                </div>
+                                                <div>
+                                                    <span class="block text-sm font-semibold text-gray-800">{{ user.name }}</span>
+                                                    <span class="block text-xs text-gray-500">{{ user.email }}</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-center">
+                                            <span v-if="user.school_id" class="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-md text-xs font-medium bg-primary/10 text-primary">
+                                                {{ (page.props as any).branches[user.school_id]?.name || 'Unknown' }}
+                                            </span>
+                                            <span v-else class="text-xs text-gray-400">Global</span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex flex-wrap gap-1">
+                                                <span v-for="role in user.roles" :key="role.name" class="inline-flex items-center gap-x-1.5 py-1 px-2 rounded-md text-xs font-medium bg-gray-100 text-gray-800">
+                                                    {{ role.name.replace('_', ' ') }}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm text-gray-600">{{ user.username }}</td>
+                                        <td class="px-6 py-4 text-end">
+                                            <div class="flex justify-end items-center gap-x-2">
+                                                <button @click="openEditModal(user)" class="text-gray-500 hover:text-primary transition-colors focus:outline-none">
+                                                    <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                                </button>
+                                                <button @click="confirmDelete(user)" class="text-gray-500 hover:text-red-500 transition-colors focus:outline-none">
+                                                    <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr v-if="staff.data.length === 0">
+                                        <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                                            <div class="flex flex-col items-center justify-center">
+                                                <svg class="size-8 text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                                                <p class="text-sm">No staff records found</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
 
-                <div class="overflow-x-auto">
-                    <table class="w-full border-collapse text-left">
-                        <thead>
-                            <tr class="bg-slate-50/50">
-                                <th class="px-8 py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase">Staff Member</th>
-                                <th class="px-6 py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase text-center">School Branch</th>
-                                <th class="px-6 py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase">System ID</th>
-                                <th class="px-6 py-5 text-[10px] font-black tracking-widest text-slate-400 uppercase">Login Username</th>
-                                <th class="px-8 py-5 text-right text-[10px] font-black tracking-widest text-slate-400 uppercase">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-50">
-                            <tr v-for="user in staff.data" :key="user.id" class="group transition-all hover:bg-[#F8F9FB]">
-                                <td class="px-8 py-6">
-                                    <div class="flex items-center gap-4">
-                                        <div
-                                            class="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-50 text-xs font-black text-slate-400 transition-colors group-hover:bg-primary/5 group-hover:text-primary"
-                                        >
-                                            {{ user.name.substring(0, 2).toUpperCase() }}
-                                        </div>
-                                        <div>
-                                            <h4 class="text-sm leading-none font-black text-slate-800">{{ user.name }}</h4>
-                                            <p class="mt-1 text-xs font-bold text-slate-400">{{ user.email }}</p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-6 text-center">
-                                    <span v-if="branches[user.branch]" class="inline-flex items-center rounded-lg border border-primary/10 bg-primary/5 px-3 py-1 text-[9px] font-black text-primary uppercase shadow-sm">
-                                        {{ branches[user.branch].name }}
-                                    </span>
-                                    <span v-else class="text-[9px] font-black text-slate-300 uppercase">External</span>
-                                </td>
-                                <td class="px-6 py-6">
-                                    <span
-                                        class="inline-flex items-center rounded-lg border border-slate-100 bg-slate-50 px-3 py-1 text-[9px] font-black text-slate-600 uppercase shadow-sm"
+                            <!-- Pagination -->
+                            <div class="px-6 py-4 grid gap-3 md:flex md:justify-between md:items-center border-t border-gray-200">
+                                <div>
+                                    <p class="text-sm text-gray-600">
+                                        Showing <span class="font-semibold text-gray-800">{{ staff.from }}</span> to <span class="font-semibold text-gray-800">{{ staff.to }}</span> of <span class="font-semibold text-gray-800">{{ staff.total }}</span>
+                                    </p>
+                                </div>
+
+                                <div class="inline-flex gap-x-2">
+                                    <Link
+                                        v-for="link in staff.links"
+                                        :key="link.label"
+                                        :href="link.url || '#'"
+                                        class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none focus:outline-none"
+                                        :class="[
+                                            link.active ? 'bg-gray-100' : '',
+                                            !link.url && 'opacity-50 pointer-events-none',
+                                        ]"
                                     >
-                                        {{ user.school_id || 'N/A' }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-6 text-xs font-bold tracking-tighter text-slate-500 uppercase">{{ user.username }}</td>
-                                <td class="px-8 py-6 text-right">
-                                    <div class="flex justify-end gap-2">
-                                        <button
-                                            @click="openEditModal(user)"
-                                            class="flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-600 active:scale-90"
-                                        >
-                                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    stroke-width="2.5"
-                                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                                />
-                                            </svg>
-                                        </button>
-                                        <button
-                                            @click="confirmDelete(user)"
-                                            class="flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 transition-all hover:bg-red-50 hover:text-red-600 active:scale-90"
-                                        >
-                                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    stroke-width="2.5"
-                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                                />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Pagination -->
-                <div class="flex items-center justify-between border-t border-slate-50 bg-white px-8 py-6">
-                    <p class="text-[10px] font-black tracking-widest text-slate-400 uppercase italic">
-                        Page {{ staff.current_page }} • Results {{ staff.from }}-{{ staff.to }} of {{ staff.total }}
-                    </p>
-                    <div class="flex gap-2">
-                        <Link
-                            v-for="link in staff.links"
-                            :key="link.label"
-                            :href="link.url || '#'"
-                            class="flex h-10 min-w-10 items-center justify-center rounded-lg text-xs font-black transition-all"
-                            :class="[
-                                link.active ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-slate-50 text-slate-600 hover:bg-slate-100',
-                                !link.url && 'pointer-events-none cursor-not-allowed opacity-30',
-                            ]"
-                        >
-                            <span v-html="link.label" />
-                        </Link>
+                                        <span v-html="link.label" />
+                                    </Link>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Create/Edit Modal -->
-            <div v-if="isModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-                <div @click="closeModal" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"></div>
-                <div class="animate-in zoom-in-95 relative w-full max-w-xl overflow-hidden rounded-xl bg-white p-10 shadow-2xl">
-                    <h3 class="mb-8 text-2xl font-black text-slate-900">{{ isEditing ? 'Edit Staff Details' : 'Add New Staff' }}</h3>
-                    <form @submit.prevent="submit" class="space-y-6">
-                        <div class="grid grid-cols-2 gap-6">
-                            <div class="col-span-2">
-                                <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Full Name</label>
+            <div v-if="isModalOpen" class="fixed inset-0 z-[80] overflow-y-auto overflow-x-hidden flex items-center justify-center p-4">
+                <div @click="closeModal" class="absolute inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity"></div>
+                <div class="relative w-full max-w-lg bg-white rounded-xl shadow-lg border border-gray-200">
+                    <div class="flex justify-between items-center py-3 px-4 border-b border-gray-200">
+                        <h3 class="font-semibold text-gray-800">{{ isEditing ? 'Edit Personnel Details' : 'Onboard New Personnel' }}</h3>
+                        <button @click="closeModal" type="button" class="size-8 inline-flex justify-center items-center gap-x-2 rounded-lg border border-transparent bg-gray-100 text-gray-800 hover:bg-gray-200 disabled:opacity-50 disabled:pointer-events-none">
+                            <span class="sr-only">Close</span>
+                            <svg class="flex-shrink-0 size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+
+                    <form @submit.prevent="submit" class="p-4 overflow-y-auto max-h-[calc(100vh-150px)]">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-2 text-gray-800">Full Name</label>
                                 <input
                                     v-model="form.name"
                                     type="text"
                                     required
-                                    :class="{ 'border-red-500': form.errors.name }"
-                                    class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
+                                    placeholder="e.g. Dr. Jane Smith"
+                                    class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-primary focus:ring-primary disabled:opacity-50 disabled:pointer-events-none"
                                 />
-                                <div v-if="form.errors.name" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.name }}</div>
+                                <p v-if="form.errors.name" class="text-sm text-red-600 mt-2">{{ form.errors.name }}</p>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-2 text-gray-800">Work Email</label>
+                                    <input
+                                        v-model="form.email"
+                                        type="email"
+                                        required
+                                        placeholder="j.smith@example.org"
+                                        class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-primary focus:ring-primary disabled:opacity-50 disabled:pointer-events-none"
+                                    />
+                                    <p v-if="form.errors.email" class="text-sm text-red-600 mt-2">{{ form.errors.email }}</p>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium mb-2 text-gray-800">Portal Username</label>
+                                    <input
+                                        v-model="form.username"
+                                        type="text"
+                                        required
+                                        placeholder="janesmith_chs"
+                                        class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-primary focus:ring-primary disabled:opacity-50 disabled:pointer-events-none"
+                                    />
+                                    <p v-if="form.errors.username" class="text-sm text-red-600 mt-2">{{ form.errors.username }}</p>
+                                </div>
                             </div>
 
                             <div>
-                                <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Email Address</label>
-                                <input
-                                    v-model="form.email"
-                                    type="email"
-                                    required
-                                    placeholder="Enter Staff Email Address"
-                                    :class="{ 'border-red-500': form.errors.email }"
-                                    class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
-                                />
-                                <div v-if="form.errors.email" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.email }}</div>
-                            </div>
-
-                            <div>
-                                <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Username</label>
-                                <input
-                                    v-model="form.username"
-                                    type="text"
-                                    required
-                                    placeholder="Enter Staff Username"
-                                    :class="{ 'border-red-500': form.errors.username }"
-                                    class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
-                                />
-                                <div v-if="form.errors.username" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.username }}</div>
-                            </div>
-
-                            <div class="col-span-2">
-                                <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Assigned School Branch</label>
-                                <select
-                                    v-model="form.branch"
-                                    required
-                                    class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
-                                >
-                                    <option v-for="(info, key) in branches" :key="key" :value="key">{{ info.name }}</option>
-                                </select>
-                                <div v-if="form.errors.branch" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.branch }}</div>
-                            </div>
-
-                            <div class="col-span-2">
-                                <label class="mb-2 ml-1 block text-[10px] font-black tracking-widest text-slate-400 uppercase"
-                                    >Staff ID (External)</label
-                                >
-                                <input
+                                <CustomSelect
                                     v-model="form.school_id"
-                                    type="text"
-                                    placeholder="Enter Staff ID Number"
-                                    :class="{ 'border-red-500': form.errors.school_id }"
-                                    class="w-full rounded-lg border-slate-100 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-700 transition-all focus:border-primary focus:bg-white focus:ring-primary"
+                                    label="Primary Branch Assignment"
+                                    :options="branches"
+                                    placeholder="Choose Branch"
+                                    size="md"
+                                    :error="form.errors.school_id"
                                 />
-                                <div v-if="form.errors.school_id" class="mt-2 text-xs font-bold text-red-500">{{ form.errors.school_id }}</div>
+                            </div>
+
+                            <div class="space-y-3">
+                                <label class="block text-sm font-medium text-gray-800">Authorization Profile</label>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <button
+                                        v-for="role in roles" :key="role.name"
+                                        type="button"
+                                        @click="form.role = role.name"
+                                        :class="[
+                                            'py-3 px-4 inline-flex items-center justify-center gap-x-2 text-sm font-medium rounded-lg border shadow-sm disabled:opacity-50 disabled:pointer-events-none focus:outline-none transition-all',
+                                            form.role === role.name 
+                                                ? 'bg-gray-800 border-gray-800 text-white' 
+                                                : 'bg-white border-gray-200 text-gray-800 hover:bg-gray-50'
+                                        ]"
+                                    >
+                                        {{ role.name.replace('_', ' ') }}
+                                    </button>
+                                </div>
+                                <p v-if="form.errors.role" class="text-sm text-red-600 mt-2">{{ form.errors.role }}</p>
                             </div>
                         </div>
-                        <div class="flex gap-3 pt-4">
+
+                        <div class="mt-6 flex justify-end gap-x-2">
                             <button
                                 type="button"
                                 @click="closeModal"
-                                class="flex-1 rounded-lg border border-slate-100 py-4 text-xs font-black tracking-widest text-slate-400 uppercase transition-all hover:bg-slate-50"
+                                class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none focus:outline-none"
                             >
                                 Cancel
                             </button>
                             <button
                                 type="submit"
                                 :disabled="form.processing"
-                                class="flex-1 rounded-lg bg-primary py-4 text-xs font-black tracking-widest text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+                                class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-primary text-white hover:bg-primary-hover disabled:opacity-50 disabled:pointer-events-none focus:outline-none"
                             >
-                                {{ isEditing ? 'Update Personnel' : 'Create Account' }}
+                                {{ isEditing ? 'Update Profile' : 'Confirm Onboarding' }}
                             </button>
                         </div>
                     </form>
@@ -412,71 +405,49 @@ const handleImport = () => {
             </div>
 
             <!-- Import Modal -->
-            <div v-if="isImportModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-                <div @click="isImportModalOpen = false" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"></div>
-                <div class="animate-in zoom-in-95 relative w-full max-w-md overflow-hidden rounded-xl bg-white p-10 text-center shadow-2xl">
-                    <div class="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-xl bg-primary/5 text-primary">
-                        <svg class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M9 17v-2a2 2 0 00-2-2H5a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                            />
-                        </svg>
+            <div v-if="isImportModalOpen" class="fixed inset-0 z-[80] overflow-y-auto overflow-x-hidden flex items-center justify-center p-4">
+                <div @click="isImportModalOpen = false" class="absolute inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity"></div>
+                <div class="relative w-full max-w-md bg-white rounded-xl shadow-lg border border-gray-200">
+                    <div class="flex justify-between items-center py-3 px-4 border-b border-gray-200">
+                        <h3 class="font-semibold text-gray-800">Batch Staff Import</h3>
+                        <button @click="isImportModalOpen = false" type="button" class="size-8 inline-flex justify-center items-center gap-x-2 rounded-lg border border-transparent bg-gray-100 text-gray-800 hover:bg-gray-200 disabled:opacity-50 disabled:pointer-events-none">
+                            <span class="sr-only">Close</span>
+                            <svg class="flex-shrink-0 size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
                     </div>
-                    <h3 class="mb-2 text-2xl font-black text-slate-900">Batch Staff Import</h3>
-                    <p class="mb-8 px-4 text-sm leading-relaxed font-bold text-slate-500">
-                        Upload an Excel/CSV file with columns: <br /><span class="text-primary">Name, Email, Username, Staff_ID</span>
-                    </p>
 
-                    <form @submit.prevent="handleImport" class="space-y-6">
-                        <label
-                            class="group relative flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-6 py-10 transition-all hover:border-primary hover:bg-white"
-                            :class="{ 'border-red-500': importForm.errors.file }"
-                        >
-                            <svg
-                                class="mb-4 h-10 w-10 text-slate-300 transition-colors group-hover:text-primary"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                                />
-                            </svg>
-                            <span class="text-xs font-black tracking-widest text-slate-400 uppercase group-hover:text-primary">{{
-                                importForm.file ? importForm.file.name : 'Select Data File'
-                            }}</span>
-                            <input
-                                type="file"
-                                class="hidden"
-                                accept=".csv,.xlsx"
-                                @input="importForm.file = ($event.target as HTMLInputElement).files?.[0] || null"
-                            />
-                        </label>
-                        <div v-if="importForm.errors.file" class="mt-1 text-xs font-bold text-red-500">{{ importForm.errors.file }}</div>
-
-                        <div class="flex gap-3">
-                            <button
-                                type="button"
-                                @click="isImportModalOpen = false"
-                                class="flex-1 rounded-lg border border-slate-100 py-4 text-xs font-black tracking-widest text-slate-400 uppercase transition-all hover:bg-slate-50"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                :disabled="!importForm.file || importForm.processing"
-                                class="flex-1 rounded-lg bg-primary py-4 text-xs font-black tracking-widest text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
-                            >
-                                Start Import
-                            </button>
+                    <div class="p-6">
+                        <div class="text-center mb-6">
+                            <div class="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+                                <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                </svg>
+                            </div>
+                            <p class="text-sm text-gray-500">
+                                Upload a CSV/Excel file. Required columns: <span class="text-primary font-semibold">Name, Email, Username, Staff_ID</span>
+                            </p>
                         </div>
-                    </form>
+
+                        <form @submit.prevent="handleImport" class="space-y-4">
+                            <label class="group relative flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 p-6 transition-all hover:border-primary hover:bg-white">
+                                <svg class="mb-3 size-8 text-gray-400 group-hover:text-primary transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                </svg>
+                                <span class="text-xs font-medium text-gray-500 group-hover:text-primary transition-colors">{{ importForm.file ? importForm.file.name : 'Select data file' }}</span>
+                                <input type="file" class="hidden" accept=".csv,.xlsx" @input="importForm.file = ($event.target as HTMLInputElement).files?.[0] || null" />
+                            </label>
+                            <p v-if="importForm.errors.file" class="text-sm text-red-600">{{ importForm.errors.file }}</p>
+
+                            <div class="flex gap-x-2">
+                                <button type="button" @click="isImportModalOpen = false" class="flex-1 py-2 px-3 inline-flex items-center justify-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none focus:outline-none">
+                                    Cancel
+                                </button>
+                                <button type="submit" :disabled="!importForm.file || importForm.processing" class="flex-1 py-2 px-3 inline-flex items-center justify-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-primary text-white hover:bg-primary-hover disabled:opacity-50 disabled:pointer-events-none focus:outline-none">
+                                    Start Import
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { Head, Link, usePage, useForm } from '@inertiajs/vue3';
-import { computed, watch } from 'vue';
+import { computed, watch, ref } from 'vue';
 import { store, index } from '@/actions/App/Http/Controllers/Staff/StaffQuestionController';
+import CustomSelect from '@/components/Form/CustomSelect.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import StaffLayout from '@/layouts/StaffLayout.vue';
 import type { AppPageProps } from '@/types';
@@ -16,8 +17,11 @@ const props = defineProps<{
 }>();
 
 const page = usePage<AppPageProps>();
-const isAdmin = computed(() => page.props.auth.user.roles.includes('admin'));
+const isAdmin = computed(() => page.props.auth.user.roles.includes('super_admin'));
 const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
+
+const imagePreview = ref<string | null>(null);
+const fileInput = ref<HTMLInputElement | null>(null);
 
 const form = useForm({
     subject_id: '',
@@ -28,6 +32,7 @@ const form = useForm({
     explanation: '',
     type: 'multiple_choice',
     difficulty: 'medium',
+    image: null as File | null,
     options: [
         { content: '', is_correct: true },
         { content: '', is_correct: false },
@@ -36,6 +41,24 @@ const form = useForm({
     ],
 });
 
+const handleImageChange = (e: Event) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (file) {
+        form.image = file;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            imagePreview.value = e.target?.result as string;
+        };
+        reader.readAsDataURL(file);
+    }
+};
+
+const removeImage = () => {
+    form.image = null;
+    imagePreview.value = null;
+    if (fileInput.value) fileInput.value.value = '';
+};
+
 const selectedSubject = computed(() => {
     return props.subjects.find((s) => s.id === (form.subject_id as string));
 });
@@ -43,32 +66,38 @@ const selectedSubject = computed(() => {
 const availableClasses = computed(() => {
     if (!selectedSubject.value) return [];
 
-    // Get unique class IDs from the subject's topics
-    const classIds = new Set((selectedSubject.value as any).topics.filter((t: any) => t.school_class_id).map((t: any) => t.school_class_id));
+    const topics = (selectedSubject.value as any).topics || [];
+    // Get unique class IDs from the topics of the selected subject
+    const mappedClassIds = [...new Set(
+        topics.filter((t: any) => t.school_class_id).map((t: any) => t.school_class_id)
+    )];
 
-    return props.classes.filter((c) => classIds.has(c.id));
+    // Only return classes that have at least one topic for this subject
+    return props.classes.filter((c) => mappedClassIds.includes(c.id));
 });
 
 const filteredTopics = computed(() => {
     if (!selectedSubject.value || !form.school_class_id) return [];
 
-    return (selectedSubject.value as any).topics.filter((topic: any) => !topic.school_class_id || topic.school_class_id === form.school_class_id);
+    const topics = (selectedSubject.value as any).topics || [];
+
+    // Return explicitly mapped topics that match the selected subject AND the selected class
+    return topics
+        .filter((topic: any) => String(topic.school_class_id) === String(form.school_class_id))
+        .map((topic: any) => ({
+            id: topic.id,
+            name: topic.name
+        }));
 });
 
-watch(
-    () => form.subject_id,
-    () => {
-        form.school_class_id = '';
-        form.topic_id = '';
-    },
-);
+watch(() => form.subject_id, (newVal) => {
+    form.school_class_id = '';
+    form.topic_id = '';
+});
 
-watch(
-    () => form.school_class_id,
-    () => {
-        form.topic_id = '';
-    },
-);
+watch(() => form.school_class_id, (newVal) => {
+    form.topic_id = '';
+});
 
 const addOption = () => {
     form.options.push({ content: '', is_correct: false });
@@ -81,17 +110,16 @@ const removeOption = (idx: number) => {
 };
 
 const setCorrectOption = (idx: number) => {
-    if (form.type === 'multiple_choice') {
-        form.options.forEach((opt, i) => {
-            opt.is_correct = i === idx;
-        });
-    }
+    form.options.forEach((opt, i) => {
+        opt.is_correct = i === idx;
+    });
 };
 
 const submit = () => {
     form.post(store().url, {
         onSuccess: () => {
             form.reset();
+            imagePreview.value = null;
         },
     });
 };
@@ -101,264 +129,236 @@ const submit = () => {
     <component :is="Layout">
         <Head title="Create Question" />
 
-        <div class="space-y-8 md:space-y-10">
-            <!-- Breadcrumbs -->
-            <nav class="flex items-center gap-2 text-[10px] font-bold tracking-widest text-slate-500 uppercase">
-                <Link :href="isAdmin ? '/admin/dashboard' : '/staff/dashboard'" class="text-slate-500 transition-colors hover:text-slate-800">Dashboard</Link>
-                <svg class="h-3 w-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg>
-                <Link :href="index().url" class="text-slate-500 transition-colors hover:text-slate-800">Question Bank</Link>
-                <svg class="h-3 w-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg>
-                <span class="text-slate-900">New Addition</span>
-            </nav>
+        <div class="max-w-7xl mx-auto pb-24">
+            <div class="space-y-6 sm:space-y-10">
+                <!-- Breadcrumbs -->
+                <nav class="flex items-center gap-2 text-xs font-medium text-gray-500">
+                    <Link :href="isAdmin ? '/admin/dashboard' : '/staff/dashboard'" class="hover:text-primary transition-colors">Dashboard</Link>
+                    <svg class="size-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                    <Link :href="index().url" class="hover:text-primary transition-colors">Question Bank</Link>
+                    <svg class="size-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                    <span class="text-gray-800">Add Question</span>
+                </nav>
 
-            <div class="w-full">
-                <!-- Back Button -->
-                <div class="mb-8">
-                    <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                            <div class="flex items-center gap-3">
-                                <Link :href="index().url" class="group flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white transition-all hover:border-slate-900 hover:text-slate-900 active:scale-95">
-                                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" /></svg>
-                                </Link>
-                                <h1 class="text-2xl md:text-3xl font-black tracking-tight text-slate-900 italic">Create Question</h1>
-                            </div>
-                            <p class="mt-2 text-[10px] md:text-sm font-bold tracking-widest text-slate-400 uppercase px-1">Define metadata, content, and valid options.</p>
+                <!-- Page Header -->
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <h1 class="text-2xl font-semibold text-gray-800">Create Question</h1>
+                        <p class="text-sm text-gray-500 mt-1">
+                            Draft a new assessment item for the question bank
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-x-2">
+                        <Link
+                            :href="index().url"
+                            class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none"
+                        >
+                            Cancel
+                        </Link>
+                        <button
+                            @click="submit"
+                            :disabled="form.processing"
+                            class="py-2.5 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-primary text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
+                        >
+                            <span v-if="form.processing" class="loading loading-spinner loading-xs"></span>
+                            Publish Question
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Global Error Alert -->
+                <div v-if="form.errors.options" class="bg-red-50 border border-red-200 text-sm text-red-800 rounded-lg p-4 flex items-center gap-3" role="alert">
+                    <svg class="size-4 shrink-0" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+                    {{ form.errors.options }}
+                </div>
+
+                <!-- 01. Classification Section -->
+                <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+                    <div class="mb-6 flex items-center gap-x-3">
+                        <span class="size-8 flex items-center justify-center rounded-lg bg-primary/10 text-primary font-semibold text-sm">1</span>
+                        <h2 class="text-lg font-semibold text-gray-800">Context & Classification</h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <CustomSelect
+                            v-model="form.subject_id"
+                            label="Subject Area"
+                            :options="subjects"
+                            placeholder="Choose Subject"
+                            :error="form.errors.subject_id"
+                            size="md"
+                        />
+                        <CustomSelect
+                            v-model="form.school_class_id"
+                            label="Target Level"
+                            :options="availableClasses"
+                            placeholder="Choose Class"
+                            :error="form.errors.school_class_id"
+                            size="md"
+                        />
+                        <CustomSelect
+                            v-model="form.topic_id"
+                            label="Curriculum Topic"
+                            :options="filteredTopics"
+                            placeholder="Choose Topic"
+                            :disabled="!form.subject_id || !form.school_class_id"
+                            :error="form.errors.topic_id"
+                            size="md"
+                        />
+                        <CustomSelect
+                            v-if="batches && batches.length > 0"
+                            v-model="form.prospective_class_id"
+                            label="Entrance Cohort"
+                            :options="batches"
+                            placeholder="Regular Enrollment"
+                            :error="form.errors.prospective_class_id"
+                            size="md"
+                        />
+                    </div>
+                </div>
+
+                <!-- 02. Question Content Section -->
+                <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+                    <div class="mb-6 flex items-center justify-between">
+                        <div class="flex items-center gap-x-3">
+                            <span class="size-8 flex items-center justify-center rounded-lg bg-primary/10 text-primary font-semibold text-sm">2</span>
+                            <h2 class="text-lg font-semibold text-gray-800">Problem Statement <span class="text-red-500">*</span></h2>
+                        </div>
+                        <button type="button" @click="fileInput?.click()" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none">
+                            <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                            {{ imagePreview ? 'Replace Image' : 'Add Image' }}
+                        </button>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div class="flex flex-wrap gap-2">
+                            <button
+                                v-for="type in types" :key="type.value" type="button"
+                                @click="form.type = type.value"
+                                class="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border transition-colors focus:outline-none"
+                                :class="form.type === type.value ? 'bg-primary text-white border-transparent' : 'bg-white text-gray-800 border-gray-200 hover:bg-gray-50'"
+                            >
+                                {{ type.label }}
+                            </button>
+                        </div>
+
+                        <textarea
+                            v-model="form.content"
+                            rows="4"
+                            required
+                            class="py-3 px-4 block w-full border-gray-200 rounded-lg text-lg font-medium focus:border-primary focus:ring-primary disabled:opacity-50 disabled:pointer-events-none"
+                            :class="form.errors.content ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : 'border-gray-200'"
+                            placeholder="Type your question here..."
+                        ></textarea>
+                        <p v-if="form.errors.content" class="text-xs text-red-600 mt-1">{{ form.errors.content }}</p>
+
+                        <div v-if="imagePreview" class="relative inline-block overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
+                            <img :src="imagePreview" class="max-h-80 w-auto object-contain" />
+                            <button @click="removeImage" type="button" class="absolute top-2 right-2 size-8 flex items-center justify-center rounded-lg bg-red-600 text-white shadow-sm hover:bg-red-700 transition-colors">
+                                <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+                        </div>
+                        <input ref="fileInput" type="file" class="hidden" accept="image/*" @change="handleImageChange" />
+
+                        <div class="pt-6 border-t border-gray-100">
+                            <label class="block text-sm font-medium text-gray-800 mb-2">Explanation (Optional)</label>
+                            <textarea
+                                v-model="form.explanation"
+                                rows="2"
+                                class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-primary focus:ring-primary disabled:opacity-50 disabled:pointer-events-none"
+                                placeholder="Provide a detailed explanation for the correct answer..."
+                            ></textarea>
+                            <p v-if="form.errors.explanation" class="text-xs text-red-600 mt-1">{{ form.errors.explanation }}</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="mb-8 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
-                    <div class="p-8 md:p-12">
-
-                    <form @submit.prevent="submit" class="space-y-10">
-                        <!-- Metadata Row -->
-                        <div class="grid grid-cols-1 gap-10 md:grid-cols-4">
-                            <div>
-                                <label class="mb-2 block text-sm font-semibold text-slate-700">Subject</label>
-                                <select
-                                    v-model="form.subject_id"
-                                    required
-                                    class="block w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-3.5 text-sm transition-all focus:border-primary focus:ring-primary"
-                                >
-                                    <option value="" disabled>Select Subject</option>
-                                    <option v-for="subject in subjects" :key="subject.id" :value="subject.id">
-                                        {{ subject.name }}
-                                    </option>
-                                </select>
-                                <div v-if="form.errors.subject_id" class="mt-1 text-xs text-red-600">{{ form.errors.subject_id }}</div>
-                            </div>
-
-                            <div>
-                                <label class="mb-2 block text-sm font-semibold text-slate-700">Target Class</label>
-                                <select
-                                    v-model="form.school_class_id"
-                                    required
-                                    :disabled="!selectedSubject"
-                                    class="block w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-3.5 text-sm transition-all focus:border-primary focus:ring-primary disabled:opacity-50"
-                                >
-                                    <option value="" disabled>Select Class</option>
-                                    <option v-for="cls in availableClasses" :key="cls.id" :value="cls.id">{{ cls.name }} ({{ cls.level }})</option>
-                                </select>
-                                <div v-if="form.errors.school_class_id" class="mt-1 text-xs text-red-600">{{ form.errors.school_class_id }}</div>
-                            </div>
-
-                            <div>
-                                <label class="mb-2 block text-sm font-semibold text-slate-700">Topic</label>
-                                <select
-                                    v-model="form.topic_id"
-                                    required
-                                    :disabled="!selectedSubject || !form.school_class_id"
-                                    class="block w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-3.5 text-sm transition-all focus:border-primary focus:ring-primary disabled:opacity-50"
-                                >
-                                    <option value="" disabled>Select Topic</option>
-                                    <option v-for="topic in filteredTopics" :key="topic.id" :value="topic.id">
-                                        {{ topic.name }}
-                                    </option>
-                                </select>
-                                <div v-if="form.errors.topic_id" class="mt-1 text-xs text-red-600">{{ form.errors.topic_id }}</div>
-                            </div>
-
-                            <div v-if="batches && batches.length > 0">
-                                <label class="mb-2 block text-sm font-semibold text-slate-700">Entrance Batch (Optional)</label>
-                                <select
-                                    v-model="form.prospective_class_id"
-                                    class="block w-full rounded-xl border-slate-200 bg-slate-50 px-4 py-3.5 text-sm transition-all focus:border-primary focus:ring-primary"
-                                >
-                                    <option value="">None (Regular Question)</option>
-                                    <option v-for="batch in batches" :key="batch.id" :value="batch.id">
-                                        {{ batch.name }}
-                                    </option>
-                                </select>
-                                <div v-if="form.errors.prospective_class_id" class="mt-1 text-xs text-red-600">{{ form.errors.prospective_class_id }}</div>
-                            </div>
+                <!-- 03. Answer Options Section -->
+                <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+                    <div class="mb-6 flex items-center justify-between">
+                        <div class="flex items-center gap-x-3">
+                            <span class="size-8 flex items-center justify-center rounded-lg bg-primary/10 text-primary font-semibold text-sm">3</span>
+                            <h2 class="text-lg font-semibold text-gray-800">Response Choices <span class="text-red-500">*</span></h2>
                         </div>
+                        <button type="button" @click="addOption" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-gray-100 text-gray-800 hover:bg-gray-200 focus:outline-none">
+                            + Add Option
+                        </button>
+                    </div>
 
-                        <!-- Type & Difficulty Toggles -->
-                        <div class="grid grid-cols-1 gap-10 md:grid-cols-2">
-                            <div class="rounded-xl border border-slate-100 bg-slate-50/50 p-6">
-                                <label class="mb-4 block text-sm font-semibold text-slate-700">Question Type</label>
-                                <div class="flex gap-4">
-                                    <button
-                                        v-for="type in types"
-                                        :key="type.value"
-                                        type="button"
-                                        @click="form.type = type.value"
-                                        :class="[
-                                            'flex-1 rounded-xl border-2 py-3.5 text-sm font-bold transition-all',
-                                            form.type === type.value
-                                                ? 'border-primary bg-primary text-white shadow-md'
-                                                : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300',
-                                        ]"
-                                    >
-                                        {{ type.label }}
-                                    </button>
-                                </div>
-                                <div v-if="form.errors.type" class="mt-2 text-xs text-red-600">{{ form.errors.type }}</div>
-                            </div>
-
-                            <div class="rounded-xl border border-slate-100 bg-slate-50/50 p-6">
-                                <label class="mb-4 block text-sm font-semibold text-slate-700">Difficulty Level</label>
-                                <div class="flex gap-4">
-                                    <button
-                                        v-for="difficult in difficulties"
-                                        :key="difficult.value"
-                                        type="button"
-                                        @click="form.difficulty = difficult.value"
-                                        :class="[
-                                            'flex-1 rounded-xl border-2 py-3.5 text-sm font-bold transition-all',
-                                            form.difficulty === difficult.value
-                                                ? 'border-primary bg-primary text-white shadow-md'
-                                                : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300',
-                                        ]"
-                                    >
-                                        {{ difficult.label }}
-                                    </button>
-                                </div>
-                                <div v-if="form.errors.difficulty" class="mt-2 text-xs text-red-600">{{ form.errors.difficulty }}</div>
-                            </div>
-                        </div>
-
-                        <!-- Main Content Grid -->
-                        <div class="grid grid-cols-1 gap-16 lg:grid-cols-2">
-                            <div class="space-y-8">
-                                <div>
-                                    <label class="mb-3 block text-sm font-semibold text-slate-700">Question Content</label>
-                                    <textarea
-                                        v-model="form.content"
-                                        rows="10"
-                                        required
-                                        class="block w-full rounded-xl border-slate-200 bg-slate-50 px-5 py-5 text-sm transition-all focus:border-primary focus:ring-primary"
-                                        placeholder="Enter the full text of your question..."
-                                    ></textarea>
-                                    <div v-if="form.errors.content" class="mt-2 text-xs font-medium text-red-600">{{ form.errors.content }}</div>
-                                </div>
-
-                                <div>
-                                    <label class="mb-3 block text-sm font-semibold text-slate-700">Explanation (Optional)</label>
-                                    <textarea
-                                        v-model="form.explanation"
-                                        rows="4"
-                                        class="block w-full rounded-xl border-slate-200 bg-slate-50 px-5 py-5 text-sm transition-all focus:border-primary focus:ring-primary"
-                                        placeholder="Provide a detailed explanation for the correct answer..."
-                                    ></textarea>
-                                    <div v-if="form.errors.explanation" class="mt-2 text-xs text-red-600">{{ form.errors.explanation }}</div>
-                                </div>
-                            </div>
-
-                            <div class="space-y-8">
-                                <div class="flex items-center justify-between">
-                                    <label class="block text-sm font-semibold text-slate-700">Answer Options</label>
-                                    <button
-                                        type="button"
-                                        @click="addOption"
-                                        class="flex items-center rounded-xl bg-primary/5 px-3 py-1.5 text-xs font-bold text-primary transition-colors hover:bg-primary/10 hover:underline"
-                                    >
-                                        <svg class="mr-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                        </svg>
-                                        Add Option
-                                    </button>
-                                </div>
-                                <div v-if="form.errors.options" class="mt-1 text-xs font-medium text-red-600">{{ (form.errors as any).options }}</div>
-
-                                <div class="space-y-5">
-                                    <div v-for="(option, index) in form.options" :key="index" class="group flex gap-4">
-                                        <div class="relative flex-1">
-                                            <input
-                                                v-model="option.content"
-                                                type="text"
-                                                required
-                                                class="block w-full rounded-xl border-slate-200 bg-slate-50 px-5 py-4 pr-12 text-sm transition-all focus:border-primary focus:ring-primary"
-                                                :placeholder="`Option ${index + 1}`"
-                                            />
-                                            <button
-                                                v-if="form.options.length > 2"
-                                                type="button"
-                                                @click="removeOption(index)"
-                                                class="absolute top-1/2 right-4 -translate-y-1/2 text-slate-300 opacity-0 transition-colors group-hover:opacity-100 hover:text-red-500"
-                                            >
-                                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                                </svg>
-                                            </button>
-                                            <div v-if="form.errors[`options.${index}.content`]" class="mt-1 text-xs text-red-600">
-                                                {{ form.errors[`options.${index}.content`] }}
-                                            </div>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            @click="setCorrectOption(index)"
-                                            :class="[
-                                                'w-36 shrink-0 rounded-xl border-2 text-xs font-bold transition-all',
-                                                option.is_correct
-                                                    ? 'border-green-500 bg-green-500 text-white shadow-md'
-                                                    : 'border-slate-200 bg-white text-slate-400 hover:border-slate-300',
-                                            ]"
-                                        >
-                                            {{ option.is_correct ? 'Correct Answer' : 'Mark Correct' }}
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Form Actions -->
-                        <div class="flex justify-end border-t border-slate-100 pt-10">
-                            <div class="flex gap-4">
-                                <Link :href="index().url" class="px-8 py-4 text-sm font-bold text-slate-500 transition-colors hover:text-slate-700">
-                                    Cancel
-                                </Link>
+                    <div class="grid grid-cols-1 gap-4">
+                        <div v-for="(option, index) in form.options" :key="index" class="space-y-1">
+                            <div class="flex items-center gap-4 p-4 border rounded-lg bg-white hover:bg-gray-50 transition-colors" :class="form.errors[`options.${index}.content`] ? 'border-red-200' : 'border-gray-200'">
                                 <button
-                                    type="submit"
-                                    :disabled="form.processing"
-                                    class="flex items-center justify-center rounded-xl bg-primary px-16 py-4 text-lg font-bold text-white shadow-xl transition-all hover:scale-105 hover:bg-primary/90 active:scale-95 disabled:opacity-50"
+                                    type="button"
+                                    @click="setCorrectOption(index)"
+                                    :class="[
+                                        'size-10 shrink-0 flex items-center justify-center rounded-lg border-2 transition-all',
+                                        option.is_correct
+                                            ? 'border-green-500 bg-green-500 text-white'
+                                            : 'border-gray-200 bg-white text-gray-400 hover:border-gray-300'
+                                    ]"
                                 >
-                                    <span v-if="form.processing" class="mr-2 animate-spin">
-                                        <svg class="h-5 w-5" viewBox="0 0 24 24">
-                                            <circle
-                                                class="opacity-25"
-                                                cx="12"
-                                                cy="12"
-                                                r="10"
-                                                stroke="currentColor"
-                                                stroke-width="4"
-                                                fill="none"
-                                            ></circle>
-                                            <path
-                                                class="opacity-75"
-                                                fill="currentColor"
-                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                            ></path>
-                                        </svg>
-                                    </span>
-                                    Publish to Repository
+                                    <span v-if="!option.is_correct" class="text-sm font-bold">{{ String.fromCharCode(65 + index) }}</span>
+                                    <svg v-else class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
+                                </button>
+
+                                <div class="flex-1">
+                                    <input
+                                        v-model="option.content"
+                                        type="text"
+                                        required
+                                        class="py-2 px-0 block w-full border-none bg-transparent text-sm font-medium focus:ring-0"
+                                        :placeholder="`Enter option ${String.fromCharCode(65 + index)} content`"
+                                    />
+                                </div>
+
+                                <button
+                                    v-if="form.options.length > 2"
+                                    type="button"
+                                    @click="removeOption(index)"
+                                    class="size-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+                                >
+                                    <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                 </button>
                             </div>
+                            <p v-if="form.errors[`options.${index}.content`]" class="text-[10px] text-red-600 px-1">{{ form.errors[`options.${index}.content`] }}</p>
                         </div>
-                    </form>
+                    </div>
+                </div>
+
+                <!-- Footer Summary Bar -->
+                <div class="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-xl shadow-sm">
+                    <div class="hidden md:flex items-center gap-4">
+                        <div class="flex items-center gap-1.5" :class="form.content ? 'text-teal-600' : 'text-gray-400'">
+                            <span class="size-2 rounded-full" :class="form.content ? 'bg-teal-600' : 'bg-gray-300'"></span>
+                            <span class="text-xs font-medium">Question Content</span>
+                        </div>
+                        <div class="flex items-center gap-1.5" :class="form.options.some(o => o.content) ? 'text-teal-600' : 'text-gray-400'">
+                            <span class="size-2 rounded-full" :class="form.options.some(o => o.content) ? 'bg-teal-600' : 'bg-gray-300'"></span>
+                            <span class="text-xs font-medium">Answer Choices</span>
+                        </div>
+                        <div class="flex items-center gap-1.5" :class="form.subject_id ? 'text-teal-600' : 'text-gray-400'">
+                            <span class="size-2 rounded-full" :class="form.subject_id ? 'bg-teal-600' : 'bg-gray-300'"></span>
+                            <span class="text-xs font-medium">Taxonomy</span>
+                        </div>
+                    </div>
+                    <button
+                        @click="submit"
+                        :disabled="form.processing"
+                        class="w-full md:w-auto py-2.5 px-6 inline-flex items-center justify-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-primary text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
+                    >
+                        <span v-if="form.processing" class="loading loading-spinner loading-xs"></span>
+                        Publish to Bank
+                    </button>
                 </div>
             </div>
         </div>
-    </div>
-</component>
+    </component>
 </template>
+
+<style scoped>
+/* Standard Clean Look */
+textarea:focus, input:focus {
+    outline: none !important;
+}
+</style>

@@ -35,13 +35,8 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-        $user = null;
-        foreach (['admin', 'staff', 'student', 'web'] as $guard) {
-            if ($request->user($guard)) {
-                $user = $request->user($guard);
-                break;
-            }
-        }
+        // Use standard 'web' guard for all users
+        $user = $request->user();
 
         if ($user) {
             $user->loadMissing(['roles', 'permissions']);
@@ -61,7 +56,14 @@ class HandleInertiaRequests extends Middleware
                 'is_seeding' => $user ? \Illuminate\Support\Facades\Cache::get("user_{$user->id}_seeding_status") : null,
             ],
             'academic_session' => \App\Models\AcademicSession::current()->first(),
-            'branches' => config('app.branches'),
+            'branches' => \App\Models\School::where('is_active', true)->get()->mapWithKeys(fn ($s) => [
+                $s->id => [
+                    'id' => $s->id,
+                    'name' => $s->name,
+                    'slug' => $s->slug,
+                    'type' => $s->type,
+                ],
+            ]),
             'flash' => [
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),

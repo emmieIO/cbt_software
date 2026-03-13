@@ -11,6 +11,7 @@ class RoleDTO
      */
     public function __construct(
         public string $name,
+        public string $category = 'staff',
         public array $permissions = []
     ) {}
 
@@ -18,6 +19,7 @@ class RoleDTO
     {
         return new self(
             name: $request->string('name'),
+            category: $request->string('category', 'staff'),
             permissions: $request->array('permissions')
         );
     }
@@ -26,6 +28,7 @@ class RoleDTO
     {
         return [
             'name' => $this->name,
+            'category' => $this->category,
             'permissions' => $this->permissions,
         ];
     }

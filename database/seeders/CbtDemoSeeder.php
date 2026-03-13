@@ -48,7 +48,7 @@ class CbtDemoSeeder extends Seeder
             ['school_class_id' => $class->id]
         );
 
-        // 5. Create Staff (Teacher)
+        // 5. Create Staff (Teacher) -> Examiner Role
         $staff = User::firstOrCreate(
             ['email' => 'teacher@chrisland.com'],
             [
@@ -57,11 +57,11 @@ class CbtDemoSeeder extends Seeder
                 'password' => Hash::make('password'),
             ]
         );
-        if (! $staff->hasRole('staff')) {
-            $staff->assignRole('staff');
+        if (! $staff->hasRole('examiner')) {
+            $staff->assignRole('examiner');
         }
 
-        // 6. Create Student
+        // 6. Create Student -> Candidate Role
         $student = User::firstOrCreate(
             ['email' => 'student@chrisland.com'],
             [
@@ -69,10 +69,11 @@ class CbtDemoSeeder extends Seeder
                 'username' => 'student_jane',
                 'password' => Hash::make('password'),
                 'school_class_id' => $class->id,
+                'status' => 'active',
             ]
         );
-        if (! $student->hasRole('student')) {
-            $student->assignRole('student');
+        if (! $student->hasRole('candidate')) {
+            $student->assignRole('candidate');
         }
 
         // Enroll student and assign teacher

@@ -50,13 +50,7 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         $middleware->redirectUsersTo(function (Request $request) {
-            $user = null;
-            foreach (['admin', 'staff', 'student', 'web'] as $guard) {
-                if ($request->user($guard)) {
-                    $user = $request->user($guard);
-                    break;
-                }
-            }
+            $user = $request->user();
 
             return $user ? app(AuthService::class)->getRedirectUrl($user) : route('home');
         });

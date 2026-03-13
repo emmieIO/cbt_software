@@ -22,16 +22,16 @@ class UserService
             $userData['password'] = Hash::make('chrisland123'); // Default password for new imports
         }
 
-        // Auto-set status for candidates
-        if ($role === 'candidate') {
+        // Auto-set status for candidates (prospective by default)
+        if ($role === 'candidate' && ! isset($userData['status'])) {
             $userData['status'] = 'prospective';
         }
 
         $user = User::create($userData);
         $user->assignRole($role);
 
-        // Record initial enrollment for students
-        if ($role === 'student' && $user->school_class_id) {
+        // Record initial enrollment for active candidates (formerly students)
+        if ($role === 'candidate' && $user->school_class_id && ($user->status === 'active' || ! isset($userData['status']))) {
             $currentSession = AcademicSession::current()->first();
             if ($currentSession) {
                 ClassEnrollment::updateOrCreate(
@@ -59,7 +59,7 @@ class UserService
      */
     public function deleteUser(User $user): bool
     {
-        if ($user->hasRole('admin')) {
+        if ($user->can('sys:manage_settings')) {
             return false;
         }
 

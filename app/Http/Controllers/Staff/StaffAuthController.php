@@ -11,18 +11,16 @@ use Inertia\Response;
 
 class StaffAuthController extends Controller
 {
-    public function __construct(
-        protected AuthService $authService
-    ) {}
+    public function __construct(protected AuthService $authService) {}
 
     public function login(): Response
     {
         return Inertia::render('Staff/Login');
     }
 
-    public function authenticate(LoginRequest $request): RedirectResponse
+    public function store(LoginRequest $request): RedirectResponse
     {
-        $user = $this->authService->login($request->credentials(), $request->boolean('remember'), 'staff');
+        $user = $this->authService->login($request->credentials(), $request->boolean('remember'), 'examiner');
 
         return redirect()->intended(route('staff.dashboard'));
     }

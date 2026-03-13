@@ -19,7 +19,7 @@ interface Exam {
     academic_session: { name: string };
     status: string;
     type: string;
-    branch: string;
+    school_id: string | null;
     duration: number;
     questions_count: number;
     start_time: string | null;
@@ -30,167 +30,155 @@ const props = defineProps<{
     filters: {
         status?: string;
         type?: string;
-        branch?: string;
+        school_id?: string;
     };
 }>();
 
 const page = usePage();
 const branches = computed(() => (page.props as any).branches || {});
-const isAdmin = computed(() => (page.props.auth.user as any).roles.includes('admin'));
+const isAdmin = computed(() => (page.props.auth.user as any).permissions.includes('sys:manage_settings'));
 const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
 
 // Filters
-const branchFilter = ref(props.filters.branch || '');
+const schoolFilter = ref(props.filters.school_id || '');
 const applyFilters = () => {
-    router.get(router.page.url, { 
+    router.get(page.url, { 
         ...props.filters,
-        branch: branchFilter.value 
+        school_id: schoolFilter.value 
     }, { preserveState: true });
 };
 
-const getStatusColor = (status: string) => {
+const getStatusClasses = (status: string) => {
     switch (status) {
         case 'live':
-            return 'bg-green-500 text-white';
+            return 'bg-teal-100 text-teal-800';
         case 'scheduled':
-            return 'bg-blue-500 text-white';
+            return 'bg-blue-100 text-blue-800';
         case 'closed':
-            return 'bg-slate-500 text-white';
+            return 'bg-red-100 text-red-800';
         default:
-            return 'bg-slate-100 text-slate-600';
+            return 'bg-gray-100 text-gray-800';
     }
 };
 </script>
 
 <template>
     <component :is="Layout">
-        <Head title="My Examinations" />
+        <Head title="Examination Vault" />
 
-        <div class="space-y-8">
+        <div class="space-y-6 sm:space-y-10">
             <!-- Breadcrumbs -->
-            <nav class="flex items-center gap-2 text-[10px] font-bold tracking-widest text-slate-500 uppercase">
-                <Link :href="isAdmin ? '/admin/dashboard' : '/staff/dashboard'" class="text-slate-500 transition-colors hover:text-slate-800">Dashboard</Link>
-                <svg class="h-3 w-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg>
-                <span class="text-slate-900">Examination Vault</span>
+            <nav class="flex items-center gap-2 text-xs font-medium text-gray-500">
+                <Link :href="isAdmin ? '/admin/dashboard' : '/staff/dashboard'" class="hover:text-primary transition-colors">Dashboard</Link>
+                <svg class="size-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                <span class="text-gray-800">Examination Vault</span>
             </nav>
 
-            <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+            <!-- Page Header -->
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <div class="flex items-center gap-3">
-                        <Link :href="isAdmin ? '/admin/dashboard' : '/staff/dashboard'" class="group flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white transition-all hover:border-slate-900 hover:text-slate-900 active:scale-95">
-                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" /></svg>
-                        </Link>
-                        <h2 class="text-2xl md:text-3xl font-black tracking-tight text-slate-900 italic">Examination Vault</h2>
-                    </div>
-                    <p class="mt-2 text-xs md:text-sm font-bold text-slate-500 uppercase tracking-widest">Manage papers and student schedules.</p>
+                    <h1 class="text-2xl font-semibold text-gray-800">Examination Vault</h1>
+                    <p class="text-sm text-gray-500 mt-1">
+                        Manage papers and student schedules • {{ exams.data.length }} Records
+                    </p>
                 </div>
                 <Link
                     :href="createExamAction().url"
-                    class="flex h-12 items-center justify-center gap-3 rounded-xl bg-primary px-6 text-xs md:text-sm font-black tracking-wider text-white uppercase shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 sm:w-auto"
+                    class="py-2.5 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-primary text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
                 >
-                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
+                    <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
                     New Examination
                 </Link>
             </div>
 
-            <!-- Branch Filter -->
-            <div class="flex items-center gap-3 rounded-xl border border-slate-100 bg-white p-4 shadow-sm">
-                <div class="flex h-10 items-center gap-2 rounded-lg border border-slate-100 bg-slate-50 px-4">
-                    <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
+            <!-- Filters -->
+            <div class="flex flex-col sm:flex-row gap-4">
+                <div class="w-full sm:max-w-xs">
+                    <label class="sr-only">Filter by Branch</label>
                     <select 
-                        v-model="branchFilter" 
+                        v-model="schoolFilter" 
                         @change="applyFilters"
-                        class="cursor-pointer border-none bg-transparent text-[10px] font-black text-slate-600 uppercase focus:ring-0"
+                        class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-primary focus:ring-primary disabled:opacity-50 disabled:pointer-events-none"
                     >
                         <option value="">All My Branches</option>
                         <option v-for="(info, key) in branches" :key="key" :value="key">{{ info.name }}</option>
                     </select>
                 </div>
-                <span class="text-[10px] font-black tracking-widest text-slate-400 uppercase italic">Filter vault by school</span>
             </div>
 
-            <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                <div
-                    v-for="exam in exams.data"
-                    :key="exam.id"
-                    class="group relative overflow-hidden rounded-xl border border-slate-100 bg-white p-6 md:p-8 shadow-sm transition-all hover:shadow-xl"
-                >
-                    <div class="relative z-10">
-                        <div class="mb-4 md:mb-6 flex items-start justify-between">
-                            <span
-                                class="rounded-lg-full px-2 py-0.5 md:px-3 md:py-1 text-[8px] md:text-[9px] font-black tracking-widest text-slate-900 uppercase"
-                                :class="getStatusColor(exam.status)"
-                            >
-                                {{ exam.status }}
-                            </span>
-                            <span class="text-[9px] md:text-[10px] font-black tracking-tighter text-slate-300 uppercase">{{ exam.type }}</span>
-                        </div>
-
-                        <h3 class="mb-2 line-clamp-1 text-lg md:text-xl font-black text-slate-800">{{ exam.title }}</h3>
-                        <div class="mb-4 md:mb-6 flex flex-wrap items-center gap-2">
-                            <div v-if="branches[exam.branch]" class="inline-flex items-center rounded-lg border border-primary/10 bg-primary/5 px-2 py-0.5 text-[8px] font-black text-primary uppercase">
-                                {{ branches[exam.branch].name }}
-                            </div>
-                            <span class="rounded-xl bg-slate-50 px-2 py-0.5 md:py-1 text-[9px] md:text-[10px] font-black text-slate-500 uppercase border border-slate-100">
-                                {{ exam.subject?.name || 'Multi-Subject' }}
-                            </span>
-                            <div class="hidden sm:block rounded-lg-full h-1 w-1 bg-slate-200"></div>
-                            <span class="text-[9px] md:text-[10px] font-bold tracking-widest text-slate-400 uppercase">
-                                {{ exam.type === 'entrance' ? (exam.prospective_class?.name || 'All Candidates') : (exam.school_class?.name || 'General') }}
-                            </span>
-                        </div>
-
-                        <div class="mb-6 md:mb-8 grid grid-cols-2 gap-3 md:gap-4">
-                            <div class="rounded-xl bg-slate-50 p-3 md:p-4">
-                                <span class="mb-1 block text-[8px] md:text-[9px] font-black tracking-widest text-slate-400 uppercase">Time</span>
-                                <span class="text-[10px] md:text-xs font-bold text-slate-700">{{ exam.duration }} Mins</span>
-                            </div>
-                            <div class="rounded-xl bg-slate-50 p-3 md:p-4">
-                                <span class="mb-1 block text-[8px] md:text-[9px] font-black tracking-widest text-slate-400 uppercase">Pool</span>
-                                <span class="text-[10px] md:text-xs font-bold text-slate-700">{{ exam.questions_count }} Items</span>
-                            </div>
-                        </div>
-
-                        <div class="flex gap-2 md:gap-3">
-                            <Link
-                                :href="editExamAction(exam.id).url"
-                                class="flex h-12 w-12 md:h-14 md:w-14 shrink-0 items-center justify-center rounded-xl border-2 border-slate-100 text-slate-400 transition-all hover:border-primary hover:text-primary active:scale-90"
-                            >
-                                <svg class="h-4 w-4 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2.5"
-                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                    />
-                                </svg>
-                            </Link>
-                            <Link
-                                :href="showExamAction(exam.id).url"
-                                class="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-slate-100 py-3 md:py-4 text-[10px] md:text-xs font-black tracking-widest text-slate-600 uppercase transition-all hover:border-primary hover:text-primary"
-                            >
-                                Configure
-                                <svg class="h-3 w-3 md:h-4 md:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                                </svg>
-                            </Link>
+            <!-- Exams Table Card -->
+            <div class="flex flex-col">
+                <div class="-m-1.5 overflow-x-auto">
+                    <div class="p-1.5 min-w-full inline-block align-middle">
+                        <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">Exam Details</th>
+                                        <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">Configuration</th>
+                                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
+                                        <th scope="col" class="px-6 py-3 text-end text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    <tr v-for="exam in exams.data" :key="exam.id" class="hover:bg-gray-50 transition-colors">
+                                        <td class="px-6 py-4">
+                                            <div class="flex flex-col">
+                                                <span class="text-sm font-semibold text-gray-800">{{ exam.title }}</span>
+                                                <div class="flex items-center gap-x-2 mt-0.5">
+                                                    <span v-if="exam.school_id && branches[exam.school_id]" class="text-xs text-primary font-medium">
+                                                        {{ branches[exam.school_id].name }}
+                                                    </span>
+                                                    <span v-if="exam.school_id" class="text-xs text-gray-400">•</span>
+                                                    <span class="text-xs text-gray-500">
+                                                        {{ exam.type === 'entrance' ? (exam.prospective_class?.name || 'All Candidates') : (exam.school_class?.name || 'General') }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex flex-col">
+                                                <span class="text-xs text-gray-800"><span class="font-medium">Subject:</span> {{ exam.subject?.name || 'Multi-Subject' }}</span>
+                                                <span class="text-xs text-gray-500 mt-0.5">{{ exam.duration }} Mins • {{ exam.questions_count }} Questions</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-center">
+                                            <span 
+                                                class="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-md text-xs font-medium capitalize"
+                                                :class="getStatusClasses(exam.status)"
+                                            >
+                                                {{ exam.status }}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 text-end">
+                                            <div class="flex justify-end items-center gap-x-2">
+                                                <Link 
+                                                    :href="editExamAction(exam.id).url" 
+                                                    class="size-8 inline-flex justify-center items-center gap-x-2 rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-50"
+                                                >
+                                                    <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                                </Link>
+                                                <Link 
+                                                    :href="showExamAction(exam.id).url" 
+                                                    class="py-1.5 px-3 inline-flex items-center gap-x-2 text-xs font-semibold rounded-lg border border-transparent bg-primary text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                                                >
+                                                    Configure
+                                                </Link>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr v-if="exams.data.length === 0">
+                                        <td colspan="4" class="px-6 py-12 text-center text-gray-500">
+                                            <div class="flex flex-col items-center justify-center">
+                                                <svg class="size-8 text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                                <p class="text-sm">No examinations drafted yet</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                </div>
-
-                <!-- Empty State -->
-                <div v-if="exams.data.length === 0" class="col-span-full flex flex-col items-center justify-center py-12 md:py-20 opacity-30">
-                    <svg class="mb-4 h-16 w-16 md:h-20 md:w-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="1"
-                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        />
-                    </svg>
-                    <p class="text-base md:text-lg font-bold tracking-widest uppercase">No Examinations Drafted</p>
                 </div>
             </div>
         </div>
