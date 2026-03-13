@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, router, Link, useForm } from '@inertiajs/vue3';
 import { debounce } from 'lodash';
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { store, update, destroy } from '@/actions/App/Http/Controllers/Admin/TopicController';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
@@ -22,9 +22,11 @@ const props = defineProps<{
     topics: Topic[];
     subjects: Subject[];
     classes: SchoolClass[];
+    levels: { value: string; label: string }[];
     filters: {
         subject_id?: string;
         school_class_id?: string;
+        level?: string;
     };
 }>();
 
@@ -33,16 +35,33 @@ const isEditing = ref(false);
 const editingTopic = ref<Topic | null>(null);
 
 const form = useForm({
+    level: 'primary',
     subject_id: '',
     school_class_id: '',
     name: '',
     description: '',
 });
 
-// Filtering logic
+// Dynamic filtering for modal dropdowns
+const modalSubjects = computed(() => {
+    return props.subjects.filter(s => s.level === form.level);
+});
+
+const modalClasses = computed(() => {
+    return props.classes.filter(c => c.level === form.level);
+});
+
+// Reset subject/class when level changes in modal
+watch(() => form.level, () => {
+    form.subject_id = '';
+    form.school_class_id = '';
+});
+
+// Filtering logic for the main table
 const filterForm = ref({
     subject_id: props.filters.subject_id || '',
     school_class_id: props.filters.school_class_id || '',
+    level: props.filters.level || '',
 });
 
 watch(
@@ -59,6 +78,7 @@ watch(
 const clearFilters = () => {
     filterForm.value.subject_id = '';
     filterForm.value.school_class_id = '';
+    filterForm.value.level = '';
 };
 
 const openCreateModal = () => {
@@ -71,6 +91,7 @@ const openCreateModal = () => {
 const openEditModal = (topic: Topic) => {
     isEditing.value = true;
     editingTopic.value = topic;
+    form.level = topic.subject.level;
     form.subject_id = topic.subject_id;
     form.school_class_id = topic.school_class_id;
     form.name = topic.name;
@@ -162,6 +183,15 @@ const handleDelete = () => {
                                 <div class="flex flex-wrap items-center gap-2">
                                     <div class="w-48">
                                         <select 
+                                            v-model="filterForm.level"
+                                            class="py-2 px-3 block w-full border-gray-200 rounded-lg text-sm focus:border-primary focus:ring-primary disabled:opacity-50"
+                                        >
+                                            <option value="">All Levels</option>
+                                            <option v-for="l in levels" :key="l.value" :value="l.value">{{ l.label }}</option>
+                                        </select>
+                                    </div>
+                                    <div class="w-48">
+                                        <select 
                                             v-model="filterForm.subject_id"
                                             class="py-2 px-3 block w-full border-gray-200 rounded-lg text-sm focus:border-primary focus:ring-primary disabled:opacity-50"
                                         >
@@ -179,7 +209,7 @@ const handleDelete = () => {
                                         </select>
                                     </div>
                                     <button
-                                        v-if="filterForm.subject_id || filterForm.school_class_id"
+                                        v-if="filterForm.subject_id || filterForm.school_class_id || filterForm.level"
                                         @click="clearFilters"
                                         class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent text-red-600 hover:bg-red-50 focus:outline-none"
                                     >
@@ -248,15 +278,32 @@ const handleDelete = () => {
             <div @click="closeModal" class="absolute inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity"></div>
             <div class="relative w-full max-w-lg bg-white rounded-xl shadow-lg border border-gray-200">
                 <div class="flex justify-between items-center py-3 px-4 border-b border-gray-200">
-                    <h3 class="font-semibold text-gray-800">{{ isEditing ? 'Update Topic' : 'Register New Topic' }}</h3>
+                    <h3 class="font-semibold text-gray-800 uppercase tracking-tight text-sm">{{ isEditing ? 'Update Topic Details' : 'Register New Knowledge Unit' }}</h3>
                     <button @click="closeModal" type="button" class="size-8 inline-flex justify-center items-center gap-x-2 rounded-lg border border-transparent bg-gray-100 text-gray-800 hover:bg-gray-200 disabled:opacity-50">
                         <span class="sr-only">Close</span>
                         <svg class="flex-shrink-0 size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
                 
-                <form @submit.prevent="submit" class="p-4 overflow-y-auto max-h-[calc(100vh-150px)]">
-                    <div class="space-y-4">
+                <form @submit.prevent="submit" class="p-6 overflow-y-auto max-h-[calc(100vh-150px)]">
+                    <div class="space-y-6">
+                        <!-- Step 1: Academic Level Selection -->
+                        <div>
+                            <label class="block text-sm font-medium mb-2 text-gray-800 uppercase tracking-widest text-[10px]">Academic Tier</label>
+                            <div class="grid grid-cols-3 gap-3">
+                                <button
+                                    v-for="level in levels"
+                                    :key="level.value"
+                                    type="button"
+                                    @click="form.level = level.value"
+                                    class="py-3 px-2 text-center text-[10px] font-bold uppercase rounded-lg border-2 transition-all shadow-sm"
+                                    :class="form.level === level.value ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white border-gray-100 text-gray-400 hover:border-gray-200'"
+                                >
+                                    {{ level.label }}
+                                </button>
+                            </div>
+                        </div>
+
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium mb-2 text-gray-800">Subject Area</label>
@@ -266,7 +313,7 @@ const handleDelete = () => {
                                     class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-primary focus:ring-primary disabled:opacity-50"
                                 >
                                     <option value="" disabled>Select Subject</option>
-                                    <option v-for="subject in subjects" :key="subject.id" :value="subject.id">{{ subject.name }} ({{ subject.level }})</option>
+                                    <option v-for="subject in modalSubjects" :key="subject.id" :value="subject.id">{{ subject.name }}</option>
                                 </select>
                                 <p v-if="form.errors.subject_id" class="text-sm text-red-600 mt-2">{{ form.errors.subject_id }}</p>
                             </div>
@@ -278,20 +325,20 @@ const handleDelete = () => {
                                     class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-primary focus:ring-primary disabled:opacity-50"
                                 >
                                     <option value="" disabled>Select Class</option>
-                                    <option v-for="cls in classes" :key="cls.id" :value="cls.id">{{ cls.name }}</option>
+                                    <option v-for="cls in modalClasses" :key="cls.id" :value="cls.id">{{ cls.name }}</option>
                                 </select>
                                 <p v-if="form.errors.school_class_id" class="text-sm text-red-600 mt-2">{{ form.errors.school_class_id }}</p>
                             </div>
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium mb-2 text-gray-800">Topic Title</label>
+                            <label class="block text-sm font-medium mb-2 text-gray-800 uppercase tracking-widest text-[10px]">Topic Nomenclature</label>
                             <input
                                 v-model="form.name"
                                 type="text"
                                 required
-                                placeholder="e.g. Fractions and Decimals"
-                                class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-primary focus:ring-primary disabled:opacity-50"
+                                placeholder="e.g. CELL BIOLOGY"
+                                class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm font-semibold text-gray-800 focus:border-primary focus:ring-primary disabled:opacity-50"
                             />
                             <p v-if="form.errors.name" class="text-sm text-red-600 mt-2">{{ form.errors.name }}</p>
                         </div>
@@ -301,14 +348,14 @@ const handleDelete = () => {
                             <textarea
                                 v-model="form.description"
                                 rows="3"
-                                placeholder="Enter a brief summary of this topic..."
+                                placeholder="Provide a high-level summary of the topic scope..."
                                 class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-primary focus:ring-primary disabled:opacity-50"
                             ></textarea>
                             <p v-if="form.errors.description" class="text-sm text-red-600 mt-2">{{ form.errors.description }}</p>
                         </div>
                     </div>
                     
-                    <div class="mt-6 flex justify-end gap-x-2">
+                    <div class="mt-8 flex justify-end gap-x-2">
                         <button
                             type="button"
                             @click="closeModal"
@@ -319,9 +366,9 @@ const handleDelete = () => {
                         <button
                             type="submit"
                             :disabled="form.processing"
-                            class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-primary text-white hover:bg-primary-hover focus:outline-none"
+                            class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-primary text-white hover:bg-primary-hover focus:outline-none shadow-md shadow-primary/20"
                         >
-                            {{ isEditing ? 'Save Changes' : 'Confirm Registration' }}
+                            {{ isEditing ? 'Update Topic' : 'Confirm Registration' }}
                         </button>
                     </div>
                 </form>

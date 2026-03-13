@@ -30,23 +30,23 @@ class TopicController extends Controller
         $subjectsQuery = Subject::query();
         $classesQuery = SchoolClass::query();
 
-        // Level-based Scoping logic
+        // Level-based Scoping logic for staff
         if (! $user->can('sys:manage_settings')) {
-            // Staff are strictly scoped to their assigned campus level
             $school = $user->school_id ? School::find($user->school_id) : null;
             if ($school) {
                 $subjectsQuery->where('level', $school->type);
                 $classesQuery->where('level', $school->type);
-                
-                // Restrict the topics listing to match the campus level
                 $query->whereHas('subject', fn($q) => $q->where('level', $school->type));
             } else {
-                // No school assigned, no access
                 $query->whereRaw('1 = 0');
             }
         }
 
-        // Apply filters if provided (mostly for Super Admin global searches)
+        // Apply filters
+        if ($request->filled('level')) {
+            $query->whereHas('subject', fn($q) => $q->where('level', $request->level));
+        }
+
         if ($request->filled('subject_id')) {
             $query->where('subject_id', $request->subject_id);
         }
@@ -56,11 +56,14 @@ class TopicController extends Controller
         }
 
         return Inertia::render('Admin/Topics/Index', [
-            // Return all records to support the new multi-tier dynamic frontend navigation
             'topics' => $query->orderBy('name')->get(),
             'subjects' => $subjectsQuery->orderBy('name')->get(),
             'classes' => $classesQuery->orderBy('name')->get(),
-            'filters' => $request->only(['subject_id', 'school_class_id']),
+            'levels' => collect(\App\Enums\ClassLevel::cases())->map(fn ($l) => [
+                'value' => $l->value,
+                'label' => \Illuminate\Support\Str::title($l->value),
+            ]),
+            'filters' => $request->only(['subject_id', 'school_class_id', 'level']),
         ]);
     }
 
