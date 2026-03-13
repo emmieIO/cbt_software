@@ -17,27 +17,33 @@ class QuestionService
      */
     public function getAuthorizedContext(User $user, bool $withTopics = false, bool $strict = false): array
     {
-        $isAdmin = $user->can('bank:manage');
+        // Only Super Admins (with sys:manage_settings) see the global context.
+        // Examiners (staff) should be scoped to their assigned school level.
+        $isGlobalAdmin = $user->can('sys:manage_settings');
 
-        if ($isAdmin) {
+        if ($isGlobalAdmin) {
             $subjectsQuery = Subject::query();
             $classesQuery = SchoolClass::query();
             $batchesQuery = \App\Models\ProspectiveClass::where('is_active', true);
         } else {
-            $assignments = $user->currentAssignments()->get();
+            $user->loadMissing('school');
+            $school = $user->school;
 
-            // If any assignment has subject_id as NULL, it means access to ALL subjects (for that batch/class)
-            // But if $strict is true, we ONLY want subjects they are explicitly teaching.
-            $hasAllSubjectsAccess = ! $strict && $assignments->contains(fn ($a) => is_null($a->subject_id));
+            // Subjects & Classes: Scoped to the school's level (Nursery, Primary, Secondary)
+            $subjectsQuery = Subject::query();
+            $classesQuery = SchoolClass::query();
 
-            if ($hasAllSubjectsAccess) {
-                $subjectsQuery = Subject::query();
+            if ($school) {
+                $subjectsQuery->where('level', $school->type);
+                $classesQuery->where('level', $school->type);
             } else {
-                $subjectsQuery = Subject::whereIn('id', $assignments->pluck('subject_id')->filter());
+                // If not assigned to a school, they see nothing by default
+                $subjectsQuery->whereRaw('1 = 0');
+                $classesQuery->whereRaw('1 = 0');
             }
-
-            $classesQuery = SchoolClass::whereIn('id', $assignments->pluck('school_class_id')->filter());
-            $batchesQuery = \App\Models\ProspectiveClass::whereIn('id', $assignments->pluck('prospective_class_id')->filter());
+            
+            // Batches: Entrance exam batches are usually global
+            $batchesQuery = \App\Models\ProspectiveClass::where('is_active', true);
         }
 
         if ($withTopics) {
@@ -177,38 +183,17 @@ class QuestionService
         $query = Question::query()
             ->with(['topic.subject', 'schoolClass', 'prospectiveClass', 'options', 'creator']);
 
-        // Scope to teacher's assignments if they aren't an admin
-        if (! $user->can('bank:manage')) {
-            $assignments = $user->currentAssignments()->get();
-
-            if ($assignments->isEmpty()) {
-                $query->whereRaw('1 = 0');
-            } else {
-                $query->where(function ($q) use ($assignments) {
-                    foreach ($assignments as $assignment) {
-                        $q->orWhere(function ($subQ) use ($assignment) {
-                            // Regular Assignment match regular questions
-                            if ($assignment->school_class_id) {
-                                $subQ->whereNull('prospective_class_id')
-                                    ->where('school_class_id', $assignment->school_class_id);
-
-                                if ($assignment->subject_id) {
-                                    $subQ->whereHas('topic', fn ($tQ) => $tQ->where('subject_id', $assignment->subject_id));
-                                }
-                            }
-
-                            // Entrance Assignment match entrance questions
-                            if ($assignment->prospective_class_id) {
-                                $subQ->whereNotNull('prospective_class_id')
-                                    ->where('prospective_class_id', $assignment->prospective_class_id);
-
-                                if ($assignment->subject_id) {
-                                    $subQ->whereHas('topic', fn ($tQ) => $tQ->where('subject_id', $assignment->subject_id));
-                                }
-                            }
-                        });
-                    }
+        // Scope to teacher's school level if they aren't a global admin
+        if (! $user->can('sys:manage_settings')) {
+            $user->loadMissing('school');
+            $school = $user->school;
+            
+            if ($school) {
+                $query->whereHas('schoolClass', function ($q) use ($school) {
+                    $q->where('level', $school->type);
                 });
+            } else {
+                $query->whereRaw('1 = 0');
             }
         }
 

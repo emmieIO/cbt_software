@@ -10,8 +10,9 @@ defineProps<{
     user: User & {
         username: string;
         school_id: string | null;
-        branch?: string;
+        school?: { name: string };
         school_class?: { name: string };
+        roles: string[];
         assignments?: Array<{
             id: string;
             subject: { name: string };
@@ -39,6 +40,10 @@ const formatDate = (dateString: string) => {
         year: 'numeric',
     });
 };
+
+const formatRole = (role: string) => {
+    return role.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+};
 </script>
 
 <template>
@@ -62,7 +67,7 @@ const formatDate = (dateString: string) => {
                         <div class="flex flex-wrap justify-center sm:justify-start items-center gap-3">
                             <h2 class="text-3xl font-bold text-gray-800">{{ user.name }}</h2>
                             <span class="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-xs font-semibold bg-primary/10 text-primary uppercase tracking-wider">
-                                Verified {{ permissions.includes('sys:manage_settings') ? 'Admin' : (permissions.includes('bank:view') ? 'Staff' : 'Student') }}
+                                Verified {{ formatRole(user.roles[0] || 'User') }}
                             </span>
                         </div>
                         <div class="flex flex-col sm:flex-row items-center gap-2 sm:gap-6 text-sm text-gray-500 font-medium">
@@ -94,7 +99,7 @@ const formatDate = (dateString: string) => {
                         </div>
                         <div>
                             <p class="text-xs font-medium text-gray-400 uppercase tracking-widest">Unique Identifier</p>
-                            <p class="mt-1 text-sm font-semibold text-gray-800">{{ user.school_id || 'Not Assigned' }}</p>
+                            <p class="mt-1 text-sm font-semibold text-gray-800">{{ user.id }}</p>
                         </div>
                         <div>
                             <p class="text-xs font-medium text-gray-400 uppercase tracking-widest">Registration Date</p>
@@ -109,9 +114,11 @@ const formatDate = (dateString: string) => {
                         <h3 class="text-xs font-semibold text-gray-800 uppercase tracking-wider">Institutional Context</h3>
                     </div>
                     <div class="p-6 space-y-6">
-                        <div v-if="user.branch && branches[user.branch]">
+                        <div v-if="user.school_id && (branches[user.school_id] || user.school)">
                             <p class="text-xs font-medium text-gray-400 uppercase tracking-widest">Assigned Campus</p>
-                            <p class="mt-1 text-sm font-semibold text-primary">{{ branches[user.branch].name }}</p>
+                            <p class="mt-1 text-sm font-semibold text-primary">
+                                {{ branches[user.school_id]?.name || user.school?.name }}
+                            </p>
                         </div>
 
                         <div v-if="user.school_class">
@@ -131,10 +138,10 @@ const formatDate = (dateString: string) => {
                             </div>
                         </div>
 
-                        <div v-else>
-                            <p class="text-xs font-medium text-gray-400 uppercase tracking-widest">Administrative Role</p>
+                        <div>
+                            <p class="text-xs font-medium text-gray-400 uppercase tracking-widest">System Access Tier</p>
                             <p class="mt-1 text-sm font-semibold text-gray-800">
-                                {{ permissions.includes('sys:manage_settings') ? 'System Oversight' : 'General User' }}
+                                {{ formatRole(user.roles[0] || 'User') }}
                             </p>
                         </div>
                     </div>

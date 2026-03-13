@@ -32,9 +32,21 @@ const form = useForm({
     type: 'primary',
     address: '',
     contact_email: '',
-    contact_phone: [''], 
+    contact_phone: [''],
     is_active: true,
 });
+
+const addPhoneField = () => {
+    form.contact_phone.push('');
+};
+
+const removePhoneField = (index: number) => {
+    if (form.contact_phone.length > 1) {
+        form.contact_phone.splice(index, 1);
+    } else {
+        form.contact_phone[0] = '';
+    }
+};
 
 const openCreateModal = () => {
     isEditing.value = false;
@@ -51,8 +63,8 @@ const openEditModal = (branch: Branch) => {
     form.type = branch.type;
     form.address = branch.address || '';
     form.contact_email = branch.contact_email || '';
-    form.contact_phone = branch.contact_phone && branch.contact_phone.length > 0 
-        ? [...branch.contact_phone] 
+    form.contact_phone = branch.contact_phone && branch.contact_phone.length > 0
+        ? [...branch.contact_phone]
         : [''];
     form.is_active = branch.is_active;
     isModalOpen.value = true;
@@ -94,6 +106,17 @@ const handleDelete = () => {
                 branchToDelete.value = null;
             },
         });
+    }
+};
+
+const getTypeClasses = (type: string) => {
+    switch (type) {
+        case 'nursery':
+            return 'bg-pink-100 text-pink-800';
+        case 'secondary':
+            return 'bg-indigo-100 text-indigo-800';
+        default:
+            return 'bg-orange-100 text-orange-800';
     }
 };
 </script>
@@ -149,18 +172,27 @@ const handleDelete = () => {
                                             <span class="block text-xs text-gray-500 mt-0.5 truncate max-w-xs">{{ school.address || 'No address provided' }}</span>
                                         </td>
                                         <td class="px-6 py-4">
-                                            <span 
+                                            <span
                                                 class="inline-flex items-center gap-x-1.5 py-1 px-3 rounded-full text-xs font-bold uppercase tracking-wider"
-                                                :class="school.type === 'secondary' ? 'bg-indigo-100 text-indigo-800' : 'bg-orange-100 text-orange-800'"
+                                                :class="getTypeClasses(school.type)"
                                             >
                                                 {{ school.type }}
                                             </span>
                                         </td>
                                         <td class="hidden md:table-cell px-6 py-4">
                                             <span class="block text-sm text-gray-800">{{ school.contact_email || 'N/A' }}</span>
-                                            <span class="block text-xs text-gray-500 mt-0.5">
-                                                {{ (school.contact_phone && school.contact_phone.length > 0) ? school.contact_phone[0] : 'N/A' }}
-                                            </span>
+                                            <div class="flex flex-wrap gap-1 mt-1">
+                                                <template v-if="school.contact_phone && school.contact_phone.length > 0">
+                                                    <span 
+                                                        v-for="(phone, idx) in school.contact_phone" 
+                                                        :key="idx"
+                                                        class="inline-block text-[10px] font-bold text-gray-500 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100"
+                                                    >
+                                                        {{ phone }}
+                                                    </span>
+                                                </template>
+                                                <span v-else class="text-xs text-gray-400">N/A</span>
+                                            </div>
                                         </td>
                                         <td class="px-6 py-4 text-center">
                                             <span v-if="school.is_active" class="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-md text-xs font-medium bg-teal-100 text-teal-800">
@@ -207,7 +239,7 @@ const handleDelete = () => {
                         <svg class="flex-shrink-0 size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
-                
+
                 <form @submit.prevent="submit" class="p-4 overflow-y-auto max-h-[calc(100vh-150px)]">
                     <div class="space-y-4">
                         <div>
@@ -224,13 +256,13 @@ const handleDelete = () => {
 
                         <div>
                             <label class="block text-sm font-medium mb-2 text-gray-800 uppercase tracking-widest text-[10px]">Institutional Category</label>
-                            <div class="grid grid-cols-2 gap-3">
-                                <button 
-                                    v-for="type in ['primary', 'secondary']"
+                            <div class="grid grid-cols-3 gap-3">
+                                <button
+                                    v-for="type in ['nursery', 'primary', 'secondary']"
                                     :key="type"
                                     type="button"
                                     @click="form.type = type"
-                                    class="py-3 px-4 text-center text-xs font-bold uppercase rounded-lg border-2 transition-all shadow-sm"
+                                    class="py-3 px-2 text-center text-[10px] font-bold uppercase rounded-lg border-2 transition-all shadow-sm"
                                     :class="form.type === type ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white border-gray-100 text-gray-400 hover:border-gray-200'"
                                 >
                                     {{ type }}
@@ -249,25 +281,41 @@ const handleDelete = () => {
                             ></textarea>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium mb-2 text-gray-800">Work Email</label>
-                                <input
-                                    v-model="form.contact_email"
-                                    type="email"
-                                    placeholder="admin@branch.com"
-                                    class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-primary focus:ring-primary disabled:opacity-50"
-                                />
+                        <div class="space-y-3">
+                            <label class="block text-sm font-medium text-gray-800">Work Email</label>
+                            <input
+                                v-model="form.contact_email"
+                                type="email"
+                                placeholder="admin@branch.com"
+                                class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-primary focus:ring-primary disabled:opacity-50"
+                            />
+                        </div>
+
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <label class="block text-sm font-medium text-gray-800">Contact Numbers</label>
+                                <button type="button" @click="addPhoneField" class="text-[10px] font-black text-primary uppercase hover:underline">+ Add Phone</button>
                             </div>
-                            <div>
-                                <label class="block text-sm font-medium mb-2 text-gray-800 text-[10px] uppercase tracking-widest">Initial Phone</label>
-                                <input
-                                    v-model="form.contact_phone[0]"
-                                    type="text"
-                                    placeholder="+234..."
-                                    class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-primary focus:ring-primary disabled:opacity-50"
-                                />
+
+                            <div v-for="(phone, index) in form.contact_phone" :key="index" class="flex gap-2">
+                                <div class="relative flex-1">
+                                    <input
+                                        v-model="form.contact_phone[index]"
+                                        type="text"
+                                        placeholder="+234..."
+                                        class="py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-primary focus:ring-primary disabled:opacity-50"
+                                    />
+                                </div>
+                                <button
+                                    v-if="form.contact_phone.length > 1 || form.contact_phone[0] !== ''"
+                                    type="button"
+                                    @click="removePhoneField(index)"
+                                    class="p-3 text-gray-400 hover:text-red-500 transition-colors"
+                                >
+                                    <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                </button>
                             </div>
+                            <p v-if="form.errors.contact_phone" class="text-sm text-red-600 mt-2">{{ form.errors.contact_phone }}</p>
                         </div>
 
                         <div class="flex items-center">
@@ -280,7 +328,7 @@ const handleDelete = () => {
                             <label for="is_active" class="text-sm text-gray-500 ms-3">Branch is active</label>
                         </div>
                     </div>
-                    
+
                     <div class="mt-6 flex justify-end gap-x-2">
                         <button
                             type="button"

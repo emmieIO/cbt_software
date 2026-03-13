@@ -18,7 +18,6 @@ class RolesAndPermissionsSeeder extends Seeder
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         // We now use a Single Guard Strategy (web) for the entire application database.
-        // Isolation is maintained through Namespaced Permission Names (domain:action).
         $guard = 'web';
 
         $permissionsByDomain = [
@@ -57,14 +56,7 @@ class RolesAndPermissionsSeeder extends Seeder
             ],
         ];
 
-        // Wipe old permissions to ensure no duplicates remain
-        \Spatie\Permission\Models\Role::query()->delete();
-        \Spatie\Permission\Models\Permission::query()->delete();
-        \Illuminate\Support\Facades\DB::table('role_has_permissions')->delete();
-        \Illuminate\Support\Facades\DB::table('model_has_permissions')->delete();
-        \Illuminate\Support\Facades\DB::table('model_has_roles')->delete();
-
-        // Create all permissions
+        // Create all permissions (update existing ones)
         foreach ($permissionsByDomain as $domain => $permissions) {
             foreach ($permissions as $name => $description) {
                 Permission::findOrCreate($name, $guard);

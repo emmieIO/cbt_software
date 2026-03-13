@@ -21,19 +21,14 @@ class SchoolClassController extends Controller
      */
     public function index(Request $request): Response
     {
-        $query = SchoolClass::with('school');
-
-        if ($request->school_id) {
-            $query->where('school_id', $request->school_id);
-        }
+        $query = SchoolClass::query();
 
         return Inertia::render('Admin/Classes/Index', [
-            'classes' => $query->latest()->get(),
+            'classes' => $query->orderBy('level')->orderBy('name')->get(),
             'levels' => collect(ClassLevel::cases())->map(fn ($l) => [
                 'value' => $l->value,
                 'label' => Str::title($l->value),
             ]),
-            'filters' => $request->only(['school_id']),
         ]);
     }
 
@@ -45,16 +40,15 @@ class SchoolClassController extends Controller
         $request->validate([
             'name' => [
                 'required', 'string', 'max:255',
-                \Illuminate\Validation\Rule::unique('school_classes')->where(fn ($q) => $q->where('school_id', $request->school_id)),
+                \Illuminate\Validation\Rule::unique('school_classes')->where(fn ($q) => $q->where('level', $request->level)),
             ],
             'level' => ['required', new Enum(ClassLevel::class)],
-            'school_id' => ['required', 'exists:schools,id'],
         ]);
 
         $dto = \App\DTOs\SchoolClassDTO::fromRequest($request);
         $this->classService->createClass($dto);
 
-        return back()->with('success', 'School class created successfully.');
+        return back()->with('success', 'Global academic class created successfully.');
     }
 
     /**
@@ -66,17 +60,16 @@ class SchoolClassController extends Controller
             'name' => [
                 'required', 'string', 'max:255',
                 \Illuminate\Validation\Rule::unique('school_classes')
-                    ->where(fn ($q) => $q->where('school_id', $request->school_id))
+                    ->where(fn ($q) => $q->where('level', $request->level))
                     ->ignore($schoolClass->id),
             ],
             'level' => ['required', new Enum(ClassLevel::class)],
-            'school_id' => ['required', 'exists:schools,id'],
         ]);
 
         $dto = \App\DTOs\SchoolClassDTO::fromRequest($request);
         $this->classService->updateClass($schoolClass, $dto);
 
-        return back()->with('success', 'School class updated successfully.');
+        return back()->with('success', 'Academic class updated successfully.');
     }
 
     /**
@@ -84,16 +77,12 @@ class SchoolClassController extends Controller
      */
     public function destroy(SchoolClass $schoolClass): RedirectResponse
     {
-
         $deleted = $this->classService->deleteClass($schoolClass);
 
         if ($deleted === false) {
-
-            return back()->with('error', 'Cannot delete class because it has associated questions.');
-
+            return back()->with('error', 'Cannot delete class because it has associated records.');
         }
 
-        return back()->with('success', 'School class deleted successfully.');
-
+        return back()->with('success', 'Academic class deleted successfully.');
     }
 }

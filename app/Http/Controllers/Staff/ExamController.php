@@ -293,6 +293,9 @@ class ExamController extends Controller
         }
 
         if (! $user->can('sys:manage_settings')) {
+            // Staff are ALWAYS scoped to their assigned school
+            $query->where('school_id', $user->school_id);
+
             $assignments = $user->currentAssignments()->get();
             $assignedClassIds = $assignments->pluck('school_class_id')->filter()->unique();
             $assignedSubjectIds = $assignments->pluck('subject_id')->filter()->unique();

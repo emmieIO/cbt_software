@@ -31,7 +31,7 @@ const userName = computed(() => page.props.auth?.user?.name || 'Staff');
             <!-- Page Header -->
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-2xl font-semibold text-gray-800">Teacher Hub</h1>
+                    <h1 class="text-2xl font-semibold text-gray-800">Examiner Hub</h1>
                     <p class="mt-1 text-sm text-gray-500">Welcome back, {{ userName }}</p>
                 </div>
             </div>

@@ -42,7 +42,7 @@ class SchoolRequest extends FormRequest
                     }
                 },
             ],
-            'type' => ['required', 'string', 'in:primary,secondary'],
+            'type' => ['required', 'string', 'in:nursery,primary,secondary'],
             'address' => ['nullable', 'string', 'max:500'],
             'contact_email' => ['nullable', 'email', 'max:255'],
             'contact_phone' => ['nullable', 'array'],

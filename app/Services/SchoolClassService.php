@@ -14,7 +14,6 @@ class SchoolClassService
             'name' => $dto->name,
             'slug' => Str::slug($dto->name),
             'level' => $dto->level,
-            'school_id' => $dto->school_id,
         ]);
     }
 
@@ -24,7 +23,6 @@ class SchoolClassService
             'name' => $dto->name,
             'slug' => Str::slug($dto->name),
             'level' => $dto->level,
-            'school_id' => $dto->school_id,
         ]);
     }
 

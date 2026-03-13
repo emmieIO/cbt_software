@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { Head, useForm, Link, usePage } from '@inertiajs/vue3';
-import { ref, computed, watch } from 'vue';
+import { Head, useForm, Link } from '@inertiajs/vue3';
+import { ref } from 'vue';
 import { store, update, destroy } from '@/actions/App/Http/Controllers/Admin/SchoolClassController';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
-import CustomSelect from '@/components/Form/CustomSelect.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 
 interface SchoolClass {
@@ -11,19 +10,12 @@ interface SchoolClass {
     name: string;
     slug: string;
     level: string;
-    school_id: string;
-    school?: { name: string; type: string };
 }
 
 const props = defineProps<{
     classes: SchoolClass[];
     levels: { value: string; label: string }[];
-    filters: { school_id?: string };
 }>();
-
-const page = usePage();
-const branches = computed(() => (page.props.branches as any) || {});
-const branchOptions = computed(() => Object.values(branches.value));
 
 const isModalOpen = ref(false);
 const isEditing = ref(false);
@@ -31,24 +23,7 @@ const editingClass = ref<SchoolClass | null>(null);
 
 const form = useForm({
     name: '',
-    level: '',
-    school_id: '',
-});
-
-// Filtering logic: Restrict class levels based on selected school type
-const filteredLevels = computed(() => {
-    if (!form.school_id || !branches.value[form.school_id]) return props.levels;
-    
-    const schoolType = branches.value[form.school_id].type;
-    return props.levels.filter(l => l.value === schoolType);
-});
-
-// Auto-set level if there's only one option for that school
-watch(() => form.school_id, (newId) => {
-    if (newId && branches.value[newId]) {
-        const schoolType = branches.value[newId].type;
-        form.level = schoolType;
-    }
+    level: 'primary',
 });
 
 const openCreateModal = () => {
@@ -63,7 +38,6 @@ const openEditModal = (cls: SchoolClass) => {
     editingClass.value = cls;
     form.name = cls.name;
     form.level = cls.level;
-    form.school_id = cls.school_id;
     isModalOpen.value = true;
 };
 
@@ -102,6 +76,17 @@ const handleDelete = () => {
         });
     }
 };
+
+const getLevelClasses = (level: string) => {
+    switch (level) {
+        case 'nursery':
+            return 'bg-pink-100 text-pink-800';
+        case 'secondary':
+            return 'bg-indigo-100 text-indigo-800';
+        default:
+            return 'bg-orange-100 text-orange-800';
+    }
+};
 </script>
 
 <template>
@@ -115,15 +100,15 @@ const handleDelete = () => {
                 <svg class="size-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
                 <span class="text-gray-800">Academic Framework</span>
                 <svg class="size-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
-                <span class="text-gray-800">Class Hierarchies</span>
+                <span class="text-gray-800">Global Classes</span>
             </nav>
 
             <!-- Page Header -->
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <h1 class="text-2xl font-semibold text-gray-800">Class Hierarchies</h1>
+                    <h1 class="text-2xl font-semibold text-gray-800">Global Classes</h1>
                     <p class="text-sm text-gray-500 mt-1">
-                        Define and organize institutional levels across campuses.
+                        Define academic levels available across all campuses.
                     </p>
                 </div>
                 <button
@@ -131,7 +116,7 @@ const handleDelete = () => {
                     class="py-2.5 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-primary text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50"
                 >
                     <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
-                    New Class Level
+                    Add Global Class
                 </button>
             </div>
 
@@ -144,7 +129,6 @@ const handleDelete = () => {
                                 <thead class="bg-gray-50">
                                     <tr>
                                         <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">Class Name</th>
-                                        <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">Campus Branch</th>
                                         <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Academic Level</th>
                                         <th scope="col" class="px-6 py-3 text-end text-xs font-medium text-gray-500 uppercase">Actions</th>
                                     </tr>
@@ -154,13 +138,10 @@ const handleDelete = () => {
                                         <td class="px-6 py-4">
                                             <span class="text-sm font-semibold text-gray-800 uppercase tracking-tight">{{ cls.name }}</span>
                                         </td>
-                                        <td class="px-6 py-4">
-                                            <span class="text-sm text-gray-600">{{ cls.school?.name }}</span>
-                                        </td>
                                         <td class="px-6 py-4 text-center">
                                             <span 
                                                 class="inline-flex items-center gap-x-1.5 py-1 px-3 rounded-full text-[10px] font-bold uppercase tracking-wider"
-                                                :class="cls.level === 'secondary' ? 'bg-indigo-100 text-indigo-800' : 'bg-orange-100 text-orange-800'"
+                                                :class="getLevelClasses(cls.level)"
                                             >
                                                 {{ cls.level }}
                                             </span>
@@ -177,7 +158,7 @@ const handleDelete = () => {
                                         </td>
                                     </tr>
                                     <tr v-if="classes.length === 0">
-                                        <td colspan="4" class="px-6 py-12 text-center text-gray-500">
+                                        <td colspan="3" class="px-6 py-12 text-center text-gray-500">
                                             <p class="text-sm">No class hierarchies defined yet.</p>
                                         </td>
                                     </tr>
@@ -194,7 +175,7 @@ const handleDelete = () => {
             <div @click="closeModal" class="absolute inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity"></div>
             <div class="relative w-full max-w-lg bg-white rounded-xl shadow-lg border border-gray-200">
                 <div class="flex justify-between items-center py-3 px-4 border-b border-gray-200">
-                    <h3 class="font-semibold text-gray-800 uppercase tracking-tight text-sm">{{ isEditing ? 'Update Hierarchy' : 'Define New Level' }}</h3>
+                    <h3 class="font-semibold text-gray-800 uppercase tracking-tight text-sm">{{ isEditing ? 'Update Global Class' : 'Define New Global Class' }}</h3>
                     <button @click="closeModal" type="button" class="size-8 inline-flex justify-center items-center gap-x-2 rounded-lg border border-transparent bg-gray-100 text-gray-800 hover:bg-gray-200 disabled:opacity-50">
                         <span class="sr-only">Close</span>
                         <svg class="flex-shrink-0 size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -203,17 +184,6 @@ const handleDelete = () => {
                 
                 <form @submit.prevent="submit" class="p-6 overflow-y-auto max-h-[calc(100vh-150px)]">
                     <div class="space-y-6">
-                        <div>
-                            <label class="block text-sm font-medium mb-2 text-gray-800 uppercase tracking-widest text-[10px]">Academic Branch</label>
-                            <CustomSelect
-                                v-model="form.school_id"
-                                :options="branchOptions"
-                                placeholder="Select Campus"
-                                :error="form.errors.school_id"
-                                size="md"
-                            />
-                        </div>
-
                         <div>
                             <label class="block text-sm font-medium mb-2 text-gray-800 uppercase tracking-widest text-[10px]">Class Nomenclature</label>
                             <input
@@ -228,9 +198,9 @@ const handleDelete = () => {
 
                         <div>
                             <label class="block text-sm font-medium mb-2 text-gray-800 uppercase tracking-widest text-[10px]">Mandatory Academic Level</label>
-                            <div class="grid grid-cols-2 gap-3">
+                            <div class="grid grid-cols-3 gap-3">
                                 <button 
-                                    v-for="level in filteredLevels"
+                                    v-for="level in levels"
                                     :key="level.value"
                                     type="button"
                                     @click="form.level = level.value"
@@ -241,7 +211,6 @@ const handleDelete = () => {
                                 </button>
                             </div>
                             <p v-if="form.errors.level" class="text-sm text-red-600 mt-2">{{ form.errors.level }}</p>
-                            <p v-if="!form.school_id" class="text-[10px] text-orange-500 font-medium mt-2 italic">Please select a campus first to verify academic level.</p>
                         </div>
                     </div>
                     
@@ -258,7 +227,7 @@ const handleDelete = () => {
                             :disabled="form.processing"
                             class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-primary text-white hover:bg-primary-hover focus:outline-none"
                         >
-                            {{ isEditing ? 'Confirm Changes' : 'Create Hierarchy' }}
+                            {{ isEditing ? 'Confirm Changes' : 'Create Global Class' }}
                         </button>
                     </div>
                 </form>
@@ -267,9 +236,9 @@ const handleDelete = () => {
 
         <ConfirmationModal
             :show="isDeleteModalOpen"
-            title="Delete Hierarchy Level?"
-            :message="`Are you sure you want to delete ${classToDelete?.name}? This will remove it from all campuses and cannot be undone.`"
-            confirm-label="Delete Level"
+            title="Delete Global Class?"
+            :message="`Are you sure you want to delete ${classToDelete?.name}? This will remove it from the entire system context and cannot be undone.`"
+            confirm-label="Delete Permanent"
             variant="danger"
             @close="isDeleteModalOpen = false"
             @confirm="handleDelete"

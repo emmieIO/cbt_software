@@ -66,14 +66,9 @@ const selectedSubject = computed(() => {
 const availableClasses = computed(() => {
     if (!selectedSubject.value) return [];
 
-    const topics = (selectedSubject.value as any).topics || [];
-    // Get unique class IDs from the topics of the selected subject
-    const mappedClassIds = [...new Set(
-        topics.filter((t: any) => t.school_class_id).map((t: any) => t.school_class_id)
-    )];
-
-    // Only return classes that have at least one topic for this subject
-    return props.classes.filter((c) => mappedClassIds.includes(c.id));
+    // Filter the global classes prop to only show those that match the selected subject's level
+    // (e.g., if English is 'secondary', only show JSS1-SS3)
+    return props.classes.filter((c) => String(c.level) === String(selectedSubject.value?.level));
 });
 
 const filteredTopics = computed(() => {

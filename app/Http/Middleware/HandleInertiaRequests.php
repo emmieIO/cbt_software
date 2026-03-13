@@ -56,14 +56,17 @@ class HandleInertiaRequests extends Middleware
                 'is_seeding' => $user ? \Illuminate\Support\Facades\Cache::get("user_{$user->id}_seeding_status") : null,
             ],
             'academic_session' => \App\Models\AcademicSession::current()->first(),
-            'branches' => \App\Models\School::where('is_active', true)->get()->mapWithKeys(fn ($s) => [
-                $s->id => [
-                    'id' => $s->id,
-                    'name' => $s->name,
-                    'slug' => $s->slug,
-                    'type' => $s->type,
-                ],
-            ]),
+            'branches' => \App\Models\School::where('is_active', true)
+                ->when($user && ! $user->can('sys:manage_settings'), fn ($q) => $q->where('id', $user->school_id))
+                ->get()
+                ->mapWithKeys(fn ($s) => [
+                    $s->id => [
+                        'id' => $s->id,
+                        'name' => $s->name,
+                        'slug' => $s->slug,
+                        'type' => $s->type,
+                    ],
+                ]),
             'flash' => [
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),

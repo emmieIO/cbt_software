@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SchoolClass;
 use App\Models\Subject;
 use App\Models\Topic;
+use App\Models\School;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -20,8 +21,32 @@ class TopicController extends Controller
      */
     public function index(Request $request): Response
     {
+        $user = $request->user();
+        
+        // Base Query: Load everything since we want to handle large repositories cleanly in the UI
         $query = Topic::with(['subject', 'schoolClass'])->withCount('questions');
 
+        // Initial Context queries
+        $subjectsQuery = Subject::query();
+        $classesQuery = SchoolClass::query();
+
+        // Level-based Scoping logic
+        if (! $user->can('sys:manage_settings')) {
+            // Staff are strictly scoped to their assigned campus level
+            $school = $user->school_id ? School::find($user->school_id) : null;
+            if ($school) {
+                $subjectsQuery->where('level', $school->type);
+                $classesQuery->where('level', $school->type);
+                
+                // Restrict the topics listing to match the campus level
+                $query->whereHas('subject', fn($q) => $q->where('level', $school->type));
+            } else {
+                // No school assigned, no access
+                $query->whereRaw('1 = 0');
+            }
+        }
+
+        // Apply filters if provided (mostly for Super Admin global searches)
         if ($request->filled('subject_id')) {
             $query->where('subject_id', $request->subject_id);
         }
@@ -31,9 +56,10 @@ class TopicController extends Controller
         }
 
         return Inertia::render('Admin/Topics/Index', [
-            'topics' => $query->latest()->paginate(10)->withQueryString(),
-            'subjects' => Subject::all(),
-            'classes' => SchoolClass::all(),
+            // Return all records to support the new multi-tier dynamic frontend navigation
+            'topics' => $query->orderBy('name')->get(),
+            'subjects' => $subjectsQuery->orderBy('name')->get(),
+            'classes' => $classesQuery->orderBy('name')->get(),
             'filters' => $request->only(['subject_id', 'school_class_id']),
         ]);
     }
@@ -45,22 +71,17 @@ class TopicController extends Controller
     {
 
         $request->validate([
-
             'subject_id' => ['required', 'exists:subjects,id'],
-
             'school_class_id' => ['required', 'exists:school_classes,id'],
-
             'name' => ['required', 'string', 'max:255'],
-
             'description' => ['nullable', 'string'],
-
         ]);
 
         $dto = \App\DTOs\TopicDTO::fromRequest($request);
 
         $this->topicService->createTopic($dto);
 
-        return back()->with('success', 'Topic created successfully.');
+        return back()->with('success', 'Curriculum unit initialized successfully.');
 
     }
 
@@ -71,22 +92,17 @@ class TopicController extends Controller
     {
 
         $request->validate([
-
             'subject_id' => ['required', 'exists:subjects,id'],
-
             'school_class_id' => ['required', 'exists:school_classes,id'],
-
             'name' => ['required', 'string', 'max:255'],
-
             'description' => ['nullable', 'string'],
-
         ]);
 
         $dto = \App\DTOs\TopicDTO::fromRequest($request);
 
         $this->topicService->updateTopic($topic, $dto);
 
-        return back()->with('success', 'Topic updated successfully.');
+        return back()->with('success', 'Curriculum unit modified successfully.');
 
     }
 
@@ -99,12 +115,10 @@ class TopicController extends Controller
         $deleted = $this->topicService->deleteTopic($topic);
 
         if ($deleted === false) {
-
-            return back()->with('error', 'Cannot delete topic because it has associated questions.');
-
+            return back()->with('error', 'Cannot delete knowledge unit because it has associated assessment questions.');
         }
 
-        return back()->with('success', 'Topic deleted successfully.');
+        return back()->with('success', 'Knowledge unit purged successfully.');
 
     }
 }

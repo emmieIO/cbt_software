@@ -16,7 +16,20 @@ class Subject extends Model
         'name',
         'slug',
         'description',
+        'level',
     ];
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'level' => \App\Enums\ClassLevel::class,
+        ];
+    }
 
     /**
      * Get the topics for the subject.

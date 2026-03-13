@@ -13,7 +13,7 @@ class ProfileController extends Controller
      */
     public function show(Request $request): Response
     {
-        $user = $request->user()->load(['schoolClass', 'currentAssignments.subject', 'currentAssignments.schoolClass', 'currentAssignments.prospectiveClass']);
+        $user = $request->user()->load(['school', 'schoolClass', 'currentAssignments.subject', 'currentAssignments.schoolClass', 'currentAssignments.prospectiveClass']);
 
         // Ensure roles are passed as a flat array of names for frontend consistency
         $userData = array_merge($user->toArray(), [

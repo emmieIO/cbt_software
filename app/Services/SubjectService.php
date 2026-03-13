@@ -12,8 +12,9 @@ class SubjectService
     {
         return Subject::create([
             'name' => $dto->name,
-            'slug' => Str::slug($dto->name),
+            'slug' => Str::slug($dto->name . '-' . $dto->level),
             'description' => $dto->description,
+            'level' => $dto->level,
         ]);
     }
 
@@ -21,8 +22,9 @@ class SubjectService
     {
         return $subject->update([
             'name' => $dto->name,
-            'slug' => Str::slug($dto->name),
+            'slug' => Str::slug($dto->name . '-' . $dto->level),
             'description' => $dto->description,
+            'level' => $dto->level,
         ]);
     }
 

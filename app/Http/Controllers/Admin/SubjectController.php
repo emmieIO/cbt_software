@@ -34,11 +34,12 @@ class SubjectController extends Controller
     {
 
         $request->validate([
-
-            'name' => ['required', 'string', 'max:255', 'unique:subjects,name'],
-
+            'name' => [
+                'required', 'string', 'max:255',
+                \Illuminate\Validation\Rule::unique('subjects')->where(fn ($q) => $q->where('level', $request->level)),
+            ],
             'description' => ['nullable', 'string'],
-
+            'level' => ['required', 'string', 'in:nursery,primary,secondary'],
         ]);
 
         $dto = \App\DTOs\SubjectDTO::fromRequest($request);
@@ -56,11 +57,14 @@ class SubjectController extends Controller
     {
 
         $request->validate([
-
-            'name' => ['required', 'string', 'max:255', 'unique:subjects,name,'.$subject->id],
-
+            'name' => [
+                'required', 'string', 'max:255',
+                \Illuminate\Validation\Rule::unique('subjects')
+                    ->where(fn ($q) => $q->where('level', $request->level))
+                    ->ignore($subject->id),
+            ],
             'description' => ['nullable', 'string'],
-
+            'level' => ['required', 'string', 'in:nursery,primary,secondary'],
         ]);
 
         $dto = \App\DTOs\SubjectDTO::fromRequest($request);
