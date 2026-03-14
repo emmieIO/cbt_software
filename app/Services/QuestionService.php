@@ -183,7 +183,8 @@ class QuestionService
         $query = Question::query()
             ->with(['topic.subject', 'schoolClass', 'prospectiveClass', 'options', 'creator']);
 
-        // Scope to teacher's school level if they aren't a global admin
+        // Tier-Scoped Visibility: Staff see all questions within their institutional level (e.g. Secondary sees JSS1-SS3).
+        // They are NOT restricted to only their own creations.
         if (! $user->can('sys:manage_settings')) {
             $user->loadMissing('school');
             $school = $user->school;
@@ -193,6 +194,7 @@ class QuestionService
                     $q->where('level', $school->type);
                 });
             } else {
+                // If no school is assigned, they see nothing by default
                 $query->whereRaw('1 = 0');
             }
         }

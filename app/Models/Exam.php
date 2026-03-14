@@ -14,6 +14,7 @@ class Exam extends Model
     use HasUlids;
 
     protected $fillable = [
+        'branch',
         'school_id',
         'subject_id',
         'school_class_id',

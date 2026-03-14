@@ -22,6 +22,8 @@ class ExamDTO
         public ?string $end_time = null,
         public ?string $description = null,
         public ?string $instructions = null,
+        public ?string $status = null,
+        public ?string $branch = null,
         public array $compositions = [],
     ) {}
 
@@ -47,6 +49,8 @@ class ExamDTO
             end_time: $request->input('end_time'),
             description: $request->input('description'),
             instructions: $request->input('instructions'),
+            status: $request->input('status'),
+            branch: $request->input('branch'),
             compositions: $compositions,
         );
     }
@@ -66,6 +70,8 @@ class ExamDTO
             'end_time' => $this->end_time,
             'description' => $this->description,
             'instructions' => $this->instructions,
+            'status' => $this->status,
+            'branch' => $this->branch,
             'compositions' => $this->compositions,
         ];
     }

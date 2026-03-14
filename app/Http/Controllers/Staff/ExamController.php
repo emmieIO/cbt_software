@@ -29,32 +29,15 @@ class ExamController extends Controller
             $query->where('school_id', $request->school_id);
         }
 
-        // Scoping: Staff only see their own exams or exams for their assigned loads
+        // Scoping Logic
         if (! $user->can('sys:manage_settings')) {
-            $assignments = $user->currentAssignments()->get();
-            $assignedClassIds = $assignments->pluck('school_class_id')->filter()->unique();
-            $assignedSubjectIds = $assignments->pluck('subject_id')->filter()->unique();
-            $assignedBatchIds = $assignments->pluck('prospective_class_id')->filter()->unique();
-            $isCoordinator = $assignments->contains(fn ($a) => is_null($a->subject_id));
+            // Staff/Examiners are strictly scoped to their assigned school branch
+            $query->where('school_id', $user->school_id);
 
-            $query->where(function ($q) use ($assignedClassIds, $assignedSubjectIds, $assignedBatchIds, $isCoordinator) {
-                // Regular Exam Scoping
-                $q->where(function ($subQ) use ($assignedClassIds, $assignedSubjectIds) {
-                    $subQ->whereIn('school_class_id', $assignedClassIds)
-                        ->whereIn('subject_id', $assignedSubjectIds);
-                });
-
-                // Entrance Exam Scoping
-                $q->orWhere(function ($subQ) use ($assignedBatchIds, $assignedSubjectIds, $isCoordinator) {
-                    $subQ->where('type', \App\Enums\ExamType::ENTRANCE)
-                        ->whereIn('prospective_class_id', $assignedBatchIds);
-
-                    // If not a coordinator, further restrict entrance exams to their subject
-                    if (! $isCoordinator) {
-                        $subQ->whereIn('subject_id', $assignedSubjectIds);
-                    }
-                });
-            });
+            // If the user is a regular teacher (doesn't have broad management rights), 
+            // we could further restrict to their assignments. 
+            // However, based on the requirement for examiners to see exams created by others (like Super Admin),
+            // we allow school-wide visibility for anyone with 'exam:view'.
         }
 
         return Inertia::render('Staff/Exams/Index', [
@@ -70,16 +53,10 @@ class ExamController extends Controller
     {
         $user = $request->user();
 
-        // Get authorized context with strict subjects (only those explicitly assigned)
-        $context = (new \App\Services\QuestionService)->getAuthorizedContext($user, false, true);
-
-        // Get only assigned loads for this teacher
-        $assignments = $user->currentAssignments()
-            ->with(['schoolClass', 'subject', 'prospectiveClass'])
-            ->get();
+        // Get authorized context (scoped to their school tier)
+        $context = (new \App\Services\QuestionService)->getAuthorizedContext($user, false, false);
 
         return Inertia::render('Staff/Exams/Create', [
-            'assignments' => $assignments,
             'sessions' => AcademicSession::current()->get(),
             'batches' => $context['batches'],
             'subjects' => $context['subjects'],
@@ -96,7 +73,7 @@ class ExamController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'school_id' => ['required', 'exists:schools,id'],
             'subject_id' => [
-                'required_unless:type,entrance',
+                'required_without:compositions',
                 'nullable',
                 'exists:subjects,id',
             ],
@@ -104,12 +81,13 @@ class ExamController extends Controller
             'prospective_class_id' => ['required_if:type,entrance', 'nullable', 'exists:prospective_classes,id'],
             'duration' => ['required', 'integer', 'min:1'],
             'type' => ['required', 'string'], // ExamType enum
-            'start_time' => ['nullable', 'date'],
+            'start_time' => ['nullable', 'date', 'after_or_equal:now'],
             'end_time' => ['nullable', 'date', 'after:start_time'],
-            'compositions' => ['required_if:type,entrance', 'array'],
+            'compositions' => ['nullable', 'array'],
             'compositions.*.subject_id' => ['required', 'exists:subjects,id'],
             'compositions.*.topic_id' => ['nullable', 'exists:topics,id'],
             'compositions.*.question_count' => ['required', 'integer', 'min:1'],
+            'compositions.*.marks_per_question' => ['required', 'numeric', 'min:0.1'],
         ]);
 
         $currentSession = AcademicSession::current()->first();
@@ -119,7 +97,13 @@ class ExamController extends Controller
         }
 
         $dto = ExamDTO::fromRequest($request, $currentSession->id);
-        $exam = $this->examService->createExam($dto->toArray(), $request->user()->id);
+        
+        // Sync branch slug
+        $school = \App\Models\School::find($request->school_id);
+        $data = $dto->toArray();
+        $data['branch'] = $school->slug;
+
+        $exam = $this->examService->createExam($data, $request->user()->id);
 
         return redirect()->route('staff.exams.show', $exam->id)
             ->with('success', 'Exam configuration saved. Now allocate your questions.');
@@ -130,7 +114,7 @@ class ExamController extends Controller
      */
     public function show(Exam $exam): \Inertia\Response
     {
-        $exam->load(['subject', 'schoolClass', 'prospectiveClass', 'questions']);
+        $exam->load(['subject', 'schoolClass', 'prospectiveClass', 'academicSession', 'questions', 'compositions.subject', 'compositions.topic']);
 
         return Inertia::render('Staff/Exams/Show', [
             'exam' => $exam,
@@ -142,7 +126,7 @@ class ExamController extends Controller
      */
     public function manageQuestions(Exam $exam): \Inertia\Response
     {
-        $exam->load(['subject', 'schoolClass', 'questions']);
+        $exam->load(['subject', 'schoolClass', 'questions', 'compositions.subject', 'compositions.topic']);
 
         $availableQuestions = $this->examService->getAvailableQuestions($exam);
 
@@ -190,17 +174,11 @@ class ExamController extends Controller
     {
         $user = $request->user();
 
-        // Get authorized context with strict subjects
-        $context = (new \App\Services\QuestionService)->getAuthorizedContext($user, false, true);
-
-        // Get only assigned loads for this teacher
-        $assignments = $user->currentAssignments()
-            ->with(['schoolClass', 'subject', 'prospectiveClass'])
-            ->get();
+        // Get authorized context
+        $context = (new \App\Services\QuestionService)->getAuthorizedContext($user, false, false);
 
         return Inertia::render('Staff/Exams/Edit', [
-            'exam' => $exam->load(['subject', 'schoolClass', 'prospectiveClass', 'compositions']),
-            'assignments' => $assignments,
+            'exam' => $exam->load(['subject', 'schoolClass', 'prospectiveClass', 'compositions.subject', 'compositions.topic']),
             'sessions' => AcademicSession::current()->get(),
             'batches' => $context['batches'],
             'subjects' => $context['subjects'],
@@ -217,18 +195,18 @@ class ExamController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'school_id' => ['required', 'exists:schools,id'],
             'subject_id' => [
-                'required_unless:type,entrance',
+                'required_without:compositions',
                 'nullable',
                 'exists:subjects,id',
             ],
-            'school_class_id' => ['required_unless:type,entrance', 'nullable', 'exists:school_classes,id'],
+            'school_class_id' => ['required', 'exists:school_classes,id'],
             'prospective_class_id' => ['required_if:type,entrance', 'nullable', 'exists:prospective_classes,id'],
             'duration' => ['required', 'integer', 'min:1'],
             'type' => ['required', 'string'], // ExamType enum
             'start_time' => ['nullable', 'date'],
             'end_time' => ['nullable', 'date', 'after:start_time'],
             'status' => ['required', 'string'], // ExamStatus enum
-            'compositions' => ['required_if:type,entrance', 'array'],
+            'compositions' => ['nullable', 'array'],
             'compositions.*.subject_id' => ['required', 'exists:subjects,id'],
             'compositions.*.topic_id' => ['nullable', 'exists:topics,id'],
             'compositions.*.question_count' => ['required', 'integer', 'min:1'],
@@ -236,24 +214,33 @@ class ExamController extends Controller
         ]);
 
         \Illuminate\Support\Facades\DB::transaction(function () use ($request, $exam) {
-            $data = $request->only([
-                'title', 'school_id', 'subject_id', 'school_class_id', 'prospective_class_id',
-                'duration', 'type', 'start_time', 'end_time', 'status',
-            ]);
+            $currentSessionId = $exam->academic_session_id;
+            $dto = ExamDTO::fromRequest($request, $currentSessionId);
+            
+            // Sync branch slug
+            $school = \App\Models\School::find($request->school_id);
+            $data = $dto->toArray();
+            $data['branch'] = $school?->slug;
+
+            // Remove compositions from array before update as it's a relationship
+            $compositions = $data['compositions'];
+            unset($data['compositions']);
+
+            // If compositions is empty, ensure subject_id is NOT null
+            if (empty($compositions) && is_null($data['subject_id'])) {
+                $data['subject_id'] = $exam->subject_id;
+            }
 
             $exam->update($data);
 
-            if ($request->type === 'entrance') {
+            if (!empty($compositions)) {
                 // Wipe and recreate compositions for simplicity in sync
                 $exam->compositions()->delete();
-                foreach ($request->compositions as $comp) {
-                    $exam->compositions()->create([
-                        'subject_id' => $comp['subject_id'],
-                        'topic_id' => $comp['topic_id'] ?? null,
-                        'question_count' => $comp['question_count'],
-                        'marks_per_question' => $comp['marks_per_question'],
-                    ]);
+                foreach ($compositions as $compDto) {
+                    $exam->compositions()->create($compDto->toArray());
                 }
+            } else {
+                $exam->compositions()->delete();
             }
         });
 
@@ -293,32 +280,8 @@ class ExamController extends Controller
         }
 
         if (! $user->can('sys:manage_settings')) {
-            // Staff are ALWAYS scoped to their assigned school
+            // Staff are ALWAYS scoped to their assigned school branch
             $query->where('school_id', $user->school_id);
-
-            $assignments = $user->currentAssignments()->get();
-            $assignedClassIds = $assignments->pluck('school_class_id')->filter()->unique();
-            $assignedSubjectIds = $assignments->pluck('subject_id')->filter()->unique();
-            $assignedBatchIds = $assignments->pluck('prospective_class_id')->filter()->unique();
-            $isCoordinator = $assignments->contains(fn ($a) => is_null($a->subject_id));
-
-            $query->where(function ($q) use ($assignedClassIds, $assignedSubjectIds, $assignedBatchIds, $isCoordinator) {
-                // Regular Exam results
-                $q->where(function ($subQ) use ($assignedClassIds, $assignedSubjectIds) {
-                    $subQ->whereIn('school_class_id', $assignedClassIds)
-                        ->whereIn('subject_id', $assignedSubjectIds);
-                });
-
-                // Entrance Exam results
-                $q->orWhere(function ($subQ) use ($assignedBatchIds, $assignedSubjectIds, $isCoordinator) {
-                    $subQ->where('type', \App\Enums\ExamType::ENTRANCE)
-                        ->whereIn('prospective_class_id', $assignedBatchIds);
-
-                    if (! $isCoordinator) {
-                        $subQ->whereIn('subject_id', $assignedSubjectIds);
-                    }
-                });
-            });
         }
 
         return Inertia::render('Staff/Results/Index', [

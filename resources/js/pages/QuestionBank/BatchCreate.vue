@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { Head, Link, usePage, useForm } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { index as indexAction, batchStore } from '@/actions/App/Http/Controllers/Staff/StaffQuestionController';
+import CustomSelect from '@/components/Form/CustomSelect.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import StaffLayout from '@/layouts/StaffLayout.vue';
 import type { AppPageProps } from '@/types';
@@ -18,6 +19,31 @@ const props = defineProps<{
 const page = usePage<AppPageProps>();
 const isAdmin = computed(() => page.props.auth.user.permissions.includes('sys:manage_settings'));
 const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
+
+const branches = computed(() => {
+    const rawBranches = (page.props as any).branches || {};
+    return Object.values(rawBranches).map((info: any) => ({
+        id: info.id,
+        name: info.name,
+        type: info.type
+    }));
+});
+
+// Context Awareness
+const selectedBranchId = ref(page.props.auth.user.school_id || (branches.value.length > 0 ? branches.value[0].id : ''));
+const selectedBranch = computed(() => branches.value.find(b => b.id === selectedBranchId.value));
+
+const filteredSubjects = computed(() => {
+    if (!selectedBranch.value) return props.subjects;
+    return props.subjects
+        .filter(s => s.level === selectedBranch.value?.type)
+        .map(s => ({ ...s, name: `${s.name} (${s.level.toUpperCase()})` }));
+});
+
+const filteredClasses = computed(() => {
+    if (!selectedBranch.value) return props.classes;
+    return props.classes.filter(c => c.level === selectedBranch.value?.type);
+});
 
 // Individual row structure
 const createEmptyRow = () => ({
@@ -53,6 +79,15 @@ const applyBulkMetadata = () => {
         if (bulkTopic.value) q.topic_id = bulkTopic.value;
     });
 };
+
+// Reset bulk and row metadata if tier changes to avoid mismatch
+watch(selectedBranchId, () => {
+    bulkSubject.value = '';
+    bulkClass.value = '';
+    bulkTopic.value = '';
+    
+    // Optional: questions.value.forEach(q => { q.subject_id = ''; q.school_class_id = ''; q.topic_id = ''; });
+});
 
 const addRow = () => {
     const lastRow = questions.value[questions.value.length - 1];
@@ -129,13 +164,8 @@ const getFilteredTopics = (subjectId: string, classId: string) => {
     return (subject as any).topics.filter((t: any) => !t.school_class_id || t.school_class_id === classId);
 };
 
-const getAvailableClasses = (subjectId: string) => {
-    const subject = props.subjects.find(s => s.id === subjectId);
-    if (!subject) return [];
-
-    // We always show all authorized classes passed from the server
-    // as QuestionService already filters these based on the user's context.
-    return props.classes;
+const getAvailableClasses = () => {
+    return filteredClasses.value;
 };
 </script>
 
@@ -143,8 +173,8 @@ const getAvailableClasses = (subjectId: string) => {
     <component :is="Layout" wide>
         <Head title="Spreadsheet Mode" />
 
-        <div class="space-y-6">
-            <!-- Minimal Header -->
+        <div class="space-y-6 pb-24">
+            <!-- Header -->
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <Link :href="indexAction().url" class="inline-flex items-center justify-center size-8 rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 transition-all">
@@ -158,7 +188,7 @@ const getAvailableClasses = (subjectId: string) => {
                     <button 
                         @click="submit"
                         :disabled="form.processing"
-                        class="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:pointer-events-none"
+                        class="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:pointer-events-none transition-all shadow-sm active:scale-95"
                     >
                         <span v-if="form.processing" class="animate-spin inline-block size-4 border-[3px] border-current border-t-transparent text-white rounded-full"></span>
                         <svg v-else class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
@@ -167,101 +197,163 @@ const getAvailableClasses = (subjectId: string) => {
                 </div>
             </div>
 
-            <!-- Compact Metadata Bar -->
-            <div class="flex items-center gap-4 bg-white border border-gray-200 rounded-xl shadow-sm p-3">
-                <div class="flex items-center gap-2 px-3 border-r border-gray-200">
-                    <div class="h-2 w-2 rounded-full bg-primary"></div>
-                    <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Bulk Actions</span>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Institutional Scope & Context -->
+                <div class="lg:col-span-4">
+                    <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-5 space-y-4 h-full">
+                        <div class="flex items-center gap-3">
+                            <div class="size-8 flex items-center justify-center rounded-lg bg-primary/10 text-primary">
+                                <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                            </div>
+                            <div>
+                                <h2 class="text-sm font-bold text-gray-800">{{ isAdmin ? 'Campus Context' : 'Authorized Context' }}</h2>
+                                <p class="text-[10px] text-gray-500 uppercase font-black tracking-widest">{{ isAdmin ? 'Select target branch' : 'Current active level' }}</p>
+                            </div>
+                        </div>
+
+                        <CustomSelect 
+                            v-if="isAdmin"
+                            v-model="selectedBranchId"
+                            :options="branches"
+                            placeholder="Choose Branch"
+                            size="sm"
+                        />
+
+                        <div v-else class="p-3 bg-gray-50 rounded-lg border border-gray-100">
+                            <div class="text-xs font-bold text-gray-800">{{ selectedBranch?.name || 'Loading branch...' }}</div>
+                        </div>
+
+                        <div v-if="selectedBranch" class="flex items-center gap-3 p-3 bg-teal-50 border border-teal-100 rounded-lg transition-all">
+                            <div class="size-2 rounded-full bg-teal-500 animate-pulse"></div>
+                            <span class="text-xs font-black text-teal-800 uppercase tracking-tighter">Verified Level: {{ selectedBranch.type }}</span>
+                        </div>
+                    </div>
                 </div>
-                <select v-model="bulkSubject" class="py-2 px-3 block w-full max-w-[200px] border-gray-200 rounded-lg text-xs focus:border-primary focus:ring-primary disabled:opacity-50 disabled:pointer-events-none bg-gray-50">
-                    <option value="">Subject</option>
-                    <option v-for="s in subjects" :key="s.id" :value="s.id">{{ s.name }}</option>
-                </select>
-                <select v-model="bulkClass" class="py-2 px-3 block w-full max-w-[150px] border-gray-200 rounded-lg text-xs focus:border-primary focus:ring-primary disabled:opacity-50 disabled:pointer-events-none bg-gray-50">
-                    <option value="">Class</option>
-                    <option v-for="c in classes" :key="c.id" :value="c.id">{{ c.name }}</option>
-                </select>
-                <button 
-                    @click="applyBulkMetadata"
-                    class="py-2 px-4 inline-flex items-center gap-x-2 text-xs font-semibold rounded-lg border border-transparent bg-gray-900 text-white hover:bg-black disabled:opacity-50 disabled:pointer-events-none"
-                >
-                    Apply to all
-                </button>
+
+                <!-- Bulk Actions -->
+                <div class="lg:col-span-8">
+                    <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-5 space-y-4 h-full">
+                        <div class="flex items-center gap-3">
+                            <div class="size-8 flex items-center justify-center rounded-lg bg-slate-900 text-white">
+                                <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                            </div>
+                            <div>
+                                <h2 class="text-sm font-bold text-gray-800">Bulk Metadata</h2>
+                                <p class="text-[10px] text-gray-500 uppercase font-black tracking-widest">Apply settings to all rows</p>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap gap-3 items-end">
+                            <div class="flex-1 min-w-[180px]">
+                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Subject</label>
+                                <select v-model="bulkSubject" class="py-2 px-3 block w-full border-gray-200 rounded-lg text-xs focus:border-primary focus:ring-primary bg-gray-50">
+                                    <option value="">Select Subject</option>
+                                    <option v-for="s in filteredSubjects" :key="s.id" :value="s.id">{{ s.name }}</option>
+                                </select>
+                            </div>
+                            <div class="flex-1 min-w-[140px]">
+                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Class</label>
+                                <select v-model="bulkClass" class="py-2 px-3 block w-full border-gray-200 rounded-lg text-xs focus:border-primary focus:ring-primary bg-gray-50">
+                                    <option value="">Select Class</option>
+                                    <option v-for="c in filteredClasses" :key="c.id" :value="c.id">{{ c.name }}</option>
+                                </select>
+                            </div>
+                            <button 
+                                @click="applyBulkMetadata"
+                                class="py-2 px-6 inline-flex items-center gap-x-2 text-xs font-black uppercase rounded-lg border border-transparent bg-slate-900 text-white hover:bg-black transition-all shadow-sm active:scale-95"
+                            >
+                                Apply All
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <!-- Compact Grid -->
-            <div class="flex flex-col bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+            <!-- Spreadsheet Grid -->
+            <div class="flex flex-col bg-white border border-gray-200 rounded-xl shadow-sm overflow-visible">
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
+                        <thead class="bg-gray-50/50">
                             <tr>
-                                <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">#</th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-64">Context</th>
-                                <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-24">Image</th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">Content</th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 w-80">Options (A-D)</th>
-                                <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-16">Actions</th>
+                                <th scope="col" class="px-4 py-3 text-center text-[10px] font-black text-gray-400 uppercase border-r border-gray-200 w-12">#</th>
+                                <th scope="col" class="px-4 py-3 text-left text-[10px] font-black text-gray-400 uppercase border-r border-gray-200 w-64">Syllabus Context</th>
+                                <th scope="col" class="px-4 py-3 text-center text-[10px] font-black text-gray-400 uppercase border-r border-gray-200 w-24">Media</th>
+                                <th scope="col" class="px-4 py-3 text-left text-[10px] font-black text-gray-400 uppercase border-r border-gray-200">Question Content</th>
+                                <th scope="col" class="px-4 py-3 text-left text-[10px] font-black text-gray-400 uppercase border-r border-gray-200 w-80">Options (A-D)</th>
+                                <th scope="col" class="px-4 py-3 text-center text-[10px] font-black text-gray-400 uppercase w-16"></th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200">
                             <tr v-for="(q, idx) in questions" :key="idx" class="hover:bg-gray-50 transition-colors">
                                 <!-- Index -->
-                                <td class="px-4 py-3 text-xs font-medium text-gray-400 text-center border-r border-gray-200">{{ idx + 1 }}</td>
+                                <td class="px-4 py-3 text-xs font-bold text-gray-400 text-center border-r border-gray-200">{{ idx + 1 }}</td>
                                 
                                 <!-- Compact Context -->
-                                <td class="px-4 py-3 space-y-2 border-r border-gray-200 bg-gray-50/30">
-                                    <select v-model="q.subject_id" class="py-1 px-2 block w-full border-gray-200 rounded-md text-[11px] focus:border-primary focus:ring-primary bg-white">
-                                        <option value="">Subject</option>
-                                        <option v-for="s in subjects" :key="s.id" :value="s.id">{{ s.name }}</option>
-                                    </select>
-                                    <select v-model="q.school_class_id" class="py-1 px-2 block w-full border-gray-200 rounded-md text-[11px] focus:border-primary focus:ring-primary bg-white">
-                                        <option value="">Class</option>
-                                        <option v-for="c in getAvailableClasses(q.subject_id)" :key="c.id" :value="c.id">{{ c.name }}</option>
-                                    </select>
-                                    <select v-model="q.topic_id" class="py-1 px-2 block w-full border-gray-200 rounded-md text-[11px] focus:border-primary focus:ring-primary bg-white">
-                                        <option value="">Topic</option>
-                                        <option v-for="t in getFilteredTopics(q.subject_id, q.school_class_id)" :key="t.id" :value="t.id">{{ t.name }}</option>
-                                    </select>
+                                <td class="px-4 py-3 space-y-2 border-r border-gray-200 bg-gray-50/20">
+                                    <div class="relative group">
+                                        <select v-model="q.subject_id" class="py-1.5 px-2 block w-full border-gray-200 rounded-md text-[11px] font-semibold focus:border-primary focus:ring-primary bg-white shadow-sm">
+                                            <option value="">Subject Area</option>
+                                            <option v-for="s in filteredSubjects" :key="s.id" :value="s.id">{{ s.name }}</option>
+                                        </select>
+                                    </div>
+                                    <div class="relative group">
+                                        <select v-model="q.school_class_id" class="py-1.5 px-2 block w-full border-gray-200 rounded-md text-[11px] font-semibold focus:border-primary focus:ring-primary bg-white shadow-sm">
+                                            <option value="">Academic Class</option>
+                                            <option v-for="c in getAvailableClasses()" :key="c.id" :value="c.id">{{ c.name }}</option>
+                                        </select>
+                                    </div>
+                                    <div class="relative group">
+                                        <select v-model="q.topic_id" class="py-1.5 px-2 block w-full border-gray-200 rounded-md text-[11px] font-semibold focus:border-primary focus:ring-primary bg-white shadow-sm">
+                                            <option value="">Topic Context</option>
+                                            <option v-for="t in getFilteredTopics(q.subject_id, q.school_class_id)" :key="t.id" :value="t.id">{{ t.name }}</option>
+                                        </select>
+                                    </div>
                                 </td>
 
-                                <!-- Compact Image -->
+                                <!-- Media -->
                                 <td class="px-4 py-3 text-center border-r border-gray-200">
                                     <div v-if="q.imagePreview" class="relative group inline-block">
-                                        <img :src="q.imagePreview" class="size-12 rounded-lg object-cover border border-gray-200" />
-                                        <button @click="removeImage(idx)" class="absolute -top-1.5 -right-1.5 size-5 rounded-full bg-red-600 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <svg class="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" /></svg>
+                                        <img :src="q.imagePreview" class="size-14 rounded-lg object-cover border-2 border-primary/20 shadow-sm" />
+                                        <button @click="removeImage(idx)" class="absolute -top-2 -right-2 size-6 rounded-full bg-red-600 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:scale-110 shadow-lg">
+                                            <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                                         </button>
                                     </div>
-                                    <button v-else @click="triggerFileInput(idx)" class="size-12 flex items-center justify-center rounded-lg border border-dashed border-gray-300 text-gray-300 hover:text-primary hover:border-primary transition-colors">
-                                        <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                                    <button v-else @click="triggerFileInput(idx)" class="size-14 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-200 text-gray-300 hover:text-primary hover:border-primary hover:bg-primary/5 transition-all group">
+                                        <svg class="size-5 mb-1 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                                        <span class="text-[8px] font-black uppercase">Add Image</span>
                                         <input :id="'file-input-'+idx" type="file" class="hidden" accept="image/*" @change="(e) => handleImageUpload(idx, e)" />
                                     </button>
                                 </td>
 
-                                <!-- Compact Content -->
+                                <!-- Content -->
                                 <td class="px-4 py-3 border-r border-gray-200">
-                                    <textarea v-model="q.content" rows="2" placeholder="Question content..." class="py-2 px-3 block w-full border-gray-200 rounded-lg text-sm focus:border-primary focus:ring-primary bg-white resize-none"></textarea>
-                                    <input v-model="q.explanation" placeholder="Explanation (Optional)" class="mt-2 py-1 px-2 block w-full border-gray-200 rounded-md text-xs focus:border-primary focus:ring-primary bg-white" />
+                                    <textarea v-model="q.content" rows="2" placeholder="Describe the question requirement..." class="py-2 px-3 block w-full border-gray-200 rounded-lg text-sm font-medium focus:border-primary focus:ring-primary bg-white resize-none shadow-sm"></textarea>
+                                    <div class="mt-2 flex items-center gap-2">
+                                        <div class="shrink-0 text-[10px] font-black text-gray-400 uppercase">Expl:</div>
+                                        <input v-model="q.explanation" placeholder="Context for the correct answer (Optional)" class="py-1 px-2 block w-full border-gray-200 rounded-md text-[11px] focus:border-primary focus:ring-primary bg-gray-50/50" />
+                                    </div>
                                 </td>
 
-                                <!-- Compact Options -->
-                                <td class="px-4 py-3 border-r border-gray-200 bg-gray-50/10">
-                                    <div class="grid grid-cols-2 gap-2">
-                                        <div v-for="(opt, oIdx) in q.options" :key="oIdx" class="flex items-center gap-2">
-                                            <input 
-                                                type="radio" 
-                                                :checked="opt.is_correct"
-                                                @change="() => q.options.forEach((o, i) => o.is_correct = i === oIdx)"
-                                                class="shrink-0 size-3.5 border-gray-200 rounded-full text-primary focus:ring-primary"
-                                            />
-                                            <input v-model="opt.content" :placeholder="'Option '+String.fromCharCode(65+oIdx)" class="py-1 px-2 block w-full border-gray-200 rounded-md text-xs focus:border-primary focus:ring-primary bg-white" />
+                                <!-- Options -->
+                                <td class="px-4 py-3 border-r border-gray-200 bg-gray-50/5">
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div v-for="(opt, oIdx) in q.options" :key="oIdx" class="relative">
+                                            <div class="flex items-center gap-2 p-1.5 rounded-lg border border-gray-100 bg-white shadow-sm transition-all focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20">
+                                                <input 
+                                                    type="radio" 
+                                                    :checked="opt.is_correct"
+                                                    @change="() => q.options.forEach((o, i) => o.is_correct = i === oIdx)"
+                                                    class="shrink-0 size-3.5 border-gray-300 rounded-full text-primary focus:ring-primary cursor-pointer"
+                                                />
+                                                <input v-model="opt.content" :placeholder="'Option '+String.fromCharCode(65+oIdx)" class="p-0 block w-full border-none rounded-md text-[11px] font-medium focus:ring-0 bg-transparent" />
+                                            </div>
                                         </div>
                                     </div>
                                 </td>
 
                                 <!-- Actions -->
                                 <td class="px-4 py-3 text-center">
-                                    <button @click="removeRow(idx)" class="text-gray-400 hover:text-red-600 transition-colors">
+                                    <button @click="removeRow(idx)" class="size-8 flex items-center justify-center rounded-lg text-gray-300 hover:bg-red-50 hover:text-red-600 transition-all active:scale-90">
                                         <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                     </button>
                                 </td>
@@ -272,13 +364,13 @@ const getAvailableClasses = (subjectId: string) => {
             </div>
 
             <!-- Floating Minimal Action Bar -->
-            <div class="flex justify-center pt-4 pb-8">
+            <div class="fixed bottom-10 left-1/2 -translate-x-1/2 z-50">
                 <button 
                     @click="addRow"
-                    class="py-3 px-6 inline-flex items-center gap-x-2 text-sm font-semibold rounded-full border border-transparent bg-gray-900 text-white hover:bg-black transition-all shadow-lg"
+                    class="py-3 px-8 inline-flex items-center gap-x-2 text-sm font-black uppercase tracking-widest rounded-full border border-transparent bg-slate-900 text-white hover:bg-black transition-all shadow-2xl active:scale-95"
                 >
                     <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" /></svg>
-                    Add New Row
+                    New Row
                 </button>
             </div>
         </div>
