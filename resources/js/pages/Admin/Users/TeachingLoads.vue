@@ -37,6 +37,14 @@ const props = defineProps<{
 }>();
 
 const page = usePage();
+
+const subjectsWithOptions = computed(() => {
+    return props.subjects.map((s) => ({
+        ...s,
+        name: `${s.name} (${s.level.toUpperCase()})`
+    }));
+});
+
 const branches = computed(() => {
     const rawBranches = (page.props as any).branches || {};
     return Object.entries(rawBranches).map(([id, info]: [string, any]) => ({
@@ -228,7 +236,7 @@ const handleDelete = () => {
                                         v-if="assignment.subject"
                                         class="inline-flex items-center gap-x-1.5 rounded-full bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-800"
                                     >
-                                        {{ assignment.subject.name }}
+                                        {{ assignment.subject.name }} ({{ assignment.subject.level?.toUpperCase() }})
                                     </span>
                                     <span
                                         v-else
@@ -322,7 +330,7 @@ const handleDelete = () => {
                                 class="block w-full rounded-lg border-gray-200 px-4 py-3 text-sm focus:border-primary focus:ring-primary disabled:pointer-events-none disabled:opacity-50"
                             >
                                 <option value="">None (For Lead Examiners)</option>
-                                <option v-for="subject in subjects" :key="subject.id" :value="subject.id">{{ subject.name }}</option>
+                                <option v-for="subject in subjectsWithOptions" :key="subject.id" :value="subject.id">{{ subject.name }}</option>
                             </select>
                             <div v-if="form.errors.subject_id" class="mt-2 text-xs text-red-500">{{ form.errors.subject_id }}</div>
                         </div>

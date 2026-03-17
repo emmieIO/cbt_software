@@ -74,6 +74,13 @@ const removeImage = () => {
     if (fileInput.value) fileInput.value.value = '';
 };
 
+const subjectsWithOptions = computed(() => {
+    return props.subjects.map((s) => ({
+        ...s,
+        name: `${s.name} (${s.level.toUpperCase()})`
+    }));
+});
+
 const selectedSubject = computed(() => {
     return props.subjects.find((s) => s.id === (form.subject_id as string));
 });
@@ -200,7 +207,7 @@ const submit = () => {
                         <CustomSelect
                             v-model="form.subject_id"
                             label="Subject Area"
-                            :options="subjects"
+                            :options="subjectsWithOptions"
                             placeholder="Choose Subject"
                             :error="form.errors.subject_id"
                             size="md"

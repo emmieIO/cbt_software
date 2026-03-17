@@ -50,7 +50,7 @@ class StaffQuestionController extends Controller
             'classes' => $context['classes'],
             'batches' => $context['batches'],
             'difficulties' => collect(QuestionDifficulty::cases())->map(fn ($d) => ['value' => $d->value, 'label' => Str::title($d->value)]),
-            'filters' => $request->only(['search', 'subject_id', 'school_class_id', 'difficulty']),
+            'filters' => $request->only(['search', 'subject_id', 'school_class_id', 'prospective_class_id', 'difficulty']),
         ]);
     }
 

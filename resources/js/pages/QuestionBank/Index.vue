@@ -34,13 +34,25 @@ const page = usePage();
 const isAdmin = computed(() => (page.props.auth.user as any).permissions.includes('sys:manage_settings'));
 const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
 
+const subjectsWithOptions = computed(() => {
+    return props.subjects.map((s) => ({
+        ...s,
+        name: `${s.name} (${s.level.toUpperCase()})`
+    }));
+});
+
 const isSeeding = computed(() => (page.props.auth as any).is_seeding);
+
+// Automatic Polling when seeding is in progress
+router.poll(5000, {
+    only: ['questions', 'auth', 'flash'],
+    keepAlive: true,
+});
 
 const isRefreshing = ref(false);
 const refresh = () => {
     isRefreshing.value = true;
     router.reload({
-        only: ['questions'],
         onFinish: () => {
             isRefreshing.value = false;
         },
@@ -253,7 +265,7 @@ const getDifficultyClasses = (difficulty: string) => {
                                             class="py-2 px-3 block w-full border-gray-200 rounded-lg text-sm focus:border-primary focus:ring-primary disabled:opacity-50 disabled:pointer-events-none"
                                         >
                                             <option value="">All Subjects</option>
-                                            <option v-for="s in subjects" :key="s.id" :value="s.id">{{ s.name }}</option>
+                                            <option v-for="s in subjectsWithOptions" :key="s.id" :value="s.id">{{ s.name }}</option>
                                         </select>
                                     </div>
                                     <div class="w-40">
