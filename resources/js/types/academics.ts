@@ -3,6 +3,7 @@ export type Subject = {
     name: string;
     slug: string;
     topics: Topic[];
+    level:string
     [key: string]: unknown;
 };
 
@@ -37,6 +38,7 @@ export type Question = {
     explanation: string | null;
     type: 'multiple_choice' | 'true_false' | 'theory';
     difficulty: 'easy' | 'medium' | 'hard';
+    image_path: string | null;
     version: number;
     is_active: boolean;
     topic: Topic;

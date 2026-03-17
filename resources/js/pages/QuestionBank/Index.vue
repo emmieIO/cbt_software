@@ -35,7 +35,7 @@ const isAdmin = computed(() => (page.props.auth.user as any).permissions.include
 const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
 
 const subjectsWithOptions = computed(() => {
-    return props.subjects.map((s) => ({
+    return props.subjects.map((s: Subject) => ({
         ...s,
         name: `${s.name} (${s.level.toUpperCase()})`
     }));
@@ -46,7 +46,6 @@ const isSeeding = computed(() => (page.props.auth as any).is_seeding);
 // Automatic Polling when seeding is in progress
 router.poll(5000, {
     only: ['questions', 'auth', 'flash'],
-    keepAlive: true,
 });
 
 const isRefreshing = ref(false);
@@ -321,7 +320,7 @@ const getDifficultyClasses = (difficulty: string) => {
                                         </td>
                                         <td class="px-6 py-4 max-w-md">
                                             <div class="flex items-start gap-x-3">
-                                                <div class="size-8 flex-shrink-0 flex items-center justify-center rounded bg-gray-100 text-[10px] font-bold text-gray-500 uppercase">
+                                                <div class="size-8 shrink-0 flex items-center justify-center rounded bg-gray-100 text-[10px] font-bold text-gray-500 uppercase">
                                                     {{ question.type.charAt(0) }}
                                                 </div>
                                                 <div class="flex flex-col min-w-0">
@@ -410,7 +409,7 @@ const getDifficultyClasses = (difficulty: string) => {
         </div>
 
         <!-- Import Modal -->
-        <div v-if="isImportModalOpen" class="fixed inset-0 z-[80] overflow-y-auto overflow-x-hidden flex items-center justify-center p-4">
+        <div v-if="isImportModalOpen" class="fixed inset-0 z-80 overflow-y-auto overflow-x-hidden flex items-center justify-center p-4">
             <div @click="isImportModalOpen = false" class="absolute inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity"></div>
             <div class="relative w-full max-w-md bg-white rounded-xl shadow-lg border border-gray-200">
                 <div class="p-6 text-center">
