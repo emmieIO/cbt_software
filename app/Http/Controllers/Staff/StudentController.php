@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Staff;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use App\Models\School;
 use App\Models\SchoolClass;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -19,9 +19,9 @@ class StudentController extends Controller
     {
         $user = $request->user();
         $school = $user->school_id ? School::find($user->school_id) : null;
-        
+
         // Base Query: Active students in the same campus
-        $query = User::role('candidate')
+        $query = User::query()->role('candidate')
             ->where('status', 'active')
             ->where('school_id', $user->school_id)
             ->with(['schoolClass']);

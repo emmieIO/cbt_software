@@ -22,7 +22,7 @@ class ExamController extends Controller
     public function index(Request $request): \Inertia\Response
     {
         $user = $request->user();
-        $query = Exam::with(['subject', 'schoolClass', 'academicSession', 'prospectiveClass'])
+        $query = Exam::with(['subject', 'schoolClass', 'academicSession'])
             ->withCount('questions');
 
         if ($request->school_id) {
@@ -34,8 +34,8 @@ class ExamController extends Controller
             // Staff/Examiners are strictly scoped to their assigned school branch
             $query->where('school_id', $user->school_id);
 
-            // If the user is a regular teacher (doesn't have broad management rights), 
-            // we could further restrict to their assignments. 
+            // If the user is a regular teacher (doesn't have broad management rights),
+            // we could further restrict to their assignments.
             // However, based on the requirement for examiners to see exams created by others (like Super Admin),
             // we allow school-wide visibility for anyone with 'exam:view'.
         }
@@ -54,11 +54,10 @@ class ExamController extends Controller
         $user = $request->user();
 
         // Get authorized context (scoped to their school tier)
-        $context = (new \App\Services\QuestionService)->getAuthorizedContext($user, false, false);
+        $context = app(\App\Services\QuestionService::class)->getAuthorizedContext($user, false);
 
         return Inertia::render('Staff/Exams/Create', [
-            'sessions' => AcademicSession::current()->get(),
-            'batches' => $context['batches'],
+            'sessions' => AcademicSession::query()->current()->get(),
             'subjects' => $context['subjects'],
             'classes' => $context['classes'],
         ]);
@@ -78,7 +77,6 @@ class ExamController extends Controller
                 'exists:subjects,id',
             ],
             'school_class_id' => ['required', 'exists:school_classes,id'],
-            'prospective_class_id' => ['required_if:type,entrance', 'nullable', 'exists:prospective_classes,id'],
             'duration' => ['required', 'integer', 'min:1'],
             'type' => ['required', 'string'], // ExamType enum
             'start_time' => ['nullable', 'date', 'after_or_equal:now'],
@@ -97,7 +95,7 @@ class ExamController extends Controller
         }
 
         $dto = ExamDTO::fromRequest($request, $currentSession->id);
-        
+
         // Sync branch slug
         $school = \App\Models\School::find($request->school_id);
         $data = $dto->toArray();
@@ -114,7 +112,14 @@ class ExamController extends Controller
      */
     public function show(Exam $exam): \Inertia\Response
     {
-        $exam->load(['subject', 'schoolClass', 'prospectiveClass', 'academicSession', 'questions', 'compositions.subject', 'compositions.topic']);
+        $exam->load([
+            'subject',
+            'schoolClass',
+            'academicSession',
+            'questions.topic.subject',
+            'compositions.subject',
+            'compositions.topic',
+        ]);
 
         return Inertia::render('Staff/Exams/Show', [
             'exam' => $exam,
@@ -175,12 +180,11 @@ class ExamController extends Controller
         $user = $request->user();
 
         // Get authorized context
-        $context = (new \App\Services\QuestionService)->getAuthorizedContext($user, false, false);
+        $context = app(\App\Services\QuestionService::class)->getAuthorizedContext($user, false);
 
         return Inertia::render('Staff/Exams/Edit', [
-            'exam' => $exam->load(['subject', 'schoolClass', 'prospectiveClass', 'compositions.subject', 'compositions.topic']),
-            'sessions' => AcademicSession::current()->get(),
-            'batches' => $context['batches'],
+            'exam' => $exam->load(['subject', 'schoolClass', 'compositions.subject', 'compositions.topic']),
+            'sessions' => AcademicSession::query()->current()->get(),
             'subjects' => $context['subjects'],
             'classes' => $context['classes'],
         ]);
@@ -200,7 +204,6 @@ class ExamController extends Controller
                 'exists:subjects,id',
             ],
             'school_class_id' => ['required', 'exists:school_classes,id'],
-            'prospective_class_id' => ['required_if:type,entrance', 'nullable', 'exists:prospective_classes,id'],
             'duration' => ['required', 'integer', 'min:1'],
             'type' => ['required', 'string'], // ExamType enum
             'start_time' => ['nullable', 'date'],
@@ -216,7 +219,7 @@ class ExamController extends Controller
         \Illuminate\Support\Facades\DB::transaction(function () use ($request, $exam) {
             $currentSessionId = $exam->academic_session_id;
             $dto = ExamDTO::fromRequest($request, $currentSessionId);
-            
+
             // Sync branch slug
             $school = \App\Models\School::find($request->school_id);
             $data = $dto->toArray();
@@ -233,7 +236,7 @@ class ExamController extends Controller
 
             $exam->update($data);
 
-            if (!empty($compositions)) {
+            if (! empty($compositions)) {
                 // Wipe and recreate compositions for simplicity in sync
                 $exam->compositions()->delete();
                 foreach ($compositions as $compDto) {
@@ -272,7 +275,7 @@ class ExamController extends Controller
     {
         $user = $request->user();
 
-        $query = Exam::with(['subject', 'schoolClass', 'prospectiveClass'])
+        $query = Exam::with(['subject', 'schoolClass'])
             ->withCount('attempts');
 
         if ($request->school_id) {
@@ -295,7 +298,7 @@ class ExamController extends Controller
      */
     public function showResults(Exam $exam): \Inertia\Response
     {
-        $exam->load(['subject', 'schoolClass', 'prospectiveClass']);
+        $exam->load(['subject', 'schoolClass']);
 
         $attempts = $exam->attempts()
             ->with(['user.schoolClass'])
@@ -337,7 +340,6 @@ class ExamController extends Controller
             'school',
             'subject',
             'schoolClass',
-            'prospectiveClass',
             'academicSession',
             'questions' => function ($query) {
                 $query->with(['options', 'topic.subject'])->orderByPivot('order', 'asc');
@@ -358,7 +360,6 @@ class ExamController extends Controller
             'school',
             'subject',
             'schoolClass',
-            'prospectiveClass',
             'academicSession',
             'questions' => function ($query) {
                 $query->orderByPivot('order', 'asc');
@@ -379,7 +380,6 @@ class ExamController extends Controller
             'school',
             'subject',
             'schoolClass',
-            'prospectiveClass',
             'academicSession',
             'attempts' => function ($query) {
                 $query->with(['user.schoolClass'])->latest('score');

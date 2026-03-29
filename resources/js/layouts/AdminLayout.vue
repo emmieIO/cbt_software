@@ -3,27 +3,32 @@ import { usePage } from '@inertiajs/vue3';
 import { h, defineComponent, computed } from 'vue';
 import { index as sessionsIndex } from '@/actions/App/Http/Controllers/Admin/AcademicSessionController';
 import { logout, dashboard } from '@/actions/App/Http/Controllers/Admin/AdminController';
-import { index as entranceIndex } from '@/actions/App/Http/Controllers/Admin/EntranceController';
 import { index as permissionsIndex } from '@/actions/App/Http/Controllers/Admin/PermissionController';
-import { index as promotionIndex } from '@/actions/App/Http/Controllers/Admin/PromotionController';
-import { index as prospectiveIndex } from '@/actions/App/Http/Controllers/Admin/ProspectiveClassController';
 import { index as rolesIndex } from '@/actions/App/Http/Controllers/Admin/RoleController';
 import { index as classesIndex } from '@/actions/App/Http/Controllers/Admin/SchoolClassController';
 import { index as schoolsIndex } from '@/actions/App/Http/Controllers/Admin/SchoolController';
 import { index as staffIndex } from '@/actions/App/Http/Controllers/Admin/StaffController';
 import { index as studentIndex } from '@/actions/App/Http/Controllers/Admin/StudentController';
 import { index as subjectsIndex } from '@/actions/App/Http/Controllers/Admin/SubjectController';
-import { index as teachingLoadsIndex } from '@/actions/App/Http/Controllers/Admin/TeachingLoadController';
 import { index as topicsIndex } from '@/actions/App/Http/Controllers/Admin/TopicController';
 import { index as examsIndex, create as createExam, results as resultsIndex } from '@/actions/App/Http/Controllers/Staff/ExamController';
-import { index as questionsIndex, generate as aiLabGenerate, create as createQuestion } from '@/actions/App/Http/Controllers/Staff/StaffQuestionController';
+import {
+    index as questionsIndex,
+    generate as aiLabGenerate,
+    create as createQuestion,
+} from '@/actions/App/Http/Controllers/Staff/StaffQuestionController';
 import DashboardLayout from '@/layouts/DashboardLayout.vue';
+import type { User } from '@/types/auth';
+import type { NavSection } from '@/types/navigation';
 
-withDefaults(defineProps<{
-    wide?: boolean;
-}>(), {
-    wide: false
-});
+withDefaults(
+    defineProps<{
+        wide?: boolean;
+    }>(),
+    {
+        wide: false,
+    },
+);
 
 const page = usePage();
 
@@ -130,12 +135,12 @@ const IconResults = defineComponent({
                 'stroke-linecap': 'round',
                 'stroke-linejoin': 'round',
                 'stroke-width': '2',
-                d: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
+                d: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v16a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
             }),
         ]),
 });
 
-const navigation = [
+const navigation: NavSection[] = [
     {
         section: 'Overview',
         items: [
@@ -222,13 +227,6 @@ const navigation = [
                 permission: 'admin:manage_setup',
             },
             {
-                name: 'Entrance Batches',
-                href: prospectiveIndex().url,
-                active: page.component === 'Admin/Classes/Prospective',
-                icon: IconSchool,
-                permission: 'admin:manage_batches',
-            },
-            {
                 name: 'Subjects',
                 href: subjectsIndex().url,
                 active: page.component === 'Admin/Subjects/Index',
@@ -252,35 +250,14 @@ const navigation = [
                 href: staffIndex().url,
                 active: page.component === 'Admin/Users/Staff',
                 icon: IconUsers,
-                permission: 'admin:manage_users',
+                permission: 'staff:view',
             },
             {
                 name: 'Students',
                 href: studentIndex().url,
                 active: page.component === 'Admin/Users/Students',
                 icon: IconUsers,
-                permission: 'admin:manage_users',
-            },
-            {
-                name: 'Teaching Loads',
-                href: teachingLoadsIndex().url,
-                active: page.component === 'Admin/Users/TeachingLoads',
-                icon: IconBank,
-                permission: 'admin:manage_users',
-            },
-            {
-                name: 'Entrance Candidates',
-                href: entranceIndex().url,
-                active: page.component === 'Admin/Users/Candidates',
-                icon: IconExams,
-                permission: 'admin:manage_admissions',
-            },
-            {
-                name: 'Promotions',
-                href: promotionIndex().url,
-                active: page.component === 'Admin/Users/Promotion',
-                icon: IconSchool,
-                permission: 'admin:manage_enrollment',
+                permission: 'student:view',
             },
         ],
     },
@@ -318,7 +295,7 @@ const filteredNavigation = computed(() => {
             ...section,
             items: section.items.filter((item) => {
                 if (!item.permission) return true;
-                const userPermissions = (page.props.auth.user as any)?.permissions || [];
+                const userPermissions = (page.props.auth.user as User)?.permissions || [];
                 return userPermissions.includes(item.permission);
             }),
         }))

@@ -28,6 +28,7 @@ class GetQuestionsRequest extends FormRequest
             'subject_id' => ['nullable', 'exists:subjects,id'],
             'school_class_id' => ['nullable', 'exists:school_classes,id'],
             'difficulty' => ['nullable', new Enum(QuestionDifficulty::class)],
+            'level' => ['nullable', 'string', 'in:nursery,primary,secondary'],
         ];
     }
 }

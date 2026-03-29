@@ -2,13 +2,25 @@
 
 namespace App\Services;
 
+use App\Enums\AttemptStatus;
+use App\Enums\ExamStatus;
 use App\Models\Exam;
-use App\Models\Question;
+use App\Models\ExamAttempt;
+use App\Models\User;
+use App\Repositories\Contracts\AttemptRepositoryInterface;
+use App\Repositories\Contracts\ExamRepositoryInterface;
+use App\Repositories\Contracts\QuestionRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
 class ExamService
 {
+    public function __construct(
+        protected ExamRepositoryInterface $examRepo,
+        protected QuestionRepositoryInterface $questionRepo,
+        protected AttemptRepositoryInterface $attemptRepo
+    ) {}
+
     /**
      * Create a new exam.
      */
@@ -21,7 +33,7 @@ class ExamService
             $exam = Exam::create([
                 ...$data,
                 'created_by' => $creatorId,
-                'status' => 'draft',
+                'status' => ExamStatus::DRAFT,
             ]);
 
             foreach ($compositions as $compDTO) {
@@ -42,7 +54,6 @@ class ExamService
 
     /**
      * Automatically select questions for an exam using the biennial rotation policy.
-     * Supports both single-subject and multi-subject (composition) exams.
      */
     public function autoSelectQuestions(Exam $exam, ?int $totalCount = null): int
     {
@@ -56,11 +67,9 @@ class ExamService
                     $sectionIds = $this->pullQuestionsForCriteria(
                         subjectId: $composition->subject_id,
                         topicId: $composition->topic_id,
-                        prospectiveClassId: $exam->prospective_class_id,
                         schoolClassId: $composition->source_class_id ?? $exam->school_class_id,
                         count: $composition->question_count,
-                        twoYearsAgo: $twoYearsAgo,
-                        isEntrance: $exam->type === \App\Enums\ExamType::ENTRANCE
+                        twoYearsAgo: $twoYearsAgo
                     );
                     $selectedQuestionIds = array_merge($selectedQuestionIds, $sectionIds);
                 }
@@ -70,18 +79,16 @@ class ExamService
                 $selectedQuestionIds = $this->pullQuestionsForCriteria(
                     subjectId: $exam->subject_id,
                     topicId: null,
-                    prospectiveClassId: $exam->prospective_class_id,
                     schoolClassId: $exam->school_class_id,
                     count: $totalCount,
-                    twoYearsAgo: $twoYearsAgo,
-                    isEntrance: $exam->type === \App\Enums\ExamType::ENTRANCE
+                    twoYearsAgo: $twoYearsAgo
                 );
             }
 
             // Sync all selected questions
             if (! empty($selectedQuestionIds)) {
                 $exam->questions()->sync($selectedQuestionIds);
-                Question::whereIn('id', $selectedQuestionIds)->update(['last_used_at' => now()]);
+                \App\Models\Question::whereIn('id', $selectedQuestionIds)->update(['last_used_at' => now()]);
             }
 
             return count($selectedQuestionIds);
@@ -94,37 +101,21 @@ class ExamService
     protected function pullQuestionsForCriteria(
         string $subjectId,
         ?string $topicId,
-        ?string $prospectiveClassId,
         ?string $schoolClassId,
         int $count,
-        \Carbon\CarbonInterface $twoYearsAgo,
-        bool $isEntrance = false
+        \Carbon\CarbonInterface $twoYearsAgo
     ): array {
-        $query = Question::whereHas('topic', fn ($q) => $q->where('subject_id', $subjectId));
+        $query = \App\Models\Question::whereHas('topic', fn ($q) => $q->where('subject_id', $subjectId));
 
         if ($topicId) {
             $query->where('topic_id', $topicId);
         }
 
-        // For entrance exams, we are more flexible with class/batch filtering
-        // unless specific batch questions are required.
-        if (! $isEntrance) {
-            if ($prospectiveClassId) {
-                $query->where('prospective_class_id', $prospectiveClassId);
-            } else {
-                $query->where('school_class_id', $schoolClassId);
-            }
-        } else {
-            // Entrance Exams: Prefer batch-specific, fallback to source class (level) if provided
-            $hasBatchQuestions = (clone $query)->where('prospective_class_id', $prospectiveClassId)->exists();
-            if ($hasBatchQuestions) {
-                $query->where('prospective_class_id', $prospectiveClassId);
-            } elseif ($schoolClassId) {
-                $query->where('school_class_id', $schoolClassId);
-            }
+        if ($schoolClassId) {
+            $query->where('school_class_id', $schoolClassId);
         }
 
-        // 1. Primary Pool: Compliant questions
+        // 1. Primary Pool: Compliant questions (not used in last 2 years)
         $primaryPool = (clone $query)
             ->where(function ($q) use ($twoYearsAgo) {
                 $q->whereNull('last_used_at')->orWhere('last_used_at', '<', $twoYearsAgo);
@@ -136,7 +127,7 @@ class ExamService
 
         $selectedIds = $primaryPool;
 
-        // 2. Secondary Pool: Fallback to LRU
+        // 2. Secondary Pool: Fallback to Least Recently Used (LRU)
         if (count($selectedIds) < $count) {
             $remainingNeeded = $count - count($selectedIds);
             $secondaryIds = (clone $query)
@@ -157,36 +148,17 @@ class ExamService
      */
     public function getAvailableQuestions(Exam $exam): Collection
     {
-        $query = Question::query();
+        $query = \App\Models\Question::query();
 
-        // Case 1: Multi-subject Blueprint
         if ($exam->compositions()->exists()) {
             $subjectIds = $exam->compositions->pluck('subject_id')->unique();
             $query->whereHas('topic', fn ($q) => $q->whereIn('subject_id', $subjectIds));
-
-            // Note: For multi-subject manual select, we currently pull ALL questions from these subjects.
-            // If we wanted to be stricter, we'd need to join or union queries per composition.
-            // For now, we'll let the user see the whole pool of those subjects.
-        }
-        // Case 2: Standard Single-subject Exam
-        else {
+        } else {
             $query->whereHas('topic', fn ($q) => $q->where('subject_id', $exam->subject_id));
         }
 
-        // Relaxed filtering for entrance exams
-        if ($exam->type !== \App\Enums\ExamType::ENTRANCE) {
-            if ($exam->prospective_class_id) {
-                $query->where('prospective_class_id', $exam->prospective_class_id);
-            } else {
-                $query->where('school_class_id', $exam->school_class_id);
-            }
-        } else {
-            // For Entrance: If batch-specific questions exist, show them,
-            // otherwise show everything in those subjects
-            $hasBatchQuestions = (clone $query)->where('prospective_class_id', $exam->prospective_class_id)->exists();
-            if ($hasBatchQuestions) {
-                $query->where('prospective_class_id', $exam->prospective_class_id);
-            }
+        if ($exam->school_class_id) {
+            $query->where('school_class_id', $exam->school_class_id);
         }
 
         return $query->with(['topic.subject'])->get();
@@ -195,41 +167,39 @@ class ExamService
     /**
      * Start a new exam attempt for a student.
      */
-    public function startExam(\App\Models\User $user, Exam $exam): \App\Models\ExamAttempt
+    public function startExam(User $user, Exam $exam): ExamAttempt
     {
         return DB::transaction(function () use ($user, $exam) {
-            // 1. Eligibility Check: Ensure no attempt (ongoing or submitted) already exists
-            $existingAttempt = \App\Models\ExamAttempt::where('user_id', $user->id)
+            // Check eligibility (repository method would be ideal here)
+            $existingAttempt = ExamAttempt::where('user_id', $user->id)
                 ->where('exam_id', $exam->id)
                 ->first();
 
             if ($existingAttempt) {
-                if ($existingAttempt->status === \App\Enums\AttemptStatus::SUBMITTED) {
+                if ($existingAttempt->status === AttemptStatus::SUBMITTED) {
                     throw new \Exception('You have already completed this examination. Only one attempt is permitted.');
                 }
 
-                return $existingAttempt; // Return ongoing attempt
+                return $existingAttempt;
             }
 
-            // 2. Create the Attempt
-            $attempt = \App\Models\ExamAttempt::create([
+            // Create Attempt
+            $attempt = $this->attemptRepo->create([
                 'user_id' => $user->id,
                 'exam_id' => $exam->id,
-                'status' => \App\Enums\AttemptStatus::ONGOING,
+                'status' => AttemptStatus::ONGOING,
                 'started_at' => now(),
             ]);
 
-            // 3. Locked-in Shuffling: Save the unique sequence for this student
+            // Locked-in Shuffling
             $questions = $exam->questions()->with('options')->get();
             $seed = $attempt->id;
 
-            // Stable shuffle questions using a hash of (ID + attempt seed)
             $shuffledQuestionIds = $questions->values()
                 ->sortBy(fn ($q) => hash('sha256', $q->id.$seed))
                 ->pluck('id')
                 ->toArray();
 
-            // Stable shuffle options for every question
             $optionMap = [];
             foreach ($questions as $question) {
                 $optionMap[$question->id] = $question->options->values()
@@ -238,37 +208,31 @@ class ExamService
                     ->toArray();
             }
 
-            // Save sequence to metadata for persistence and audit
-            $attempt->update([
-                'status' => \App\Enums\AttemptStatus::ONGOING,
-                'metadata' => [
-                    'question_order' => $shuffledQuestionIds,
-                    'option_orders' => $optionMap,
-                ],
+            $this->attemptRepo->updateMetadata($attempt->id, [
+                'question_order' => $shuffledQuestionIds,
+                'option_orders' => $optionMap,
             ]);
 
-            return $attempt;
+            return $attempt->fresh();
         });
     }
 
     /**
      * Get the questions for an attempt in their locked-in order.
      */
-    public function getAttemptQuestions(\App\Models\ExamAttempt $attempt): Collection
+    public function getAttemptQuestions(ExamAttempt $attempt): Collection
     {
         $metadata = $attempt->metadata;
         $questionOrder = $metadata['question_order'] ?? [];
         $optionOrders = $metadata['option_orders'] ?? [];
 
-        // Fetch all questions in the attempt pool
-        $questions = Question::query()
+        $questions = \App\Models\Question::query()
             ->whereIn('id', $questionOrder)
             ->with('options')
             ->get()
             ->sortBy(fn ($q) => array_search($q->id, $questionOrder))
             ->values();
 
-        // Sort options for each question based on the locked-in order
         $questions->each(function ($question) use ($optionOrders) {
             $order = $optionOrders[$question->id] ?? [];
             if (! empty($order)) {
@@ -285,10 +249,10 @@ class ExamService
     /**
      * Submit an exam attempt and calculate the score.
      */
-    public function submitAttempt(\App\Models\ExamAttempt $attempt, array $answers, array $additionalMetadata = [], array $violations = []): void
+    public function submitAttempt(ExamAttempt $attempt, array $answers, array $additionalMetadata = [], array $violations = []): void
     {
         DB::transaction(function () use ($attempt, $answers, $additionalMetadata, $violations) {
-            if ($attempt->status !== \App\Enums\AttemptStatus::ONGOING) {
+            if ($attempt->status !== AttemptStatus::ONGOING) {
                 return;
             }
 
@@ -296,7 +260,6 @@ class ExamService
             $questions = $this->getAttemptQuestions($attempt)->load('topic');
             $exam = $attempt->exam->load('compositions');
 
-            // Cache marks per subject/topic for performance
             $marksMap = [];
             if ($exam->compositions->isNotEmpty()) {
                 foreach ($exam->compositions as $comp) {
@@ -314,10 +277,8 @@ class ExamService
                     $isCorrect = $option ? $option->is_correct : false;
                 }
 
-                // Determine marks for this question
-                $marks = 1.00; // Default
+                $marks = 1.00;
                 if (! empty($marksMap)) {
-                    // Try topic-specific match first, then subject match
                     $marks = $marksMap["t_{$question->topic_id}"]
                           ?? $marksMap["s_{$question->topic->subject_id}"]
                           ?? 1.00;
@@ -326,7 +287,6 @@ class ExamService
                 $earned = $isCorrect ? $marks : 0.00;
                 $totalScore += $earned;
 
-                // Record the answer
                 \App\Models\ExamAnswer::create([
                     'exam_attempt_id' => $attempt->id,
                     'question_id' => $question->id,
@@ -337,14 +297,10 @@ class ExamService
             }
 
             $finalMetadata = array_merge($attempt->metadata ?? [], $additionalMetadata);
+            $this->attemptRepo->submit($attempt->id, $totalScore, $finalMetadata['termination_reason'] ?? null);
 
-            $attempt->update([
-                'status' => \App\Enums\AttemptStatus::SUBMITTED,
-                'submitted_at' => now(),
-                'score' => $totalScore,
-                'metadata' => $finalMetadata,
-                'violations' => $violations,
-            ]);
+            // Finalize metadata update (if not handled by submit)
+            $attempt->update(['metadata' => $finalMetadata, 'violations' => $violations]);
         });
     }
 }

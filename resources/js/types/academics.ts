@@ -3,7 +3,7 @@ export type Subject = {
     name: string;
     slug: string;
     topics: Topic[];
-    level:string
+    level: string;
     [key: string]: unknown;
 };
 
@@ -43,7 +43,6 @@ export type Question = {
     is_active: boolean;
     topic: Topic;
     school_class: SchoolClass;
-    prospective_class?: Batch;
     creator?: {
         id: string;
         name: string;
@@ -52,15 +51,6 @@ export type Question = {
     options: Option[];
     created_at: string;
     updated_at: string;
-};
-
-export type Batch = {
-    id: string;
-    name: string;
-    slug: string;
-    branch: string;
-    description?: string;
-    is_active: boolean;
 };
 
 export type PaginatedData<T> = {

@@ -26,15 +26,15 @@ class SubjectController extends Controller
         }
 
         if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%');
+            $query->where('name', 'like', '%'.$request->search.'%');
         }
 
         return Inertia::render('Admin/Subjects/Index', [
             'subjects' => $query->latest()->paginate(10)->withQueryString(),
             'counts' => [
-                'nursery' => Subject::where('level', 'nursery')->count(),
-                'primary' => Subject::where('level', 'primary')->count(),
-                'secondary' => Subject::where('level', 'secondary')->count(),
+                'nursery' => Subject::query()->where('level', 'nursery')->count(),
+                'primary' => Subject::query()->where('level', 'primary')->count(),
+                'secondary' => Subject::query()->where('level', 'secondary')->count(),
             ],
             'filters' => $request->only(['level', 'search']),
         ]);

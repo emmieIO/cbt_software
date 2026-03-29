@@ -20,7 +20,6 @@ class UpdateQuestionRequest extends FormRequest
             'subject_id' => ['required', 'exists:subjects,id'],
             'topic_id' => ['required', 'exists:topics,id'],
             'school_class_id' => ['required', 'exists:school_classes,id'],
-            'prospective_class_id' => ['nullable', 'exists:prospective_classes,id'],
             'content' => ['required', 'string', 'min:10'],
             'explanation' => ['nullable', 'string'],
             'type' => ['required', new Enum(QuestionType::class)],

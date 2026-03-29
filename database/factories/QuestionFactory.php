@@ -29,7 +29,6 @@ class QuestionFactory extends Factory
             'type' => QuestionType::MULTIPLE_CHOICE,
             'difficulty' => $this->faker->randomElement(QuestionDifficulty::cases()),
             'created_by' => User::factory(),
-            'is_active' => true,
         ];
     }
 }

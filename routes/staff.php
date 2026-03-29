@@ -10,8 +10,8 @@ Route::middleware(['guest'])->group(function () {
     Route::post('/login', [StaffAuthController::class, 'store'])->name('login.store');
 });
 
-// Primary Staff Portal Protection: Entry based on basic examiner capability
-Route::middleware(['auth', 'can:bank:view'])->group(function () {
+// Primary Staff Portal Protection
+Route::middleware(['auth', 'can:access:staff-portal'])->group(function () {
     Route::get('/dashboard', StaffDashboardController::class)->name('dashboard');
 
     // 01. Question Repository
@@ -47,7 +47,7 @@ Route::middleware(['auth', 'can:bank:view'])->group(function () {
 
     // 02. Student Visibility
     Route::prefix('students')->name('students.')->group(function () {
-        Route::get('/', [\App\Http\Controllers\Staff\StudentController::class, 'index'])->name('index')->middleware('permission:admin:manage_users');
+        Route::get('/', [\App\Http\Controllers\Staff\StudentController::class, 'index'])->name('index')->middleware('permission:student:view');
     });
 
     // 03. Examination Operations

@@ -212,7 +212,7 @@
         </div>
         <div style="flex: 1;">
             <span class="label">Class:</span>
-            <div class="field">{{ $exam->schoolClass?->name ?? $exam->prospectiveClass?->name }}</div>
+            <div class="field">{{ $exam->schoolClass?->name ?? 'General Assessment' }}</div>
         </div>
         <div style="flex: 1;">
             <span class="label">Date:</span>

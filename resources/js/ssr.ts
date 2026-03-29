@@ -20,7 +20,7 @@ createServer(
 );
 
 function resolvePage(name: string) {
-    const pages = import.meta.glob<DefineComponent>('./pages/**/*.vue');
+    const pages = import.meta.glob<DefineComponent>('./Pages/**/*.vue');
 
-    return resolvePageComponent<DefineComponent>(`./pages/${name}.vue`, pages);
+    return resolvePageComponent<DefineComponent>(`./Pages/${name}.vue`, pages);
 }

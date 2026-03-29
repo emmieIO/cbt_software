@@ -197,7 +197,7 @@
         </div>
         <div>
             <span class="meta-label">Class / Target</span>
-            <span class="meta-item">{{ $exam->schoolClass?->name ?? $exam->prospectiveClass?->name }}</span>
+            <span class="meta-item">{{ $exam->schoolClass?->name ?? 'N/A' }}</span>
         </div>
         <div>
             <span class="meta-label">Total Questions</span>

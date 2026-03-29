@@ -28,12 +28,12 @@
     input[type='url'],
     select,
     textarea {
-        @apply border border-gray-200 rounded-lg focus:border-primary focus:ring-primary/20 shadow-xs;
+        @apply rounded-lg border border-gray-200 shadow-xs focus:border-primary focus:ring-primary/20;
     }
 
     input[type='checkbox'],
     input[type='radio'] {
-        @apply border border-gray-200 rounded text-primary focus:ring-primary/20;
+        @apply rounded border border-gray-200 text-primary focus:ring-primary/20;
     }
 }
 

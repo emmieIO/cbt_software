@@ -13,7 +13,7 @@ class AuthService
      *
      * @throws ValidationException
      */
-    public function login(array $credentials, bool $remember = false, ?string $requiredRole = null): User
+    public function login(array $credentials, bool $remember, string $requiredPermission): User
     {
         // Unify all logins under the 'web' guard
         $guard = 'web';
@@ -26,18 +26,12 @@ class AuthService
 
         $user = Auth::guard($guard)->user();
 
-        // Portal-specific security: Ensure the user belongs to this portal via Permissions
-        if ($requiredRole) {
-            $hasAccess = match ($requiredRole) {
-                'student', 'candidate' => $user->can('exam:take'),
-                'staff', 'examiner' => $user->can('bank:view'),
-                'admin', 'super_admin' => $user->can('sys:manage_settings'),
-                default => $user->can($requiredRole), // Fallback to permission check if string is passed
-            };
+        // Portal-specific security: Allow Super Admin (sys:manage_settings) to bypass,
+        // otherwise check for the specific portal access permission.
+        $isAuthorized = $user->can('sys:manage_settings') || $user->can($requiredPermission);
 
-            if (! $hasAccess) {
-                $this->failLogin('Access denied. You do not have the required permissions for this portal.', $guard);
-            }
+        if (! $isAuthorized) {
+            $this->failLogin(trans('auth.failed'), $guard);
         }
 
         request()->session()->regenerate();

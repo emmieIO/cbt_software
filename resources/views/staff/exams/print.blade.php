@@ -235,7 +235,7 @@
         </div>
         <div>
             <span class="meta-label">Class / Batch</span>
-            <span class="meta-item">{{ $exam->schoolClass?->name ?? $exam->prospectiveClass?->name }}</span>
+            <span class="meta-item">{{ $exam->schoolClass?->name ?? 'General Assessment' }}</span>
         </div>
         <div>
             <span class="meta-label">Duration</span>

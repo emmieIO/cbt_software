@@ -25,6 +25,7 @@ class SchoolFactory extends Factory
             'address' => $this->faker->address(),
             'contact_email' => $this->faker->safeEmail(),
             'contact_phone' => $this->faker->phoneNumber(),
+            'type' => 'primary',
             'is_active' => true,
         ];
     }

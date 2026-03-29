@@ -30,7 +30,7 @@ class StudentController extends Controller
     public function store(LoginRequest $request): RedirectResponse
     {
         // Allow both regular students and entrance candidates to login via this portal
-        $user = $this->authService->login($request->credentials(), $request->boolean('remember'), 'candidate');
+        $user = $this->authService->login($request->credentials(), $request->boolean('remember'), 'access:student-portal');
 
         return redirect()->intended(route('student.dashboard'));
     }
@@ -42,7 +42,7 @@ class StudentController extends Controller
 
         $exams = [];
         if ($currentSession) {
-            $query = Exam::where('academic_session_id', $currentSession->id)
+            $query = Exam::query()->where('academic_session_id', $currentSession->id)
                 ->where('status', ExamStatus::LIVE)
                 ->with(['subject'])
                 ->with(['attempts' => fn ($q) => $q->where('user_id', $user->id)])
@@ -63,7 +63,7 @@ class StudentController extends Controller
 
         return Inertia::render('Student/Dashboard', [
             'availableExams' => $exams,
-            'completedExamsCount' => \App\Models\ExamAttempt::where('user_id', $user->id)
+            'completedExamsCount' => \App\Models\ExamAttempt::query()->where('user_id', $user->id)
                 ->where('status', \App\Enums\AttemptStatus::SUBMITTED)
                 ->count(),
         ]);
@@ -79,7 +79,7 @@ class StudentController extends Controller
 
         $exams = [];
         if ($currentSession) {
-            $query = Exam::where('academic_session_id', $currentSession->id)
+            $query = Exam::query()->where('academic_session_id', $currentSession->id)
                 ->where('status', ExamStatus::LIVE)
                 ->with(['subject'])
                 ->with(['attempts' => fn ($q) => $q->where('user_id', $user->id)])
@@ -105,7 +105,7 @@ class StudentController extends Controller
      */
     public function results(Request $request): Response
     {
-        $attempts = \App\Models\ExamAttempt::where('user_id', $request->user()->id)
+        $attempts = \App\Models\ExamAttempt::query()->where('user_id', $request->user()->id)
             ->where('status', \App\Enums\AttemptStatus::SUBMITTED)
             ->with(['exam.subject'])
             ->latest('submitted_at')

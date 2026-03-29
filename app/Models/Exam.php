@@ -5,20 +5,21 @@ namespace App\Models;
 use App\Enums\ExamStatus;
 use App\Enums\ExamType;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Exam extends Model
 {
-    use HasUlids;
+    use HasFactory, HasUlids;
 
     protected $fillable = [
         'branch',
         'school_id',
         'subject_id',
         'school_class_id',
-        'prospective_class_id',
         'academic_session_id',
         'created_by',
         'title',
@@ -61,11 +62,6 @@ class Exam extends Model
         return $this->belongsTo(SchoolClass::class);
     }
 
-    public function prospectiveClass(): BelongsTo
-    {
-        return $this->belongsTo(ProspectiveClass::class);
-    }
-
     public function academicSession(): BelongsTo
     {
         return $this->belongsTo(AcademicSession::class);
@@ -76,7 +72,12 @@ class Exam extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function questions(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function users(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'exam_user')->withTimestamps();
+    }
+
+    public function questions(): BelongsToMany
     {
         return $this->belongsToMany(Question::class, 'exam_questions')
             ->using(ExamQuestion::class)

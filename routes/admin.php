@@ -8,24 +8,17 @@ Route::middleware(['guest'])->group(function () {
     Route::post('/login', [AdminController::class, 'store'])->name('login.store');
 });
 
-// Primary Admin Portal Protection: Require super_admin role
-Route::middleware(['auth', 'can:admin:manage_users'])->group(function () {
+// Primary Admin Portal Protection
+Route::middleware(['auth', 'can:access:admin-portal'])->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
 
-    // 01. School Architecture (Academic Sessions, Classes, Batches)
+    // 01. School Architecture (Academic Sessions, Classes)
     Route::prefix('school-setup')->middleware('permission:admin:manage_setup')->group(function () {
         Route::name('classes.')->group(function () {
             Route::get('/classes', [\App\Http\Controllers\Admin\SchoolClassController::class, 'index'])->name('index');
             Route::post('/classes', [\App\Http\Controllers\Admin\SchoolClassController::class, 'store'])->name('store');
             Route::put('/classes/{schoolClass}', [\App\Http\Controllers\Admin\SchoolClassController::class, 'update'])->name('update');
             Route::delete('/classes/{schoolClass}', [\App\Http\Controllers\Admin\SchoolClassController::class, 'destroy'])->name('destroy');
-        });
-
-        Route::name('prospective-classes.')->middleware('permission:admin:manage_batches')->group(function () {
-            Route::get('/prospective-batches', [\App\Http\Controllers\Admin\ProspectiveClassController::class, 'index'])->name('index');
-            Route::post('/prospective-batches', [\App\Http\Controllers\Admin\ProspectiveClassController::class, 'store'])->name('store');
-            Route::put('/prospective-batches/{prospectiveClass}', [\App\Http\Controllers\Admin\ProspectiveClassController::class, 'update'])->name('update');
-            Route::delete('/prospective-batches/{prospectiveClass}', [\App\Http\Controllers\Admin\ProspectiveClassController::class, 'destroy'])->name('destroy');
         });
 
         Route::name('sessions.')->group(function () {
@@ -71,36 +64,24 @@ Route::middleware(['auth', 'can:admin:manage_users'])->group(function () {
 
     // 05. Personnel Management
     Route::prefix('users')->group(function () {
-        Route::middleware('permission:admin:manage_users')->group(function () {
-            Route::get('/staff', [\App\Http\Controllers\Admin\StaffController::class, 'index'])->name('staff.index');
-            Route::post('/staff', [\App\Http\Controllers\Admin\StaffController::class, 'store'])->name('staff.store');
-            Route::put('/staff/{staff}', [\App\Http\Controllers\Admin\StaffController::class, 'update'])->name('staff.update');
-            Route::delete('/staff/{staff}', [\App\Http\Controllers\Admin\StaffController::class, 'destroy'])->name('staff.destroy');
-            Route::post('/staff/import', [\App\Http\Controllers\Admin\StaffController::class, 'import'])->name('staff.import');
-
-            Route::get('/students', [\App\Http\Controllers\Admin\StudentController::class, 'index'])->name('students.index');
-            Route::post('/students', [\App\Http\Controllers\Admin\StudentController::class, 'store'])->name('students.store');
-            Route::put('/students/{student}', [\App\Http\Controllers\Admin\StudentController::class, 'update'])->name('students.update');
-            Route::delete('/students/{student}', [\App\Http\Controllers\Admin\StudentController::class, 'destroy'])->name('students.destroy');
-            Route::post('/students/import', [\App\Http\Controllers\Admin\StudentController::class, 'import'])->name('students.import');
-
-            Route::get('/teaching-loads', [\App\Http\Controllers\Admin\TeachingLoadController::class, 'index'])->name('teaching-loads.index');
-            Route::post('/teaching-loads', [\App\Http\Controllers\Admin\TeachingLoadController::class, 'store'])->name('teaching-loads.store');
-            Route::delete('/teaching-loads/{assignment}', [\App\Http\Controllers\Admin\TeachingLoadController::class, 'destroy'])->name('teaching-loads.destroy');
+        Route::prefix('staff')->name('staff.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\StaffController::class, 'index'])->name('index')->middleware('permission:staff:view');
+            Route::get('/create', [\App\Http\Controllers\Admin\StaffController::class, 'create'])->name('create')->middleware('permission:staff:create');
+            Route::post('/', [\App\Http\Controllers\Admin\StaffController::class, 'store'])->name('store')->middleware('permission:staff:create');
+            Route::get('/{staff}/edit', [\App\Http\Controllers\Admin\StaffController::class, 'edit'])->name('edit')->middleware('permission:staff:edit');
+            Route::put('/{staff}', [\App\Http\Controllers\Admin\StaffController::class, 'update'])->name('update')->middleware('permission:staff:edit');
+            Route::delete('/{staff}', [\App\Http\Controllers\Admin\StaffController::class, 'destroy'])->name('destroy')->middleware('permission:staff:delete');
+            Route::post('/import', [\App\Http\Controllers\Admin\StaffController::class, 'import'])->name('import')->middleware('permission:staff:create');
         });
 
-        Route::name('promotion.')->middleware('permission:admin:manage_enrollment')->group(function () {
-            Route::get('/promotion', [\App\Http\Controllers\Admin\PromotionController::class, 'index'])->name('index');
-            Route::get('/promotion/students/{schoolClass}', [\App\Http\Controllers\Admin\PromotionController::class, 'students'])->name('students');
-            Route::post('/promotion/process', [\App\Http\Controllers\Admin\PromotionController::class, 'promote'])->name('process');
-        });
-
-        Route::middleware('permission:admin:manage_admissions')->group(function () {
-            Route::get('/entrance', [\App\Http\Controllers\Admin\EntranceController::class, 'index'])->name('entrance.index');
-            Route::post('/entrance', [\App\Http\Controllers\Admin\EntranceController::class, 'store'])->name('entrance.store');
-            Route::put('/entrance/{candidate}', [\App\Http\Controllers\Admin\EntranceController::class, 'update'])->name('entrance.update');
-            Route::post('/entrance/import', [\App\Http\Controllers\Admin\EntranceController::class, 'import'])->name('entrance.import');
-            Route::post('/entrance/admit/{candidate}', [\App\Http\Controllers\Admin\EntranceController::class, 'admit'])->name('entrance.admit');
+        Route::prefix('students')->name('students.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\StudentController::class, 'index'])->name('index')->middleware('permission:student:view');
+            Route::get('/create', [\App\Http\Controllers\Admin\StudentController::class, 'create'])->name('create')->middleware('permission:student:create');
+            Route::post('/', [\App\Http\Controllers\Admin\StudentController::class, 'store'])->name('store')->middleware('permission:student:create');
+            Route::get('/{student}/edit', [\App\Http\Controllers\Admin\StudentController::class, 'edit'])->name('edit')->middleware('permission:student:edit');
+            Route::put('/{student}', [\App\Http\Controllers\Admin\StudentController::class, 'update'])->name('update')->middleware('permission:student:edit');
+            Route::delete('/{student}', [\App\Http\Controllers\Admin\StudentController::class, 'destroy'])->name('destroy')->middleware('permission:student:delete');
+            Route::post('/import', [\App\Http\Controllers\Admin\StudentController::class, 'import'])->name('import')->middleware('permission:student:create');
         });
     });
 

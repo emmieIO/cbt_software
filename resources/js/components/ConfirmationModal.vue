@@ -81,16 +81,25 @@ watch(
                     leave-from-class="opacity-100 scale-100 translate-y-0"
                     leave-to-class="opacity-0 scale-95 translate-y-4"
                 >
-                    <div v-if="show" class="relative w-full max-w-md overflow-hidden rounded-xl bg-white p-6 sm:p-8 md:p-10 shadow-2xl shadow-slate-900/20">
+                    <div
+                        v-if="show"
+                        class="relative w-full max-w-md overflow-hidden rounded-xl bg-white p-6 shadow-2xl shadow-slate-900/20 sm:p-8 md:p-10"
+                    >
                         <!-- Icon Header -->
-                        <div class="mb-6 md:mb-8 flex flex-col items-center text-center">
+                        <div class="mb-6 flex flex-col items-center text-center md:mb-8">
                             <div
                                 :class="[
-                                    'mb-4 md:mb-6 flex h-16 w-16 md:h-20 md:w-20 items-center justify-center rounded-xl shadow-lg transition-transform hover:scale-110',
+                                    'mb-4 flex h-16 w-16 items-center justify-center rounded-xl shadow-lg transition-transform hover:scale-110 md:mb-6 md:h-20 md:w-20',
                                     variant === 'danger' ? 'bg-red-50 text-red-500 shadow-red-500/20' : 'bg-primary/5 text-primary shadow-primary/20',
                                 ]"
                             >
-                                <svg v-if="variant === 'danger'" class="h-8 w-8 md:h-10 md:w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg
+                                    v-if="variant === 'danger'"
+                                    class="h-8 w-8 md:h-10 md:w-10"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
                                     <path
                                         stroke-linecap="round"
                                         stroke-linejoin="round"
@@ -107,8 +116,8 @@ watch(
                                     />
                                 </svg>
                             </div>
-                            <h3 class="text-xl md:text-2xl font-black tracking-tight text-slate-900">{{ title }}</h3>
-                            <p class="mt-2 md:mt-3 text-xs md:text-sm leading-relaxed font-medium text-slate-500">
+                            <h3 class="text-xl font-black tracking-tight text-slate-900 md:text-2xl">{{ title }}</h3>
+                            <p class="mt-2 text-xs leading-relaxed font-medium text-slate-500 md:mt-3 md:text-sm">
                                 {{ message }}
                             </p>
                         </div>
@@ -119,7 +128,7 @@ watch(
                                 @click="confirm"
                                 :disabled="loading"
                                 :class="[
-                                    'flex h-12 md:h-14 w-full items-center justify-center rounded-xl text-xs md:text-sm font-black tracking-widest text-white uppercase shadow-lg transition-all active:scale-95 disabled:opacity-50',
+                                    'flex h-12 w-full items-center justify-center rounded-xl text-xs font-black tracking-widest text-white uppercase shadow-lg transition-all active:scale-95 disabled:opacity-50 md:h-14 md:text-sm',
                                     variant === 'danger'
                                         ? 'bg-red-600 shadow-red-600/20 hover:bg-red-700'
                                         : 'bg-primary shadow-primary/20 hover:bg-primary/90',
@@ -131,7 +140,7 @@ watch(
                             <button
                                 @click="close"
                                 :disabled="loading"
-                                class="flex h-12 md:h-14 w-full items-center justify-center rounded-xl bg-slate-50 text-xs md:text-sm font-black tracking-widest text-slate-400 uppercase transition-all hover:bg-slate-100 hover:text-slate-600 active:scale-95 disabled:opacity-50"
+                                class="flex h-12 w-full items-center justify-center rounded-xl bg-slate-50 text-xs font-black tracking-widest text-slate-400 uppercase transition-all hover:bg-slate-100 hover:text-slate-600 active:scale-95 disabled:opacity-50 md:h-14 md:text-sm"
                             >
                                 {{ cancelLabel }}
                             </button>

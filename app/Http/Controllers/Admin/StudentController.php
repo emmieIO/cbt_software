@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\DTOs\UserDTO;
 use App\Http\Controllers\Controller;
+use App\Models\School;
+use App\Models\SchoolClass;
 use App\Models\User;
 use App\Services\UserImportService;
 use App\Services\UserService;
@@ -11,6 +13,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\Permission\Models\Role;
 
 class StudentController extends Controller
 {
@@ -23,7 +26,7 @@ class StudentController extends Controller
     {
         $query = User::role('candidate')
             ->where('status', 'active')
-            ->with(['schoolClass', 'roles']);
+            ->with(['schoolClass', 'roles', 'school']);
 
         if ($request->search) {
             $query->where(function ($q) use ($request) {
@@ -43,9 +46,18 @@ class StudentController extends Controller
 
         return Inertia::render('Admin/Users/Students', [
             'students' => $query->latest()->paginate(10)->withQueryString(),
-            'classes' => \App\Models\SchoolClass::all(),
-            'roles' => \Spatie\Permission\Models\Role::where('category', 'student')->get(),
+            'classes' => SchoolClass::all(),
+            'branches' => School::query()->where('is_active', true)->get(),
             'filters' => $request->only(['search', 'school_class_id', 'school_id']),
+        ]);
+    }
+
+    public function create(): Response
+    {
+        return Inertia::render('Admin/Users/Students/Create', [
+            'classes' => SchoolClass::all(),
+            'branches' => School::query()->where('is_active', true)->get(),
+            'roles' => Role::query()->where('category', 'student')->get(),
         ]);
     }
 
@@ -62,9 +74,19 @@ class StudentController extends Controller
 
         $dto = UserDTO::fromRequest($request);
         $dto->status = 'active';
-        $user = $this->userService->createUser($dto, $request->role);
+        $this->userService->createUser($dto, $request->role);
 
-        return back()->with('success', 'Candidate record created successfully.');
+        return to_route('admin.students.index')->with('success', 'Candidate record created successfully.');
+    }
+
+    public function edit(User $student): Response
+    {
+        return Inertia::render('Admin/Users/Students/Edit', [
+            'student' => $student->load('roles'),
+            'classes' => SchoolClass::all(),
+            'branches' => School::query()->where('is_active', true)->get(),
+            'roles' => Role::query()->where('category', 'student')->get(),
+        ]);
     }
 
     public function update(Request $request, User $student): RedirectResponse
@@ -82,7 +104,7 @@ class StudentController extends Controller
         $this->userService->updateUser($student, $dto);
         $student->syncRoles([$request->role]);
 
-        return back()->with('success', 'Candidate record updated successfully.');
+        return to_route('admin.students.index')->with('success', 'Candidate record updated successfully.');
     }
 
     public function destroy(User $student): RedirectResponse

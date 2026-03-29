@@ -26,7 +26,7 @@ class SchoolService
     {
         $school->fill($dto->toArray());
         $school->slug = Str::slug($dto->name);
-        
+
         return $school->save();
     }
 

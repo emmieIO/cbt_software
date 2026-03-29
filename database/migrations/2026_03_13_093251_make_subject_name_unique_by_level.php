@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::table('subjects', function (Blueprint $table) {
             // Drop old slug unique index as it will now include level
             $table->dropUnique('subjects_slug_unique');
-            
+
             // Add composite unique index for name and level
             $table->unique(['name', 'level']);
-            
+
             // Re-add slug unique (slug will be level-aware now)
             $table->unique('slug');
         });

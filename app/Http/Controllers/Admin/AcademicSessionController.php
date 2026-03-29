@@ -19,7 +19,7 @@ class AcademicSessionController extends Controller
     public function index(): Response
     {
         return Inertia::render('Admin/Settings/Sessions', [
-            'sessions' => AcademicSession::latest()->get(),
+            'sessions' => AcademicSession::query()->latest()->get(),
             'terms' => collect(Term::cases())->map(fn ($t) => [
                 'value' => $t->value,
                 'label' => $t->label(),

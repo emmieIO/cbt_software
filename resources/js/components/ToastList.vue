@@ -5,7 +5,9 @@ import ToastItem from './ToastItem.vue';
 
 <template>
     <Teleport to="body">
-        <div class="pointer-events-none fixed top-0 right-0 z-[110] flex w-full flex-col items-center gap-3 p-4 sm:items-end sm:p-6 md:max-w-md lg:max-w-lg">
+        <div
+            class="pointer-events-none fixed top-0 right-0 z-[110] flex w-full flex-col items-center gap-3 p-4 sm:items-end sm:p-6 md:max-w-md lg:max-w-lg"
+        >
             <TransitionGroup
                 enter-active-class="transition duration-500 ease-out"
                 enter-from-class="translate-y-[-2rem] opacity-0 scale-95"

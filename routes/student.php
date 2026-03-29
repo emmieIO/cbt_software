@@ -9,12 +9,13 @@ Route::middleware(['guest'])->group(function () {
 });
 
 // Primary Student Portal Protection
-Route::middleware(['auth', 'role:candidate'])->group(function () {
+Route::middleware(['auth', 'can:access:student-portal'])->group(function () {
     Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard');
 
     // Examination Interface
     Route::prefix('exams')->name('exams.')->group(function () {
         Route::get('/', [StudentController::class, 'index'])->name('index')->middleware('permission:exam:view');
+        // Note: access:student-portal is the baseline, exam:take is the functional permission for the exam itself
         Route::post('/{exam}/start', [StudentController::class, 'startExam'])->name('start')->middleware('permission:exam:take');
         Route::get('/{attempt}', [StudentController::class, 'showExam'])->name('show')->middleware('permission:exam:take');
         Route::patch('/{attempt}/answer', [StudentController::class, 'saveAnswer'])->name('save-answer')->middleware('permission:exam:take');

@@ -19,43 +19,67 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            RolesAndPermissionsSeeder::class,
+            RevampPermissionsSeeder::class,
             SchoolSeeder::class,
         ]);
 
+        [$admin, $staff] = $this->seedUsers();
+
+        $this->seedClasses();
+        $this->seedCurriculum();
+        $this->seedSampleQuestions($admin, $staff);
+
+        if (app()->environment('local', 'testing', 'staging')) {
+            $this->call([
+                DummyResultsSeeder::class,
+            ]);
+        }
+    }
+
+    private function seedUsers(): array
+    {
+        $staff = null;
+
         // Create Super Admin
         $admin = User::updateOrCreate(
-            ['username' => 'admin_root'],
+            ['username' => config('app.admin_username', 'admin_root')],
             [
                 'name' => 'System Admin',
-                'email' => 'admin@chrisland.org',
-                'password' => bcrypt('password'),
+                'email' => config('app.admin_email', 'admin@chrisland.org'),
+                'password' => bcrypt(config('app.admin_password', 'password')),
             ]
         );
         $admin->syncRoles(['super_admin']);
 
-        // Create Examiner
-        $staff = User::updateOrCreate(
-            ['username' => 'STAFF/2026/001'],
-            [
-                'name' => 'Teacher Staff',
-                'email' => 'staff@chrisland.org',
-                'password' => bcrypt('password'),
-            ]
-        );
-        $staff->syncRoles(['examiner']);
+        if (app()->environment('local', 'testing', 'staging')) {
+            // Create Examiner
+            $staff = User::updateOrCreate(
+                ['username' => 'STAFF/2026/001'],
+                [
+                    'name' => 'Teacher Staff',
+                    'email' => 'staff@chrisland.org',
+                    'password' => bcrypt('password'),
+                ]
+            );
+            $staff->syncRoles(['examiner']);
 
-        // Create Candidate
-        $student = User::updateOrCreate(
-            ['username' => 'CHS/2026/001'],
-            [
-                'name' => 'John Candidate',
-                'email' => 'candidate@chrisland.org',
-                'password' => bcrypt('password'),
-            ]
-        );
-        $student->syncRoles(['candidate']);
+            // Create Candidate
+            $student = User::updateOrCreate(
+                ['username' => 'CHS/2026/001'],
+                [
+                    'name' => 'John Candidate',
+                    'email' => 'candidate@chrisland.org',
+                    'password' => bcrypt('password'),
+                ]
+            );
+            $student->syncRoles(['candidate']);
+        }
 
+        return [$admin, $staff];
+    }
+
+    private function seedClasses(): void
+    {
         // Create Classes
         $classDefinitions = [
             ['name' => 'Primary 1', 'level' => 'primary'],
@@ -81,7 +105,10 @@ class DatabaseSeeder extends Seeder
                 ]
             );
         }
+    }
 
+    private function seedCurriculum(): void
+    {
         $classes = SchoolClass::all();
         $p1 = $classes->where('name', 'Primary 1')->first();
         $p2 = $classes->where('name', 'Primary 2')->first();
@@ -178,28 +205,52 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($curriculum as $subjectName => $topics) {
-            $subject = Subject::updateOrCreate(
-                ['name' => $subjectName],
-                ['slug' => Str::slug($subjectName)]
-            );
+            $topicsByLevel = collect($topics)->groupBy(function ($topicData) {
+                if (! $topicData['class']) {
+                    return 'primary';
+                }
+                $l = $topicData['class']->level;
 
-            foreach ($topics as $topicData) {
-                if ($topicData['class']) {
-                    Topic::updateOrCreate(
-                        [
-                            'subject_id' => $subject->id,
-                            'school_class_id' => $topicData['class']->id,
-                            'name' => $topicData['name'],
-                        ],
-                        ['slug' => Str::slug($topicData['name'].'-'.$topicData['class']->name)]
-                    );
+                return $l instanceof \BackedEnum ? $l->value : (string) $l;
+            });
+
+            foreach ($topicsByLevel as $levelStr => $levelTopics) {
+                $subject = Subject::updateOrCreate(
+                    [
+                        'name' => $subjectName,
+                        'level' => $levelStr,
+                    ],
+                    [
+                        'slug' => Str::slug($subjectName.'-'.$levelStr),
+                    ]
+                );
+
+                foreach ($levelTopics as $topicData) {
+                    if ($topicData['class']) {
+                        Topic::updateOrCreate(
+                            [
+                                'subject_id' => $subject->id,
+                                'school_class_id' => $topicData['class']->id,
+                                'name' => $topicData['name'],
+                            ],
+                            ['slug' => Str::slug($topicData['name'].'-'.$topicData['class']->name)]
+                        );
+                    }
                 }
             }
         }
+    }
 
+    private function seedSampleQuestions(?User $admin, ?User $staff): void
+    {
         // Create initial sample questions for Math SS1
         $math = Subject::where('name', 'Mathematics')->first();
+        if (! $math) {
+            return;
+        }
+
         $algebra = $math->topics()->where('name', 'Quadratic Equations')->first();
+        $ss1 = SchoolClass::where('name', 'SS 1')->first();
 
         if ($algebra && $ss1) {
             $question = Question::updateOrCreate(
@@ -212,7 +263,7 @@ class DatabaseSeeder extends Seeder
                     'explanation' => 'The discriminant is the part of the quadratic formula under the square root: b² - 4ac.',
                     'type' => 'multiple_choice',
                     'difficulty' => 'medium',
-                    'created_by' => $staff->id,
+                    'created_by' => $staff ? $staff->id : ($admin ? $admin->id : 1),
                 ]
             );
 

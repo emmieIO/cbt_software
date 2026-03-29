@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\School;
 use App\Models\SchoolClass;
 use App\Models\Subject;
 use App\Models\Topic;
-use App\Models\School;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -22,7 +22,7 @@ class TopicController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user();
-        
+
         $query = Topic::with(['subject', 'schoolClass'])->withCount('questions');
 
         // Initial Context queries
@@ -35,7 +35,7 @@ class TopicController extends Controller
             if ($school) {
                 $subjectsQuery->where('level', $school->type);
                 $classesQuery->where('level', $school->type);
-                $query->whereHas('subject', fn($q) => $q->where('level', $school->type));
+                $query->whereHas('subject', fn ($q) => $q->where('level', $school->type));
             } else {
                 $query->whereRaw('1 = 0');
             }
@@ -43,7 +43,7 @@ class TopicController extends Controller
 
         // Apply filters
         if ($request->filled('level')) {
-            $query->whereHas('subject', fn($q) => $q->where('level', $request->level));
+            $query->whereHas('subject', fn ($q) => $q->where('level', $request->level));
         }
 
         if ($request->filled('subject_id')) {
@@ -55,7 +55,7 @@ class TopicController extends Controller
         }
 
         if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%');
+            $query->where('name', 'like', '%'.$request->search.'%');
         }
 
         return Inertia::render('Admin/Topics/Index', [

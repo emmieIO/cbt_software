@@ -4,15 +4,24 @@ import { h, defineComponent, computed } from 'vue';
 import { index as examIndex, create as createExam, results as resultsIndex } from '@/actions/App/Http/Controllers/Staff/ExamController';
 import { logout } from '@/actions/App/Http/Controllers/Staff/StaffAuthController';
 import StaffDashboardController from '@/actions/App/Http/Controllers/Staff/StaffDashboardController';
-import { index as questionIndex, generate as aiLabGenerate, create as createQuestion } from '@/actions/App/Http/Controllers/Staff/StaffQuestionController';
+import {
+    index as questionIndex,
+    generate as aiLabGenerate,
+    create as createQuestion,
+} from '@/actions/App/Http/Controllers/Staff/StaffQuestionController';
 import { index as studentIndex } from '@/actions/App/Http/Controllers/Staff/StudentController';
 import DashboardLayout from '@/layouts/DashboardLayout.vue';
+import type { User } from '@/types/auth';
+import type { NavSection } from '@/types/navigation';
 
-withDefaults(defineProps<{
-    wide?: boolean;
-}>(), {
-    wide: false
-});
+withDefaults(
+    defineProps<{
+        wide?: boolean;
+    }>(),
+    {
+        wide: false,
+    },
+);
 
 const page = usePage();
 
@@ -88,7 +97,7 @@ const IconResults = defineComponent({
         ]),
 });
 
-const navigation = [
+const navigation: NavSection[] = [
     {
         section: 'Dashboard',
         items: [
@@ -103,6 +112,7 @@ const navigation = [
                 href: studentIndex().url,
                 active: page.component === 'Staff/Students/Index',
                 icon: IconStudents,
+                permission: 'student:view',
             },
         ],
     },
@@ -166,7 +176,7 @@ const filteredNavigation = computed(() => {
             ...section,
             items: section.items.filter((item) => {
                 if (!item.permission) return true;
-                const userPermissions = (page.props.auth.user as any)?.permissions || [];
+                const userPermissions = (page.props.auth.user as User)?.permissions || [];
                 return userPermissions.includes(item.permission);
             }),
         }))

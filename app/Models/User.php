@@ -6,6 +6,10 @@ namespace App\Models;
 use App\Traits\GeneratesApplicationId;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
@@ -25,17 +29,34 @@ class User extends Authenticatable
         'username',
         'email',
         'password',
-        'school_id',
+        'school_id', // Kept for students, deprecated for staff in favor of schools()
         'school_class_id',
-        'prospective_class_id',
         'status',
         'is_active',
     ];
 
     /**
-     * Get the school the user belongs to.
+     * Get the schools/branches the user is assigned to.
      */
-    public function school(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function schools(): BelongsToMany
+    {
+        return $this->belongsToMany(School::class, 'school_user')
+            ->withPivot('is_primary')
+            ->withTimestamps();
+    }
+
+    /**
+     * Get the primary school branch for the user.
+     */
+    public function getPrimarySchoolAttribute(): ?School
+    {
+        return $this->schools()->wherePivot('is_primary', true)->first() ?? $this->schools()->first();
+    }
+
+    /**
+     * Get the school the user belongs to (Legacy/Student support).
+     */
+    public function school(): BelongsTo
     {
         return $this->belongsTo(School::class);
     }
@@ -43,40 +64,23 @@ class User extends Authenticatable
     /**
      * Get the class the user (student) belongs to.
      */
-    public function schoolClass(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function schoolClass(): BelongsTo
     {
         return $this->belongsTo(SchoolClass::class);
     }
 
     /**
-     * Get the prospective batch the user (candidate) belongs to.
+     * Get the exams assigned to this student.
      */
-    public function prospectiveClass(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function assignedExams(): BelongsToMany
     {
-        return $this->belongsTo(ProspectiveClass::class);
-    }
-
-    /**
-     * Get the teaching assignments for this user (if staff).
-     */
-    public function assignments(): \Illuminate\Database\Eloquent\Relations\HasMany
-    {
-        return $this->hasMany(TeacherAssignment::class, 'user_id');
-    }
-
-    /**
-     * Get the current academic session's assignments for this staff member.
-     */
-    public function currentAssignments(): \Illuminate\Database\Eloquent\Relations\HasMany
-    {
-        return $this->hasMany(TeacherAssignment::class, 'user_id')
-            ->whereHas('academicSession', fn ($q) => $q->where('is_current', true));
+        return $this->belongsToMany(Exam::class, 'exam_user')->withTimestamps();
     }
 
     /**
      * Get all exam attempts for the user.
      */
-    public function attempts(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function attempts(): HasMany
     {
         return $this->hasMany(ExamAttempt::class);
     }
@@ -84,7 +88,7 @@ class User extends Authenticatable
     /**
      * Get the latest exam attempt for the user.
      */
-    public function latestAttempt(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function latestAttempt(): HasOne
     {
         return $this->hasOne(ExamAttempt::class)->latestOfMany();
     }

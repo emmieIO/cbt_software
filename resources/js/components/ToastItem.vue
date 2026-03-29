@@ -11,7 +11,7 @@ const emit = defineEmits(['close']);
     <div
         class="group pointer-events-auto relative flex w-full max-w-md overflow-hidden rounded-xl border border-slate-200 bg-white p-4 shadow-xl transition-all hover:scale-[1.01] sm:min-w-[320px]"
     >
-        <div class="flex items-start gap-3.5 w-full">
+        <div class="flex w-full items-start gap-3.5">
             <!-- Icon Indicator -->
             <div
                 :class="[
@@ -40,14 +40,13 @@ const emit = defineEmits(['close']);
             </div>
 
             <!-- Text Content -->
-            <div class="flex-1 min-w-0">
+            <div class="min-w-0 flex-1">
                 <p class="text-[13px] leading-snug font-bold text-slate-800">
                     {{ message }}
                 </p>
-                <p class="mt-1 text-[10px] font-black tracking-widest uppercase opacity-40"
-                    :class="[
-                        type === 'success' ? 'text-emerald-700' : type === 'error' ? 'text-rose-700' : 'text-primary'
-                    ]"
+                <p
+                    class="mt-1 text-[10px] font-black tracking-widest uppercase opacity-40"
+                    :class="[type === 'success' ? 'text-emerald-700' : type === 'error' ? 'text-rose-700' : 'text-primary']"
                 >
                     {{ type === 'success' ? 'System Success' : type === 'error' ? 'System Error' : 'System Alert' }}
                 </p>

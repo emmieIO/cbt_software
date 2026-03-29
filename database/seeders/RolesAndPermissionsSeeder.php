@@ -26,7 +26,6 @@ class RolesAndPermissionsSeeder extends Seeder
                 'sys:manage_settings' => 'System-wide configuration and RBAC governance.',
             ],
             'admin' => [
-                'admin:manage_users' => 'CRUD operations for Staff and Student accounts.',
                 'admin:manage_setup' => 'Academic structure configuration (Sessions, Terms, Classes).',
                 'admin:manage_curriculum' => 'Management of Subjects and Topics.',
                 'admin:manage_enrollment' => 'Student class mapping and promotion management.',
@@ -54,6 +53,18 @@ class RolesAndPermissionsSeeder extends Seeder
                 'results:view' => 'Access to score sheets and performance analytics.',
                 'results:grade' => 'Manual scoring adjustment and correction authority.',
             ],
+            'staff' => [
+                'staff:view' => 'View staff member profiles and directories.',
+                'staff:create' => 'Register new staff members into the system.',
+                'staff:edit' => 'Modify staff member profiles and roles.',
+                'staff:delete' => 'Remove or deactivate staff accounts.',
+            ],
+            'student' => [
+                'student:view' => 'View candidates within assigned campus.',
+                'student:create' => 'Register new student accounts.',
+                'student:edit' => 'Modify student profiles and details.',
+                'student:delete' => 'Remove or deactivate student accounts.',
+            ],
         ];
 
         // Create all permissions (update existing ones)
@@ -75,9 +86,14 @@ class RolesAndPermissionsSeeder extends Seeder
         $examiner = Role::findOrCreate('examiner', $guard);
         $examiner->category = 'staff';
         $examiner->save();
-        $examiner->syncPermissions(Permission::where('name', 'not like', 'sys:%')
-            ->where('name', 'not like', 'admin:manage_setup%')
-            ->get());
+        $examinerPermissions = Permission::where('name', 'like', 'bank:%')
+            ->orWhere('name', 'like', 'exam:%')
+            ->orWhere('name', 'like', 'results:%')
+            ->orWhere('name', 'student:view')
+            ->get()
+            ->reject(fn ($p) => $p->name === 'exam:manage_entrance');
+
+        $examiner->syncPermissions($examinerPermissions);
 
         // 3. Candidate (Exam Taker - Students & Entrance Applicants)
         $candidate = Role::findOrCreate('candidate', $guard);

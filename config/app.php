@@ -139,6 +139,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Super Admin Production Credentials
+    |--------------------------------------------------------------------------
+    |
+    | When deploying to production, the initial database seed uses these keys
+    | to securely configure the master administrative account away from defaults.
+    |
+    */
+
+    'admin_username' => env('ADMIN_USERNAME', 'admin_root'),
+    'admin_email' => env('ADMIN_EMAIL', 'admin@chrisland.org'),
+    'admin_password' => env('ADMIN_PASSWORD', 'password'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

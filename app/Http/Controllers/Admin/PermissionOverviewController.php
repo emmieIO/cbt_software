@@ -31,10 +31,16 @@ class PermissionOverviewController extends Controller
             ],
             'Administration' => [
                 [
-                    'name' => 'admin:manage_users',
-                    'description' => 'Full CRUD (Create, Read, Update, Delete) for Staff and Student accounts.',
-                    'usage' => 'Admin > Personnel',
-                    'impact' => 'High: Data privacy & Access.',
+                    'name' => 'staff:* (view, create, edit, delete)',
+                    'description' => 'Granular CRUD operations for Staff accounts.',
+                    'usage' => 'Admin > Staff',
+                    'impact' => 'High: Personnel data control.',
+                ],
+                [
+                    'name' => 'student:* (view, create, edit, delete)',
+                    'description' => 'Granular CRUD operations for Student accounts.',
+                    'usage' => 'Admin > Students',
+                    'impact' => 'High: Candidate data control.',
                 ],
                 [
                     'name' => 'admin:manage_setup',

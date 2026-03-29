@@ -26,11 +26,11 @@ class RevampPermissionsSeeder extends Seeder
                 'sys:manage_settings' => 'System-wide configuration and RBAC governance.',
             ],
             'admin' => [
-                'admin:manage_users' => 'CRUD operations for Staff and Student accounts.',
                 'admin:manage_setup' => 'Academic structure configuration (Sessions, Terms, Classes).',
                 'admin:manage_enrollment' => 'Student class mapping and promotion management.',
                 'admin:manage_admissions' => 'Entrance exam candidate and admission lifecycle management.',
                 'admin:manage_batches' => 'Entrance exam grouping and batch configuration.',
+                'admin:manage_curriculum' => 'Subject and topic syllabus administration.',
             ],
             'bank' => [
                 'bank:view' => 'Access to browse the question repository.',
@@ -52,6 +52,23 @@ class RevampPermissionsSeeder extends Seeder
             'results' => [
                 'results:view' => 'Access to score sheets and performance analytics.',
                 'results:grade' => 'Manual scoring adjustment and correction authority.',
+            ],
+            'staff' => [
+                'staff:view' => 'View staff member profiles and directories.',
+                'staff:create' => 'Register new staff members into the system.',
+                'staff:edit' => 'Modify staff member profiles and roles.',
+                'staff:delete' => 'Remove or deactivate staff accounts.',
+            ],
+            'student' => [
+                'student:view' => 'View candidates within assigned campus.',
+                'student:create' => 'Register new student accounts.',
+                'student:edit' => 'Modify student profiles and details.',
+                'student:delete' => 'Remove or deactivate student accounts.',
+            ],
+            'access' => [
+                'access:admin-portal' => 'Authorized entry into the Institutional HQ.',
+                'access:staff-portal' => 'Authorized entry into the Examiner Console.',
+                'access:student-portal' => 'Authorized entry into the Candidate Portal.',
             ],
         ];
 
@@ -77,15 +94,20 @@ class RevampPermissionsSeeder extends Seeder
         // 2. Examiner (Question & Exam Authority)
         $examiner = Role::findOrCreate('examiner', $guard);
         $examiner->update(['category' => 'staff']);
-        $examiner->syncPermissions(Permission::where('name', 'not like', 'sys:%')
-            ->where('name', 'not like', 'admin:manage_setup%')
-            ->where('name', 'not like', 'admin:manage_users%')
-            ->get());
+        $examinerPermissions = Permission::where('name', 'like', 'bank:%')
+            ->orWhere('name', 'like', 'exam:%')
+            ->orWhere('name', 'like', 'results:%')
+            ->orWhere('name', 'student:view')
+            ->get()
+            ->reject(fn ($p) => $p->name === 'exam:manage_entrance'); // Exclude admin-level exam feature
+
+        $examiner->syncPermissions($examinerPermissions);
+        $examiner->givePermissionTo('access:staff-portal');
 
         // 3. Candidate (Exam Taker / Student)
         $candidate = Role::findOrCreate('candidate', $guard);
         $candidate->update(['category' => 'student']);
-        $candidate->syncPermissions(['exam:view', 'exam:take', 'results:view']);
+        $candidate->syncPermissions(['exam:view', 'exam:take', 'results:view', 'access:student-portal']);
 
         // Re-assign roles to existing seed users
         $adminUser = User::where('email', 'admin@chrisland.org')->first();

@@ -12,6 +12,8 @@ class ProspectiveClass extends Model
 {
     use HasFactory, HasUlids;
 
+    protected $table = 'exam_batches';
+
     protected $fillable = [
         'school_id',
         'name',

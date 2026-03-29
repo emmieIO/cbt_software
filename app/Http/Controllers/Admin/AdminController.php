@@ -24,7 +24,7 @@ class AdminController extends Controller
 
     public function store(LoginRequest $request): RedirectResponse
     {
-        $user = $this->authService->login($request->credentials(), $request->boolean('remember'), 'super_admin');
+        $user = $this->authService->login($request->credentials(), $request->boolean('remember'), 'access:admin-portal');
 
         return to_route('admin.dashboard');
     }
@@ -33,11 +33,7 @@ class AdminController extends Controller
     {
         $data = $this->dashboardService->getDashboardData();
 
-        return Inertia::render('Admin/Dashboard', [
-            'stats' => $data->stats,
-            'recentExams' => $data->recentExams,
-            'recentUsers' => $data->recentUsers,
-        ]);
+        return Inertia::render('Admin/Dashboard', (array) $data);
     }
 
     public function logout(): RedirectResponse

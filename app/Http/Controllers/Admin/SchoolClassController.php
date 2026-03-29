@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Enums\ClassLevel;
 use App\Http\Controllers\Controller;
 use App\Models\SchoolClass;
 use Illuminate\Http\RedirectResponse;
@@ -24,7 +23,7 @@ class SchoolClassController extends Controller
         $query = SchoolClass::query();
 
         if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%');
+            $query->where('name', 'like', '%'.$request->search.'%');
         }
 
         if ($request->filled('level')) {
@@ -49,7 +48,7 @@ class SchoolClassController extends Controller
         $request->validate([
             'name' => [
                 'required', 'string', 'max:255',
-                \Illuminate\Validation\Rule::unique('school_classes')->where(fn ($q) => $q->where('level', $request->level)),
+                \Illuminate\Validation\Rule::unique('school_classes')->where(fn (\Illuminate\Database\Query\Builder $q) => $q->where('level', $request->level)),
             ],
             'level' => ['required', new Enum(\App\Enums\ClassLevel::class)],
         ]);
@@ -69,7 +68,7 @@ class SchoolClassController extends Controller
             'name' => [
                 'required', 'string', 'max:255',
                 \Illuminate\Validation\Rule::unique('school_classes')
-                    ->where(fn ($q) => $q->where('level', $request->level))
+                    ->where(fn (\Illuminate\Database\Query\Builder $q) => $q->where('level', $request->level))
                     ->ignore($schoolClass->id),
             ],
             'level' => ['required', new Enum(\App\Enums\ClassLevel::class)],
