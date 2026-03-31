@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { ref } from 'vue';
+import ConfirmationModal from '@/components/ConfirmationModal.vue';
 import StudentLayout from '@/layouts/StudentLayout.vue';
 
 interface Exam {
@@ -19,6 +21,21 @@ defineProps<{
         pendingExams: number;
     };
 }>();
+
+const isStartModalOpen = ref(false);
+const examToStart = ref<string | null>(null);
+
+const confirmStartExam = (examId: string) => {
+    examToStart.value = examId;
+    isStartModalOpen.value = true;
+};
+
+const handleStartExam = () => {
+    if (examToStart.value) {
+        router.post(`/student/exams/${examToStart.value}/start`);
+        isStartModalOpen.value = false;
+    }
+};
 
 const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-GB', {
@@ -113,12 +130,12 @@ const formatDate = (dateString: string) => {
                                         </span>
                                     </div>
                                 </div>
-                                <Link
-                                    :href="`/student/exams/${exam.id}`"
+                                <button
+                                    @click="confirmStartExam(exam.id)"
                                     class="rounded-lg bg-gray-900 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-black"
                                 >
                                     Access Hall
-                                </Link>
+                                </button>
                             </div>
                         </div>
 
@@ -183,5 +200,15 @@ const formatDate = (dateString: string) => {
                 </div>
             </div>
         </div>
+
+        <ConfirmationModal
+            :show="isStartModalOpen"
+            title="Begin Assessment?"
+            message="You are about to start this examination. Once you proceed, the timer will begin. Ensure your environment is quiet and your connection is stable."
+            confirm-label="Begin Now"
+            variant="primary"
+            @close="isStartModalOpen = false"
+            @confirm="handleStartExam"
+        />
     </StudentLayout>
 </template>

@@ -37,35 +37,55 @@ class StudentController extends Controller
 
     public function dashboard(Request $request): Response
     {
-        $user = $request->user(); // Use default 'web' guard
+        $user = $request->user();
         $currentSession = AcademicSession::current()->first();
 
-        $exams = [];
+        $upcomingExams = [];
         if ($currentSession) {
             $query = Exam::query()->where('academic_session_id', $currentSession->id)
                 ->where('status', ExamStatus::LIVE)
                 ->with(['subject'])
-                ->with(['attempts' => fn ($q) => $q->where('user_id', $user->id)])
-                ->withCount('questions');
+                ->withCount('questions')
+                ->whereDoesntHave('attempts', fn ($q) => $q->where('user_id', $user->id)->where('status', \App\Enums\AttemptStatus::SUBMITTED));
 
-            // All students are 'candidate' role now
-            if ($user->status === 'candidate') {
-                // Entrance Candidates see Entrance Exams for their assigned batch
-                $query->where('type', ExamType::ENTRANCE)
-                    ->where('prospective_class_id', $user->prospective_class_id);
-            } else {
-                // Regular students see exams for their current class
-                $query->where('school_class_id', $user->school_class_id);
+            // Only show exams assigned to this student or their class
+            $query->where(function ($q) use ($user) {
+                $q->whereHas('users', fn ($sq) => $sq->where('user_id', $user->id))
+                  ->orWhere('school_class_id', $user->school_class_id);
+            });
+
+            $upcomingExams = $query->orderBy('start_time', 'asc')->take(4)->get();
+        }
+
+        $recentResults = \App\Models\ExamAttempt::query()
+            ->where('user_id', $user->id)
+            ->where('status', \App\Enums\AttemptStatus::SUBMITTED)
+            ->with(['exam' => fn($q) => $q->with(['subject'])->withCount('questions')])
+            ->latest('submitted_at')
+            ->take(5)
+            ->get();
+
+        $stats = [
+            'examsTaken' => \App\Models\ExamAttempt::query()->where('user_id', $user->id)
+                ->where('status', \App\Enums\AttemptStatus::SUBMITTED)
+                ->count(),
+            'averageScore' => 0,
+            'pendingExams' => count($upcomingExams),
+        ];
+
+        if ($stats['examsTaken'] > 0) {
+            $totalPercentage = 0;
+            foreach ($recentResults as $result) {
+                $maxScore = $result->exam->questions_count ?: 1;
+                $totalPercentage += ($result->score / $maxScore) * 100;
             }
-
-            $exams = $query->take(4)->get(); // Show top 4 on dashboard
+            $stats['averageScore'] = round($totalPercentage / count($recentResults));
         }
 
         return Inertia::render('Student/Dashboard', [
-            'availableExams' => $exams,
-            'completedExamsCount' => \App\Models\ExamAttempt::query()->where('user_id', $user->id)
-                ->where('status', \App\Enums\AttemptStatus::SUBMITTED)
-                ->count(),
+            'upcomingExams' => $upcomingExams,
+            'recentResults' => $recentResults,
+            'stats' => $stats,
         ]);
     }
 
@@ -107,7 +127,7 @@ class StudentController extends Controller
     {
         $attempts = \App\Models\ExamAttempt::query()->where('user_id', $request->user()->id)
             ->where('status', \App\Enums\AttemptStatus::SUBMITTED)
-            ->with(['exam.subject'])
+            ->with(['exam' => fn ($q) => $q->with(['subject'])->withCount('questions')])
             ->latest('submitted_at')
             ->get();
 

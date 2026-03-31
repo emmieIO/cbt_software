@@ -60,6 +60,7 @@ Route::middleware(['auth', 'can:access:staff-portal'])->group(function () {
             Route::get('/{exam}/results', [\App\Http\Controllers\Staff\ExamController::class, 'showResults'])->name('results.show');
             Route::get('/{exam}/results-print', [\App\Http\Controllers\Staff\ExamController::class, 'showResultsPrint'])->name('results.print');
             Route::get('/{exam}/results/{student}', [\App\Http\Controllers\Staff\ExamController::class, 'showStudentResult'])->name('results.student');
+            Route::get('/{exam}/results/{student}/print', [\App\Http\Controllers\Staff\ExamController::class, 'showStudentResultPrint'])->name('results.student.print');
         });
 
         Route::middleware('permission:exam:create')->group(function () {

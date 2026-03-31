@@ -332,6 +332,26 @@ class ExamController extends Controller
     }
 
     /**
+     * Display the official result slip for a specific student.
+     */
+    public function showStudentResultPrint(Exam $exam, \App\Models\User $student): \Illuminate\View\View
+    {
+        $exam->load(['subject', 'schoolClass', 'academicSession']);
+
+        $attempt = $exam->attempts()
+            ->where('user_id', $student->id)
+            ->with(['user.schoolClass'])
+            ->firstOrFail();
+
+        return view('staff.exams.student-result-print', [
+            'exam' => $exam,
+            'student' => $attempt->user,
+            'attempt' => $attempt,
+            'totalQuestions' => $exam->questions()->count(),
+        ]);
+    }
+
+    /**
      * Display the hard copy examination paper.
      */
     public function showHardCopy(Exam $exam): \Illuminate\View\View
