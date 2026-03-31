@@ -347,7 +347,7 @@ const submit = () => {
                             >
                                 <button
                                     type="button"
-                                    @click="setCorrectOption(index)"
+                                    @click="setCorrectOption(Number(index))"
                                     :class="[
                                         'flex size-10 shrink-0 items-center justify-center rounded-lg border-2 transition-all',
                                         option.is_correct
@@ -355,7 +355,7 @@ const submit = () => {
                                             : 'border-gray-200 bg-white text-gray-400 hover:border-gray-300',
                                     ]"
                                 >
-                                    <span v-if="!option.is_correct" class="text-sm font-bold">{{ String.fromCharCode(65 + index) }}</span>
+                                    <span v-if="!option.is_correct" class="text-sm font-bold">{{ String.fromCharCode(65 + Number(index)) }}</span>
                                     <svg v-else class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
                                     </svg>
@@ -367,14 +367,14 @@ const submit = () => {
                                         type="text"
                                         required
                                         class="block w-full border-none bg-transparent px-0 py-2 text-sm font-medium focus:ring-0"
-                                        :placeholder="`Enter content for choice ${String.fromCharCode(65 + index)}`"
+                                        :placeholder="`Enter content for choice ${String.fromCharCode(65 + Number(index))}`"
                                     />
                                 </div>
 
                                 <button
                                     v-if="form.options.length > 2"
                                     type="button"
-                                    @click="removeOption(index)"
+                                    @click="removeOption(Number(index))"
                                     class="flex size-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500"
                                 >
                                     <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

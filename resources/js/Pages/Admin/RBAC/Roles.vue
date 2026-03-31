@@ -225,7 +225,7 @@ const togglePermission = (permissionName: string) => {
             </div>
 
             <!-- Create/Edit Modal -->
-            <div v-if="isModalOpen" class="fixed inset-0 z-[80] flex items-center justify-center overflow-x-hidden overflow-y-auto p-4">
+            <div v-if="isModalOpen" class="fixed inset-0 z-80 flex items-center justify-center overflow-x-hidden overflow-y-auto p-4">
                 <div @click="closeModal" class="absolute inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity"></div>
                 <div class="relative w-full max-w-lg rounded-xl border border-gray-200 bg-white shadow-lg">
                     <div class="flex items-center justify-between border-b border-gray-200 px-4 py-3">
@@ -236,7 +236,7 @@ const togglePermission = (permissionName: string) => {
                             class="inline-flex size-8 items-center justify-center gap-x-2 rounded-lg border border-transparent bg-gray-100 text-gray-800 hover:bg-gray-200 disabled:pointer-events-none disabled:opacity-50"
                         >
                             <span class="sr-only">Close</span>
-                            <svg class="size-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg class="size-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>

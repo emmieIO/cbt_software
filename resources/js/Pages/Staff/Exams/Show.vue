@@ -401,7 +401,7 @@ const formatDate = (dateStr: string | null) => {
                                 class="group flex gap-4 rounded-xl border border-gray-200 p-4 transition-all hover:bg-gray-50"
                             >
                                 <div
-                                    class="flex size-8 flex-shrink-0 items-center justify-center rounded-lg border border-gray-200 bg-white text-xs font-bold text-gray-400 transition-all group-hover:text-primary"
+                                    class="flex size-8 shrink-0 items-center justify-center rounded-lg border border-gray-200 bg-white text-xs font-bold text-gray-400 transition-all group-hover:text-primary"
                                 >
                                     {{ (index + 1).toString().padStart(2, '0') }}
                                 </div>

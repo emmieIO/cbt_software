@@ -104,7 +104,7 @@ const percentage = computed(() => {
                         </div>
                     </div>
 
-                    <div class="flex hidden items-center gap-8 border-l border-gray-100 pl-8 md:flex">
+                    <div class="hidden items-center gap-8 border-l border-gray-100 pl-8 md:flex">
                         <div class="text-center">
                             <p class="text-xs font-semibold tracking-widest text-gray-400 uppercase">Final Score</p>
                             <p class="text-2xl font-bold text-gray-800">

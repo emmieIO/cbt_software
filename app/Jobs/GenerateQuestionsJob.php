@@ -103,7 +103,7 @@ class GenerateQuestionsJob implements ShouldQueue
             $examiner = User::role('examiner')->first();
             $creatorId = $examiner ? $examiner->id : $this->userId;
 
-            app(\App\Services\QuestionService::class)->createQuestionsBatch($dtos, $creatorId);
+            app(\App\Services\QuestionService::class)->createBatchQuestions($dtos, $creatorId);
 
             $seededCount = count($dtos);
 

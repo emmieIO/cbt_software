@@ -48,7 +48,9 @@ const availableClasses = computed(() => {
 
 const filteredTopics = computed(() => {
     if (!selectedSubject.value || !form.school_class_id) return [];
-    return selectedSubject.value.topics.filter((topic: Topic) => String(topic.school_class_id) === String(form.school_class_id));
+    return selectedSubject.value.topics.filter((topic: Topic) => {
+        return !topic.school_class_id || String(topic.school_class_id) === String(form.school_class_id);
+    });
 });
 
 watch(selectedTier, () => {
@@ -263,7 +265,7 @@ const addLog = (type: 'info' | 'success' | 'error', message: string) => {
 
                 <!-- Live Log (Preline Card style) -->
                 <div class="space-y-6 lg:col-span-7">
-                    <div class="flex min-h-[500px] flex-col rounded-xl border border-gray-200 bg-gray-50 p-6 shadow-inner">
+                    <div class="flex min-h-125 flex-col rounded-xl border border-gray-200 bg-gray-50 p-6 shadow-inner">
                         <div class="mb-6 flex items-center justify-between">
                             <h3 class="text-xs font-bold tracking-widest text-gray-400 uppercase">Generation Activity</h3>
                             <div v-if="isGenerating" class="flex items-center gap-2">
@@ -308,7 +310,7 @@ const addLog = (type: 'info' | 'success' | 'error', message: string) => {
                     <!-- Informational Card -->
                     <div class="rounded-xl border border-blue-100 bg-blue-50 p-6">
                         <div class="flex gap-4">
-                            <div class="flex size-10 flex-shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
+                            <div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
                                 <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path
                                         stroke-linecap="round"

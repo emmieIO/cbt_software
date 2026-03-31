@@ -28,7 +28,7 @@ interface AcademicRepositoryInterface
     /**
      * Get all subjects.
      */
-    public function getAllSubjects(): Collection;
+    public function getAllSubjects(bool $withTopics = false): Collection;
 
     /**
      * Get topics for a specific subject and class.

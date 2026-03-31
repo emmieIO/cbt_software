@@ -10,7 +10,7 @@ use Laravel\Ai\Contracts\HasStructuredOutput;
 use Laravel\Ai\Promptable;
 use Stringable;
 
-#[Provider('groq')]
+#[Provider('deepseek')]
 #[Temperature(0.7)]
 class QuestionGeneratorAgent implements Agent, HasStructuredOutput
 {

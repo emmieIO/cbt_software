@@ -267,7 +267,7 @@ const stats = computed(() => {
                                                     <span class="inline-block size-1.5 rounded-full bg-red-800"></span>
                                                     Violation
                                                 </span>
-                                                <span class="mt-1 max-w-[150px] truncate text-xs text-red-600">
+                                                <span class="mt-1 max-w-37.5 truncate text-xs text-red-600">
                                                     {{ attempt.metadata.termination_reason }}
                                                 </span>
                                             </div>
@@ -325,7 +325,7 @@ const stats = computed(() => {
         </div>
 
         <!-- Violation Log Modal -->
-        <div v-if="isViolationModalOpen" class="fixed inset-0 z-[100] overflow-y-auto">
+        <div v-if="isViolationModalOpen" class="fixed inset-0 z-100 overflow-y-auto">
             <div class="flex min-h-screen items-center justify-center p-4">
                 <div @click="isViolationModalOpen = false" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity"></div>
 

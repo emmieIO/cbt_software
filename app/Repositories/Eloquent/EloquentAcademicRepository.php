@@ -30,9 +30,12 @@ class EloquentAcademicRepository implements AcademicRepositoryInterface
             ->get();
     }
 
-    public function getAllSubjects(): Collection
+    public function getAllSubjects(bool $withTopics = false): Collection
     {
-        return Subject::query()->orderBy('name')->get();
+        return Subject::query()
+            ->when($withTopics, fn ($q) => $q->with(['topics']))
+            ->orderBy('name')
+            ->get();
     }
 
     public function getTopics(string $subjectId, ?string $classId = null): Collection

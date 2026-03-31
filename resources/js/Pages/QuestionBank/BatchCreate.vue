@@ -256,7 +256,7 @@ const getAvailableClasses = () => {
                         </div>
 
                         <div class="flex flex-wrap items-end gap-3">
-                            <div class="min-w-[180px] flex-1">
+                            <div class="min-w-45 flex-1">
                                 <label class="mb-1 block text-[10px] font-black tracking-widest text-gray-400 uppercase">Subject</label>
                                 <select
                                     v-model="bulkSubject"
@@ -266,7 +266,7 @@ const getAvailableClasses = () => {
                                     <option v-for="s in filteredSubjects" :key="s.id" :value="s.id">{{ s.name }}</option>
                                 </select>
                             </div>
-                            <div class="min-w-[140px] flex-1">
+                            <div class="min-w-35 flex-1">
                                 <label class="mb-1 block text-[10px] font-black tracking-widest text-gray-400 uppercase">Class</label>
                                 <select
                                     v-model="bulkClass"
