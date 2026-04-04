@@ -14,6 +14,16 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 
+/**
+ * @property string $id
+ * @property string|null $school_id
+ * @property string|null $school_class_id
+ * @property string|null $prospective_class_id
+ * @property string|null $status
+ * @property-read School|null $school
+ * @property-read SchoolClass|null $schoolClass
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, School> $schools
+ */
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
@@ -31,12 +41,15 @@ class User extends Authenticatable
         'password',
         'school_id', // Kept for students, deprecated for staff in favor of schools()
         'school_class_id',
+        'prospective_class_id',
         'status',
         'is_active',
     ];
 
     /**
      * Get the schools/branches the user is assigned to.
+     *
+     * @return BelongsToMany<School, $this>
      */
     public function schools(): BelongsToMany
     {
@@ -55,6 +68,8 @@ class User extends Authenticatable
 
     /**
      * Get the school the user belongs to (Legacy/Student support).
+     *
+     * @return BelongsTo<School, $this>
      */
     public function school(): BelongsTo
     {
@@ -63,6 +78,8 @@ class User extends Authenticatable
 
     /**
      * Get the class the user (student) belongs to.
+     *
+     * @return BelongsTo<SchoolClass, $this>
      */
     public function schoolClass(): BelongsTo
     {
@@ -71,6 +88,8 @@ class User extends Authenticatable
 
     /**
      * Get the exams assigned to this student.
+     *
+     * @return BelongsToMany<Exam, $this>
      */
     public function assignedExams(): BelongsToMany
     {
@@ -79,6 +98,8 @@ class User extends Authenticatable
 
     /**
      * Get all exam attempts for the user.
+     *
+     * @return HasMany<ExamAttempt, $this>
      */
     public function attempts(): HasMany
     {
@@ -87,6 +108,8 @@ class User extends Authenticatable
 
     /**
      * Get the latest exam attempt for the user.
+     *
+     * @return HasOne<ExamAttempt, $this>
      */
     public function latestAttempt(): HasOne
     {

@@ -24,6 +24,30 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Page Discovery
+    |--------------------------------------------------------------------------
+    |
+    | These top-level keys help editor tooling (for example the Laravel VS Code
+    | extension) resolve Inertia component references inside PHP controllers.
+    | Runtime behavior remains driven by your client-side Inertia resolver.
+    |
+    */
+
+    'page_paths' => [
+        'resources/js/Pages',
+    ],
+
+    'page_extensions' => [
+        'js',
+        'jsx',
+        'svelte',
+        'ts',
+        'tsx',
+        'vue',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Testing
     |--------------------------------------------------------------------------
     |

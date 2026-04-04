@@ -11,6 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property string $id
+ * @property string|null $school_class_id
+ * @property string|null $created_by
+ * @property-read SchoolClass|null $schoolClass
+ */
 class Question extends Model
 {
     /** @use HasFactory<\Database\Factories\QuestionFactory> */
@@ -30,6 +36,8 @@ class Question extends Model
 
     /**
      * Get the topic that owns the question.
+     *
+     * @return BelongsTo<Topic, $this>
      */
     public function topic(): BelongsTo
     {
@@ -38,6 +46,8 @@ class Question extends Model
 
     /**
      * Get the class that owns the question.
+     *
+     * @return BelongsTo<SchoolClass, $this>
      */
     public function schoolClass(): BelongsTo
     {
@@ -46,6 +56,8 @@ class Question extends Model
 
     /**
      * Get the options for the question.
+     *
+     * @return HasMany<Option, $this>
      */
     public function options(): HasMany
     {
@@ -54,6 +66,8 @@ class Question extends Model
 
     /**
      * Get the user who created the question.
+     *
+     * @return BelongsTo<User, $this>
      */
     public function creator(): BelongsTo
     {

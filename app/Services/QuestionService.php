@@ -21,7 +21,9 @@ class QuestionService
     public function getAuthorizedContext(User $user, bool $withTopics = false): array
     {
         $isSystemAdmin = $user->can('sys:manage_settings');
-        $schoolType = $user->school?->type;
+        /** @var \App\Models\School|null $school */
+        $school = $user->school;
+        $schoolType = $school?->type;
         $schoolTypeValue = is_string($schoolType) ? $schoolType : $schoolType?->value;
 
         $classes = $this->academicRepo->getClasses($isSystemAdmin ? null : $user->school_id);

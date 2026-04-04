@@ -70,7 +70,9 @@ class QuestionPolicy
         }
 
         $question->loadMissing('schoolClass');
-        $classSchoolId = $question->schoolClass?->school_id;
+        /** @var \App\Models\SchoolClass|null $schoolClass */
+        $schoolClass = $question->schoolClass;
+        $classSchoolId = $schoolClass?->school_id;
 
         if ($classSchoolId && $classSchoolId !== $user->school_id) {
             return false;

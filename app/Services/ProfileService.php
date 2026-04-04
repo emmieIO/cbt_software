@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\School;
 use App\Models\User;
 
 class ProfileService
@@ -15,7 +16,7 @@ class ProfileService
 
         $isStaff = $user->can('bank:view');
         $assignments = $isStaff
-            ? $user->schools->map(fn ($school) => [
+            ? $user->schools->map(fn (School $school) => [
                 'id' => $school->id,
                 'subject' => ['name' => 'All Subjects'],
                 'school_class' => ['name' => $school->name],

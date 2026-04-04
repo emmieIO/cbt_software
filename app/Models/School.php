@@ -8,6 +8,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property string $id
+ * @property string $name
+ * @property \App\Enums\ClassLevel|string|null $type
+ */
 class School extends Model
 {
     /** @use HasFactory<\Database\Factories\SchoolFactory> */
@@ -39,6 +44,8 @@ class School extends Model
 
     /**
      * Get the users that belong to the school.
+     *
+     * @return HasMany<User, $this>
      */
     public function users(): HasMany
     {

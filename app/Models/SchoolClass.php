@@ -9,6 +9,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property string $id
+ * @property string|null $school_id
+ */
 class SchoolClass extends Model
 {
     /** @use HasFactory<\Database\Factories\SchoolClassFactory> */
@@ -24,6 +28,8 @@ class SchoolClass extends Model
 
     /**
      * Get the school this class belongs to.
+     *
+     * @return BelongsTo<School, $this>
      */
     public function school(): BelongsTo
     {
@@ -44,12 +50,17 @@ class SchoolClass extends Model
 
     /**
      * Get the questions for the class.
+     *
+     * @return HasMany<Question, $this>
      */
     public function questions(): HasMany
     {
         return $this->hasMany(Question::class);
     }
 
+    /**
+     * @return HasMany<User, $this>
+     */
     public function users()
     {
         return $this->hasMany(User::class);
