@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 
-defineProps<{
+const props = defineProps<{
     stats: {
         totalStudents: number;
         totalStaff: number;
@@ -35,17 +36,44 @@ defineProps<{
     }>;
 }>();
 
+const kpis = computed(() => [
+    {
+        label: 'Students',
+        value: props.stats.totalStudents,
+        tone: 'text-slate-900',
+        meta: 'Total enrolled',
+    },
+    {
+        label: 'Staff',
+        value: props.stats.totalStaff,
+        tone: 'text-slate-900',
+        meta: 'Active examiners',
+    },
+    {
+        label: 'Question Bank',
+        value: props.stats.totalQuestions,
+        tone: 'text-slate-900',
+        meta: 'Published items',
+    },
+    {
+        label: 'Live Exams',
+        value: props.stats.activeExams,
+        tone: 'text-emerald-700',
+        meta: 'Currently running',
+    },
+]);
+
 const getStatusClass = (status: string) => {
     switch (status.toLowerCase()) {
         case 'live':
         case 'active':
-            return 'bg-teal-100 text-teal-800';
+            return 'bg-emerald-100 text-emerald-700 border-emerald-200';
         case 'draft':
-            return 'bg-gray-100 text-gray-800';
+            return 'bg-slate-100 text-slate-700 border-slate-200';
         case 'closed':
-            return 'bg-red-100 text-red-800';
+            return 'bg-rose-100 text-rose-700 border-rose-200';
         default:
-            return 'bg-blue-100 text-blue-800';
+            return 'bg-blue-100 text-blue-700 border-blue-200';
     }
 };
 </script>
@@ -54,223 +82,153 @@ const getStatusClass = (status: string) => {
     <AdminLayout>
         <Head title="System Dashboard" />
 
-        <div class="space-y-6 sm:space-y-10">
-            <!-- Page Header -->
-            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div class="space-y-6 sm:space-y-8">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                    <h1 class="text-2xl font-semibold text-gray-800">System Dashboard</h1>
-                    <p class="mt-1 flex items-center gap-2 text-sm text-gray-500">
-                        <span class="flex h-2 w-2 rounded-full bg-teal-500"></span>
-                        Status: {{ stats.systemStatus }} • Network Observability
-                    </p>
+                    <p class="text-xs font-semibold tracking-widest text-slate-500 uppercase">Administration</p>
+                    <h1 class="mt-1 text-2xl font-bold text-slate-900">System Dashboard</h1>
+                    <p class="mt-1 text-sm text-slate-600">Operational overview for branches, assessments, and users.</p>
                 </div>
+
                 <div class="flex items-center gap-2">
-                    <button
-                        class="inline-flex items-center gap-x-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none"
-                    >
-                        Global Report
-                    </button>
+                    <span class="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                        <span class="size-2 rounded-full bg-emerald-500"></span>
+                        {{ stats.systemStatus }}
+                    </span>
                     <Link
                         href="/admin/school-setup/sessions"
-                        class="hover:bg-primary-hover inline-flex items-center gap-x-2 rounded-lg border border-transparent bg-primary px-4 py-2.5 text-sm font-semibold text-white focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-none"
+                        class="inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                     >
                         Academic Calendar
                     </Link>
                 </div>
             </div>
 
-            <!-- Stats Grid -->
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4">
-                <!-- Enrolled Card -->
-                <div class="flex flex-col rounded-xl border border-gray-200 bg-white shadow-sm">
-                    <div class="p-4 md:p-5">
-                        <div class="flex items-center gap-x-2">
-                            <p class="text-xs font-semibold tracking-wider text-gray-500 uppercase">Total Enrolled</p>
-                        </div>
-                        <div class="mt-1 flex items-center gap-x-2">
-                            <h3 class="text-xl font-bold text-gray-800 sm:text-2xl">{{ stats.totalStudents }}</h3>
-                        </div>
-                        <div class="mt-3 flex items-center text-xs font-medium text-teal-600">Active Students</div>
-                    </div>
-                </div>
-
-                <!-- Faculty Card -->
-                <div class="flex flex-col rounded-xl border border-gray-200 bg-white shadow-sm">
-                    <div class="p-4 md:p-5">
-                        <div class="flex items-center gap-x-2">
-                            <p class="text-xs font-semibold tracking-wider text-gray-500 uppercase">Verified Faculty</p>
-                        </div>
-                        <div class="mt-1 flex items-center gap-x-2">
-                            <h3 class="text-xl font-bold text-gray-800 sm:text-2xl">{{ stats.totalStaff }}</h3>
-                        </div>
-                        <div class="mt-3 text-xs font-medium text-blue-600">Authorized Personnel</div>
-                    </div>
-                </div>
-
-                <!-- Questions Card -->
-                <div class="flex flex-col rounded-xl border border-gray-200 bg-white shadow-sm">
-                    <div class="p-4 md:p-5">
-                        <div class="flex items-center gap-x-2">
-                            <p class="text-xs font-semibold tracking-wider text-gray-500 uppercase">Universal Bank</p>
-                        </div>
-                        <div class="mt-1 flex items-center gap-x-2">
-                            <h3 class="text-xl font-bold text-gray-800 sm:text-2xl">{{ stats.totalQuestions }}</h3>
-                        </div>
-                        <div class="mt-3 text-xs font-medium text-orange-600">Assessment Assets</div>
-                    </div>
-                </div>
-
-                <!-- Live Exams Card -->
-                <div class="flex flex-col rounded-xl border border-gray-200 bg-white shadow-sm">
-                    <div class="p-4 md:p-5">
-                        <div class="flex items-center gap-x-2">
-                            <p class="text-xs font-semibold tracking-wider text-gray-500 uppercase">Active Exams</p>
-                        </div>
-                        <div class="mt-1 flex items-center gap-x-2">
-                            <h3 class="text-xl font-bold text-gray-800 sm:text-2xl">{{ stats.activeExams }}</h3>
-                        </div>
-                        <div class="mt-3 text-xs font-medium text-teal-600">Concurrent Streams</div>
-                    </div>
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div v-for="kpi in kpis" :key="kpi.label" class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <p class="text-xs font-semibold tracking-wider text-slate-500 uppercase">{{ kpi.label }}</p>
+                    <p class="mt-2 text-3xl font-bold" :class="kpi.tone">{{ kpi.value }}</p>
+                    <p class="mt-1 text-xs text-slate-500">{{ kpi.meta }}</p>
                 </div>
             </div>
 
-            <!-- Body Grid -->
-            <div class="grid grid-cols-1 gap-6 sm:gap-10 lg:grid-cols-3">
-                <!-- Left: Recent Activity -->
-                <div class="space-y-6 lg:col-span-2">
-                    <div class="flex flex-col rounded-xl border border-gray-200 bg-white shadow-sm">
-                        <div class="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-                            <h2 class="text-lg font-semibold text-gray-800">Recent Assessments</h2>
-                            <Link href="/staff/exams" class="text-sm font-medium text-primary hover:underline">View All</Link>
+            <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
+                <div class="space-y-6 xl:col-span-2">
+                    <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                        <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+                            <h2 class="text-sm font-bold text-slate-900">Recent Assessments</h2>
+                            <Link href="/staff/exams" class="text-xs font-semibold text-primary hover:underline">View all</Link>
                         </div>
+
                         <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50">
+                            <table class="min-w-full divide-y divide-slate-200">
+                                <thead class="bg-slate-50">
                                     <tr>
-                                        <th class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">Exam Title</th>
-                                        <th class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">Context</th>
-                                        <th class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">Status</th>
-                                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Attempts</th>
+                                        <th class="px-5 py-3 text-left text-xs font-semibold tracking-wider text-slate-500 uppercase">Assessment</th>
+                                        <th class="px-5 py-3 text-left text-xs font-semibold tracking-wider text-slate-500 uppercase">Target</th>
+                                        <th class="px-5 py-3 text-left text-xs font-semibold tracking-wider text-slate-500 uppercase">Status</th>
+                                        <th class="px-5 py-3 text-right text-xs font-semibold tracking-wider text-slate-500 uppercase">Attempts</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-gray-200">
-                                    <tr v-for="exam in recentExams" :key="exam.id" class="transition-colors hover:bg-gray-50">
-                                        <td class="px-6 py-4">
-                                            <span class="text-sm font-semibold text-gray-800">{{ exam.title }}</span>
-                                            <p class="mt-0.5 text-xs text-gray-500">{{ exam.subject }}</p>
+                                <tbody class="divide-y divide-slate-100">
+                                    <tr v-for="exam in recentExams" :key="exam.id" class="hover:bg-slate-50/80">
+                                        <td class="px-5 py-4">
+                                            <p class="text-sm font-semibold text-slate-900">{{ exam.title }}</p>
+                                            <p class="mt-0.5 text-xs text-slate-500">{{ exam.subject }}</p>
                                         </td>
-                                        <td class="px-6 py-4">
-                                            <span class="text-xs text-gray-600">{{ exam.target || 'Global' }}</span>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <span
-                                                :class="getStatusClass(exam.status)"
-                                                class="inline-flex items-center rounded-md px-2 py-1 text-[10px] font-bold uppercase"
-                                            >
+                                        <td class="px-5 py-4 text-xs text-slate-600">{{ exam.target || 'Global' }}</td>
+                                        <td class="px-5 py-4">
+                                            <span :class="getStatusClass(exam.status)" class="inline-flex rounded-md border px-2 py-1 text-[10px] font-bold uppercase">
                                                 {{ exam.status }}
                                             </span>
                                         </td>
-                                        <td class="px-6 py-4 text-center">
-                                            <span class="text-sm font-medium text-gray-800">{{ exam.attempts_count }}</span>
-                                        </td>
+                                        <td class="px-5 py-4 text-right text-sm font-semibold text-slate-900">{{ exam.attempts_count }}</td>
                                     </tr>
                                     <tr v-if="recentExams.length === 0">
-                                        <td colspan="4" class="px-6 py-12 text-center text-gray-500">No recent assessments found.</td>
+                                        <td colspan="4" class="px-5 py-10 text-center text-sm text-slate-500">No recent assessments available.</td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
-                    </div>
+                    </section>
 
-                    <!-- Infrastructure Quick Controls -->
-                    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-                        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                            <h3 class="mb-4 font-semibold text-gray-800">Curriculum Registry</h3>
-                            <div class="space-y-3">
-                                <Link
-                                    href="/admin/curriculum/subjects"
-                                    class="group flex items-center justify-between rounded-lg bg-gray-50 p-3 transition-colors hover:bg-gray-100"
-                                >
-                                    <span class="text-sm font-medium text-gray-700">Manage Subjects</span>
-                                    <span class="text-xs text-gray-400 group-hover:text-primary">{{ stats.totalSubjects }} Active</span>
+                    <section class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                        <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                            <h3 class="text-sm font-bold text-slate-900">Academic Registry</h3>
+                            <p class="mt-1 text-xs text-slate-500">Core curriculum assets</p>
+                            <div class="mt-4 space-y-2">
+                                <Link href="/admin/curriculum/subjects" class="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                                    <span>Subjects</span>
+                                    <span class="text-xs font-semibold text-slate-500">{{ stats.totalSubjects }}</span>
                                 </Link>
-                                <Link
-                                    href="/admin/curriculum/classes"
-                                    class="group flex items-center justify-between rounded-lg bg-gray-50 p-3 transition-colors hover:bg-gray-100"
-                                >
-                                    <span class="text-sm font-medium text-gray-700">Global Classes</span>
-                                    <span class="text-xs text-gray-400 group-hover:text-primary">{{ stats.totalClasses }} Active</span>
+                                <Link href="/admin/curriculum/topics" class="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                                    <span>Topics</span>
+                                    <span class="text-xs font-semibold text-slate-500">Review</span>
+                                </Link>
+                                <Link href="/admin/school-setup/classes" class="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                                    <span>Classes</span>
+                                    <span class="text-xs font-semibold text-slate-500">{{ stats.totalClasses }}</span>
                                 </Link>
                             </div>
                         </div>
 
-                        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                            <h3 class="mb-4 font-semibold text-gray-800">Identity Control</h3>
-                            <div class="space-y-3">
-                                <Link
-                                    href="/admin/users/students"
-                                    class="group flex items-center justify-between rounded-lg bg-gray-50 p-3 transition-colors hover:bg-gray-100"
-                                >
-                                    <span class="text-sm font-medium text-gray-700">Students Registry</span>
-                                    <svg class="size-4 text-gray-400 group-hover:text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                    </svg>
+                        <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                            <h3 class="text-sm font-bold text-slate-900">Identity & Access</h3>
+                            <p class="mt-1 text-xs text-slate-500">Manage users and permissions</p>
+                            <div class="mt-4 space-y-2">
+                                <Link href="/admin/users/students" class="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                                    <span>Students</span>
+                                    <span class="text-xs font-semibold text-slate-500">Directory</span>
                                 </Link>
-                                <Link
-                                    href="/admin/users/staff"
-                                    class="group flex items-center justify-between rounded-lg bg-gray-50 p-3 transition-colors hover:bg-gray-100"
-                                >
-                                    <span class="text-sm font-medium text-gray-700">Faculty Management</span>
-                                    <svg class="size-4 text-gray-400 group-hover:text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                    </svg>
+                                <Link href="/admin/users/staff" class="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                                    <span>Staff</span>
+                                    <span class="text-xs font-semibold text-slate-500">Directory</span>
+                                </Link>
+                                <Link href="/admin/rbac/permissions" class="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                                    <span>Permissions</span>
+                                    <span class="text-xs font-semibold text-slate-500">RBAC</span>
                                 </Link>
                             </div>
                         </div>
-                    </div>
+                    </section>
                 </div>
 
-                <!-- Right: Recent Access & Lab -->
                 <div class="space-y-6">
-                    <div class="rounded-xl border border-gray-200 bg-white shadow-sm">
-                        <div class="border-b border-gray-200 px-6 py-4">
-                            <h2 class="font-semibold text-gray-800">Recent Activity</h2>
+                    <section class="rounded-xl border border-slate-200 bg-white shadow-sm">
+                        <div class="border-b border-slate-200 px-5 py-4">
+                            <h2 class="text-sm font-bold text-slate-900">Recent User Activity</h2>
                         </div>
-                        <div class="space-y-5 p-6">
+                        <div class="space-y-4 p-5">
                             <div v-for="user in recentUsers" :key="user.id" class="flex items-center gap-3">
-                                <div
-                                    class="flex size-8 items-center justify-center rounded-full border border-gray-200 bg-gray-100 text-xs font-bold text-gray-500 uppercase"
-                                >
+                                <div class="flex size-9 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-xs font-bold text-slate-600">
                                     {{ user.name.substring(0, 2) }}
                                 </div>
                                 <div class="min-w-0 flex-1">
-                                    <p class="truncate text-sm font-medium text-gray-800">{{ user.name }}</p>
-                                    <p class="text-[10px] tracking-wider text-gray-500 uppercase">{{ user.role }} • {{ user.joined_at }}</p>
+                                    <p class="truncate text-sm font-semibold text-slate-900">{{ user.name }}</p>
+                                    <p class="truncate text-xs text-slate-500">{{ user.role }} • {{ user.joined_at }}</p>
                                 </div>
                             </div>
+                            <p v-if="recentUsers.length === 0" class="text-sm text-slate-500">No recent user activity.</p>
                         </div>
-                    </div>
+                    </section>
 
-                    <!-- AI Seeding Box -->
-                    <div class="group relative overflow-hidden rounded-xl bg-primary p-6 shadow-sm">
-                        <div class="relative z-10">
-                            <h3 class="text-lg font-bold tracking-tight text-white uppercase">Rapid Deployment</h3>
-                            <p class="mt-1 text-xs text-white/70">Initialize bank seeding via AI Synapse.</p>
-
-                            <Link
-                                href="/staff/questions"
-                                class="mt-6 flex items-center justify-center gap-x-2 rounded-lg bg-white/10 px-4 py-3 text-sm font-semibold text-white transition-all hover:bg-white/20"
-                            >
-                                <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                </svg>
-                                Open AI Laboratory
-                            </Link>
+                    <section class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                        <h3 class="text-sm font-bold text-slate-900">System Snapshot</h3>
+                        <div class="mt-4 space-y-3 text-sm">
+                            <div class="flex items-center justify-between">
+                                <span class="text-slate-600">Branches</span>
+                                <span class="font-semibold text-slate-900">{{ stats.totalBranches }}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-slate-600">Total Exams</span>
+                                <span class="font-semibold text-slate-900">{{ stats.totalExams }}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-slate-600">Candidates</span>
+                                <span class="font-semibold text-slate-900">{{ stats.totalCandidates }}</span>
+                            </div>
                         </div>
-                        <div
-                            class="absolute -right-10 -bottom-10 size-32 rounded-full bg-white/5 blur-2xl transition-transform group-hover:scale-110"
-                        ></div>
-                    </div>
+                    </section>
                 </div>
             </div>
         </div>

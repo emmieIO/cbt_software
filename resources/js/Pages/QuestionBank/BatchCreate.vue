@@ -23,15 +23,15 @@ const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
 const branches = computed(() => {
     const rawBranches = (page.props as any).branches || {};
     return Object.values(rawBranches).map((info: any) => ({
-        id: info.id,
+        id: String(info.id),
         name: info.name,
-        type: info.type,
+        type: typeof info.type === 'string' ? info.type : (info.type?.value ?? ''),
     }));
 });
 
 // Context Awareness
-const selectedBranchId = ref(page.props.auth.user.school_id || (branches.value.length > 0 ? branches.value[0].id : ''));
-const selectedBranch = computed(() => branches.value.find((b) => b.id === selectedBranchId.value));
+const selectedBranchId = ref(page.props.auth.user.school_id ? String(page.props.auth.user.school_id) : (branches.value.length > 0 ? String(branches.value[0].id) : ''));
+const selectedBranch = computed(() => branches.value.find((b) => String(b.id) === String(selectedBranchId.value)));
 
 const filteredSubjects = computed(() => {
     if (!selectedBranch.value) return props.subjects;
@@ -68,12 +68,16 @@ const questions = ref([createEmptyRow()]);
 const bulkSubject = ref('');
 const bulkClass = ref('');
 const bulkTopic = ref('');
+const bulkType = ref('');
+const bulkDifficulty = ref('');
 
 const applyBulkMetadata = () => {
     questions.value.forEach((q) => {
         if (bulkSubject.value) q.subject_id = bulkSubject.value;
         if (bulkClass.value) q.school_class_id = bulkClass.value;
         if (bulkTopic.value) q.topic_id = bulkTopic.value;
+        if (bulkType.value) q.type = bulkType.value;
+        if (bulkDifficulty.value) q.difficulty = bulkDifficulty.value;
     });
 };
 
@@ -82,9 +86,27 @@ watch(selectedBranchId, () => {
     bulkSubject.value = '';
     bulkClass.value = '';
     bulkTopic.value = '';
+    bulkType.value = '';
+    bulkDifficulty.value = '';
 
     // Optional: questions.value.forEach(q => { q.subject_id = ''; q.school_class_id = ''; q.topic_id = ''; });
 });
+
+watch(
+    branches,
+    (currentBranches) => {
+        if (!currentBranches.length) {
+            selectedBranchId.value = '';
+            return;
+        }
+
+        const exists = currentBranches.some((b) => String(b.id) === String(selectedBranchId.value));
+        if (!exists) {
+            selectedBranchId.value = String(currentBranches[0].id);
+        }
+    },
+    { immediate: true },
+);
 
 const addRow = () => {
     const lastRow = questions.value[questions.value.length - 1];
@@ -105,6 +127,14 @@ const removeRow = (index: number) => {
     if (questions.value.length > 1) {
         questions.value.splice(index, 1);
     }
+};
+
+const handleRowSubjectChange = (index: number) => {
+    questions.value[index].topic_id = '';
+};
+
+const handleRowClassChange = (index: number) => {
+    questions.value[index].topic_id = '';
 };
 
 const handleImageUpload = (index: number, e: Event) => {
@@ -135,9 +165,11 @@ const removeImage = (index: number) => {
 const form = useForm({
     questions: [] as any[],
 });
+const formErrors = computed(() => form.errors as Record<string, string | undefined>);
 
 const submit = () => {
     form.questions = questions.value.map((q) => ({
+        subject_id: q.subject_id,
         topic_id: q.topic_id,
         school_class_id: q.school_class_id,
         content: q.content,
@@ -148,7 +180,10 @@ const submit = () => {
         options: q.options,
     }));
 
-    form.post(batchStore().url);
+    form.post(batchStore().url, {
+        forceFormData: true,
+        preserveScroll: true,
+    });
 };
 
 const getFilteredTopics = (subjectId: string, classId: string) => {
@@ -161,6 +196,18 @@ const getFilteredTopics = (subjectId: string, classId: string) => {
 
 const getAvailableClasses = () => {
     return filteredClasses.value;
+};
+
+const getRowFieldError = (index: number, field: string) => {
+    return formErrors.value[`questions.${index}.${field}`];
+};
+
+const getRowOptionsError = (index: number) => {
+    return formErrors.value[`questions.${index}.options`];
+};
+
+const rowHasError = (index: number) => {
+    return Object.keys(form.errors).some((key) => key.startsWith(`questions.${index}.`));
 };
 </script>
 
@@ -202,6 +249,14 @@ const getAvailableClasses = () => {
                         Publish All
                     </button>
                 </div>
+            </div>
+
+            <div
+                v-if="Object.keys(form.errors).length"
+                class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+                role="alert"
+            >
+                Please fix the highlighted spreadsheet rows and try again.
             </div>
 
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
@@ -276,6 +331,36 @@ const getAvailableClasses = () => {
                                     <option v-for="c in filteredClasses" :key="c.id" :value="c.id">{{ c.name }}</option>
                                 </select>
                             </div>
+                            <div class="min-w-45 flex-1">
+                                <label class="mb-1 block text-[10px] font-black tracking-widest text-gray-400 uppercase">Topic</label>
+                                <select
+                                    v-model="bulkTopic"
+                                    class="block w-full rounded-lg border-gray-200 bg-gray-50 px-3 py-2 text-xs focus:border-primary focus:ring-primary"
+                                >
+                                    <option value="">Select Topic</option>
+                                    <option v-for="t in getFilteredTopics(bulkSubject, bulkClass)" :key="t.id" :value="t.id">{{ t.name }}</option>
+                                </select>
+                            </div>
+                            <div class="min-w-35 flex-1">
+                                <label class="mb-1 block text-[10px] font-black tracking-widest text-gray-400 uppercase">Type</label>
+                                <select
+                                    v-model="bulkType"
+                                    class="block w-full rounded-lg border-gray-200 bg-gray-50 px-3 py-2 text-xs focus:border-primary focus:ring-primary"
+                                >
+                                    <option value="">Select Type</option>
+                                    <option v-for="t in types" :key="t.value" :value="t.value">{{ t.label }}</option>
+                                </select>
+                            </div>
+                            <div class="min-w-35 flex-1">
+                                <label class="mb-1 block text-[10px] font-black tracking-widest text-gray-400 uppercase">Difficulty</label>
+                                <select
+                                    v-model="bulkDifficulty"
+                                    class="block w-full rounded-lg border-gray-200 bg-gray-50 px-3 py-2 text-xs focus:border-primary focus:ring-primary"
+                                >
+                                    <option value="">Select Difficulty</option>
+                                    <option v-for="d in difficulties" :key="d.value" :value="d.value">{{ d.label }}</option>
+                                </select>
+                            </div>
                             <button
                                 @click="applyBulkMetadata"
                                 class="inline-flex items-center gap-x-2 rounded-lg border border-transparent bg-slate-900 px-6 py-2 text-xs font-black text-white uppercase shadow-sm transition-all hover:bg-black active:scale-95"
@@ -326,27 +411,38 @@ const getAvailableClasses = () => {
                         <tbody class="divide-y divide-gray-200">
                             <tr v-for="(q, idx) in questions" :key="idx" class="transition-colors hover:bg-gray-50">
                                 <!-- Index -->
-                                <td class="border-r border-gray-200 px-4 py-3 text-center text-xs font-bold text-gray-400">{{ idx + 1 }}</td>
+                                <td class="border-r border-gray-200 px-4 py-3 text-center text-xs font-bold text-gray-400">
+                                    <div>{{ idx + 1 }}</div>
+                                    <div v-if="rowHasError(idx)" class="mt-1 text-[10px] font-black text-red-600">Error</div>
+                                </td>
 
                                 <!-- Compact Context -->
                                 <td class="space-y-2 border-r border-gray-200 bg-gray-50/20 px-4 py-3">
                                     <div class="group relative">
                                         <select
                                             v-model="q.subject_id"
+                                            @change="handleRowSubjectChange(idx)"
                                             class="block w-full rounded-md border-gray-200 bg-white px-2 py-1.5 text-[11px] font-semibold shadow-sm focus:border-primary focus:ring-primary"
                                         >
                                             <option value="">Subject Area</option>
                                             <option v-for="s in filteredSubjects" :key="s.id" :value="s.id">{{ s.name }}</option>
                                         </select>
+                                        <p v-if="getRowFieldError(idx, 'subject_id')" class="mt-1 text-[10px] text-red-600">
+                                            {{ getRowFieldError(idx, 'subject_id') }}
+                                        </p>
                                     </div>
                                     <div class="group relative">
                                         <select
                                             v-model="q.school_class_id"
+                                            @change="handleRowClassChange(idx)"
                                             class="block w-full rounded-md border-gray-200 bg-white px-2 py-1.5 text-[11px] font-semibold shadow-sm focus:border-primary focus:ring-primary"
                                         >
                                             <option value="">Academic Class</option>
                                             <option v-for="c in getAvailableClasses()" :key="c.id" :value="c.id">{{ c.name }}</option>
                                         </select>
+                                        <p v-if="getRowFieldError(idx, 'school_class_id')" class="mt-1 text-[10px] text-red-600">
+                                            {{ getRowFieldError(idx, 'school_class_id') }}
+                                        </p>
                                     </div>
                                     <div class="group relative">
                                         <select
@@ -357,6 +453,25 @@ const getAvailableClasses = () => {
                                             <option v-for="t in getFilteredTopics(q.subject_id, q.school_class_id)" :key="t.id" :value="t.id">
                                                 {{ t.name }}
                                             </option>
+                                        </select>
+                                        <p v-if="getRowFieldError(idx, 'topic_id')" class="mt-1 text-[10px] text-red-600">
+                                            {{ getRowFieldError(idx, 'topic_id') }}
+                                        </p>
+                                    </div>
+                                    <div class="group relative">
+                                        <select
+                                            v-model="q.type"
+                                            class="block w-full rounded-md border-gray-200 bg-white px-2 py-1.5 text-[11px] font-semibold shadow-sm focus:border-primary focus:ring-primary"
+                                        >
+                                            <option v-for="t in types" :key="t.value" :value="t.value">{{ t.label }}</option>
+                                        </select>
+                                    </div>
+                                    <div class="group relative">
+                                        <select
+                                            v-model="q.difficulty"
+                                            class="block w-full rounded-md border-gray-200 bg-white px-2 py-1.5 text-[11px] font-semibold shadow-sm focus:border-primary focus:ring-primary"
+                                        >
+                                            <option v-for="d in difficulties" :key="d.value" :value="d.value">{{ d.label }}</option>
                                         </select>
                                     </div>
                                 </td>
@@ -406,6 +521,9 @@ const getAvailableClasses = () => {
                                         placeholder="Describe the question requirement..."
                                         class="block w-full resize-none rounded-lg border-gray-200 bg-white px-3 py-2 text-sm font-medium shadow-sm focus:border-primary focus:ring-primary"
                                     ></textarea>
+                                    <p v-if="getRowFieldError(idx, 'content')" class="mt-1 text-[10px] text-red-600">
+                                        {{ getRowFieldError(idx, 'content') }}
+                                    </p>
                                     <div class="mt-2 flex items-center gap-2">
                                         <div class="shrink-0 text-[10px] font-black text-gray-400 uppercase">Expl:</div>
                                         <input
@@ -437,6 +555,9 @@ const getAvailableClasses = () => {
                                             </div>
                                         </div>
                                     </div>
+                                    <p v-if="getRowOptionsError(idx)" class="mt-2 text-[10px] text-red-600">
+                                        {{ getRowOptionsError(idx) }}
+                                    </p>
                                 </td>
 
                                 <!-- Actions -->

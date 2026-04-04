@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 
 interface PermissionDetail {
@@ -9,122 +10,142 @@ interface PermissionDetail {
     impact: string;
 }
 
-defineProps<{
+const props = defineProps<{
     groups: Record<string, PermissionDetail[]>;
 }>();
 
+const groupedEntries = computed(() => {
+    return Object.entries(props.groups)
+        .map(([groupName, items]) => ({
+            key: groupName,
+            label: groupName.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase()),
+            items: [...items].sort((a, b) => a.name.localeCompare(b.name)),
+        }))
+        .sort((a, b) => a.label.localeCompare(b.label));
+});
+
+const totalPermissions = computed(() => groupedEntries.value.reduce((total, group) => total + group.items.length, 0));
+
+const criticalCount = computed(() =>
+    groupedEntries.value.reduce(
+        (total, group) => total + group.items.filter((item) => item.impact.toLowerCase().includes('critical')).length,
+        0,
+    ),
+);
+
+const highCount = computed(() =>
+    groupedEntries.value.reduce((total, group) => total + group.items.filter((item) => item.impact.toLowerCase().includes('high')).length, 0),
+);
+
 const getImpactColor = (impact: string) => {
-    const imp = impact.toLowerCase();
-    if (imp.includes('critical')) return 'text-red-600 bg-red-50 border-red-100';
-    if (imp.includes('high')) return 'text-orange-600 bg-orange-50 border-orange-100';
-    if (imp.includes('efficiency') || imp.includes('reporting')) return 'text-primary bg-primary/5 border-primary/10';
-    return 'text-slate-600 bg-slate-50 border-slate-100';
+    const value = impact.toLowerCase();
+    if (value.includes('critical')) return 'bg-rose-100 text-rose-700 border-rose-200';
+    if (value.includes('high')) return 'bg-amber-100 text-amber-700 border-amber-200';
+    if (value.includes('efficiency') || value.includes('reporting')) return 'bg-blue-100 text-blue-700 border-blue-200';
+    return 'bg-slate-100 text-slate-700 border-slate-200';
 };
 </script>
 
 <template>
     <AdminLayout>
-        <Head title="Governance & Permission Architecture" />
+        <Head title="RBAC Overview" />
 
-        <div class="space-y-10 pb-20">
-            <!-- Board Review Header -->
-            <div class="flex flex-col gap-6 border-b border-gray-100 pb-8 sm:flex-row sm:items-center sm:justify-between">
-                <div class="max-w-2xl">
-                    <div class="mb-4 flex items-center gap-3">
-                        <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-white shadow-md">
-                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M9 12l2 2 4-4m5.618-4.016A3.333 3.333 0 0118 3.333a3.333 3.333 0 01-3.333 3.333 3.333 3.333 0 01-3.334-3.333C11.333 3.333 11.333 3.333 11.333 3.333c0 .001 0 .001 0 .001a3.333 3.333 0 01-3.333 3.333 3.333 3.333 0 01-3.333-3.333 3.333 3.333 0 01-3.334 3.333C1.333 3.333 1.333 3.333 1.333 3.333"
-                                />
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"
-                                />
-                            </svg>
-                        </div>
-                        <h1 class="text-2xl font-bold text-gray-900">Governance Architecture</h1>
-                    </div>
-                    <h2 class="mb-2 text-lg font-semibold text-gray-800">Security Protocols & Access Matrix</h2>
-                    <p class="text-sm leading-relaxed text-gray-500">
-                        This document provides a full disclosure of the Chrisland CBT security layers. All system permissions are mapped below by
-                        operational group, impact level, and implementation scope.
-                    </p>
-                </div>
-                <div class="shrink-0">
-                    <div class="rounded-xl border border-gray-200 bg-white p-4 text-center shadow-sm">
-                        <span class="mb-1 block text-xs font-semibold tracking-wider text-gray-400 uppercase">Status</span>
-                        <span class="text-sm font-bold text-primary">Board Verification v1.1</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Grouped Permissions -->
-            <div v-for="(items, groupName) in groups" :key="groupName" class="space-y-6">
-                <div class="flex items-center gap-4">
-                    <h3 class="text-xs font-bold tracking-widest whitespace-nowrap text-gray-400 uppercase">{{ groupName }}</h3>
-                    <div class="h-px w-full bg-gray-100"></div>
-                </div>
-
-                <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-                    <div
-                        v-for="permission in items"
-                        :key="permission.name"
-                        class="group relative flex flex-col rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:border-primary/50 hover:shadow-md"
-                    >
-                        <!-- Header -->
-                        <div class="mb-6 flex items-start justify-between">
-                            <div class="space-y-1">
-                                <span class="block text-xs font-semibold tracking-wider text-primary uppercase">Permission Key</span>
-                                <h3 class="font-mono text-base font-semibold text-gray-900">{{ permission.name }}</h3>
-                            </div>
-                            <div
-                                :class="[
-                                    'rounded-full border px-2.5 py-1 text-xs font-semibold uppercase transition-all',
-                                    getImpactColor(permission.impact),
-                                ]"
-                            >
-                                {{ permission.impact.split(':')[0] }}
-                            </div>
-                        </div>
-
-                        <!-- Description -->
-                        <div class="flex-1 space-y-4">
-                            <p class="text-sm text-gray-600">
-                                {{ permission.description }}
-                            </p>
-
-                            <div class="rounded-lg border border-gray-100 bg-gray-50 p-4">
-                                <span class="mb-2 block text-xs font-semibold tracking-wider text-gray-400 uppercase">Scope</span>
-                                <div class="flex items-center gap-2">
-                                    <div class="h-1.5 w-1.5 rounded-full bg-primary/40"></div>
-                                    <span class="text-xs font-bold text-gray-700 uppercase">{{ permission.usage }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Global Security Statement -->
-            <div class="relative overflow-hidden rounded-xl bg-gray-900 p-8 text-white shadow-lg">
-                <div class="relative z-10 max-w-3xl">
-                    <h3 class="mb-4 text-xl font-bold tracking-tight">Security & Audit Integrity</h3>
-                    <p class="text-sm leading-relaxed font-medium text-gray-400">
-                        The Chrisland CBT Software employs a rigorous multi-guard authentication system. Permissions are immutable once assigned to a
-                        role unless authorized by a Super Admin. Technical Note: Permissions are isolated across Admin, Staff, and Student guards to
-                        prevent cross-portal privilege escalation.
-                    </p>
-                </div>
-                <svg class="absolute right-0 bottom-0 -mr-12 -mb-12 h-48 w-48 text-white/5" fill="currentColor" viewBox="0 0 24 24">
-                    <path
-                        d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"
-                    />
+        <div class="mx-auto max-w-7xl space-y-6 pb-12 sm:space-y-8">
+            <nav class="flex items-center gap-2 text-xs font-medium text-slate-500">
+                <Link href="/admin/dashboard" class="transition-colors hover:text-primary">Dashboard</Link>
+                <svg class="size-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                 </svg>
+                <Link href="/admin/rbac/permissions" class="transition-colors hover:text-primary">Permissions</Link>
+                <svg class="size-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+                <span class="text-slate-900">RBAC Overview</span>
+            </nav>
+
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                    <p class="text-xs font-semibold tracking-widest text-slate-500 uppercase">Access Governance</p>
+                    <h1 class="mt-1 text-2xl font-bold text-slate-900">RBAC Overview</h1>
+                    <p class="mt-1 text-sm text-slate-600">
+                        Operational summary of permission domains, risk intensity, and usage scope across the platform.
+                    </p>
+                </div>
+                <Link
+                    href="/admin/rbac/permissions"
+                    class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+                >
+                    Permission Registry
+                </Link>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <p class="text-xs font-semibold tracking-wider text-slate-500 uppercase">Permission Domains</p>
+                    <p class="mt-2 text-3xl font-bold text-slate-900">{{ groupedEntries.length }}</p>
+                    <p class="mt-1 text-xs text-slate-500">Grouped control areas</p>
+                </div>
+                <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <p class="text-xs font-semibold tracking-wider text-slate-500 uppercase">Total Keys</p>
+                    <p class="mt-2 text-3xl font-bold text-slate-900">{{ totalPermissions }}</p>
+                    <p class="mt-1 text-xs text-slate-500">All permission definitions</p>
+                </div>
+                <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <p class="text-xs font-semibold tracking-wider text-slate-500 uppercase">Critical Keys</p>
+                    <p class="mt-2 text-3xl font-bold text-rose-700">{{ criticalCount }}</p>
+                    <p class="mt-1 text-xs text-slate-500">Highest impact controls</p>
+                </div>
+                <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <p class="text-xs font-semibold tracking-wider text-slate-500 uppercase">High Keys</p>
+                    <p class="mt-2 text-3xl font-bold text-amber-700">{{ highCount }}</p>
+                    <p class="mt-1 text-xs text-slate-500">Elevated impact controls</p>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <section
+                    v-for="group in groupedEntries"
+                    :key="group.key"
+                    class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
+                >
+                    <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+                        <div>
+                            <h2 class="text-sm font-bold text-slate-900">{{ group.label }}</h2>
+                            <p class="mt-0.5 text-xs text-slate-500">{{ group.items.length }} permission keys</p>
+                        </div>
+                        <span class="rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-semibold text-slate-600">Domain</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-4 p-5 md:grid-cols-2 xl:grid-cols-3">
+                        <article
+                            v-for="permission in group.items"
+                            :key="permission.name"
+                            class="rounded-lg border border-slate-200 bg-slate-50/40 p-4"
+                        >
+                            <div class="mb-3 flex items-start justify-between gap-3">
+                                <p class="font-mono text-xs font-semibold text-slate-900">{{ permission.name }}</p>
+                                <span :class="getImpactColor(permission.impact)" class="rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase">
+                                    {{ permission.impact.split(':')[0] }}
+                                </span>
+                            </div>
+
+                            <p class="text-xs leading-relaxed text-slate-600">{{ permission.description }}</p>
+
+                            <div class="mt-3 rounded-md border border-slate-200 bg-white px-2.5 py-2">
+                                <p class="text-[10px] font-semibold tracking-wider text-slate-500 uppercase">Usage Scope</p>
+                                <p class="mt-1 text-xs font-semibold text-slate-800">{{ permission.usage }}</p>
+                            </div>
+                        </article>
+                    </div>
+                </section>
+            </div>
+
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 md:p-5">
+                <h3 class="text-sm font-bold text-slate-900">Compliance Note</h3>
+                <p class="mt-2 text-xs leading-relaxed text-slate-600">
+                    Permission keys are managed in source code and deployed through controlled releases. Role assignment should be reviewed periodically
+                    to maintain least-privilege access across Admin, Staff, and Student contexts.
+                </p>
             </div>
         </div>
     </AdminLayout>

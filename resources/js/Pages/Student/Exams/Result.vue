@@ -46,6 +46,24 @@ const getGrade = computed(() => {
 const handlePrint = () => {
     window.print();
 };
+
+const formatIssueDate = (dateString: string) => {
+    const date = new Date(dateString);
+
+    if (Number.isNaN(date.getTime())) {
+        return 'Invalid date';
+    }
+
+    try {
+        return date.toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: 'long',
+            year: 'numeric',
+        });
+    } catch {
+        return date.toISOString().slice(0, 10);
+    }
+};
 </script>
 
 <template>
@@ -142,7 +160,7 @@ const handlePrint = () => {
                         </div>
                         <div>
                             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Date of Issue</p>
-                            <p class="text-xs font-bold text-slate-900 uppercase">{{ new Date(attempt.submitted_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) }}</p>
+                            <p class="text-xs font-bold text-slate-900 uppercase">{{ formatIssueDate(attempt.submitted_at) }}</p>
                         </div>
                     </div>
                 </div>

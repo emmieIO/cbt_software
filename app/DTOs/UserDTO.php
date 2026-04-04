@@ -14,6 +14,7 @@ class UserDTO
         public ?string $school_class_id = null,
         public ?string $branch = null,
         public ?string $password = null,
+        public ?string $status = null,
     ) {}
 
     public static function fromRequest(Request $request): self
@@ -26,6 +27,7 @@ class UserDTO
             school_class_id: $request->school_class_id,
             branch: $request->branch,
             password: $request->password,
+            status: $request->status,
         );
     }
 
@@ -39,6 +41,7 @@ class UserDTO
             'school_class_id' => $this->school_class_id,
             'branch' => $this->branch,
             'password' => $this->password,
+            'status' => $this->status,
         ]);
     }
 }

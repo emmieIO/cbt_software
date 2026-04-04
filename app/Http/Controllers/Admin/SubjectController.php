@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\DTOs\SubjectDTO;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\SubjectRequest;
 use App\Models\Subject;
+use App\Services\SubjectService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -11,81 +14,45 @@ use Inertia\Response;
 
 class SubjectController extends Controller
 {
-    public function __construct(protected \App\Services\SubjectService $subjectService) {}
+    public function __construct(protected SubjectService $subjectService) {}
 
     /**
      * Display a listing of the subjects.
      */
     public function index(Request $request): Response
     {
-        $query = Subject::withCount('topics');
-
-        // Apply level filter if provided
-        if ($request->filled('level')) {
-            $query->where('level', $request->level);
-        }
-
-        if ($request->filled('search')) {
-            $query->where('name', 'like', '%'.$request->search.'%');
-        }
+        $filters = $request->only(['level', 'search']);
+        $data = $this->subjectService->getIndexData($filters);
 
         return Inertia::render('Admin/Subjects/Index', [
-            'subjects' => $query->latest()->paginate(10)->withQueryString(),
-            'counts' => [
-                'nursery' => Subject::query()->where('level', 'nursery')->count(),
-                'primary' => Subject::query()->where('level', 'primary')->count(),
-                'secondary' => Subject::query()->where('level', 'secondary')->count(),
-            ],
-            'filters' => $request->only(['level', 'search']),
+            'subjects' => $data['subjects'],
+            'counts' => $data['counts'],
+            'filters' => $filters,
         ]);
     }
 
     /**
      * Store a newly created subject in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(SubjectRequest $request): RedirectResponse
     {
-
-        $request->validate([
-            'name' => [
-                'required', 'string', 'max:255',
-                \Illuminate\Validation\Rule::unique('subjects')->where(fn ($q) => $q->where('level', $request->level)),
-            ],
-            'description' => ['nullable', 'string'],
-            'level' => ['required', 'string', 'in:nursery,primary,secondary'],
-        ]);
-
-        $dto = \App\DTOs\SubjectDTO::fromRequest($request);
+        $dto = SubjectDTO::fromRequest($request);
 
         $this->subjectService->createSubject($dto);
 
         return back()->with('success', 'Subject created successfully.');
-
     }
 
     /**
      * Update the specified subject in storage.
      */
-    public function update(Request $request, Subject $subject): RedirectResponse
+    public function update(SubjectRequest $request, Subject $subject): RedirectResponse
     {
-
-        $request->validate([
-            'name' => [
-                'required', 'string', 'max:255',
-                \Illuminate\Validation\Rule::unique('subjects')
-                    ->where(fn ($q) => $q->where('level', $request->level))
-                    ->ignore($subject->id),
-            ],
-            'description' => ['nullable', 'string'],
-            'level' => ['required', 'string', 'in:nursery,primary,secondary'],
-        ]);
-
-        $dto = \App\DTOs\SubjectDTO::fromRequest($request);
+        $dto = SubjectDTO::fromRequest($request);
 
         $this->subjectService->updateSubject($subject, $dto);
 
         return back()->with('success', 'Subject updated successfully.');
-
     }
 
     /**
@@ -93,16 +60,12 @@ class SubjectController extends Controller
      */
     public function destroy(Subject $subject): RedirectResponse
     {
-
         $deleted = $this->subjectService->deleteSubject($subject);
 
         if ($deleted === false) {
-
             return back()->with('error', 'Cannot delete subject because it has associated topics.');
-
         }
 
         return back()->with('success', 'Subject deleted successfully.');
-
     }
 }

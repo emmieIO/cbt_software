@@ -8,6 +8,7 @@ use App\Models\SchoolClass;
 use App\Models\Subject;
 use App\Models\Topic;
 use App\Models\User;
+use BackedEnum;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -211,7 +212,7 @@ class DatabaseSeeder extends Seeder
                 }
                 $l = $topicData['class']->level;
 
-                return $l instanceof \BackedEnum ? $l->value : (string) $l;
+                return $l instanceof BackedEnum ? $l->value : (string) $l;
             });
 
             foreach ($topicsByLevel as $levelStr => $levelTopics) {

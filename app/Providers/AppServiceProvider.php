@@ -2,6 +2,16 @@
 
 namespace App\Providers;
 
+use App\Repositories\Contracts\AcademicRepositoryInterface;
+use App\Repositories\Contracts\AttemptRepositoryInterface;
+use App\Repositories\Contracts\ExamRepositoryInterface;
+use App\Repositories\Contracts\QuestionRepositoryInterface;
+use App\Repositories\Contracts\UserRepositoryInterface;
+use App\Repositories\Eloquent\EloquentAcademicRepository;
+use App\Repositories\Eloquent\EloquentAttemptRepository;
+use App\Repositories\Eloquent\EloquentExamRepository;
+use App\Repositories\Eloquent\EloquentQuestionRepository;
+use App\Repositories\Eloquent\EloquentUserRepository;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -17,28 +27,28 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(
-            \App\Repositories\Contracts\UserRepositoryInterface::class,
-            \App\Repositories\Eloquent\EloquentUserRepository::class
+            UserRepositoryInterface::class,
+            EloquentUserRepository::class
         );
 
         $this->app->bind(
-            \App\Repositories\Contracts\ExamRepositoryInterface::class,
-            \App\Repositories\Eloquent\EloquentExamRepository::class
+            ExamRepositoryInterface::class,
+            EloquentExamRepository::class
         );
 
         $this->app->bind(
-            \App\Repositories\Contracts\QuestionRepositoryInterface::class,
-            \App\Repositories\Eloquent\EloquentQuestionRepository::class
+            QuestionRepositoryInterface::class,
+            EloquentQuestionRepository::class
         );
 
         $this->app->bind(
-            \App\Repositories\Contracts\AcademicRepositoryInterface::class,
-            \App\Repositories\Eloquent\EloquentAcademicRepository::class
+            AcademicRepositoryInterface::class,
+            EloquentAcademicRepository::class
         );
 
         $this->app->bind(
-            \App\Repositories\Contracts\AttemptRepositoryInterface::class,
-            \App\Repositories\Eloquent\EloquentAttemptRepository::class
+            AttemptRepositoryInterface::class,
+            EloquentAttemptRepository::class
         );
     }
 

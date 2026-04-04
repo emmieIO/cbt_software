@@ -20,7 +20,7 @@ class QuestionDTO
 
     public QuestionDifficulty $difficulty;
 
-    /** @var \App\DTOs\OptionDTO[] */
+    /** @var OptionDTO[] */
     public array $options;
 
     public ?string $image_path;

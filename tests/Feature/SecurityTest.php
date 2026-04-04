@@ -3,8 +3,12 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Services\AuthService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Validation\ValidationException;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
 
 class SecurityTest extends TestCase
@@ -16,7 +20,7 @@ class SecurityTest extends TestCase
         parent::setUp();
 
         // Reset cached roles and permissions
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         // Seed basic roles and permissions
         $adminRole = Role::findOrCreate('super_admin', 'web');
@@ -29,9 +33,9 @@ class SecurityTest extends TestCase
 
         Role::findOrCreate('examiner', 'web');
 
-        \Spatie\Permission\Models\Permission::findOrCreate('access:admin-portal', 'web');
-        \Spatie\Permission\Models\Permission::findOrCreate('access:student-portal', 'web');
-        \Spatie\Permission\Models\Permission::findOrCreate('sys:manage_settings', 'web');
+        Permission::findOrCreate('access:admin-portal', 'web');
+        Permission::findOrCreate('access:student-portal', 'web');
+        Permission::findOrCreate('sys:manage_settings', 'web');
 
         $adminRole->givePermissionTo('access:admin-portal');
         $adminRole->givePermissionTo('sys:manage_settings');
@@ -69,7 +73,7 @@ class SecurityTest extends TestCase
         $this->withSession([]);
         request()->setLaravelSession(session()->driver());
 
-        $authService = app(\App\Services\AuthService::class);
+        $authService = app(AuthService::class);
 
         // 1. Existing user, wrong password
         $user = User::factory()->create(['password' => bcrypt('correct-password')]);
@@ -77,7 +81,7 @@ class SecurityTest extends TestCase
         $errorMsg1 = '';
         try {
             $authService->login(['email' => $user->email, 'password' => 'wrong-password'], false, 'access:admin-portal');
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             $errorMsg1 = $e->errors()['login_id'][0];
         }
 
@@ -85,12 +89,19 @@ class SecurityTest extends TestCase
         $errorMsg2 = '';
         try {
             $authService->login(['email' => $user->email, 'password' => 'correct-password'], false, 'access:admin-portal');
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             $errorMsg2 = $e->errors()['login_id'][0];
         }
 
         // Both messages MUST be identical
         $this->assertEquals($errorMsg1, $errorMsg2);
         $this->assertEquals(trans('auth.failed'), $errorMsg1);
+    }
+
+    public function test_debug_exception_route_is_not_publicly_accessible(): void
+    {
+        $response = $this->get('/debug-exception');
+
+        $response->assertNotFound();
     }
 }

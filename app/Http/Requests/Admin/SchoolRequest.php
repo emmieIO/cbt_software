@@ -2,6 +2,9 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Models\School;
+use Closure;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
 
@@ -18,12 +21,12 @@ class SchoolRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
         $school = $this->route('school');
-        $schoolId = $school instanceof \App\Models\School ? $school->id : $school;
+        $schoolId = $school instanceof School ? $school->id : $school;
 
         return [
             'name' => [
@@ -31,9 +34,9 @@ class SchoolRequest extends FormRequest
                 'string',
                 'max:255',
                 'unique:schools,name,'.$schoolId,
-                function ($attribute, $value, $fail) use ($schoolId) {
+                function (string $attribute, string $value, Closure $fail) use ($schoolId) {
                     $slug = Str::slug($value);
-                    $exists = \App\Models\School::where('slug', $slug)
+                    $exists = School::where('slug', $slug)
                         ->when($schoolId, fn ($query) => $query->where('id', '!=', $schoolId))
                         ->exists();
 

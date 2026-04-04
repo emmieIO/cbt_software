@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\Staff\ExamController;
 use App\Http\Controllers\Staff\StaffAuthController;
 use App\Http\Controllers\Staff\StaffDashboardController;
 use App\Http\Controllers\Staff\StaffQuestionController;
+use App\Http\Controllers\Staff\StudentController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['guest'])->group(function () {
@@ -47,42 +49,42 @@ Route::middleware(['auth', 'can:access:staff-portal'])->group(function () {
 
     // 02. Student Visibility
     Route::prefix('students')->name('students.')->group(function () {
-        Route::get('/', [\App\Http\Controllers\Staff\StudentController::class, 'index'])->name('index')->middleware('permission:student:view');
+        Route::get('/', [StudentController::class, 'index'])->name('index')->middleware('permission:student:view');
     });
 
     // 03. Examination Operations
     Route::prefix('exams')->name('exams.')->group(function () {
-        Route::get('/', [\App\Http\Controllers\Staff\ExamController::class, 'index'])->name('index')->middleware('permission:exam:view');
+        Route::get('/', [ExamController::class, 'index'])->name('index')->middleware('permission:exam:view');
 
         // Results & Prints (Moved up to avoid conflict with {exam})
         Route::middleware('permission:results:view')->group(function () {
-            Route::get('/results', [\App\Http\Controllers\Staff\ExamController::class, 'results'])->name('results');
-            Route::get('/{exam}/results', [\App\Http\Controllers\Staff\ExamController::class, 'showResults'])->name('results.show');
-            Route::get('/{exam}/results-print', [\App\Http\Controllers\Staff\ExamController::class, 'showResultsPrint'])->name('results.print');
-            Route::get('/{exam}/results/{student}', [\App\Http\Controllers\Staff\ExamController::class, 'showStudentResult'])->name('results.student');
-            Route::get('/{exam}/results/{student}/print', [\App\Http\Controllers\Staff\ExamController::class, 'showStudentResultPrint'])->name('results.student.print');
+            Route::get('/results', [ExamController::class, 'results'])->name('results');
+            Route::get('/{exam}/results', [ExamController::class, 'showResults'])->name('results.show');
+            Route::get('/{exam}/results-print', [ExamController::class, 'showResultsPrint'])->name('results.print');
+            Route::get('/{exam}/results/{student}', [ExamController::class, 'showStudentResult'])->name('results.student');
+            Route::get('/{exam}/results/{student}/print', [ExamController::class, 'showStudentResultPrint'])->name('results.student.print');
         });
 
         Route::middleware('permission:exam:create')->group(function () {
-            Route::get('/create', [\App\Http\Controllers\Staff\ExamController::class, 'create'])->name('create');
-            Route::post('/', [\App\Http\Controllers\Staff\ExamController::class, 'store'])->name('store');
+            Route::get('/create', [ExamController::class, 'create'])->name('create');
+            Route::post('/', [ExamController::class, 'store'])->name('store');
         });
 
-        Route::get('/{exam}', [\App\Http\Controllers\Staff\ExamController::class, 'show'])->name('show')->middleware('permission:exam:view');
+        Route::get('/{exam}', [ExamController::class, 'show'])->name('show')->middleware('permission:exam:view');
 
         Route::middleware('permission:exam:edit')->group(function () {
-            Route::get('/{exam}/edit', [\App\Http\Controllers\Staff\ExamController::class, 'edit'])->name('edit');
-            Route::put('/{exam}', [\App\Http\Controllers\Staff\ExamController::class, 'update'])->name('update');
-            Route::get('/{exam}/questions', [\App\Http\Controllers\Staff\ExamController::class, 'manageQuestions'])->name('questions');
-            Route::post('/{exam}/questions', [\App\Http\Controllers\Staff\ExamController::class, 'updateQuestions'])->name('questions.update');
-            Route::post('/{exam}/ai-select', [\App\Http\Controllers\Staff\ExamController::class, 'aiSelectQuestions'])->name('questions.ai-select');
+            Route::get('/{exam}/edit', [ExamController::class, 'edit'])->name('edit');
+            Route::put('/{exam}', [ExamController::class, 'update'])->name('update');
+            Route::get('/{exam}/questions', [ExamController::class, 'manageQuestions'])->name('questions');
+            Route::post('/{exam}/questions', [ExamController::class, 'updateQuestions'])->name('questions.update');
+            Route::post('/{exam}/ai-select', [ExamController::class, 'aiSelectQuestions'])->name('questions.ai-select');
         });
 
-        Route::delete('/{exam}', [\App\Http\Controllers\Staff\ExamController::class, 'destroy'])->name('destroy')->middleware('permission:exam:delete');
+        Route::delete('/{exam}', [ExamController::class, 'destroy'])->name('destroy')->middleware('permission:exam:delete');
 
         // Physical Paper Generation
-        Route::get('/{exam}/print', [\App\Http\Controllers\Staff\ExamController::class, 'showHardCopy'])->name('print')->middleware('permission:exam:view');
-        Route::get('/{exam}/answer-sheet', [\App\Http\Controllers\Staff\ExamController::class, 'showAnswerSheet'])->name('answer-sheet')->middleware('permission:exam:view');
+        Route::get('/{exam}/print', [ExamController::class, 'showHardCopy'])->name('print')->middleware('permission:exam:view');
+        Route::get('/{exam}/answer-sheet', [ExamController::class, 'showAnswerSheet'])->name('answer-sheet')->middleware('permission:exam:view');
     });
 
     Route::post('/logout', [StaffAuthController::class, 'logout'])->name('logout');

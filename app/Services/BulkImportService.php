@@ -9,6 +9,7 @@ use App\Enums\QuestionType;
 use App\Models\SchoolClass;
 use App\Models\Subject;
 use App\Models\Topic;
+use Exception;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -62,13 +63,13 @@ class BulkImportService
                     // Resolve Subject
                     $subject = Subject::where('name', trim((string) $subjectName))->first();
                     if (! $subject) {
-                        throw new \Exception("Subject '{$subjectName}' not found.");
+                        throw new Exception("Subject '{$subjectName}' not found.");
                     }
 
                     // Resolve Class
                     $class = SchoolClass::where('name', trim((string) $className))->first();
                     if (! $class) {
-                        throw new \Exception("Class '{$className}' not found.");
+                        throw new Exception("Class '{$className}' not found.");
                     }
 
                     // Resolve Topic (filtered by subject and class)
@@ -78,7 +79,7 @@ class BulkImportService
                         ->first();
 
                     if (! $topic) {
-                        throw new \Exception("Topic '{$topicName}' for subject '{$subjectName}' and class '{$className}' not found.");
+                        throw new Exception("Topic '{$topicName}' for subject '{$subjectName}' and class '{$className}' not found.");
                     }
 
                     $correctLetter = strtoupper(trim((string) $correctLetter));
@@ -110,7 +111,7 @@ class BulkImportService
                 }
             }
             DB::commit();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             throw ValidationException::withMessages([
                 'file' => ["Error at row $rowNumber: ".$e->getMessage()],

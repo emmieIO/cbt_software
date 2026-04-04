@@ -2,10 +2,7 @@
 
 namespace App\Http\Controllers\Staff;
 
-use App\DTOs\OptionDTO;
 use App\DTOs\QuestionDTO;
-use App\Enums\QuestionDifficulty;
-use App\Enums\QuestionType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Question\BatchStoreQuestionRequest;
 use App\Http\Requests\Question\BulkDestroyQuestionRequest;
@@ -13,15 +10,17 @@ use App\Http\Requests\Question\GenerateQuestionsRequest;
 use App\Http\Requests\Question\GetQuestionsRequest;
 use App\Http\Requests\Question\StoreQuestionRequest;
 use App\Http\Requests\Question\UpdateQuestionRequest;
+use App\Jobs\GenerateQuestionsJob;
 use App\Models\Question;
 use App\Services\BulkExportService;
 use App\Services\BulkImportService;
+use App\Services\Question\QuestionDtoFactory;
+use App\Services\Question\QuestionMediaService;
+use App\Services\Question\QuestionPayloadService;
 use App\Services\QuestionService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -33,53 +32,40 @@ class StaffQuestionController extends Controller
     public function __construct(
         protected QuestionService $questionService,
         protected BulkImportService $bulkImportService,
-        protected BulkExportService $bulkExportService
+        protected BulkExportService $bulkExportService,
+        protected QuestionMediaService $questionMediaService,
+        protected QuestionPayloadService $questionPayloadService,
+        protected QuestionDtoFactory $questionDtoFactory
     ) {}
 
     /**
-     * Display the question bank repository.
+     * Render question bank listing with authorized filters and pagination.
      */
     public function index(GetQuestionsRequest $request): Response
     {
-        $user = $request->user();
-        $context = $this->questionService->getAuthorizedContext($user);
+        $filters = $request->validated();
+        $payload = $this->questionPayloadService->getIndexPayload($request->user(), $filters);
 
         return Inertia::render('QuestionBank/Index', [
-            'questions' => $this->questionService->getFilteredQuestions($request->validated(), $user),
-            'subjects' => $context['subjects'],
-            'classes' => $context['classes'],
-            'difficulties' => collect(QuestionDifficulty::cases())->map(fn ($d) => ['value' => $d->value, 'label' => Str::title($d->value)]),
-            'levels' => $context['classes']->pluck('level')->unique()->values()->map(function ($l) {
-                $val = $l instanceof \BackedEnum ? $l->value : $l;
-
-                return ['value' => $val, 'label' => Str::title($val)];
-            }),
+            ...$payload,
             'filters' => $request->only(['search', 'subject_id', 'school_class_id', 'difficulty', 'level']),
         ]);
     }
 
     /**
-     * Show the AI question generation lab.
+     * Render the AI-assisted question generation form.
      */
     public function generate(Request $request): Response
     {
-        $user = $request->user();
-        $context = $this->questionService->getAuthorizedContext($user, true);
-
-        return Inertia::render('QuestionBank/Generate', [
-            'subjects' => $context['subjects'],
-            'classes' => $context['classes'],
-            'types' => collect(QuestionType::cases())->map(fn ($t) => ['value' => $t->value, 'label' => str_replace('_', ' ', Str::title($t->value))]),
-            'difficulties' => collect(QuestionDifficulty::cases())->map(fn ($d) => ['value' => $d->value, 'label' => Str::title($d->value)]),
-        ]);
+        return Inertia::render('QuestionBank/Generate', $this->questionPayloadService->getFormPayload($request->user(), true));
     }
 
     /**
-     * Process the AI question generation.
+     * Queue asynchronous AI question generation for the current user.
      */
     public function processGeneration(GenerateQuestionsRequest $request): RedirectResponse
     {
-        \App\Jobs\GenerateQuestionsJob::dispatch(
+        GenerateQuestionsJob::dispatch(
             $request->user()->id,
             $request->validated('subject_id'),
             $request->validated('topic_id'),
@@ -92,82 +78,46 @@ class StaffQuestionController extends Controller
     }
 
     /**
-     * Show the spreadsheet-style batch creation UI.
+     * Render spreadsheet-style interface for batch question creation.
      */
     public function batchCreate(Request $request): Response
     {
-        $user = $request->user();
-        $context = $this->questionService->getAuthorizedContext($user, true);
-
-        return Inertia::render('QuestionBank/BatchCreate', [
-            'subjects' => $context['subjects'],
-            'classes' => $context['classes'],
-            'types' => collect(QuestionType::cases())->map(fn ($t) => ['value' => $t->value, 'label' => str_replace('_', ' ', Str::title($t->value))]),
-            'difficulties' => collect(QuestionDifficulty::cases())->map(fn ($d) => ['value' => $d->value, 'label' => Str::title($d->value)]),
-        ]);
+        return Inertia::render('QuestionBank/BatchCreate', $this->questionPayloadService->getFormPayload($request->user(), true));
     }
 
     /**
-     * Store multiple questions from the batch UI.
+     * Persist batch-created questions and attach uploaded row images.
      */
     public function batchStore(BatchStoreQuestionRequest $request): RedirectResponse
     {
-        $dtos = [];
+        $validatedQuestions = $request->validated('questions');
+        $imagePaths = [];
         $userId = $request->user()->id;
 
-        foreach ($request->validated('questions') as $index => $qData) {
-            $imagePath = null;
-            if ($request->hasFile("questions.$index.image")) {
-                $imagePath = $request->file("questions.$index.image")->store('questions', 'public');
-            }
-
-            $options = array_map(
-                fn (array $opt) => new OptionDTO($opt['content'], $opt['is_correct']),
-                $qData['options']
-            );
-
-            $dtos[] = new QuestionDTO(
-                topic_id: $qData['topic_id'],
-                school_class_id: $qData['school_class_id'],
-                content: $qData['content'],
-                explanation: $qData['explanation'] ?? null,
-                type: $qData['type'],
-                difficulty: $qData['difficulty'],
-                options: $options,
-                image_path: $imagePath
-            );
+        foreach (array_keys($validatedQuestions) as $index) {
+            $imagePaths[$index] = $this->questionMediaService->store($request->file("questions.$index.image"));
         }
 
+        $dtos = $this->questionDtoFactory->makeBatch($validatedQuestions, $imagePaths);
         $this->questionService->createBatchQuestions($dtos, $userId);
 
         return redirect()->route('staff.questions.index')->with('success', count($dtos).' questions added successfully to the repository.');
     }
 
     /**
-     * Show the form for creating a new question.
+     * Render single-question creation form with contextual dropdown data.
      */
     public function create(Request $request): Response
     {
-        $user = $request->user();
-        $context = $this->questionService->getAuthorizedContext($user, true);
-
-        return Inertia::render('QuestionBank/Create', [
-            'subjects' => $context['subjects'],
-            'classes' => $context['classes'],
-            'types' => collect(QuestionType::cases())->map(fn ($t) => ['value' => $t->value, 'label' => str_replace('_', ' ', Str::title($t->value))]),
-            'difficulties' => collect(QuestionDifficulty::cases())->map(fn ($d) => ['value' => $d->value, 'label' => Str::title($d->value)]),
-        ]);
+        return Inertia::render('QuestionBank/Create', $this->questionPayloadService->getFormPayload($request->user(), true));
     }
 
     /**
-     * Store a new question.
+     * Persist one question, including optional media upload.
      */
     public function store(StoreQuestionRequest $request): RedirectResponse
     {
-        $imagePath = null;
-        if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('questions', 'public');
-        }
+        $imagePath = $this->questionMediaService->store($request->file('image'));
 
         $dto = QuestionDTO::fromRequest($request);
         $dto->image_path = $imagePath;
@@ -178,45 +128,27 @@ class StaffQuestionController extends Controller
     }
 
     /**
-     * Show the form for editing the specified question.
+     * Render edit form for an authorized question.
      */
     public function edit(Request $request, Question $question): Response
     {
         $this->authorize('update', $question);
 
-        $user = $request->user();
-        $question->load(['topic.subject', 'options']);
-        $context = $this->questionService->getAuthorizedContext($user, true);
-
-        return Inertia::render('QuestionBank/Edit', [
-            'question' => $question,
-            'subjects' => $context['subjects'],
-            'classes' => $context['classes'],
-            'types' => collect(QuestionType::cases())->map(fn ($t) => ['value' => $t->value, 'label' => str_replace('_', ' ', Str::title($t->value))]),
-            'difficulties' => collect(QuestionDifficulty::cases())->map(fn ($d) => ['value' => $d->value, 'label' => Str::title($d->value)]),
-        ]);
+        return Inertia::render('QuestionBank/Edit', $this->questionPayloadService->getEditPayload($request->user(), $question));
     }
 
     /**
-     * Update the specified question in storage.
+     * Update question content and reconcile media replacement/removal.
      */
     public function update(UpdateQuestionRequest $request, Question $question): RedirectResponse
     {
         $this->authorize('update', $question);
 
-        $imagePath = $question->image_path;
-        if ($request->hasFile('image')) {
-            // Delete old image if exists
-            if ($imagePath) {
-                Storage::disk('public')->delete($imagePath);
-            }
-            $imagePath = $request->file('image')->store('questions', 'public');
-        } elseif ($request->boolean('remove_image')) {
-            if ($imagePath) {
-                Storage::disk('public')->delete($imagePath);
-            }
-            $imagePath = null;
-        }
+        $imagePath = $this->questionMediaService->replace(
+            $request->file('image'),
+            $question->image_path,
+            $request->boolean('remove_image')
+        );
 
         $dto = QuestionDTO::fromRequest($request);
         $dto->image_path = $imagePath;
@@ -227,7 +159,7 @@ class StaffQuestionController extends Controller
     }
 
     /**
-     * Bulk import questions from CSV or Excel.
+     * Import questions from supported spreadsheet formats.
      */
     public function import(Request $request): RedirectResponse
     {
@@ -241,7 +173,7 @@ class StaffQuestionController extends Controller
     }
 
     /**
-     * Export the question bank.
+     * Stream a downloadable export of the question bank.
      */
     public function export(): StreamedResponse
     {
@@ -249,7 +181,7 @@ class StaffQuestionController extends Controller
     }
 
     /**
-     * Download import template.
+     * Stream template file used for bulk question import.
      */
     public function downloadTemplate(): StreamedResponse
     {
@@ -257,16 +189,13 @@ class StaffQuestionController extends Controller
     }
 
     /**
-     * Delete a question.
+     * Delete an authorized question and its associated media.
      */
     public function destroy(Request $request, Question $question): RedirectResponse
     {
         $this->authorize('delete', $question);
 
-        // Delete image if exists
-        if ($question->image_path) {
-            Storage::disk('public')->delete($question->image_path);
-        }
+        $this->questionMediaService->delete($question->image_path);
 
         $this->questionService->deleteQuestion($question);
 
@@ -274,7 +203,7 @@ class StaffQuestionController extends Controller
     }
 
     /**
-     * Bulk delete questions.
+     * Delete multiple authorized questions and clean up their media.
      */
     public function bulkDestroy(BulkDestroyQuestionRequest $request): RedirectResponse
     {
@@ -282,9 +211,7 @@ class StaffQuestionController extends Controller
 
         foreach ($questions as $question) {
             if ($request->user()->can('delete', $question)) {
-                if ($question->image_path) {
-                    Storage::disk('public')->delete($question->image_path);
-                }
+                $this->questionMediaService->delete($question->image_path);
                 $this->questionService->deleteQuestion($question);
             }
         }

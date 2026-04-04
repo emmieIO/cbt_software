@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use App\Enums\ClassLevel;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SchoolClass extends Model
@@ -23,7 +25,7 @@ class SchoolClass extends Model
     /**
      * Get the school this class belongs to.
      */
-    public function school(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function school(): BelongsTo
     {
         return $this->belongsTo(School::class);
     }
@@ -36,7 +38,7 @@ class SchoolClass extends Model
     protected function casts(): array
     {
         return [
-            'level' => \App\Enums\ClassLevel::class,
+            'level' => ClassLevel::class,
         ];
     }
 

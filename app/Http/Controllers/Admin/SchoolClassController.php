@@ -2,58 +2,41 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\DTOs\SchoolClassDTO;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\SchoolClassRequest;
 use App\Models\SchoolClass;
+use App\Services\SchoolClassService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
-use Illuminate\Validation\Rules\Enum;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class SchoolClassController extends Controller
 {
-    public function __construct(protected \App\Services\SchoolClassService $classService) {}
+    public function __construct(protected SchoolClassService $classService) {}
 
     /**
      * Display a listing of the school classes.
      */
     public function index(Request $request): Response
     {
-        $query = SchoolClass::query();
-
-        if ($request->filled('search')) {
-            $query->where('name', 'like', '%'.$request->search.'%');
-        }
-
-        if ($request->filled('level')) {
-            $query->where('level', $request->level);
-        }
+        $filters = $request->only(['search', 'level']);
+        $data = $this->classService->getIndexData($filters);
 
         return Inertia::render('Admin/Classes/Index', [
-            'classes' => $query->orderBy('level')->orderBy('name')->paginate(10)->withQueryString(),
-            'levels' => collect(\App\Enums\ClassLevel::cases())->map(fn ($l) => [
-                'value' => $l->value,
-                'label' => Str::title($l->value),
-            ]),
-            'filters' => $request->only(['search', 'level']),
+            'classes' => $data['classes'],
+            'levels' => $data['levels'],
+            'filters' => $filters,
         ]);
     }
 
     /**
      * Store a newly created school class in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(SchoolClassRequest $request): RedirectResponse
     {
-        $request->validate([
-            'name' => [
-                'required', 'string', 'max:255',
-                \Illuminate\Validation\Rule::unique('school_classes')->where(fn (\Illuminate\Database\Query\Builder $q) => $q->where('level', $request->level)),
-            ],
-            'level' => ['required', new Enum(\App\Enums\ClassLevel::class)],
-        ]);
-
-        $dto = \App\DTOs\SchoolClassDTO::fromRequest($request);
+        $dto = SchoolClassDTO::fromRequest($request);
         $this->classService->createClass($dto);
 
         return back()->with('success', 'Global academic class created successfully.');
@@ -62,19 +45,9 @@ class SchoolClassController extends Controller
     /**
      * Update the specified school class in storage.
      */
-    public function update(Request $request, SchoolClass $schoolClass): RedirectResponse
+    public function update(SchoolClassRequest $request, SchoolClass $schoolClass): RedirectResponse
     {
-        $request->validate([
-            'name' => [
-                'required', 'string', 'max:255',
-                \Illuminate\Validation\Rule::unique('school_classes')
-                    ->where(fn (\Illuminate\Database\Query\Builder $q) => $q->where('level', $request->level))
-                    ->ignore($schoolClass->id),
-            ],
-            'level' => ['required', new Enum(\App\Enums\ClassLevel::class)],
-        ]);
-
-        $dto = \App\DTOs\SchoolClassDTO::fromRequest($request);
+        $dto = SchoolClassDTO::fromRequest($request);
         $this->classService->updateClass($schoolClass, $dto);
 
         return back()->with('success', 'Academic class updated successfully.');

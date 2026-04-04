@@ -64,26 +64,18 @@ class QuestionPolicy
      */
     protected function isAssigned(User $user, Question $question): bool
     {
-        return $user->currentAssignments()
-            ->where(function ($query) use ($question) {
-                if (! $question->prospective_class_id) {
-                    // Regular Question: Teacher must be assigned to this regular class
-                    $query->whereNotNull('school_class_id')
-                        ->where('school_class_id', $question->school_class_id)
-                        ->where(function ($subQ) use ($question) {
-                            $subQ->where('subject_id', $question->topic->subject_id)
-                                ->orWhereNull('subject_id');
-                        });
-                } else {
-                    // Entrance Question: Teacher must be assigned to this entrance batch
-                    $query->whereNotNull('prospective_class_id')
-                        ->where('prospective_class_id', $question->prospective_class_id)
-                        ->where(function ($subQ) use ($question) {
-                            $subQ->where('subject_id', $question->topic->subject_id)
-                                ->orWhereNull('subject_id');
-                        });
-                }
-            })
-            ->exists();
+        // Legacy teacher assignment table has been retired; enforce branch-based ownership instead.
+        if (! $user->school_id) {
+            return $question->created_by === $user->id;
+        }
+
+        $question->loadMissing('schoolClass');
+        $classSchoolId = $question->schoolClass?->school_id;
+
+        if ($classSchoolId && $classSchoolId !== $user->school_id) {
+            return false;
+        }
+
+        return true;
     }
 }

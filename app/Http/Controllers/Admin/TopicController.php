@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\DTOs\TopicDTO;
 use App\Http\Controllers\Controller;
-use App\Models\School;
-use App\Models\SchoolClass;
-use App\Models\Subject;
+use App\Http\Requests\Admin\TopicRequest;
 use App\Models\Topic;
+use App\Services\TopicService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -14,102 +14,47 @@ use Inertia\Response;
 
 class TopicController extends Controller
 {
-    public function __construct(protected \App\Services\TopicService $topicService) {}
+    public function __construct(protected TopicService $topicService) {}
 
     /**
      * Display a listing of the topics.
      */
     public function index(Request $request): Response
     {
-        $user = $request->user();
-
-        $query = Topic::with(['subject', 'schoolClass'])->withCount('questions');
-
-        // Initial Context queries
-        $subjectsQuery = Subject::query();
-        $classesQuery = SchoolClass::query();
-
-        // Level-based Scoping logic for staff
-        if (! $user->can('sys:manage_settings')) {
-            $school = $user->school_id ? School::find($user->school_id) : null;
-            if ($school) {
-                $subjectsQuery->where('level', $school->type);
-                $classesQuery->where('level', $school->type);
-                $query->whereHas('subject', fn ($q) => $q->where('level', $school->type));
-            } else {
-                $query->whereRaw('1 = 0');
-            }
-        }
-
-        // Apply filters
-        if ($request->filled('level')) {
-            $query->whereHas('subject', fn ($q) => $q->where('level', $request->level));
-        }
-
-        if ($request->filled('subject_id')) {
-            $query->where('subject_id', $request->subject_id);
-        }
-
-        if ($request->filled('school_class_id')) {
-            $query->where('school_class_id', $request->school_class_id);
-        }
-
-        if ($request->filled('search')) {
-            $query->where('name', 'like', '%'.$request->search.'%');
-        }
+        $filters = $request->only(['subject_id', 'school_class_id', 'level', 'search']);
+        $indexData = $this->topicService->getIndexData($request->user(), $filters);
 
         return Inertia::render('Admin/Topics/Index', [
-            'topics' => $query->orderBy('name')->paginate(10)->withQueryString(),
-            'subjects' => $subjectsQuery->orderBy('name')->get(),
-            'classes' => $classesQuery->orderBy('name')->get(),
-            'levels' => collect(\App\Enums\ClassLevel::cases())->map(fn ($l) => [
-                'value' => $l->value,
-                'label' => \Illuminate\Support\Str::title($l->value),
-            ]),
-            'filters' => $request->only(['subject_id', 'school_class_id', 'level', 'search']),
+            'topics' => $indexData['topics'],
+            'subjects' => $indexData['subjects'],
+            'classes' => $indexData['classes'],
+            'levels' => $indexData['levels'],
+            'filters' => $filters,
         ]);
     }
 
     /**
      * Store a newly created topic in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(TopicRequest $request): RedirectResponse
     {
-
-        $request->validate([
-            'subject_id' => ['required', 'exists:subjects,id'],
-            'school_class_id' => ['required', 'exists:school_classes,id'],
-            'name' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-        ]);
-
-        $dto = \App\DTOs\TopicDTO::fromRequest($request);
+        $dto = TopicDTO::fromRequest($request);
 
         $this->topicService->createTopic($dto);
 
         return back()->with('success', 'Curriculum unit initialized successfully.');
-
     }
 
     /**
      * Update the specified topic in storage.
      */
-    public function update(Request $request, Topic $topic): RedirectResponse
+    public function update(TopicRequest $request, Topic $topic): RedirectResponse
     {
-
-        $request->validate([
-            'subject_id' => ['required', 'exists:subjects,id'],
-            'school_class_id' => ['required', 'exists:school_classes,id'],
-            'name' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-        ]);
-
-        $dto = \App\DTOs\TopicDTO::fromRequest($request);
+        $dto = TopicDTO::fromRequest($request);
 
         $this->topicService->updateTopic($topic, $dto);
 
         return back()->with('success', 'Curriculum unit modified successfully.');
-
     }
 
     /**
@@ -117,7 +62,6 @@ class TopicController extends Controller
      */
     public function destroy(Topic $topic): RedirectResponse
     {
-
         $deleted = $this->topicService->deleteTopic($topic);
 
         if ($deleted === false) {
@@ -125,6 +69,5 @@ class TopicController extends Controller
         }
 
         return back()->with('success', 'Knowledge unit purged successfully.');
-
     }
 }

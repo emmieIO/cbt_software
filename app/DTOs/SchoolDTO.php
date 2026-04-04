@@ -2,6 +2,8 @@
 
 namespace App\DTOs;
 
+use Illuminate\Http\Request;
+
 readonly class SchoolDTO
 {
     /**
@@ -19,7 +21,7 @@ readonly class SchoolDTO
     /**
      * Create a DTO from a request.
      */
-    public static function fromRequest(\Illuminate\Http\Request $request): self
+    public static function fromRequest(Request $request): self
     {
         return new self(
             name: $request->validated('name'),

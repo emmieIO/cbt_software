@@ -1,0 +1,175 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Call to an undefined method Illuminate\\Http\\Request\:\:validated\(\)\.$#'
+			identifier: method.notFound
+			count: 6
+			path: app/DTOs/SchoolDTO.php
+
+		-
+			message: '#^Access to an undefined property App\\DTOs\\UserDTO\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/StaffController.php
+
+		-
+			message: '#^Access to an undefined property App\\DTOs\\UserDTO\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/StudentController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\User\:\:\$currentAssignments\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/ProfileController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\User\:\:\$prospective_class_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Student/StudentController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$questions_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Student/StudentController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:questions\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/Student/StudentController.php
+
+		-
+			message: '#^Cannot call method label\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Models/AcademicSession.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Question\:\:\$prospective_class_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Policies/QuestionPolicy.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$subject_id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Policies/QuestionPolicy.php
+
+		-
+			message: '#^Call to an undefined method App\\Models\\User\:\:currentAssignments\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Policies/QuestionPolicy.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/AdminDashboardService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 4
+			path: app/Services/AdminDashboardService.php
+
+		-
+			message: '#^Cannot call method format\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Services/AdminDashboardService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$content\.$#'
+			identifier: property.notFound
+			count: 4
+			path: app/Services/BulkExportService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$is_correct\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/BulkExportService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Services/BulkExportService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$subject\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/BulkExportService.php
+
+		-
+			message: '#^Cannot access property \$value on string\.$#'
+			identifier: property.nonObject
+			count: 2
+			path: app/Services/BulkExportService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Services/Exam/AttemptLifecycleService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$options\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Exam/AttemptLifecycleService.php
+
+		-
+			message: '#^Variable \$order in empty\(\) always exists and is always falsy\.$#'
+			identifier: empty.variable
+			count: 1
+			path: app/Services/Exam/AttemptLifecycleService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$question_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Exam/QuestionSelectionService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$subject_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Exam/QuestionSelectionService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$topic_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Exam/QuestionSelectionService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Services/StaffDashboardService.php
+
+		-
+			message: '#^Cannot call method format\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: app/Services/StaffDashboardService.php
+
+		-
+			message: '#^Cannot call method isToday\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Services/StaffDashboardService.php
+
+		-
+			message: '#^Called ''pluck'' on Laravel collection, but could have been retrieved as a query\.$#'
+			identifier: larastan.noUnnecessaryCollectionCall
+			count: 2
+			path: app/Services/UserImportService.php

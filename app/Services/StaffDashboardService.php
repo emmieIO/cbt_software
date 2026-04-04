@@ -4,6 +4,9 @@ namespace App\Services;
 
 use App\DTOs\StaffDashboardDTO;
 use App\Enums\ExamStatus;
+use App\Models\Exam;
+use App\Models\Question;
+use App\Models\SchoolClass;
 use App\Models\User;
 use App\Repositories\Contracts\AcademicRepositoryInterface;
 use App\Repositories\Contracts\ExamRepositoryInterface;
@@ -44,12 +47,12 @@ class StaffDashboardService
     private function calculateStats(?string $schoolId): array
     {
         return [
-            'assignedClasses' => \App\Models\SchoolClass::where('school_id', $schoolId)->count(),
-            'pendingResults' => \App\Models\Exam::where('school_id', $schoolId)
+            'assignedClasses' => SchoolClass::where('school_id', $schoolId)->count(),
+            'pendingResults' => Exam::where('school_id', $schoolId)
                 ->where('status', ExamStatus::CLOSED)
                 ->whereHas('attempts')
                 ->count(),
-            'questionBankCount' => \App\Models\Question::whereHas('schoolClass', fn ($q) => $q->where('school_id', $schoolId))->count(),
+            'questionBankCount' => Question::whereHas('schoolClass', fn ($q) => $q->where('school_id', $schoolId))->count(),
         ];
     }
 
@@ -70,7 +73,7 @@ class StaffDashboardService
      */
     private function getUpcomingSchedule(?string $schoolId, ?string $sessionId): array
     {
-        return \App\Models\Exam::where('school_id', $schoolId)
+        return Exam::where('school_id', $schoolId)
             ->where('academic_session_id', $sessionId)
             ->where('start_time', '>=', now())
             ->orderBy('start_time', 'asc')

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ClassLevel;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -30,7 +31,7 @@ class School extends Model
     protected function casts(): array
     {
         return [
-            'type' => \App\Enums\ClassLevel::class,
+            'type' => ClassLevel::class,
             'contact_phone' => 'array',
             'is_active' => 'boolean',
         ];

@@ -23,6 +23,7 @@
     "require-dev": {
         "barryvdh/laravel-ide-helper": "^3.7",
         "fakerphp/faker": "^1.23",
+        "larastan/larastan": "^3.0",
         "laravel/boost": "^2.0",
         "laravel/pail": "^1.2.2",
         "laravel/pint": "^1.24",
@@ -64,6 +65,9 @@
         ],
         "lint": [
             "pint --parallel"
+        ],
+        "analyze": [
+            "phpstan analyse --memory-limit=1G --debug --no-progress"
         ],
         "test:lint": [
             "pint --parallel --test"

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, useForm, Link } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { store, update, destroy } from '@/actions/App/Http/Controllers/Admin/SchoolController';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
@@ -18,7 +18,7 @@ interface Branch {
     users_count: number;
 }
 
-defineProps<{
+const props = defineProps<{
     schools: PaginatedData<Branch>;
 }>();
 
@@ -111,38 +111,50 @@ const handleDelete = () => {
 const getTypeClasses = (type: string) => {
     switch (type) {
         case 'nursery':
-            return 'bg-pink-100 text-pink-800';
+            return 'bg-pink-100 text-pink-700 border-pink-200';
         case 'secondary':
-            return 'bg-indigo-100 text-indigo-800';
+            return 'bg-indigo-100 text-indigo-700 border-indigo-200';
         default:
-            return 'bg-orange-100 text-orange-800';
+            return 'bg-orange-100 text-orange-700 border-orange-200';
     }
 };
+
+const totalCampuses = computed(() => props.schools.total ?? 0);
+const activeCampuses = computed(() => props.schools.data.filter((campus) => campus.is_active).length);
+const inactiveCampuses = computed(() => props.schools.data.filter((campus) => !campus.is_active).length);
+const staffedCampuses = computed(() => props.schools.data.filter((campus) => campus.users_count > 0).length);
+
+const formatTypeLabel = (type: string) =>
+    type
+        .split('_')
+        .join(' ')
+        .replace(/\b\w/g, (char) => char.toUpperCase());
 </script>
 
 <template>
     <AdminLayout>
-        <Head title="Branch Management" />
+        <Head title="Campus Directory" />
 
-        <div class="space-y-6 sm:space-y-10">
+        <div class="mx-auto max-w-7xl space-y-6 pb-12 sm:space-y-8">
             <!-- Breadcrumbs -->
-            <nav class="flex items-center gap-2 text-xs font-medium text-gray-500">
+            <nav class="flex items-center gap-2 text-xs font-medium text-slate-500">
                 <Link href="/admin/dashboard" class="transition-colors hover:text-primary">Dashboard</Link>
-                <svg class="size-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg class="size-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                 </svg>
-                <span class="text-gray-800">Infrastructure</span>
+                <span class="text-slate-900">Infrastructure</span>
             </nav>
 
             <!-- Page Header -->
-            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                    <h1 class="text-2xl font-semibold text-gray-800">Campus Directory</h1>
-                    <p class="mt-1 text-sm text-gray-500">Institutional Branches • {{ schools.total }} Locations</p>
+                    <p class="text-xs font-semibold tracking-widest text-slate-500 uppercase">Infrastructure Registry</p>
+                    <h1 class="mt-1 text-2xl font-bold text-slate-900">Campus Directory</h1>
+                    <p class="mt-1 text-sm text-slate-600">Manage all branches, contact points, and operational status.</p>
                 </div>
                 <button
                     @click="openCreateModal"
-                    class="hover:bg-primary-hover inline-flex items-center gap-x-2 rounded-lg border border-transparent bg-primary px-4 py-2.5 text-sm font-semibold text-white focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-none disabled:pointer-events-none disabled:opacity-50"
+                    class="inline-flex items-center gap-x-2 rounded-lg border border-transparent bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary/90 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-none disabled:pointer-events-none disabled:opacity-50"
                 >
                     <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -151,67 +163,100 @@ const getTypeClasses = (type: string) => {
                 </button>
             </div>
 
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <p class="text-xs font-semibold tracking-wider text-slate-500 uppercase">Total Campuses</p>
+                    <p class="mt-2 text-3xl font-bold text-slate-900">{{ totalCampuses }}</p>
+                    <p class="mt-1 text-xs text-slate-500">Registered locations</p>
+                </div>
+                <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <p class="text-xs font-semibold tracking-wider text-slate-500 uppercase">Active</p>
+                    <p class="mt-2 text-3xl font-bold text-emerald-700">{{ activeCampuses }}</p>
+                    <p class="mt-1 text-xs text-slate-500">Ready for operations</p>
+                </div>
+                <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <p class="text-xs font-semibold tracking-wider text-slate-500 uppercase">Inactive</p>
+                    <p class="mt-2 text-3xl font-bold text-rose-700">{{ inactiveCampuses }}</p>
+                    <p class="mt-1 text-xs text-slate-500">Require attention</p>
+                </div>
+                <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <p class="text-xs font-semibold tracking-wider text-slate-500 uppercase">With Staff</p>
+                    <p class="mt-2 text-3xl font-bold text-slate-900">{{ staffedCampuses }}</p>
+                    <p class="mt-1 text-xs text-slate-500">Campuses with users</p>
+                </div>
+            </div>
+
             <!-- Branches Table Card -->
-            <div class="flex flex-col">
-                <div class="-m-1.5 overflow-x-auto">
-                    <div class="inline-block min-w-full p-1.5 align-middle">
-                        <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50">
+            <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+                    <h2 class="text-sm font-bold text-slate-900">Campus Register</h2>
+                    <span class="text-xs font-semibold text-slate-500">{{ schools.data.length }} visible</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead class="bg-slate-50">
                                     <tr>
-                                        <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">Branch Details</th>
-                                        <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">Category</th>
-                                        <th scope="col" class="hidden px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase md:table-cell">
+                                        <th scope="col" class="px-6 py-3 text-start text-xs font-semibold tracking-wider text-slate-500 uppercase">
+                                            Branch Details
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-start text-xs font-semibold tracking-wider text-slate-500 uppercase">Category</th>
+                                        <th scope="col" class="hidden px-6 py-3 text-start text-xs font-semibold tracking-wider text-slate-500 uppercase md:table-cell">
                                             Contact Info
                                         </th>
-                                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
-                                        <th scope="col" class="px-6 py-3 text-end text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                        <th scope="col" class="px-6 py-3 text-center text-xs font-semibold tracking-wider text-slate-500 uppercase">Users</th>
+                                        <th scope="col" class="px-6 py-3 text-center text-xs font-semibold tracking-wider text-slate-500 uppercase">Status</th>
+                                        <th scope="col" class="px-6 py-3 text-end text-xs font-semibold tracking-wider text-slate-500 uppercase">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-gray-200">
-                                    <tr v-for="school in schools.data" :key="school.id" class="transition-colors hover:bg-gray-50">
+                                <tbody class="divide-y divide-slate-100">
+                                    <tr v-for="school in schools.data" :key="school.id" class="transition-colors hover:bg-slate-50/80">
                                         <td class="px-6 py-4">
-                                            <span class="block text-sm font-semibold text-gray-800">{{ school.name }}</span>
-                                            <span class="mt-0.5 block max-w-xs truncate text-xs text-gray-500">{{
+                                            <span class="block text-sm font-semibold text-slate-900">{{ school.name }}</span>
+                                            <span class="mt-0.5 block max-w-xs truncate text-xs text-slate-500">{{
                                                 school.address || 'No address provided'
                                             }}</span>
                                         </td>
                                         <td class="px-6 py-4">
                                             <span
-                                                class="inline-flex items-center gap-x-1.5 rounded-full px-3 py-1 text-xs font-bold tracking-wider uppercase"
+                                                class="inline-flex items-center gap-x-1.5 rounded-full border px-3 py-1 text-xs font-bold tracking-wider uppercase"
                                                 :class="getTypeClasses(school.type)"
                                             >
-                                                {{ school.type }}
+                                                {{ formatTypeLabel(school.type) }}
                                             </span>
                                         </td>
                                         <td class="hidden px-6 py-4 md:table-cell">
-                                            <span class="block text-sm text-gray-800">{{ school.contact_email || 'N/A' }}</span>
+                                            <span class="block text-sm text-slate-800">{{ school.contact_email || 'N/A' }}</span>
                                             <div class="mt-1 flex flex-wrap gap-1">
                                                 <template v-if="school.contact_phone && school.contact_phone.length > 0">
                                                     <span
                                                         v-for="(phone, idx) in school.contact_phone"
                                                         :key="idx"
-                                                        class="inline-block rounded border border-gray-100 bg-gray-50 px-1.5 py-0.5 text-[10px] font-bold text-gray-500"
+                                                        class="inline-block rounded border border-slate-100 bg-slate-50 px-1.5 py-0.5 text-[10px] font-bold text-slate-500"
                                                     >
                                                         {{ phone }}
                                                     </span>
                                                 </template>
-                                                <span v-else class="text-xs text-gray-400">N/A</span>
+                                                <span v-else class="text-xs text-slate-400">N/A</span>
                                             </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-center">
+                                            <span class="inline-flex rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700">
+                                                {{ school.users_count }}
+                                            </span>
                                         </td>
                                         <td class="px-6 py-4 text-center">
                                             <span
                                                 v-if="school.is_active"
-                                                class="inline-flex items-center gap-x-1.5 rounded-md bg-teal-100 px-3 py-1.5 text-xs font-medium text-teal-800"
+                                                class="inline-flex items-center gap-x-1.5 rounded-md bg-emerald-100 px-3 py-1.5 text-xs font-medium text-emerald-700"
                                             >
-                                                <span class="inline-block size-1.5 rounded-full bg-teal-500"></span>
+                                                <span class="inline-block size-1.5 rounded-full bg-emerald-500"></span>
                                                 Active
                                             </span>
                                             <span
                                                 v-else
-                                                class="inline-flex items-center gap-x-1.5 rounded-md bg-red-100 px-3 py-1.5 text-xs font-medium text-red-800"
+                                                class="inline-flex items-center gap-x-1.5 rounded-md bg-rose-100 px-3 py-1.5 text-xs font-medium text-rose-700"
                                             >
-                                                <span class="inline-block size-1.5 rounded-full bg-red-500"></span>
+                                                <span class="inline-block size-1.5 rounded-full bg-rose-500"></span>
                                                 Inactive
                                             </span>
                                         </td>
@@ -219,7 +264,7 @@ const getTypeClasses = (type: string) => {
                                             <div class="flex items-center justify-end gap-x-2">
                                                 <button
                                                     @click="openEditModal(school)"
-                                                    class="text-gray-500 transition-colors hover:text-primary focus:outline-none"
+                                                    class="inline-flex size-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50 focus:outline-none"
                                                 >
                                                     <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path
@@ -232,7 +277,7 @@ const getTypeClasses = (type: string) => {
                                                 </button>
                                                 <button
                                                     @click="confirmDelete(school)"
-                                                    class="text-gray-500 transition-colors hover:text-red-500 focus:outline-none"
+                                                    class="inline-flex size-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 focus:outline-none"
                                                 >
                                                     <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path
@@ -247,23 +292,24 @@ const getTypeClasses = (type: string) => {
                                         </td>
                                     </tr>
                                     <tr v-if="schools.data.length === 0">
-                                        <td colspan="5" class="px-6 py-12 text-center text-gray-500">
-                                            <p class="text-sm">No branches registered yet</p>
+                                        <td colspan="6" class="px-6 py-14 text-center text-slate-500">
+                                            <p class="text-sm font-semibold text-slate-700">No campuses registered yet.</p>
+                                            <p class="mt-1 text-xs text-slate-500">Create your first branch to start assigning users and assessments.</p>
                                         </td>
                                     </tr>
                                 </tbody>
-                            </table>
+                    </table>
 
                             <!-- Pagination -->
                             <div
-                                v-if="schools.total > schools.per_page"
-                                class="grid gap-3 border-t border-gray-200 px-6 py-4 md:flex md:items-center md:justify-between"
+                        v-if="schools.total > schools.per_page"
+                        class="grid gap-3 border-t border-slate-200 px-6 py-4 md:flex md:items-center md:justify-between"
                             >
                                 <div>
-                                    <p class="text-sm text-gray-600">
-                                        Showing <span class="font-semibold text-gray-800">{{ schools.from }}</span> to
-                                        <span class="font-semibold text-gray-800">{{ schools.to }}</span> of
-                                        <span class="font-semibold text-gray-800">{{ schools.total }}</span>
+                            <p class="text-sm text-slate-600">
+                                        Showing <span class="font-semibold text-slate-800">{{ schools.from }}</span> to
+                                        <span class="font-semibold text-slate-800">{{ schools.to }}</span> of
+                                        <span class="font-semibold text-slate-800">{{ schools.total }}</span>
                                     </p>
                                 </div>
 
@@ -272,15 +318,13 @@ const getTypeClasses = (type: string) => {
                                         v-for="link in schools.links"
                                         :key="link.label"
                                         :href="link.url || '#'"
-                                        class="inline-flex items-center gap-x-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none disabled:pointer-events-none disabled:opacity-50"
-                                        :class="[link.active ? 'bg-gray-100' : '', !link.url && 'pointer-events-none opacity-50']"
+                                        class="inline-flex items-center gap-x-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-sm hover:bg-slate-50 focus:outline-none disabled:pointer-events-none disabled:opacity-50"
+                                        :class="[link.active ? 'bg-slate-100' : '', !link.url && 'pointer-events-none opacity-50']"
                                     >
                                         <span v-html="link.label" />
                                     </Link>
                                 </div>
                             </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>

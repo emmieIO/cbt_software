@@ -44,8 +44,9 @@ expect()->extend('toBeOne', function () {
 
 function actingAsAdmin()
 {
-    $user = \App\Models\User::factory()->create();
+    $user = User::factory()->create();
     $user->assignRole('super_admin');
 
     return test()->actingAs($user);
 }
+use App\Models\User;

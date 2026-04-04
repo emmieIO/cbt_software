@@ -3,8 +3,10 @@
 namespace App\Services;
 
 use App\DTOs\UserDTO;
+use App\Models\ProspectiveClass;
 use App\Models\SchoolClass;
 use App\Models\User;
+use Exception;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -37,7 +39,7 @@ class UserImportService
 
         // Cache lookups
         $classes = SchoolClass::all()->pluck('id', 'name')->mapWithKeys(fn ($id, $name) => [strtolower(trim($name)) => $id]);
-        $batches = \App\Models\ProspectiveClass::all()->pluck('id', 'name')->mapWithKeys(fn ($id, $name) => [strtolower(trim($name)) => $id]);
+        $batches = ProspectiveClass::all()->pluck('id', 'name')->mapWithKeys(fn ($id, $name) => [strtolower(trim($name)) => $id]);
 
         DB::beginTransaction();
         try {
@@ -96,7 +98,7 @@ class UserImportService
                 }
             }
             DB::commit();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             throw ValidationException::withMessages([
                 'file' => ["Error at row $rowNumber: ".$e->getMessage()],

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ClassLevel;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -27,7 +28,7 @@ class Subject extends Model
     protected function casts(): array
     {
         return [
-            'level' => \App\Enums\ClassLevel::class,
+            'level' => ClassLevel::class,
         ];
     }
 

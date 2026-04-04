@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
+use App\Models\Subject;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -15,10 +16,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-as-read');
 
     // Dynamic UI API Helpers
-    Route::get('/api/subjects/{subject}/topics', function (\App\Models\Subject $subject) {
+    Route::get('/api/subjects/{subject}/topics', function (Subject $subject) {
         return $subject->topics()->orderBy('name')->get(['id', 'name']);
     })->name('api.topics.index');
-});
-Route::get('/debug-exception', function () {
-    throw new \Exception('Debug Exception');
 });

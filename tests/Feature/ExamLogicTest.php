@@ -2,12 +2,17 @@
 
 namespace Tests\Feature;
 
+use App\Enums\AttemptStatus;
 use App\Models\Exam;
+use App\Models\ExamAnswer;
+use App\Models\Option;
 use App\Models\Question;
+use App\Models\SchoolClass;
 use App\Models\Subject;
 use App\Models\Topic;
 use App\Models\User;
 use App\Services\ExamService;
+use Exception;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -26,7 +31,7 @@ class ExamLogicTest extends TestCase
     public function test_biennial_rotation_policy_excludes_recently_used_questions(): void
     {
         $subject = Subject::factory()->create();
-        $class = \App\Models\SchoolClass::factory()->create();
+        $class = SchoolClass::factory()->create();
         $topic = Topic::factory()->create(['subject_id' => $subject->id]);
 
         // 1. Create a "used" question (used 1 month ago)
@@ -73,5 +78,58 @@ class ExamLogicTest extends TestCase
         $order2 = $attemptQuestions->pluck('id')->toArray();
 
         $this->assertEquals($order1, $order2);
+    }
+
+    public function test_cannot_start_new_attempt_after_submission(): void
+    {
+        $user = User::factory()->create();
+        $exam = Exam::factory()->create();
+        $question = Question::factory()->create();
+        $exam->questions()->attach($question->id);
+
+        $attempt = $this->service->startExam($user, $exam);
+        $attempt->update(['status' => AttemptStatus::SUBMITTED, 'submitted_at' => now()]);
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Only one attempt is permitted');
+
+        $this->service->startExam($user, $exam);
+    }
+
+    public function test_submit_attempt_is_idempotent_when_already_submitted(): void
+    {
+        $user = User::factory()->create();
+        $exam = Exam::factory()->create();
+        $question = Question::factory()->create();
+        $correctOption = Option::factory()->create(['question_id' => $question->id, 'is_correct' => true]);
+        Option::factory()->create(['question_id' => $question->id, 'is_correct' => false]);
+        $exam->questions()->attach($question->id);
+
+        $attempt = $this->service->startExam($user, $exam);
+
+        $this->service->submitAttempt(
+            $attempt,
+            [$question->id => $correctOption->id],
+            ['termination_reason' => 'user_submit'],
+            ['tab_switches' => 0]
+        );
+
+        $firstAttempt = $attempt->fresh();
+        $firstScore = $firstAttempt->score;
+        $firstAnswersCount = ExamAnswer::query()->where('exam_attempt_id', $attempt->id)->count();
+
+        $this->service->submitAttempt(
+            $firstAttempt,
+            [$question->id => 'non-existent-option'],
+            ['termination_reason' => 'timeout'],
+            ['tab_switches' => 5]
+        );
+
+        $secondAttempt = $attempt->fresh();
+        $secondAnswersCount = ExamAnswer::query()->where('exam_attempt_id', $attempt->id)->count();
+
+        $this->assertEquals($firstScore, $secondAttempt->score);
+        $this->assertEquals($firstAnswersCount, $secondAnswersCount);
+        $this->assertEquals('user_submit', $secondAttempt->metadata['termination_reason']);
     }
 }

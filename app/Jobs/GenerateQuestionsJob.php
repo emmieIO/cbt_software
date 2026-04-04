@@ -10,10 +10,13 @@ use App\Models\Subject;
 use App\Models\Topic;
 use App\Models\User;
 use App\Notifications\AiQuestionsSeeded;
+use App\Services\QuestionService;
+use Exception;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class GenerateQuestionsJob implements ShouldQueue
 {
@@ -80,7 +83,7 @@ class GenerateQuestionsJob implements ShouldQueue
             $questions = $response['questions'] ?? [];
 
             if (empty($questions)) {
-                throw new \Exception('AI returned no questions.');
+                throw new Exception('AI returned no questions.');
             }
 
             // Map AI output to DTOs
@@ -103,7 +106,7 @@ class GenerateQuestionsJob implements ShouldQueue
             $examiner = User::role('examiner')->first();
             $creatorId = $examiner ? $examiner->id : $this->userId;
 
-            app(\App\Services\QuestionService::class)->createBatchQuestions($dtos, $creatorId);
+            app(QuestionService::class)->createBatchQuestions($dtos, $creatorId);
 
             $seededCount = count($dtos);
 
@@ -118,7 +121,7 @@ class GenerateQuestionsJob implements ShouldQueue
                 $seededCount
             ));
 
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::error('AI Question Generation Failed', [
                 'error' => $e->getMessage(),
                 'topic' => $topic->name,

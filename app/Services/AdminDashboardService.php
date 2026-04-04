@@ -4,6 +4,9 @@ namespace App\Services;
 
 use App\DTOs\AdminDashboardDTO;
 use App\Enums\ExamStatus;
+use App\Models\Exam;
+use App\Models\Question;
+use App\Models\User;
 use App\Repositories\Contracts\AcademicRepositoryInterface;
 use App\Repositories\Contracts\ExamRepositoryInterface;
 use App\Repositories\Contracts\QuestionRepositoryInterface;
@@ -27,9 +30,9 @@ class AdminDashboardService
             'totalStudents' => $this->userRepo->getByRole('candidate')->count(),
             'totalStaff' => $this->userRepo->getByRole('examiner')->count(),
             'totalCandidates' => $this->userRepo->getByRole('candidate')->count(), // Unified concept
-            'totalQuestions' => \App\Models\Question::count(), // Repository extension needed later for full decoupling
-            'totalExams' => \App\Models\Exam::count(),
-            'activeExams' => \App\Models\Exam::where('status', ExamStatus::LIVE)->count(),
+            'totalQuestions' => Question::count(), // Repository extension needed later for full decoupling
+            'totalExams' => Exam::count(),
+            'activeExams' => Exam::where('status', ExamStatus::LIVE)->count(),
             'totalBranches' => $this->academicRepo->getActiveSchools()->count(),
             'totalClasses' => $this->academicRepo->getClasses()->count(),
             'totalSubjects' => $this->academicRepo->getAllSubjects()->count(),
@@ -40,7 +43,7 @@ class AdminDashboardService
         $subjectBreakdown = $this->academicRepo->getAllSubjects()
             ->map(fn ($subject) => [
                 'name' => $subject->name,
-                'count' => \App\Models\Question::whereHas('topic', function ($q) use ($subject) {
+                'count' => Question::whereHas('topic', function ($q) use ($subject) {
                     $q->where('subject_id', $subject->id);
                 })->count(),
             ])
@@ -51,7 +54,7 @@ class AdminDashboardService
 
         $stats['subjectBreakdown'] = $subjectBreakdown;
 
-        $recentExams = \App\Models\Exam::with(['subject', 'schoolClass'])
+        $recentExams = Exam::with(['subject', 'schoolClass'])
             ->withCount('attempts')
             ->latest()
             ->take(5)
@@ -68,7 +71,7 @@ class AdminDashboardService
             ])
             ->toArray();
 
-        $recentUsers = \App\Models\User::latest()
+        $recentUsers = User::latest()
             ->take(5)
             ->get()
             ->map(fn ($user) => [

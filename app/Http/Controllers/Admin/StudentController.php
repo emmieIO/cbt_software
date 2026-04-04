@@ -4,122 +4,87 @@ namespace App\Http\Controllers\Admin;
 
 use App\DTOs\UserDTO;
 use App\Http\Controllers\Controller;
-use App\Models\School;
-use App\Models\SchoolClass;
+use App\Http\Requests\Admin\StudentImportRequest;
+use App\Http\Requests\Admin\StudentRequest;
 use App\Models\User;
+use App\Services\Admin\StudentManagementService;
 use App\Services\UserImportService;
-use App\Services\UserService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
-use Spatie\Permission\Models\Role;
 
 class StudentController extends Controller
 {
     public function __construct(
-        protected UserService $userService,
+        protected StudentManagementService $studentManagementService,
         protected UserImportService $userImportService
     ) {}
 
     public function index(Request $request): Response
     {
-        $query = User::role('candidate')
-            ->where('status', 'active')
-            ->with(['schoolClass', 'roles', 'school']);
-
-        if ($request->search) {
-            $query->where(function ($q) use ($request) {
-                $q->where('name', 'like', "%{$request->search}%")
-                    ->orWhere('email', 'like', "%{$request->search}%")
-                    ->orWhere('username', 'like', "%{$request->search}%");
-            });
-        }
-
-        if ($request->school_id) {
-            $query->where('school_id', $request->school_id);
-        }
-
-        if ($request->school_class_id) {
-            $query->where('school_class_id', $request->school_class_id);
-        }
+        $filters = $request->only(['search', 'school_class_id', 'school_id']);
+        $indexData = $this->studentManagementService->getIndexData($filters);
 
         return Inertia::render('Admin/Users/Students', [
-            'students' => $query->latest()->paginate(10)->withQueryString(),
-            'classes' => SchoolClass::all(),
-            'branches' => School::query()->where('is_active', true)->get(),
-            'filters' => $request->only(['search', 'school_class_id', 'school_id']),
+            'students' => $indexData['students'],
+            'classes' => $indexData['classes'],
+            'branches' => $indexData['branches'],
+            'filters' => $filters,
         ]);
     }
 
     public function create(): Response
     {
+        $context = $this->studentManagementService->getFormContext();
+
         return Inertia::render('Admin/Users/Students/Create', [
-            'classes' => SchoolClass::all(),
-            'branches' => School::query()->where('is_active', true)->get(),
-            'roles' => Role::query()->where('category', 'student')->get(),
+            'classes' => $context['classes'],
+            'branches' => $context['branches'],
+            'roles' => $context['roles'],
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(StudentRequest $request): RedirectResponse
     {
-        $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'username' => ['required', 'string', 'max:255', 'unique:users'],
-            'school_id' => ['required', 'exists:schools,id'],
-            'school_class_id' => ['required', 'exists:school_classes,id'],
-            'role' => ['required', 'string', 'exists:roles,name'],
-        ]);
-
         $dto = UserDTO::fromRequest($request);
-        $dto->status = 'active';
-        $this->userService->createUser($dto, $request->role);
+        $this->studentManagementService->createCandidate($dto, $request->string('role')->toString());
 
         return to_route('admin.students.index')->with('success', 'Candidate record created successfully.');
     }
 
     public function edit(User $student): Response
     {
+        $context = $this->studentManagementService->getFormContext();
+
         return Inertia::render('Admin/Users/Students/Edit', [
             'student' => $student->load('roles'),
-            'classes' => SchoolClass::all(),
-            'branches' => School::query()->where('is_active', true)->get(),
-            'roles' => Role::query()->where('category', 'student')->get(),
+            'classes' => $context['classes'],
+            'branches' => $context['branches'],
+            'roles' => $context['roles'],
         ]);
     }
 
-    public function update(Request $request, User $student): RedirectResponse
+    public function update(StudentRequest $request, User $student): RedirectResponse
     {
-        $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,'.$student->id],
-            'username' => ['required', 'string', 'max:255', 'unique:users,username,'.$student->id],
-            'school_id' => ['required', 'exists:schools,id'],
-            'school_class_id' => ['required', 'exists:school_classes,id'],
-            'role' => ['required', 'string', 'exists:roles,name'],
-        ]);
-
         $dto = UserDTO::fromRequest($request);
-        $this->userService->updateUser($student, $dto);
-        $student->syncRoles([$request->role]);
+        $this->studentManagementService->updateCandidate($student, $dto, $request->string('role')->toString());
 
         return to_route('admin.students.index')->with('success', 'Candidate record updated successfully.');
     }
 
     public function destroy(User $student): RedirectResponse
     {
-        $this->userService->deleteUser($student);
+        $deleted = $this->studentManagementService->deleteCandidate($student);
+        if (! $deleted) {
+            return back()->with('error', 'You cannot delete this user account.');
+        }
 
         return back()->with('success', 'Candidate record deleted successfully.');
     }
 
-    public function import(Request $request): RedirectResponse
+    public function import(StudentImportRequest $request): RedirectResponse
     {
-        $request->validate([
-            'file' => ['required', 'file', 'mimes:csv,xlsx'],
-        ]);
-
         $count = $this->userImportService->import($request->file('file'), 'candidate');
 
         return back()->with('success', "$count candidates imported successfully.");

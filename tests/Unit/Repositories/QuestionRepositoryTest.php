@@ -3,7 +3,9 @@
 namespace Tests\Unit\Repositories;
 
 use App\Models\Question;
+use App\Models\SchoolClass;
 use App\Models\Topic;
+use App\Models\User;
 use App\Repositories\Eloquent\EloquentQuestionRepository;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -23,8 +25,8 @@ class QuestionRepositoryTest extends TestCase
     public function test_can_create_question_with_options(): void
     {
         $topic = Topic::factory()->create();
-        $class = \App\Models\SchoolClass::factory()->create();
-        $user = \App\Models\User::factory()->create();
+        $class = SchoolClass::factory()->create();
+        $user = User::factory()->create();
 
         $data = [
             'topic_id' => $topic->id,

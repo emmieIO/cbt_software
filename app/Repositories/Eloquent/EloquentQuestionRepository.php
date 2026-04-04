@@ -89,7 +89,10 @@ class EloquentQuestionRepository implements QuestionRepositoryInterface
                 $options = $qData['options'] ?? [];
                 unset($qData['options']);
 
-                $this->create($qData, $options);
+                $question = Question::create($qData);
+                if (! empty($options)) {
+                    $question->options()->createMany($options);
+                }
                 $count++;
             }
 

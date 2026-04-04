@@ -20,9 +20,21 @@ class QuestionService
 
     public function getAuthorizedContext(User $user, bool $withTopics = false): array
     {
+        $isSystemAdmin = $user->can('sys:manage_settings');
+        $schoolType = $user->school?->type;
+        $schoolTypeValue = is_string($schoolType) ? $schoolType : $schoolType?->value;
+
+        $classes = $this->academicRepo->getClasses($isSystemAdmin ? null : $user->school_id);
+        $subjects = $this->academicRepo->getAllSubjects($withTopics);
+
+        if (! $isSystemAdmin && $schoolTypeValue) {
+            $classes = $classes->where('level', $schoolTypeValue)->values();
+            $subjects = $subjects->where('level', $schoolTypeValue)->values();
+        }
+
         return [
-            'subjects' => $this->academicRepo->getAllSubjects($withTopics),
-            'classes' => $this->academicRepo->getClasses(),
+            'subjects' => $subjects,
+            'classes' => $classes,
         ];
     }
 

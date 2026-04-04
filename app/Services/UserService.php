@@ -17,12 +17,10 @@ class UserService
     {
         $userData = $dto->toArray();
 
-        // Default password if not provided
         if (! isset($userData['password'])) {
-            $userData['password'] = Hash::make('chrisland123'); // Default password for new imports
+            $userData['password'] = Hash::make('chrisland123');
         }
 
-        // Auto-set status for candidates (prospective by default)
         if ($role === 'candidate' && ! isset($userData['status'])) {
             $userData['status'] = 'prospective';
         }
@@ -30,7 +28,7 @@ class UserService
         $user = User::create($userData);
         $user->assignRole($role);
 
-        // Record initial enrollment for active candidates (formerly students)
+        // Keep class enrollment in sync for active candidate accounts.
         if ($role === 'candidate' && $user->school_class_id && ($user->status === 'active' || ! isset($userData['status']))) {
             $currentSession = AcademicSession::current()->first();
             if ($currentSession) {

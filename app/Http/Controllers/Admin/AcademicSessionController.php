@@ -2,53 +2,32 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Enums\Term;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\AcademicSessionRequest;
 use App\Models\AcademicSession;
+use App\Services\AcademicSessionService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class AcademicSessionController extends Controller
 {
+    public function __construct(protected AcademicSessionService $academicSessionService) {}
+
     /**
      * List all academic sessions.
      */
     public function index(): Response
     {
-        return Inertia::render('Admin/Settings/Sessions', [
-            'sessions' => AcademicSession::query()->latest()->get(),
-            'terms' => collect(Term::cases())->map(fn ($t) => [
-                'value' => $t->value,
-                'label' => $t->label(),
-            ]),
-        ]);
+        return Inertia::render('Admin/Settings/Sessions', $this->academicSessionService->getIndexData());
     }
 
     /**
      * Store a new academic session.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(AcademicSessionRequest $request): RedirectResponse
     {
-        $request->validate([
-            'name' => [
-                'required',
-                'string',
-                Rule::unique('academic_sessions')->where('term', $request->term),
-            ],
-            'term' => ['required', Rule::enum(Term::class)],
-            'start_date' => ['required', 'date'],
-            'end_date' => ['required', 'date', 'after:start_date'],
-            'is_current' => ['boolean'],
-        ]);
-
-        if ($request->is_current) {
-            AcademicSession::query()->update(['is_current' => false]);
-        }
-
-        AcademicSession::create($request->all());
+        $this->academicSessionService->createSession($request->validated());
 
         return back()->with('success', 'Academic session created successfully.');
     }
@@ -56,27 +35,9 @@ class AcademicSessionController extends Controller
     /**
      * Update an academic session.
      */
-    public function update(Request $request, AcademicSession $session): RedirectResponse
+    public function update(AcademicSessionRequest $request, AcademicSession $session): RedirectResponse
     {
-        $request->validate([
-            'name' => [
-                'required',
-                'string',
-                Rule::unique('academic_sessions')
-                    ->where('term', $request->term)
-                    ->ignore($session->id),
-            ],
-            'term' => ['required', Rule::enum(Term::class)],
-            'start_date' => ['required', 'date'],
-            'end_date' => ['required', 'date', 'after:start_date'],
-            'is_current' => ['boolean'],
-        ]);
-
-        if ($request->is_current && ! $session->is_current) {
-            AcademicSession::query()->update(['is_current' => false]);
-        }
-
-        $session->update($request->all());
+        $this->academicSessionService->updateSession($session, $request->validated());
 
         return back()->with('success', 'Academic session updated successfully.');
     }
@@ -86,8 +47,7 @@ class AcademicSessionController extends Controller
      */
     public function setCurrent(AcademicSession $session): RedirectResponse
     {
-        AcademicSession::query()->update(['is_current' => false]);
-        $session->update(['is_current' => true]);
+        $this->academicSessionService->setCurrent($session);
 
         return back()->with('success', "Academic session set to {$session->name}.");
     }
@@ -97,11 +57,9 @@ class AcademicSessionController extends Controller
      */
     public function destroy(AcademicSession $session): RedirectResponse
     {
-        if ($session->is_current) {
+        if (! $this->academicSessionService->deleteSession($session)) {
             return back()->with('error', 'Cannot delete the current active session.');
         }
-
-        $session->delete();
 
         return back()->with('success', 'Academic session deleted successfully.');
     }

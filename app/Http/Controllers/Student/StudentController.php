@@ -2,24 +2,26 @@
 
 namespace App\Http\Controllers\Student;
 
-use App\Enums\ExamStatus;
-use App\Enums\ExamType;
+use App\Enums\AttemptStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
-use App\Models\AcademicSession;
 use App\Models\Exam;
+use App\Models\ExamAttempt;
 use App\Services\AuthService;
 use App\Services\ExamService;
+use App\Services\Student\StudentPortalService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Throwable;
 
 class StudentController extends Controller
 {
     public function __construct(
         protected AuthService $authService,
-        protected ExamService $examService
+        protected ExamService $examService,
+        protected StudentPortalService $studentPortalService
     ) {}
 
     public function login(): Response
@@ -37,55 +39,12 @@ class StudentController extends Controller
 
     public function dashboard(Request $request): Response
     {
-        $user = $request->user();
-        $currentSession = AcademicSession::current()->first();
-
-        $upcomingExams = [];
-        if ($currentSession) {
-            $query = Exam::query()->where('academic_session_id', $currentSession->id)
-                ->where('status', ExamStatus::LIVE)
-                ->with(['subject'])
-                ->withCount('questions')
-                ->whereDoesntHave('attempts', fn ($q) => $q->where('user_id', $user->id)->where('status', \App\Enums\AttemptStatus::SUBMITTED));
-
-            // Only show exams assigned to this student or their class
-            $query->where(function ($q) use ($user) {
-                $q->whereHas('users', fn ($sq) => $sq->where('user_id', $user->id))
-                  ->orWhere('school_class_id', $user->school_class_id);
-            });
-
-            $upcomingExams = $query->orderBy('start_time', 'asc')->take(4)->get();
-        }
-
-        $recentResults = \App\Models\ExamAttempt::query()
-            ->where('user_id', $user->id)
-            ->where('status', \App\Enums\AttemptStatus::SUBMITTED)
-            ->with(['exam' => fn($q) => $q->with(['subject'])->withCount('questions')])
-            ->latest('submitted_at')
-            ->take(5)
-            ->get();
-
-        $stats = [
-            'examsTaken' => \App\Models\ExamAttempt::query()->where('user_id', $user->id)
-                ->where('status', \App\Enums\AttemptStatus::SUBMITTED)
-                ->count(),
-            'averageScore' => 0,
-            'pendingExams' => count($upcomingExams),
-        ];
-
-        if ($stats['examsTaken'] > 0) {
-            $totalPercentage = 0;
-            foreach ($recentResults as $result) {
-                $maxScore = $result->exam->questions_count ?: 1;
-                $totalPercentage += ($result->score / $maxScore) * 100;
-            }
-            $stats['averageScore'] = round($totalPercentage / count($recentResults));
-        }
+        $dashboardData = $this->studentPortalService->getDashboardData($request->user());
 
         return Inertia::render('Student/Dashboard', [
-            'upcomingExams' => $upcomingExams,
-            'recentResults' => $recentResults,
-            'stats' => $stats,
+            'upcomingExams' => $dashboardData['upcomingExams'],
+            'recentResults' => $dashboardData['recentResults'],
+            'stats' => $dashboardData['stats'],
         ]);
     }
 
@@ -94,29 +53,8 @@ class StudentController extends Controller
      */
     public function index(Request $request): Response
     {
-        $user = $request->user();
-        $currentSession = AcademicSession::current()->first();
-
-        $exams = [];
-        if ($currentSession) {
-            $query = Exam::query()->where('academic_session_id', $currentSession->id)
-                ->where('status', ExamStatus::LIVE)
-                ->with(['subject'])
-                ->with(['attempts' => fn ($q) => $q->where('user_id', $user->id)])
-                ->withCount('questions');
-
-            if ($user->status === 'candidate') {
-                $query->where('type', ExamType::ENTRANCE)
-                    ->where('prospective_class_id', $user->prospective_class_id);
-            } else {
-                $query->where('school_class_id', $user->school_class_id);
-            }
-
-            $exams = $query->get();
-        }
-
         return Inertia::render('Student/Exams/Index', [
-            'exams' => $exams,
+            'exams' => $this->studentPortalService->getAvailableExams($request->user()),
         ]);
     }
 
@@ -125,14 +63,8 @@ class StudentController extends Controller
      */
     public function results(Request $request): Response
     {
-        $attempts = \App\Models\ExamAttempt::query()->where('user_id', $request->user()->id)
-            ->where('status', \App\Enums\AttemptStatus::SUBMITTED)
-            ->with(['exam' => fn ($q) => $q->with(['subject'])->withCount('questions')])
-            ->latest('submitted_at')
-            ->get();
-
         return Inertia::render('Student/Results/Index', [
-            'attempts' => $attempts,
+            'attempts' => $this->studentPortalService->getResultsHistory($request->user()),
         ]);
     }
 
@@ -145,7 +77,7 @@ class StudentController extends Controller
             $attempt = $this->examService->startExam($request->user(), $exam);
 
             return redirect()->route('student.exams.show', $attempt->id);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             return back()->with('error', $e->getMessage());
         }
     }
@@ -153,7 +85,7 @@ class StudentController extends Controller
     /**
      * Show the exam questions for the attempt.
      */
-    public function showExam(Request $request, \App\Models\ExamAttempt $attempt): Response|RedirectResponse
+    public function showExam(Request $request, ExamAttempt $attempt): Response|RedirectResponse
     {
         // Security: Ensure the candidate owns this attempt
         if ($attempt->user_id !== $request->user()->id) {
@@ -161,7 +93,7 @@ class StudentController extends Controller
         }
 
         // If already submitted, redirect to result
-        if ($attempt->status === \App\Enums\AttemptStatus::SUBMITTED) {
+        if ($attempt->status === AttemptStatus::SUBMITTED) {
             return redirect()->route('student.exams.result', $attempt->id);
         }
 
@@ -177,13 +109,13 @@ class StudentController extends Controller
     /**
      * Save a single answer during an ongoing attempt.
      */
-    public function saveAnswer(Request $request, \App\Models\ExamAttempt $attempt): RedirectResponse
+    public function saveAnswer(Request $request, ExamAttempt $attempt): RedirectResponse
     {
         if ($attempt->user_id !== $request->user()->id) {
             abort(403);
         }
 
-        if ($attempt->status !== \App\Enums\AttemptStatus::ONGOING) {
+        if ($attempt->status !== AttemptStatus::ONGOING) {
             return back()->with('error', 'Exam attempt is not active.');
         }
 
@@ -192,12 +124,11 @@ class StudentController extends Controller
             'option_id' => ['required', 'string'],
         ]);
 
-        $metadata = $attempt->metadata;
-        $savedAnswers = $metadata['saved_answers'] ?? [];
-        $savedAnswers[$request->question_id] = $request->option_id;
-
-        $metadata['saved_answers'] = $savedAnswers;
-        $attempt->update(['metadata' => $metadata]);
+        $this->studentPortalService->saveAnswer(
+            $attempt,
+            $request->string('question_id')->toString(),
+            $request->string('option_id')->toString()
+        );
 
         return back();
     }
@@ -205,7 +136,7 @@ class StudentController extends Controller
     /**
      * Submit the exam.
      */
-    public function submitExam(Request $request, \App\Models\ExamAttempt $attempt): RedirectResponse
+    public function submitExam(Request $request, ExamAttempt $attempt): RedirectResponse
     {
         if ($attempt->user_id !== $request->user()->id) {
             abort(403);
@@ -224,7 +155,7 @@ class StudentController extends Controller
     /**
      * Show the exam result.
      */
-    public function showResult(Request $request, \App\Models\ExamAttempt $attempt): Response
+    public function showResult(Request $request, ExamAttempt $attempt): Response
     {
         if ($attempt->user_id !== $request->user()->id) {
             abort(403);

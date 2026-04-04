@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\Term;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -22,7 +23,7 @@ class AcademicSession extends Model
     protected function casts(): array
     {
         return [
-            'term' => \App\Enums\Term::class,
+            'term' => Term::class,
             'is_current' => 'boolean',
             'start_date' => 'date',
             'end_date' => 'date',
