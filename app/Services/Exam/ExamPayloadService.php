@@ -11,12 +11,23 @@ class ExamPayloadService
 {
     public function __construct(protected QuestionService $questionService) {}
 
+    private function canAuthorAcrossLevels(User $user): bool
+    {
+        return $user->can('access:cross-level-authoring')
+            || $user->can('bank:create_cross_level')
+            || $user->can('exam:create_cross_level');
+    }
+
     /**
      * Build common create/edit form payload for exam screens.
      */
     public function getFormPayload(User $user): array
     {
-        $context = $this->questionService->getAuthorizedContext($user, false);
+        $context = $this->questionService->getAuthorizedContext(
+            $user,
+            false,
+            $this->canAuthorAcrossLevels($user)
+        );
 
         return [
             'sessions' => AcademicSession::query()->current()->get(),

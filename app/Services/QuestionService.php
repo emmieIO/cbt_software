@@ -18,7 +18,7 @@ class QuestionService
         protected UserRepositoryInterface $userRepo
     ) {}
 
-    public function getAuthorizedContext(User $user, bool $withTopics = false): array
+    public function getAuthorizedContext(User $user, bool $withTopics = false, bool $bypassSchoolLevelFilter = false): array
     {
         $isSystemAdmin = $user->can('sys:manage_settings');
         /** @var \App\Models\School|null $school */
@@ -29,7 +29,7 @@ class QuestionService
         $classes = $this->academicRepo->getClasses($isSystemAdmin ? null : $user->school_id);
         $subjects = $this->academicRepo->getAllSubjects($withTopics);
 
-        if (! $isSystemAdmin && $schoolTypeValue) {
+        if (! $isSystemAdmin && $schoolTypeValue && ! $bypassSchoolLevelFilter) {
             $classes = $classes->where('level', $schoolTypeValue)->values();
             $subjects = $subjects->where('level', $schoolTypeValue)->values();
         }

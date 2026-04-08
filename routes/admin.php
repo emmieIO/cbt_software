@@ -28,7 +28,7 @@ Route::middleware(['auth', 'can:access:admin-portal'])->group(function () {
             Route::get('/classes', [SchoolClassController::class, 'index'])->name('index');
             Route::post('/classes', [SchoolClassController::class, 'store'])->name('store');
             Route::put('/classes/{schoolClass}', [SchoolClassController::class, 'update'])->name('update');
-            Route::delete('/classes/{schoolClass}', [SchoolClassController::class, 'destroy'])->name('destroy');
+            Route::delete('/classes/{schoolClass}', [SchoolClassController::class, 'destroy'])->name('destroy')->middleware('permission:admin:delete_class');
         });
 
         Route::name('sessions.')->group(function () {

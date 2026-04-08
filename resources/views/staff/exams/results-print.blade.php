@@ -205,13 +205,6 @@
             background: #fcfcfc;
         }
 
-        .score-pill {
-            font-weight: 800;
-            padding: 4px 8px;
-            border-radius: 4px;
-            background: #f3f4f6;
-        }
-
         .signature-section {
             margin-top: 80px;
             display: grid;
@@ -244,14 +237,14 @@
         }
 
         .qr-code {
-            position: absolute;
-            bottom: 40px;
-            right: 40px;
+            position: static;
             width: 60px;
             height: 60px;
             border: 1px solid #e5e7eb;
             padding: 5px;
             opacity: 0.5;
+            margin-top: 18px;
+            margin-left: auto;
         }
 
         @media print {
@@ -314,10 +307,6 @@
                 <span class="meta-item">{{ $exam->schoolClass?->name ?? 'All Candidates' }}</span>
             </div>
             <div class="meta-group">
-                <span class="meta-label">Total Weight</span>
-                <span class="meta-item">{{ $totalQuestions }} Assessment Items</span>
-            </div>
-            <div class="meta-group">
                 <span class="meta-label">Authentication Date</span>
                 <span class="meta-item">{{ now()->format('F d, Y') }}</span>
             </div>
@@ -331,14 +320,15 @@
                 <th>Candidate Information</th>
                 <th>Institutional ID</th>
                 <th>Attempt Info</th>
-                <th>Raw Score</th>
-                <th style="text-align: right;">Weighted Grade</th>
+                <th style="text-align: center;">Score</th>
+                <th style="text-align: right;">Grade (%)</th>
             </tr>
         </thead>
         <tbody>
             @foreach($exam->attempts as $index => $attempt)
                 @php
                     $percentage = ($totalQuestions > 0) ? ($attempt->score / $totalQuestions) * 100 : 0;
+                    $scoreDisplay = rtrim(rtrim(number_format((float) $attempt->score, 2, '.', ''), '0'), '.');
                 @endphp
                 <tr>
                     <td style="text-align: center; font-weight: 800; color: #6b7280;">{{ $index + 1 }}</td>
@@ -356,8 +346,8 @@
                             <span style="color: #6b7280;">Duration:</span> {{ $attempt->metadata['time_spent_formatted'] ?? 'N/A' }}
                         </div>
                     </td>
-                    <td>
-                        <span class="score-pill">{{ $attempt->score }} <span style="color: #9ca3af; font-size: 10px;">/ {{ $totalQuestions }}</span></span>
+                    <td style="text-align: center; font-weight: 800;">
+                        {{ $scoreDisplay }} / {{ $totalQuestions }}
                     </td>
                     <td style="text-align: right; font-weight: 900; font-size: 14px;">
                         {{ number_format($percentage, 1) }}%

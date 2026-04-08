@@ -21,6 +21,23 @@ const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
 
 const imagePreview = ref<string | null>(null);
 const fileInput = ref<HTMLInputElement | null>(null);
+const compactLevelTag = (level: string) => {
+    const normalized = String(level).toLowerCase();
+    if (normalized === 'primary') return 'Primary';
+    if (normalized === 'secondary') return 'Secondary';
+    if (normalized === 'nursery') return 'Nursery';
+
+    return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+};
+const levelOptions = computed(() => {
+    const levels = Array.from(new Set([...props.subjects.map((s) => String(s.level)), ...props.classes.map((c) => String(c.level))])).filter(Boolean);
+
+    return levels.map((level) => ({
+        id: level,
+        name: level.toUpperCase(),
+    }));
+});
+const selectedLevel = ref(levelOptions.value.length === 1 ? levelOptions.value[0].id : '');
 
 const form = useForm({
     subject_id: '',
@@ -58,9 +75,14 @@ const removeImage = () => {
 };
 
 const subjectsWithOptions = computed(() => {
-    return props.subjects.map((s) => ({
+    const subjects = selectedLevel.value
+        ? props.subjects.filter((s) => String(s.level) === String(selectedLevel.value))
+        : [];
+
+    return subjects.map((s) => ({
         ...s,
-        name: `${s.name} (${s.level.toUpperCase()})`,
+        name: s.name,
+        badge: compactLevelTag(String(s.level)),
     }));
 });
 
@@ -69,11 +91,9 @@ const selectedSubject = computed(() => {
 });
 
 const availableClasses = computed(() => {
-    if (!selectedSubject.value) return [];
+    if (!selectedLevel.value) return [];
 
-    // Filter the global classes prop to only show those that match the selected subject's level
-    // (e.g., if English is 'secondary', only show JSS1-SS3)
-    return props.classes.filter((c) => String(c.level) === String(selectedSubject.value?.level));
+    return props.classes.filter((c) => String(c.level) === String(selectedLevel.value));
 });
 
 const filteredTopics = computed(() => {
@@ -89,6 +109,15 @@ const filteredTopics = computed(() => {
             name: topic.name,
         }));
 });
+
+watch(
+    () => selectedLevel.value,
+    () => {
+        form.subject_id = '';
+        form.school_class_id = '';
+        form.topic_id = '';
+    },
+);
 
 watch(
     () => form.subject_id,
@@ -208,10 +237,18 @@ const submit = () => {
 
                     <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
                         <CustomSelect
+                            v-model="selectedLevel"
+                            label="Academic Level"
+                            :options="levelOptions"
+                            placeholder="Choose Level"
+                            size="md"
+                        />
+                        <CustomSelect
                             v-model="form.subject_id"
                             label="Subject Area"
                             :options="subjectsWithOptions"
                             placeholder="Choose Subject"
+                            :disabled="!selectedLevel"
                             :error="form.errors.subject_id"
                             size="md"
                         />

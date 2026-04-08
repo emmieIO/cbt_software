@@ -27,6 +27,7 @@ class RevampPermissionsSeeder extends Seeder
             ],
             'admin' => [
                 'admin:manage_setup' => 'Academic structure configuration (Sessions, Terms, Classes).',
+                'admin:delete_class' => 'Delete academic classes from school setup.',
                 'admin:manage_enrollment' => 'Student class mapping and promotion management.',
                 'admin:manage_admissions' => 'Entrance exam candidate and admission lifecycle management.',
                 'admin:manage_batches' => 'Entrance exam grouping and batch configuration.',
@@ -35,6 +36,7 @@ class RevampPermissionsSeeder extends Seeder
             'bank' => [
                 'bank:view' => 'Access to browse the question repository.',
                 'bank:create' => 'Contribution of new questions to the pool.',
+                'bank:create_cross_level' => 'Create questions for both primary and secondary levels.',
                 'bank:edit' => 'Modification of existing repository items.',
                 'bank:delete' => 'Permanent removal of items from the bank.',
                 'bank:manage' => 'Bulk operations and advanced bank management.',
@@ -69,6 +71,7 @@ class RevampPermissionsSeeder extends Seeder
                 'access:admin-portal' => 'Authorized entry into the Institutional HQ.',
                 'access:staff-portal' => 'Authorized entry into the Examiner Console.',
                 'access:student-portal' => 'Authorized entry into the Candidate Portal.',
+                'access:cross-level-authoring' => 'Allows staff to author questions and exams across primary and secondary levels.',
             ],
         ];
 

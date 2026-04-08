@@ -26,16 +26,7 @@ class AttemptSubmissionService
             }
 
             $totalScore = 0;
-            $questions = $this->attemptLifecycleService->getAttemptQuestions($attempt)->load('topic');
-            $exam = $attempt->exam->load('compositions');
-
-            $marksMap = [];
-            if ($exam->compositions->isNotEmpty()) {
-                foreach ($exam->compositions as $comp) {
-                    $key = $comp->topic_id ? "t_{$comp->topic_id}" : "s_{$comp->subject_id}";
-                    $marksMap[$key] = (float) $comp->marks_per_question;
-                }
-            }
+            $questions = $this->attemptLifecycleService->getAttemptQuestions($attempt);
 
             foreach ($questions as $question) {
                 $selectedOptionId = $answers[$question->id] ?? null;
@@ -46,14 +37,8 @@ class AttemptSubmissionService
                     $isCorrect = $option ? $option->is_correct : false;
                 }
 
-                $marks = 1.00;
-                if (! empty($marksMap)) {
-                    $marks = $marksMap["t_{$question->topic_id}"]
-                          ?? $marksMap["s_{$question->topic->subject_id}"]
-                          ?? 1.00;
-                }
-
-                $earned = $isCorrect ? $marks : 0.00;
+                // Official scoring policy: one point per correct response.
+                $earned = $isCorrect ? 1.00 : 0.00;
                 $totalScore += $earned;
 
                 ExamAnswer::create([

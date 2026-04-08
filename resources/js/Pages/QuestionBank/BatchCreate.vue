@@ -18,7 +18,21 @@ const props = defineProps<{
 
 const page = usePage<AppPageProps>();
 const isAdmin = computed(() => (page.props.auth.user as User).permissions.includes('sys:manage_settings'));
+const canCreateCrossLevel = computed(
+    () => (page.props.auth.user as User).permissions.includes('access:cross-level-authoring')
+        || (page.props.auth.user as User).permissions.includes('bank:create_cross_level')
+        || (page.props.auth.user as User).permissions.includes('exam:create_cross_level')
+        || isAdmin.value
+);
 const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
+const compactLevelTag = (level: string) => {
+    const normalized = String(level).toLowerCase();
+    if (normalized === 'primary') return 'Pry';
+    if (normalized === 'secondary') return 'Sec';
+    if (normalized === 'nursery') return 'Nur';
+
+    return normalized.slice(0, 3).toUpperCase();
+};
 
 const branches = computed(() => {
     const rawBranches = (page.props as any).branches || {};
@@ -34,12 +48,18 @@ const selectedBranchId = ref(page.props.auth.user.school_id ? String(page.props.
 const selectedBranch = computed(() => branches.value.find((b) => String(b.id) === String(selectedBranchId.value)));
 
 const filteredSubjects = computed(() => {
-    if (!selectedBranch.value) return props.subjects;
-    return props.subjects.filter((s) => s.level === selectedBranch.value?.type).map((s) => ({ ...s, name: `${s.name} (${s.level.toUpperCase()})` }));
+    if (canCreateCrossLevel.value || !selectedBranch.value) {
+        return props.subjects.map((s) => ({ ...s, name: `${s.name} (${compactLevelTag(String(s.level))})` }));
+    }
+
+    return props.subjects
+        .filter((s) => s.level === selectedBranch.value?.type)
+        .map((s) => ({ ...s, name: `${s.name} (${compactLevelTag(String(s.level))})` }));
 });
 
 const filteredClasses = computed(() => {
-    if (!selectedBranch.value) return props.classes;
+    if (canCreateCrossLevel.value || !selectedBranch.value) return props.classes;
+
     return props.classes.filter((c) => c.level === selectedBranch.value?.type);
 });
 
@@ -290,7 +310,10 @@ const rowHasError = (index: number) => {
 
                         <div v-if="selectedBranch" class="flex items-center gap-3 rounded-lg border border-teal-100 bg-teal-50 p-3 transition-all">
                             <div class="size-2 animate-pulse rounded-full bg-teal-500"></div>
-                            <span class="text-xs font-black tracking-tighter text-teal-800 uppercase">Verified Level: {{ selectedBranch.type }}</span>
+                            <span v-if="canCreateCrossLevel" class="text-xs font-black tracking-tighter text-teal-800 uppercase"
+                                >Cross-Level Scope: Primary + Secondary</span
+                            >
+                            <span v-else class="text-xs font-black tracking-tighter text-teal-800 uppercase">Verified Level: {{ selectedBranch.type }}</span>
                         </div>
                     </div>
                 </div>

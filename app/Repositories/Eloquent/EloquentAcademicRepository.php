@@ -25,7 +25,13 @@ class EloquentAcademicRepository implements AcademicRepositoryInterface
     public function getClasses(?string $schoolId = null): Collection
     {
         return SchoolClass::query()
-            ->when($schoolId, fn ($q) => $q->where('school_id', $schoolId))
+            ->when($schoolId, function ($query, $resolvedSchoolId) {
+                $query->where(function ($scoped) use ($resolvedSchoolId) {
+                    // Classes can be global (school_id = null) or branch-specific.
+                    $scoped->whereNull('school_id')
+                        ->orWhere('school_id', $resolvedSchoolId);
+                });
+            })
             ->orderBy('name')
             ->get();
     }

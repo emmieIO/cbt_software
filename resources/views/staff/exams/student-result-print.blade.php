@@ -267,12 +267,8 @@
     </div>
 
     <div class="performance-summary">
-        <div class="stat-card">
-            <div class="stat-label">Raw Score</div>
-            <div class="stat-value">{{ $attempt->score }} / {{ $totalQuestions }}</div>
-        </div>
         <div class="stat-card" style="background: #111827; color: #fff;">
-            <div class="stat-label" style="color: #9ca3af;">Weighted Grade</div>
+            <div class="stat-label" style="color: #9ca3af;">Grade (%)</div>
             @php
                 $percentage = ($totalQuestions > 0) ? ($attempt->score / $totalQuestions) * 100 : 0;
             @endphp

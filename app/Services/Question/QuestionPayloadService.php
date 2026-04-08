@@ -15,6 +15,12 @@ class QuestionPayloadService
 {
     public function __construct(protected QuestionService $questionService) {}
 
+    private function canAuthorAcrossLevels(User $user): bool
+    {
+        return $user->can('access:cross-level-authoring')
+            || $user->can('bank:create_cross_level');
+    }
+
     /**
      * Build payload for the Question Bank index page.
      *
@@ -22,7 +28,11 @@ class QuestionPayloadService
      */
     public function getIndexPayload(User $user, array $filters): array
     {
-        $context = $this->questionService->getAuthorizedContext($user);
+        $context = $this->questionService->getAuthorizedContext(
+            $user,
+            false,
+            $this->canAuthorAcrossLevels($user)
+        );
 
         return [
             'questions' => $this->questionService->getFilteredQuestions($filters, $user),
@@ -38,7 +48,11 @@ class QuestionPayloadService
      */
     public function getFormPayload(User $user, bool $withTopics = true): array
     {
-        $context = $this->questionService->getAuthorizedContext($user, $withTopics);
+        $context = $this->questionService->getAuthorizedContext(
+            $user,
+            $withTopics,
+            $this->canAuthorAcrossLevels($user)
+        );
 
         return [
             'subjects' => $context['subjects'],

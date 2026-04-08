@@ -32,7 +32,22 @@ const branches = computed(() => {
 });
 
 const isAdmin = computed(() => (page.props.auth.user as any).permissions.includes('sys:manage_settings'));
+const canCreateCrossLevel = computed(() => {
+    const permissions = (page.props.auth.user as any).permissions || [];
+    return permissions.includes('access:cross-level-authoring')
+        || permissions.includes('bank:create_cross_level')
+        || permissions.includes('exam:create_cross_level')
+        || isAdmin.value;
+});
 const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
+const compactLevelTag = (level: string) => {
+    const normalized = String(level).toLowerCase();
+    if (normalized === 'primary') return 'Primary';
+    if (normalized === 'secondary') return 'Secondary';
+    if (normalized === 'nursery') return 'Nursery';
+
+    return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+};
 
 // Pre-select the branch if the staff member only has access to one
 const defaultSchoolId = branches.value.length === 1 ? branches.value[0].id : '';
@@ -63,12 +78,18 @@ const selectedBranch = computed(() => branches.value.find((b) => b.id === form.s
 
 // LEVEL-AWARE FILTERING
 const filteredSubjects = computed(() => {
-    if (!selectedBranch.value) return props.subjects;
-    return props.subjects.filter((s) => s.level === selectedBranch.value?.type).map((s) => ({ ...s, name: `${s.name} (${s.level.toUpperCase()})` }));
+    if (canCreateCrossLevel.value || !selectedBranch.value) {
+        return props.subjects.map((s) => ({ ...s, name: s.name, badge: compactLevelTag(String(s.level)) }));
+    }
+
+    return props.subjects
+        .filter((s) => s.level === selectedBranch.value?.type)
+        .map((s) => ({ ...s, name: s.name, badge: compactLevelTag(String(s.level)) }));
 });
 
 const filteredClasses = computed(() => {
-    if (!selectedBranch.value) return props.classes;
+    if (canCreateCrossLevel.value || !selectedBranch.value) return props.classes;
+
     return props.classes.filter((c) => c.level === selectedBranch.value?.type);
 });
 

@@ -109,7 +109,14 @@ class BatchStoreQuestionRequest extends FormRequest
                     $validator->errors()->add("questions.$index.school_class_id", 'Class level does not match selected subject level.');
                 }
 
-                if ($user && ! $user->can('sys:manage_settings') && $class && $user->school_id && $class->school_id !== $user->school_id) {
+                if (
+                    $user
+                    && ! $user->can('sys:manage_settings')
+                    && $class
+                    && $user->school_id
+                    && $class->school_id
+                    && $class->school_id !== $user->school_id
+                ) {
                     $validator->errors()->add("questions.$index.school_class_id", 'You cannot add questions to classes outside your branch.');
                 }
             }

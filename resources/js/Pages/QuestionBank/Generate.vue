@@ -17,6 +17,12 @@ const props = defineProps<{
 
 const page = usePage<AppPageProps>();
 const isAdmin = computed(() => page.props.auth.user.permissions.includes('sys:manage_settings'));
+const canCreateCrossLevel = computed(
+    () => page.props.auth.user.permissions.includes('access:cross-level-authoring')
+        || page.props.auth.user.permissions.includes('bank:create_cross_level')
+        || page.props.auth.user.permissions.includes('exam:create_cross_level')
+        || isAdmin.value,
+);
 const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
 
 // Pre-select tier based on user's school level
@@ -35,6 +41,8 @@ const form = useForm({
 
 // Dynamic filtering based on TIER
 const filteredSubjectsForTier = computed(() => {
+    if (canCreateCrossLevel.value) return props.subjects;
+
     return props.subjects.filter((s) => s.level === selectedTier.value);
 });
 
@@ -43,6 +51,8 @@ const selectedSubject = computed(() => {
 });
 
 const availableClasses = computed(() => {
+    if (canCreateCrossLevel.value) return props.classes;
+
     return props.classes.filter((c) => c.level === selectedTier.value);
 });
 
@@ -54,6 +64,8 @@ const filteredTopics = computed(() => {
 });
 
 watch(selectedTier, () => {
+    if (canCreateCrossLevel.value) return;
+
     form.subject_id = '';
     form.school_class_id = '';
     form.topic_id = '';
@@ -82,7 +94,12 @@ const startGeneration = () => {
     generationLogs.value = [];
 
     addLog('info', `Initializing AI Agent for ${selectedSubject.value?.name}...`);
-    addLog('info', `Context Scoping: ${selectedTier.value.toUpperCase()} Tier.`);
+    addLog(
+        'info',
+        canCreateCrossLevel.value
+            ? 'Context Scoping: Cross-Level Authoring (Primary + Secondary).'
+            : `Context Scoping: ${selectedTier.value.toUpperCase()} Tier.`,
+    );
     addLog('info', `Requesting ${form.count} ${form.difficulty} questions.`);
 
     form.post(processGeneration().url, {
@@ -141,7 +158,7 @@ const addLog = (type: 'info' | 'success' | 'error', message: string) => {
 
                         <form @submit.prevent="startGeneration" class="space-y-6">
                             <!-- Tier Selector -->
-                            <div>
+                            <div v-if="!canCreateCrossLevel">
                                 <label class="mb-3 block text-xs font-bold text-gray-500 uppercase">Academic Tier</label>
                                 <div class="flex rounded-lg border border-gray-200 bg-gray-50 p-1">
                                     <button
@@ -159,6 +176,11 @@ const addLog = (type: 'info' | 'success' | 'error', message: string) => {
                                         {{ tier }}
                                     </button>
                                 </div>
+                            </div>
+                            <div v-else class="rounded-lg border border-teal-100 bg-teal-50 px-3 py-2">
+                                <p class="text-[10px] font-black tracking-wider text-teal-800 uppercase">
+                                    Cross-Level Scope Enabled: Primary + Secondary
+                                </p>
                             </div>
 
                             <!-- Context -->
@@ -323,8 +345,8 @@ const addLog = (type: 'info' | 'success' | 'error', message: string) => {
                             <div>
                                 <h4 class="mb-1 text-xs font-bold text-blue-900 uppercase">Tier-Aware Intelligence</h4>
                                 <p class="text-xs leading-relaxed font-medium text-blue-700">
-                                    The AI Laboratory is now synchronized with your institutional levels. Selecting a tier will automatically filter
-                                    subjects and class levels to maintain academic precision.
+                                    AI generation respects your scope automatically. Staff with cross-level permission can author for both primary and
+                                    secondary without tier restrictions.
                                 </p>
                             </div>
                         </div>

@@ -43,6 +43,11 @@ const getPercentage = (score: number) => {
     return Math.round((score / total) * 100);
 };
 
+const formatScore = (score: number) => {
+    const value = Number(score) || 0;
+    return Number.isInteger(value) ? String(value) : value.toFixed(2).replace(/\.00$/, '');
+};
+
 // Violation Log Modal
 const isViolationModalOpen = ref(false);
 const activeViolations = ref<Array<{ type: string; timestamp: string }>>([]);
@@ -221,7 +226,7 @@ const stats = computed(() => {
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <div class="flex flex-col items-center">
                                                 <div class="flex items-baseline gap-1">
-                                                    <span class="text-base font-semibold text-gray-800">{{ attempt.score }}</span>
+                                                    <span class="text-base font-semibold text-gray-800">{{ formatScore(attempt.score) }}</span>
                                                     <span class="text-xs text-gray-400">/ {{ totalQuestions }}</span>
                                                 </div>
                                                 <div class="mt-1 flex items-center gap-x-2">

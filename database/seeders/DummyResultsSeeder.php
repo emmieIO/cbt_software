@@ -97,9 +97,8 @@ class DummyResultsSeeder extends Seeder
             ->get();
 
         foreach ($questions as $index => $q) {
-            $exam->questions()->attach($q->id, ['marks' => 10, 'order' => $index + 1]);
+            $exam->questions()->attach($q->id, ['marks' => 1, 'order' => $index + 1]);
         }
-        $totalExamMarks = $questions->count() * 10;
 
         // 5. Generate Attempts and Answers for Candidates
         foreach ($candidates as $candidate) {
@@ -125,7 +124,7 @@ class DummyResultsSeeder extends Seeder
 
                 if ($isCorrect) {
                     $selectedOption = $q->options()->where('is_correct', true)->first();
-                    $score = 10; // Matches marks allocated
+                    $score = 1; // Official scoring policy: one point per correct answer.
                 } else {
                     $selectedOption = $q->options()->where('is_correct', false)->inRandomOrder()->first();
                     $score = 0;

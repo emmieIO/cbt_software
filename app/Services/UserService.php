@@ -25,6 +25,10 @@ class UserService
             $userData['status'] = 'prospective';
         }
 
+        if (empty($userData['username'])) {
+            $userData['username'] = $this->generateUsername($role);
+        }
+
         $user = User::create($userData);
         $user->assignRole($role);
 
@@ -40,6 +44,41 @@ class UserService
         }
 
         return $user;
+    }
+
+    /**
+     * Generate the next sequential username for a role and current year.
+     */
+    private function generateUsername(string $role): string
+    {
+        $prefix = match ($role) {
+            'examiner' => 'STAFF',
+            'candidate' => 'CHS',
+            default => strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $role) ?: 'USER'),
+        };
+
+        $year = now()->format('Y');
+        $pattern = $prefix.'/'.$year.'/%';
+
+        $latest = User::query()
+            ->where('username', 'like', $pattern)
+            ->pluck('username')
+            ->map(function (string $username): int {
+                $lastSegment = (string) str($username)->afterLast('/');
+
+                return (int) preg_replace('/\D/', '', $lastSegment);
+            })
+            ->max() ?? 0;
+
+        $next = $latest + 1;
+
+        do {
+            $candidate = sprintf('%s/%s/%03d', $prefix, $year, $next);
+            $exists = User::query()->where('username', $candidate)->exists();
+            $next++;
+        } while ($exists);
+
+        return $candidate;
     }
 
     /**

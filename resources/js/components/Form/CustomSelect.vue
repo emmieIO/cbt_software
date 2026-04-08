@@ -4,6 +4,7 @@ import { computed, onMounted, ref, onUnmounted } from 'vue';
 interface Option {
     id: string | number;
     name: string;
+    badge?: string;
     [key: string]: any;
 }
 
@@ -104,7 +105,16 @@ const labelSizeClasses = {
                     sizeClasses[size],
                 ]"
             >
-                <span class="truncate">{{ selectedOption ? selectedOption.name : placeholder }}</span>
+                <span v-if="selectedOption" class="flex min-w-0 items-center gap-2">
+                    <span class="truncate">{{ selectedOption.name }}</span>
+                    <span
+                        v-if="selectedOption.badge"
+                        class="shrink-0 rounded-full border border-gray-200 bg-gray-100 px-1.5 py-0.5 text-xs font-bold text-gray-700"
+                    >
+                        {{ selectedOption.badge }}
+                    </span>
+                </span>
+                <span v-else class="truncate">{{ placeholder }}</span>
                 <div class="flex items-center gap-2">
                     <span v-if="clearable && selectedOption" @click.stop="clearSelection" class="rounded-md p-1 text-gray-300 hover:text-red-500">
                         <svg
@@ -160,7 +170,13 @@ const labelSizeClasses = {
                         String(option.id) === String(modelValue) ? 'bg-gray-50 font-semibold' : '',
                     ]"
                 >
-                    {{ option.name }}
+                    <span class="truncate">{{ option.name }}</span>
+                    <span
+                        v-if="option.badge"
+                        class="shrink-0 rounded-full border border-gray-200 bg-gray-100 px-1.5 py-0.5 text-xs font-bold text-gray-700"
+                    >
+                        {{ option.badge }}
+                    </span>
                     <svg
                         v-if="String(option.id) === String(modelValue)"
                         class="ms-auto size-3.5 shrink-0 text-primary"

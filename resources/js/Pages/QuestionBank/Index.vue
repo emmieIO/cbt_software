@@ -33,11 +33,19 @@ const props = defineProps<{
 const page = usePage();
 const isAdmin = computed(() => (page.props.auth.user as any).permissions.includes('sys:manage_settings'));
 const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
+const compactLevelTag = (level: string) => {
+    const normalized = String(level).toLowerCase();
+    if (normalized === 'primary') return 'Pry';
+    if (normalized === 'secondary') return 'Sec';
+    if (normalized === 'nursery') return 'Nur';
+
+    return normalized.slice(0, 3).toUpperCase();
+};
 
 const subjectsWithOptions = computed(() => {
     return props.subjects.map((s: Subject) => ({
         ...s,
-        name: `${s.name} (${typeof s.level === 'string' ? s.level.toUpperCase() : (s.level as any)?.value?.toUpperCase() || ''})`,
+        name: `${s.name} (${compactLevelTag(typeof s.level === 'string' ? s.level : (s.level as any)?.value || '')})`,
     }));
 });
 

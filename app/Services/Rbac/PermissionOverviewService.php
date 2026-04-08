@@ -41,6 +41,12 @@ class PermissionOverviewService
                     'impact' => 'Medium: Operational structure.',
                 ],
                 [
+                    'name' => 'admin:delete_class',
+                    'description' => 'Delete existing academic classes from the school setup module.',
+                    'usage' => 'Admin > School Setup > Classes',
+                    'impact' => 'High: Structural data deletion.',
+                ],
+                [
                     'name' => 'admin:manage_enrollment',
                     'description' => 'Authority to assign students to classes and manage promotions.',
                     'usage' => 'Admin > Enrollment',
@@ -57,6 +63,12 @@ class PermissionOverviewService
                     'description' => 'Control over entrance exam groups and batch settings.',
                     'usage' => 'Admin > Entrance Batches',
                     'impact' => 'Medium: Admission grouping.',
+                ],
+                [
+                    'name' => 'access:cross-level-authoring',
+                    'description' => 'Allows a staff user to create questions and exams for both primary and secondary levels.',
+                    'usage' => 'Staff Authoring Scope Override',
+                    'impact' => 'High: Cross-tier academic authoring.',
                 ],
             ],
             'Curriculum & Question Bank' => [
@@ -77,6 +89,12 @@ class PermissionOverviewService
                     'description' => 'Permission to contribute new questions to the repository.',
                     'usage' => 'Staff > Add New Question',
                     'impact' => 'Low: Repository growth.',
+                ],
+                [
+                    'name' => 'bank:create_cross_level',
+                    'description' => 'Allows staff to create questions across both primary and secondary levels.',
+                    'usage' => 'Staff > Question Bank (Cross-Level Authoring)',
+                    'impact' => 'High: Cross-tier content scope.',
                 ],
                 [
                     'name' => 'bank:edit',

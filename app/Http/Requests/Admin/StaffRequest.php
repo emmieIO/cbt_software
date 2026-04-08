@@ -21,7 +21,7 @@ class StaffRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($staffId)],
-            'username' => ['required', 'string', 'max:255', Rule::unique('users', 'username')->ignore($staffId)],
+            'username' => ['nullable', 'string', 'max:255', Rule::unique('users', 'username')->ignore($staffId)],
             'school_ids' => ['required', 'array', 'min:1'],
             'school_ids.*' => ['exists:schools,id'],
             'primary_school_id' => ['nullable', 'exists:schools,id'],

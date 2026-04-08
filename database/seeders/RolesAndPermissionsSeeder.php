@@ -27,6 +27,7 @@ class RolesAndPermissionsSeeder extends Seeder
             ],
             'admin' => [
                 'admin:manage_setup' => 'Academic structure configuration (Sessions, Terms, Classes).',
+                'admin:delete_class' => 'Delete academic classes from school setup.',
                 'admin:manage_curriculum' => 'Management of Subjects and Topics.',
                 'admin:manage_enrollment' => 'Student class mapping and promotion management.',
                 'admin:manage_admissions' => 'Entrance exam candidate and admission lifecycle management.',
@@ -35,6 +36,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'bank' => [
                 'bank:view' => 'Access to browse the question repository.',
                 'bank:create' => 'Contribution of new questions to the pool.',
+                'bank:create_cross_level' => 'Create questions for both primary and secondary levels.',
                 'bank:edit' => 'Modification of existing repository items.',
                 'bank:delete' => 'Permanent removal of items from the bank.',
                 'bank:manage' => 'Bulk operations and advanced bank management.',
@@ -64,6 +66,9 @@ class RolesAndPermissionsSeeder extends Seeder
                 'student:create' => 'Register new student accounts.',
                 'student:edit' => 'Modify student profiles and details.',
                 'student:delete' => 'Remove or deactivate student accounts.',
+            ],
+            'access' => [
+                'access:cross-level-authoring' => 'Allows staff to author questions and exams across primary and secondary levels.',
             ],
         ];
 

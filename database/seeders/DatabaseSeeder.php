@@ -228,13 +228,17 @@ class DatabaseSeeder extends Seeder
 
                 foreach ($levelTopics as $topicData) {
                     if ($topicData['class']) {
+                        $topicSlug = Str::slug($topicData['name'].'-'.$topicData['class']->name);
+
                         Topic::updateOrCreate(
+                            [
+                                'slug' => $topicSlug,
+                            ],
                             [
                                 'subject_id' => $subject->id,
                                 'school_class_id' => $topicData['class']->id,
                                 'name' => $topicData['name'],
-                            ],
-                            ['slug' => Str::slug($topicData['name'].'-'.$topicData['class']->name)]
+                            ]
                         );
                     }
                 }

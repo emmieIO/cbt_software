@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { Head, router, Link, useForm } from '@inertiajs/vue3';
+import { Head, router, Link, useForm, usePage } from '@inertiajs/vue3';
 import { debounce } from 'lodash';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { store, update, destroy, index } from '@/actions/App/Http/Controllers/Admin/SchoolClassController';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
@@ -22,6 +22,8 @@ const props = defineProps<{
         level?: string;
     };
 }>();
+const page = usePage();
+const canDeleteClass = computed(() => (page.props.auth.user as any).permissions?.includes('admin:delete_class'));
 
 const isModalOpen = ref(false);
 const isEditing = ref(false);
@@ -241,6 +243,7 @@ const getLevelClasses = (level: string) => {
                                                     </svg>
                                                 </button>
                                                 <button
+                                                    v-if="canDeleteClass"
                                                     @click="confirmDelete(cls)"
                                                     class="text-gray-500 transition-colors hover:text-red-500 focus:outline-none"
                                                 >

@@ -11,7 +11,6 @@ const props = defineProps<{
 const form = useForm({
     name: '',
     email: '',
-    username: '',
     school_ids: [] as string[],
     primary_school_id: '',
     role: props.roles.length > 0 ? props.roles[0].name : 'examiner',
@@ -115,14 +114,11 @@ const submit = () => {
 
                                     <div>
                                         <label class="mb-2 block text-sm font-medium text-gray-700">Portal Username</label>
-                                        <input
-                                            v-model="form.username"
-                                            type="text"
-                                            required
-                                            placeholder="janesmith_chs"
-                                            class="block w-full rounded-lg border-gray-200 px-4 py-3 text-sm focus:border-primary focus:ring-primary disabled:opacity-50"
-                                        />
-                                        <p v-if="form.errors.username" class="mt-2 text-sm text-red-600">{{ form.errors.username }}</p>
+                                        <div
+                                            class="block w-full rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-500"
+                                        >
+                                            Auto-generated on save (e.g. STAFF/{{ new Date().getFullYear() }}/001)
+                                        </div>
                                     </div>
                                 </div>
                             </div>
