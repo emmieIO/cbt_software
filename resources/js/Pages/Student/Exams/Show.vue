@@ -43,6 +43,11 @@ const isInExamHall = ref(false);
 const isFullscreen = ref(false);
 
 const currentQuestion = computed(() => props.questions[currentQuestionIndex.value]);
+const resolveQuestionImageSrc = (imagePath?: string | null) => {
+    if (!imagePath) return null;
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) return imagePath;
+    return `/storage/${imagePath}`;
+};
 
 // Timer logic
 const startTimer = () => {
@@ -438,7 +443,7 @@ onBeforeUnmount(() => {
                         <!-- Question Content -->
                         <div class="mb-10">
                             <div v-if="currentQuestion.image_path" class="mb-8 overflow-hidden rounded-xl border border-gray-200">
-                                <img :src="`/storage/${currentQuestion.image_path}`" class="max-h-[400px] w-full bg-gray-50 object-contain" />
+                                <img :src="resolveQuestionImageSrc(currentQuestion.image_path)" class="max-h-[400px] w-full bg-gray-50 object-contain" />
                             </div>
                             <h2 class="text-xl leading-relaxed font-semibold text-gray-800">
                                 {{ currentQuestion.content }}

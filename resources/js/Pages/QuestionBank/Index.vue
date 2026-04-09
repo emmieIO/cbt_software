@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import { Head, Link, router, usePage, useForm } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { debounce } from 'lodash';
 import { computed, ref, watch } from 'vue';
 import {
     create,
     edit,
     index as indexAction,
-    importMethod,
-    downloadTemplate,
     destroy,
 } from '@/actions/App/Http/Controllers/Staff/StaffQuestionController';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
@@ -179,22 +177,6 @@ const clearFilters = () => {
     };
 };
 
-// Import
-const isImportModalOpen = ref(false);
-const importForm = useForm({
-    file: null as File | null,
-});
-
-const handleImport = () => {
-    importForm.post(importMethod().url, {
-        onSuccess: () => {
-            isImportModalOpen.value = false;
-            importForm.reset();
-            selectedIds.value = [];
-        },
-    });
-};
-
 const getDifficultyClasses = (difficulty: string) => {
     switch (difficulty) {
         case 'easy':
@@ -206,6 +188,12 @@ const getDifficultyClasses = (difficulty: string) => {
         default:
             return 'bg-gray-100 text-gray-800';
     }
+};
+
+const resolveQuestionImageSrc = (imagePath: string | null | undefined) => {
+    if (!imagePath) return null;
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) return imagePath;
+    return `/storage/${imagePath}`;
 };
 </script>
 
@@ -289,9 +277,9 @@ const getDifficultyClasses = (difficulty: string) => {
                         </svg>
                         Spreadsheet
                     </Link>
-                    <button
+                    <Link
                         v-if="(page.props.auth.user as any).permissions.includes('bank:create')"
-                        @click="isImportModalOpen = true"
+                        :href="`${indexAction().url}/import/setup`"
                         class="inline-flex items-center gap-x-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none disabled:pointer-events-none disabled:opacity-50"
                     >
                         <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -303,7 +291,7 @@ const getDifficultyClasses = (difficulty: string) => {
                             />
                         </svg>
                         Import
-                    </button>
+                    </Link>
                     <Link
                         v-if="(page.props.auth.user as any).permissions.includes('bank:create')"
                         :href="create().url"
@@ -441,7 +429,7 @@ const getDifficultyClasses = (difficulty: string) => {
                                                 </div>
                                                 <img
                                                     v-if="question.image_path"
-                                                    :src="`/storage/${question.image_path}`"
+                                                    :src="resolveQuestionImageSrc(question.image_path)"
                                                     class="size-10 rounded border border-gray-100 object-cover"
                                                 />
                                             </div>
@@ -544,66 +532,6 @@ const getDifficultyClasses = (difficulty: string) => {
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Import Modal -->
-        <div v-if="isImportModalOpen" class="fixed inset-0 z-80 flex items-center justify-center overflow-x-hidden overflow-y-auto p-4">
-            <div @click="isImportModalOpen = false" class="absolute inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity"></div>
-            <div class="relative w-full max-w-md rounded-xl border border-gray-200 bg-white shadow-lg">
-                <div class="p-6 text-center">
-                    <div class="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-primary/10 text-primary">
-                        <svg class="size-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                            />
-                        </svg>
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-800">Batch Import</h3>
-                    <p class="mt-2 text-sm text-gray-500">Upload your questions in bulk using our template.</p>
-
-                    <div class="mt-4">
-                        <a :href="downloadTemplate().url" class="text-sm font-medium text-primary hover:underline">Download Template</a>
-                    </div>
-
-                    <form @submit.prevent="handleImport" class="mt-6 space-y-4">
-                        <label class="block cursor-pointer rounded-lg border-2 border-dashed border-gray-200 p-8 transition-colors hover:bg-gray-50">
-                            <input type="file" class="hidden" @input="importForm.file = ($event.target as HTMLInputElement).files?.[0] || null" />
-                            <div class="flex flex-col items-center">
-                                <svg class="mb-2 size-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                                    />
-                                </svg>
-                                <span class="text-sm text-gray-500">{{ importForm.file ? importForm.file.name : 'Select file (CSV, XLSX)' }}</span>
-                            </div>
-                        </label>
-                        <p v-if="importForm.errors.file" class="text-xs text-red-500">{{ importForm.errors.file }}</p>
-
-                        <div class="mt-6 flex gap-x-3">
-                            <button
-                                type="button"
-                                @click="isImportModalOpen = false"
-                                class="flex-1 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-800 hover:bg-gray-50"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                :disabled="!importForm.file || importForm.processing"
-                                class="hover:bg-primary-hover flex-1 rounded-lg border border-transparent bg-primary px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
-                            >
-                                Upload
-                            </button>
-                        </div>
-                    </form>
                 </div>
             </div>
         </div>

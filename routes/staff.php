@@ -27,6 +27,7 @@ Route::middleware(['auth', 'can:access:staff-portal'])->group(function () {
 
         Route::middleware('permission:bank:create')->group(function () {
             Route::get('/batch', [StaffQuestionController::class, 'batchCreate'])->name('batch.create');
+            Route::get('/import/setup', [StaffQuestionController::class, 'importPage'])->name('import.page');
             Route::post('/batch', [StaffQuestionController::class, 'batchStore'])->name('batch.store');
             Route::get('/create', [StaffQuestionController::class, 'create'])->name('create');
             Route::post('/', [StaffQuestionController::class, 'store'])->name('store');

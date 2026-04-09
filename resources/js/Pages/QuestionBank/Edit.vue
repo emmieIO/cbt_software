@@ -30,6 +30,11 @@ const compactLevelTag = (level: string) => {
 
     return normalized.charAt(0).toUpperCase() + normalized.slice(1);
 };
+const resolveQuestionImageSrc = (imagePath: string | null | undefined) => {
+    if (!imagePath) return null;
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) return imagePath;
+    return `/storage/${imagePath}`;
+};
 const levelOptions = computed(() => {
     const levels = Array.from(new Set([...props.subjects.map((s) => String(s.level)), ...props.classes.map((c) => String(c.level))])).filter(Boolean);
 
@@ -41,7 +46,7 @@ const levelOptions = computed(() => {
 
 // Initialize preview from props
 if (props.question.image_path) {
-    imagePreview.value = `/storage/${props.question.image_path}`;
+    imagePreview.value = resolveQuestionImageSrc(props.question.image_path);
 }
 
 const form = useForm({
@@ -72,7 +77,7 @@ watch(
     () => props.question.image_path,
     (newPath) => {
         if (newPath && !form.image) {
-            imagePreview.value = `/storage/${newPath}`;
+            imagePreview.value = resolveQuestionImageSrc(newPath);
         }
     },
     { immediate: true },

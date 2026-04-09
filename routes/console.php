@@ -27,7 +27,7 @@ Artisan::command('exam:normalize-attempt-scores {--dry-run : Preview mismatches 
     if ($mismatches->isEmpty()) {
         $this->info('No irregular scores found. Database is already consistent.');
 
-        return self::SUCCESS;
+        return 0;
     }
 
     $this->warn("Found {$mismatches->count()} attempt(s) with irregular score values.");
@@ -39,7 +39,7 @@ Artisan::command('exam:normalize-attempt-scores {--dry-run : Preview mismatches 
     if ($this->option('dry-run')) {
         $this->line('Dry run only: no records were updated.');
 
-        return self::SUCCESS;
+        return 0;
     }
 
     DB::transaction(function () use ($mismatches) {
@@ -55,5 +55,5 @@ Artisan::command('exam:normalize-attempt-scores {--dry-run : Preview mismatches 
 
     $this->info("Updated {$mismatches->count()} attempt score(s) successfully.");
 
-    return self::SUCCESS;
+    return 0;
 })->purpose('Normalize exam_attempts.score from count of correct exam_answers.');

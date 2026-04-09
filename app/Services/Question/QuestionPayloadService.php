@@ -38,6 +38,7 @@ class QuestionPayloadService
             'questions' => $this->questionService->getFilteredQuestions($filters, $user),
             'subjects' => $context['subjects'],
             'classes' => $context['classes'],
+            'types' => $this->typeOptions(),
             'difficulties' => $this->difficultyOptions(),
             'levels' => $this->levelOptions($context['classes']),
         ];

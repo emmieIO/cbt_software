@@ -34,6 +34,7 @@ class BulkExportService
                 'option_c',
                 'option_d',
                 'correct_option_letter', // A, B, C, or D
+                'image_url', // Optional external image URL
             ]));
 
             // Data
@@ -62,6 +63,7 @@ class BulkExportService
                         $options[2]?->content ?? '',
                         $options[3]?->content ?? '',
                         $correctLetter,
+                        $this->resolveImageExportUrl($question->image_path),
                     ]));
                 }
             });
@@ -84,36 +86,49 @@ class BulkExportService
             // Header
             $writer->addRow(Row::fromValues([
                 'subject_name',
-                'class_name',
                 'topic_name',
                 'content',
                 'explanation',
                 'type',
-                'difficulty',
                 'option_a',
                 'option_b',
                 'option_c',
                 'option_d',
                 'correct_option_letter',
+                'image_url',
             ]));
 
-            // Add one example row
-            $writer->addRow(Row::fromValues([
-                'Mathematics',
-                'JSS 1',
-                'Number Bases',
-                'What is the value of 10 in binary?',
-                '10 in base 10 is equal to 1010 in binary.',
-                'multiple_choice',
-                'easy',
-                '1010',
-                '1100',
-                '1111',
-                '1001',
-                'A',
-            ]));
+            // Add 100 example rows for import performance testing.
+            for ($i = 1; $i <= 100; $i++) {
+                $writer->addRow(Row::fromValues([
+                    'Mathematics',
+                    'Number Bases',
+                    "Sample import question {$i}: What is the value of 10 in binary?",
+                    '10 in base 10 is equal to 1010 in binary.',
+                    'multiple_choice',
+                    '1010',
+                    '1100',
+                    '1111',
+                    '1001',
+                    'A',
+                    '',
+                ]));
+            }
 
             $writer->close();
         }, $fileName);
+    }
+
+    private function resolveImageExportUrl(?string $imagePath): ?string
+    {
+        if (! $imagePath) {
+            return null;
+        }
+
+        if (str_starts_with($imagePath, 'http://') || str_starts_with($imagePath, 'https://')) {
+            return $imagePath;
+        }
+
+        return url('/storage/'.$imagePath);
     }
 }
