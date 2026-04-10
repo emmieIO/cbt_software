@@ -101,11 +101,11 @@ const submit = () => {
                                     </div>
 
                                     <div>
-                                        <label class="mb-2 block text-sm font-medium text-gray-700">Admission Number</label>
+                                        <label class="mb-2 block text-sm font-medium text-gray-700">System ID</label>
                                         <div
                                             class="block w-full rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-500"
                                         >
-                                            Auto-generated on save (e.g. CHS/{{ new Date().getFullYear() }}/001)
+                                            Auto-generated student identifier on save (e.g. CHS/{{ new Date().getFullYear() }}/001)
                                         </div>
                                     </div>
                                 </div>

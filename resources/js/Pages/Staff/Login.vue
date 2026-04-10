@@ -21,9 +21,8 @@ const submit = () => {
 <template>
     <Head title="Staff Login" />
 
-    <div class="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-6">
-        <div class="w-full max-w-md rounded-xl border border-gray-200 bg-white p-8 shadow-sm md:p-10">
-            <!-- Header -->
+    <div class="flex min-h-screen flex-col items-center justify-center bg-primary p-6">
+        <div class="relative w-full max-w-md rounded-xl border border-white/70 bg-white/95 p-8 shadow-2xl shadow-primary/10 backdrop-blur-sm md:p-10">
             <div class="flex flex-col items-center text-center">
                 <Link href="/">
                     <img src="/assets/img/chrisland-school-logo.png" alt="Chrisland School Logo" class="mb-6 h-16 w-auto object-contain" />
@@ -32,7 +31,6 @@ const submit = () => {
                 <p class="mt-1 text-sm text-gray-500">Educators & Academic Admin</p>
             </div>
 
-            <!-- Login Form -->
             <form @submit.prevent="submit" class="mt-8 space-y-5">
                 <div class="space-y-4">
                     <div>

@@ -114,10 +114,10 @@ const submit = () => {
                                     </div>
 
                                     <div>
-                                        <label class="mb-2 block text-sm font-medium text-gray-700">Portal Username</label>
+                                        <label class="mb-2 block text-sm font-medium text-gray-700">System ID</label>
                                         <div class="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 py-3">
                                             <p class="text-sm font-semibold text-gray-700">{{ staff.username }}</p>
-                                            <p class="mt-1 text-xs text-gray-500">System-generated identifier. This value is locked after creation.</p>
+                                            <p class="mt-1 text-xs text-gray-500">System-generated staff identifier. This value is locked after creation.</p>
                                         </div>
                                     </div>
                                 </div>
