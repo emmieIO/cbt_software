@@ -47,6 +47,7 @@ class StaffController extends Controller
     public function store(StaffRequest $request): RedirectResponse
     {
         $dto = UserDTO::fromRequest($request);
+        $dto->username = null;
         $this->staffManagementService->createStaff(
             $dto,
             $request->string('role')->toString(),
@@ -71,6 +72,7 @@ class StaffController extends Controller
     public function update(StaffRequest $request, User $staff): RedirectResponse
     {
         $dto = UserDTO::fromRequest($request);
+        $dto->username = null;
         $this->staffManagementService->updateStaff(
             $staff,
             $dto,

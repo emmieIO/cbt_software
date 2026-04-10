@@ -18,7 +18,7 @@ class UpdateCandidateRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,'.$candidate->id],
-            'username' => ['prohibited'],
+            'username' => ['nullable', 'string', 'max:255', 'unique:users,username,'.$candidate->id],
             'school_class_id' => ['required', 'exists:school_classes,id'],
             'prospective_class_id' => ['required', 'exists:prospective_classes,id'],
         ];

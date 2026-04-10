@@ -48,6 +48,7 @@ class StudentController extends Controller
     public function store(StudentRequest $request): RedirectResponse
     {
         $dto = UserDTO::fromRequest($request);
+        $dto->username = null;
         $this->studentManagementService->createCandidate($dto, $request->string('role')->toString());
 
         return to_route('admin.students.index')->with('success', 'Candidate record created successfully.');
@@ -68,6 +69,7 @@ class StudentController extends Controller
     public function update(StudentRequest $request, User $student): RedirectResponse
     {
         $dto = UserDTO::fromRequest($request);
+        $dto->username = null;
         $this->studentManagementService->updateCandidate($student, $dto, $request->string('role')->toString());
 
         return to_route('admin.students.index')->with('success', 'Candidate record updated successfully.');

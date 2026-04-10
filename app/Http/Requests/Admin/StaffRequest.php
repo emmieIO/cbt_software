@@ -15,10 +15,13 @@ class StaffRequest extends FormRequest
 
     public function rules(): array
     {
+        $staff = $this->route('staff');
+        $staffId = $staff instanceof User ? $staff->id : null;
+
         return [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($this->route('staff') instanceof User ? $this->route('staff')->id : null)],
-            'username' => ['prohibited'],
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($staffId)],
+            'username' => ['nullable', 'string', 'max:255', Rule::unique('users', 'username')->ignore($staffId)],
             'school_ids' => ['required', 'array', 'min:1'],
             'school_ids.*' => ['exists:schools,id'],
             'primary_school_id' => ['nullable', 'exists:schools,id'],
