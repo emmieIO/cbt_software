@@ -12,7 +12,6 @@ const props = defineProps<{
 const form = useForm({
     name: props.staff.name,
     email: props.staff.email,
-    username: props.staff.username,
     school_ids: props.staff.schools.map((s: any) => s.id) as string[],
     primary_school_id: props.staff.schools.find((s: any) => s.pivot.is_primary)?.id || '',
     role: props.staff.roles.length > 0 ? props.staff.roles[0].name : 'examiner',
@@ -116,14 +115,10 @@ const submit = () => {
 
                                     <div>
                                         <label class="mb-2 block text-sm font-medium text-gray-700">Portal Username</label>
-                                        <input
-                                            v-model="form.username"
-                                            type="text"
-                                            required
-                                            placeholder="janesmith_chs"
-                                            class="block w-full rounded-lg border-gray-200 px-4 py-3 text-sm focus:border-primary focus:ring-primary disabled:opacity-50"
-                                        />
-                                        <p v-if="form.errors.username" class="mt-2 text-sm text-red-600">{{ form.errors.username }}</p>
+                                        <div class="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 py-3">
+                                            <p class="text-sm font-semibold text-gray-700">{{ staff.username }}</p>
+                                            <p class="mt-1 text-xs text-gray-500">System-generated identifier. This value is locked after creation.</p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

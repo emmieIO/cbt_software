@@ -13,7 +13,6 @@ const props = defineProps<{
 const form = useForm({
     name: props.student.name,
     email: props.student.email,
-    username: props.student.username,
     school_id: props.student.school_id,
     school_class_id: props.student.school_class_id,
     role: props.student.roles.length > 0 ? props.student.roles[0].name : '',
@@ -104,14 +103,10 @@ const submit = () => {
 
                                     <div>
                                         <label class="mb-2 block text-sm font-medium text-gray-700">Admission Number</label>
-                                        <input
-                                            v-model="form.username"
-                                            type="text"
-                                            required
-                                            placeholder="e.g. CHS/2026/001"
-                                            class="block w-full rounded-lg border-gray-200 px-4 py-3 text-sm focus:border-primary focus:ring-primary disabled:opacity-50"
-                                        />
-                                        <p v-if="form.errors.username" class="mt-2 text-xs text-red-600">{{ form.errors.username }}</p>
+                                        <div class="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 py-3">
+                                            <p class="text-sm font-semibold text-gray-700">{{ student.username }}</p>
+                                            <p class="mt-1 text-xs text-gray-500">System-generated admission number. This value is locked after creation.</p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

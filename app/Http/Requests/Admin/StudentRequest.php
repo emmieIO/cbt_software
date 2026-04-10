@@ -15,13 +15,10 @@ class StudentRequest extends FormRequest
 
     public function rules(): array
     {
-        $student = $this->route('student');
-        $studentId = $student instanceof User ? $student->id : null;
-
         return [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($studentId)],
-            'username' => ['required', 'string', 'max:255', Rule::unique('users', 'username')->ignore($studentId)],
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($this->route('student') instanceof User ? $this->route('student')->id : null)],
+            'username' => ['prohibited'],
             'school_id' => ['required', 'exists:schools,id'],
             'school_class_id' => ['required', 'exists:school_classes,id'],
             'role' => ['required', 'string', 'exists:roles,name'],
