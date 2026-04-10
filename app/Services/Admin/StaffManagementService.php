@@ -21,6 +21,7 @@ class StaffManagementService
         return [
             'staff' => $this->userRepo->getPaginatedStaff(10, $filters),
             'branches' => School::query()->where('is_active', true)->get(),
+            'usersWithoutRolesCount' => User::query()->doesntHave('roles')->count(),
         ];
     }
 

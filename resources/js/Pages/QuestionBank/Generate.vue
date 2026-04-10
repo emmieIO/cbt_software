@@ -2,10 +2,17 @@
 import { Head, usePage, useForm } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import { processGeneration } from '@/actions/App/Http/Controllers/Staff/StaffQuestionController';
+import CustomSelect from '@/components/Form/CustomSelect.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import StaffLayout from '@/layouts/StaffLayout.vue';
 import type { AppPageProps } from '@/types';
-import type { Subject, SchoolClass, Topic } from '@/types/academics';
+import type { SchoolClass, Subject, Topic } from '@/types/academics';
+
+type SelectOption = {
+    id: string;
+    name: string;
+    badge?: string;
+};
 
 const props = defineProps<{
     subjects: (Subject & { topics: Topic[] })[];
@@ -16,65 +23,109 @@ const props = defineProps<{
 }>();
 
 const page = usePage<AppPageProps>();
-const isAdmin = computed(() => page.props.auth.user.permissions.includes('sys:manage_settings'));
+const userPermissions = computed(() => page.props.auth.user.permissions);
+const isAdmin = computed(() => userPermissions.value.includes('sys:manage_settings'));
 const canCreateCrossLevel = computed(
-    () => page.props.auth.user.permissions.includes('access:cross-level-authoring')
-        || page.props.auth.user.permissions.includes('bank:create_cross_level')
-        || page.props.auth.user.permissions.includes('exam:create_cross_level')
+    () => userPermissions.value.includes('access:cross-level-authoring')
+        || userPermissions.value.includes('bank:create_cross_level')
+        || userPermissions.value.includes('exam:create_cross_level')
         || isAdmin.value,
 );
 const Layout = computed(() => (isAdmin.value ? AdminLayout : StaffLayout));
 
-// Pre-select tier based on user's school level
-const userSchool = computed(() => (page.props as any).branches?.[(page.props.auth.user as any).school_id]);
-const defaultTier = computed(() => userSchool.value?.type || 'primary');
+const compactLevelTag = (level: string) => {
+    const normalized = String(level).toLowerCase();
 
-const selectedTier = ref(defaultTier.value);
+    if (normalized === 'primary') return 'Primary';
+    if (normalized === 'secondary') return 'Secondary';
+    if (normalized === 'nursery') return 'Nursery';
+
+    return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+};
+
+const levelOptions = computed<SelectOption[]>(() => {
+    const levels = Array.from(
+        new Set([
+            ...props.subjects.map((subject) => String(subject.level)),
+            ...props.classes.map((schoolClass) => String(schoolClass.level)),
+        ]),
+    ).filter(Boolean);
+
+    return levels.map((level) => ({
+        id: level,
+        name: level.toUpperCase(),
+    }));
+});
+
+const defaultLevel = computed(() => {
+    if (levelOptions.value.length === 1) {
+        return levelOptions.value[0].id;
+    }
+
+    if (!canCreateCrossLevel.value && levelOptions.value.length > 0) {
+        return levelOptions.value[0].id;
+    }
+
+    return '';
+});
+
+const selectedLevel = ref(defaultLevel.value);
 
 const form = useForm({
     subject_id: '',
     topic_id: '',
     school_class_id: '',
+    type: 'multiple_choice',
     count: 5,
     difficulty: 'medium',
 });
 
-// Dynamic filtering based on TIER
-const filteredSubjectsForTier = computed(() => {
-    if (canCreateCrossLevel.value) return props.subjects;
+const availableClasses = computed<SelectOption[]>(() => {
+    if (!selectedLevel.value) return [];
 
-    return props.subjects.filter((s) => s.level === selectedTier.value);
+    return props.classes
+        .filter((schoolClass) => String(schoolClass.level) === String(selectedLevel.value))
+        .map((schoolClass) => ({
+            id: schoolClass.id,
+            name: schoolClass.name,
+            badge: compactLevelTag(String(schoolClass.level)),
+        }));
 });
 
-const selectedSubject = computed(() => {
-    return props.subjects.find((s) => s.id === form.subject_id);
+const availableSubjects = computed<SelectOption[]>(() => {
+    if (!selectedLevel.value) return [];
+
+    return props.subjects
+        .filter((subject) => String(subject.level) === String(selectedLevel.value))
+        .map((subject) => ({
+            id: subject.id,
+            name: subject.name,
+            badge: compactLevelTag(String(subject.level)),
+        }));
 });
 
-const availableClasses = computed(() => {
-    if (canCreateCrossLevel.value) return props.classes;
+const selectedClass = computed(() => props.classes.find((schoolClass) => schoolClass.id === form.school_class_id));
+const selectedSubject = computed(() => props.subjects.find((subject) => subject.id === form.subject_id));
+const selectedTopic = computed(() => filteredTopics.value.find((topic) => topic.id === form.topic_id));
+const selectedType = computed(() => props.types.find((type) => type.value === form.type));
+const selectedDifficulty = computed(() => props.difficulties.find((difficulty) => difficulty.value === form.difficulty));
 
-    return props.classes.filter((c) => c.level === selectedTier.value);
-});
-
-const filteredTopics = computed(() => {
+const filteredTopics = computed<SelectOption[]>(() => {
     if (!selectedSubject.value || !form.school_class_id) return [];
-    return selectedSubject.value.topics.filter((topic: Topic) => {
-        return !topic.school_class_id || String(topic.school_class_id) === String(form.school_class_id);
-    });
-});
 
-watch(selectedTier, () => {
-    if (canCreateCrossLevel.value) return;
-
-    form.subject_id = '';
-    form.school_class_id = '';
-    form.topic_id = '';
+    return (selectedSubject.value.topics || [])
+        .filter((topic) => String(topic.school_class_id) === String(form.school_class_id))
+        .map((topic) => ({
+            id: topic.id,
+            name: topic.name,
+        }));
 });
 
 watch(
-    () => form.subject_id,
+    () => selectedLevel.value,
     () => {
         form.school_class_id = '';
+        form.subject_id = '';
         form.topic_id = '';
     },
 );
@@ -86,36 +137,42 @@ watch(
     },
 );
 
+watch(
+    () => form.subject_id,
+    () => {
+        form.topic_id = '';
+    },
+);
+
 const isGenerating = ref(false);
 const generationLogs = ref<{ type: 'info' | 'success' | 'error'; message: string }[]>([]);
+
+const addLog = (type: 'info' | 'success' | 'error', message: string) => {
+    generationLogs.value.unshift({ type, message });
+};
+
+const configurationReady = computed(() => {
+    return Boolean(selectedLevel.value && form.school_class_id && form.subject_id && form.topic_id && form.type && form.difficulty);
+});
 
 const startGeneration = () => {
     isGenerating.value = true;
     generationLogs.value = [];
 
-    addLog('info', `Initializing AI Agent for ${selectedSubject.value?.name}...`);
-    addLog(
-        'info',
-        canCreateCrossLevel.value
-            ? 'Context Scoping: Cross-Level Authoring (Primary + Secondary).'
-            : `Context Scoping: ${selectedTier.value.toUpperCase()} Tier.`,
-    );
-    addLog('info', `Requesting ${form.count} ${form.difficulty} questions.`);
+    addLog('info', `Config locked for ${selectedClass.value?.name || 'selected class'} ${selectedSubject.value?.name || 'subject'}.`);
+    addLog('info', `Topic focus: ${selectedTopic.value?.name || 'Pending topic'} (${String(selectedLevel.value).toUpperCase()}).`);
+    addLog('info', `Requesting ${form.count} ${selectedDifficulty.value?.label || form.difficulty} ${selectedType.value?.label || form.type} items.`);
 
     form.post(processGeneration().url, {
         onSuccess: () => {
             isGenerating.value = false;
-            addLog('success', 'AI Generation successfully started in background.');
+            addLog('success', 'AI generation has been queued successfully. The question bank will update after processing.');
         },
         onError: () => {
             isGenerating.value = false;
-            addLog('error', 'Synapse failure: Check parameters.');
+            addLog('error', 'Configuration validation failed. Review the setup section and try again.');
         },
     });
-};
-
-const addLog = (type: 'info' | 'success' | 'error', message: string) => {
-    generationLogs.value.unshift({ type, message });
 };
 </script>
 
@@ -123,185 +180,235 @@ const addLog = (type: 'info' | 'success' | 'error', message: string) => {
     <component :is="Layout">
         <Head title="AI Question Lab" />
 
-        <div class="space-y-6">
-            <!-- Header Section (Standard Preline Style) -->
-            <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm md:p-10">
-                <div class="flex flex-col justify-between gap-6 md:flex-row md:items-center">
-                    <div class="flex items-center gap-4">
-                        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                            <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                            </svg>
+        <div class="space-y-6 pb-24">
+            <div class="rounded-2xl border border-primary/15 bg-gradient-to-r from-primary/10 via-primary/5 to-white p-6 shadow-sm md:p-8">
+                <div class="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+                    <div class="max-w-2xl">
+                        <div class="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-white/80 px-3 py-1 text-[11px] font-black tracking-[0.2em] text-primary uppercase">
+                            AI Assisted Authoring
                         </div>
-                        <div>
-                            <h1 class="text-2xl font-bold text-gray-800">AI Question Lab</h1>
-                            <p class="mt-1 text-sm text-gray-500">Generate high-quality assessment items using context-aware AI.</p>
-                        </div>
+                        <h1 class="text-2xl font-semibold text-gray-900">AI Question Lab</h1>
+                        <p class="mt-2 max-w-xl text-sm leading-6 text-gray-600">
+                            Build a clean academic setup first, then let the seeder generate questions that match the chosen level, class, subject,
+                            topic, type, and difficulty.
+                        </p>
                     </div>
-                    <div v-if="isGenerating" class="flex items-center gap-3 rounded-lg border border-primary/10 bg-primary/5 px-4 py-2">
-                        <span class="relative flex h-3 w-3">
-                            <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75"></span>
-                            <span class="relative inline-flex h-3 w-3 rounded-full bg-primary"></span>
-                        </span>
-                        <span class="text-xs font-bold tracking-widest text-primary uppercase">Agent Active</span>
+
+                    <div class="grid gap-3 sm:grid-cols-3">
+                        <div class="rounded-xl border border-white/80 bg-white/90 px-4 py-3 shadow-sm">
+                            <p class="text-[10px] font-black tracking-[0.18em] text-gray-400 uppercase">Level Scope</p>
+                            <p class="mt-1 text-sm font-semibold text-gray-800">
+                                {{ canCreateCrossLevel ? 'Multi-Level' : selectedLevel ? compactLevelTag(selectedLevel) : 'Locked by School' }}
+                            </p>
+                        </div>
+                        <div class="rounded-xl border border-white/80 bg-white/90 px-4 py-3 shadow-sm">
+                            <p class="text-[10px] font-black tracking-[0.18em] text-gray-400 uppercase">Question Type</p>
+                            <p class="mt-1 text-sm font-semibold text-gray-800">{{ selectedType?.label || 'Choose Type' }}</p>
+                        </div>
+                        <div class="rounded-xl border border-white/80 bg-white/90 px-4 py-3 shadow-sm">
+                            <p class="text-[10px] font-black tracking-[0.18em] text-gray-400 uppercase">Batch Size</p>
+                            <p class="mt-1 text-sm font-semibold text-gray-800">{{ form.count }} questions</p>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
-                <!-- Parameters (Preline Form Style) -->
-                <div class="lg:col-span-5">
-                    <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm md:p-8">
-                        <div class="mb-8 flex items-center gap-3 border-b border-gray-100 pb-4">
-                            <h3 class="text-sm font-bold tracking-widest text-gray-800 uppercase">Configuration</h3>
+            <div
+                v-if="Object.keys(form.errors).length > 0"
+                class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 shadow-sm"
+            >
+                Please review the configuration fields highlighted below. The selected level, class, subject, and topic must all belong together.
+            </div>
+
+            <div class="grid grid-cols-1 gap-6 xl:grid-cols-12">
+                <div class="space-y-6 xl:col-span-7">
+                    <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                        <div class="mb-6 flex items-center gap-3">
+                            <span class="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-sm font-semibold text-primary">1</span>
+                            <div>
+                                <h2 class="text-lg font-semibold text-gray-800">Configuration</h2>
+                                <p class="text-sm text-gray-500">Choose the academic context before you start the AI seeder.</p>
+                            </div>
                         </div>
 
-                        <form @submit.prevent="startGeneration" class="space-y-6">
-                            <!-- Tier Selector -->
-                            <div v-if="!canCreateCrossLevel">
-                                <label class="mb-3 block text-xs font-bold text-gray-500 uppercase">Academic Tier</label>
-                                <div class="flex rounded-lg border border-gray-200 bg-gray-50 p-1">
+                        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                            <CustomSelect
+                                v-model="selectedLevel"
+                                label="Academic Level"
+                                :options="levelOptions"
+                                placeholder="Choose Level"
+                                :disabled="!canCreateCrossLevel && levelOptions.length === 1"
+                                size="md"
+                            />
+                            <CustomSelect
+                                v-model="form.school_class_id"
+                                label="Class"
+                                :options="availableClasses"
+                                placeholder="Choose Class"
+                                :disabled="!selectedLevel"
+                                :error="form.errors.school_class_id"
+                                size="md"
+                            />
+                            <CustomSelect
+                                v-model="form.subject_id"
+                                label="Subject"
+                                :options="availableSubjects"
+                                placeholder="Choose Subject"
+                                :disabled="!selectedLevel"
+                                :error="form.errors.subject_id"
+                                size="md"
+                            />
+                            <CustomSelect
+                                v-model="form.topic_id"
+                                label="Topic"
+                                :options="filteredTopics"
+                                placeholder="Choose Topic"
+                                :disabled="!form.subject_id || !form.school_class_id"
+                                :error="form.errors.topic_id"
+                                size="md"
+                            />
+                        </div>
+
+                        <div
+                            v-if="!canCreateCrossLevel"
+                            class="mt-5 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-800"
+                        >
+                            Your AI generation scope is restricted to your assigned school level for cleaner curriculum alignment.
+                        </div>
+                    </div>
+
+                    <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                        <div class="mb-6 flex items-center gap-3">
+                            <span class="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-sm font-semibold text-primary">2</span>
+                            <div>
+                                <h2 class="text-lg font-semibold text-gray-800">Generation Rules</h2>
+                                <p class="text-sm text-gray-500">Set the kind of questions the AI is allowed to produce.</p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-6">
+                            <div>
+                                <label class="mb-3 block text-xs font-bold tracking-widest text-gray-500 uppercase">Question Type</label>
+                                <div class="grid grid-cols-2 gap-3">
                                     <button
-                                        v-for="tier in ['nursery', 'primary', 'secondary']"
-                                        :key="tier"
+                                        v-for="type in types"
+                                        :key="type.value"
                                         type="button"
-                                        @click="selectedTier = tier"
-                                        class="flex-1 rounded-md py-2 text-[10px] font-black uppercase transition-all"
+                                        @click="form.type = type.value"
+                                        class="rounded-xl border px-4 py-3 text-sm font-semibold transition-colors"
                                         :class="
-                                            selectedTier === tier
-                                                ? 'border border-gray-200 bg-white text-gray-800 shadow-sm'
-                                                : 'text-gray-400 hover:text-gray-600'
+                                            form.type === type.value
+                                                ? 'border-primary bg-primary text-white'
+                                                : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
                                         "
                                     >
-                                        {{ tier }}
+                                        {{ type.label }}
                                     </button>
                                 </div>
-                            </div>
-                            <div v-else class="rounded-lg border border-teal-100 bg-teal-50 px-3 py-2">
-                                <p class="text-[10px] font-black tracking-wider text-teal-800 uppercase">
-                                    Cross-Level Scope Enabled: Primary + Secondary
-                                </p>
+                                <p v-if="form.errors.type" class="mt-2 text-xs text-red-600">{{ form.errors.type }}</p>
                             </div>
 
-                            <!-- Context -->
-                            <div class="space-y-4">
-                                <div>
-                                    <label class="mb-2 block text-xs font-bold text-gray-500 uppercase">Target Subject</label>
-                                    <select
-                                        v-model="form.subject_id"
-                                        required
-                                        class="block w-full rounded-lg border-gray-200 px-4 py-3 text-sm focus:border-primary focus:ring-primary disabled:opacity-50"
+                            <div>
+                                <label class="mb-3 block text-xs font-bold tracking-widest text-gray-500 uppercase">Difficulty</label>
+                                <div class="grid grid-cols-3 gap-3">
+                                    <button
+                                        v-for="difficulty in difficulties"
+                                        :key="difficulty.value"
+                                        type="button"
+                                        @click="form.difficulty = difficulty.value"
+                                        class="rounded-xl border px-4 py-3 text-sm font-semibold transition-colors"
+                                        :class="
+                                            form.difficulty === difficulty.value
+                                                ? 'border-primary bg-primary text-white'
+                                                : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                                        "
                                     >
-                                        <option value="" disabled>Select Subject</option>
-                                        <option v-for="subject in filteredSubjectsForTier" :key="subject.id" :value="subject.id">
-                                            {{ subject.name }}
-                                        </option>
-                                    </select>
+                                        {{ difficulty.label }}
+                                    </button>
                                 </div>
-
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="mb-2 block text-xs font-bold text-gray-500 uppercase">Class Level</label>
-                                        <select
-                                            v-model="form.school_class_id"
-                                            required
-                                            :disabled="!selectedTier"
-                                            class="block w-full rounded-lg border-gray-200 px-4 py-3 text-sm focus:border-primary focus:ring-primary disabled:opacity-50"
-                                        >
-                                            <option value="" disabled>Level</option>
-                                            <option v-for="cls in availableClasses" :key="cls.id" :value="cls.id">
-                                                {{ cls.name }}
-                                            </option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label class="mb-2 block text-xs font-bold text-gray-500 uppercase">Topic</label>
-                                        <select
-                                            v-model="form.topic_id"
-                                            required
-                                            :disabled="!form.subject_id || !form.school_class_id"
-                                            class="block w-full rounded-lg border-gray-200 px-4 py-3 text-sm focus:border-primary focus:ring-primary disabled:opacity-50"
-                                        >
-                                            <option value="" disabled>Topic</option>
-                                            <option v-for="topic in filteredTopics" :key="topic.id" :value="topic.id">
-                                                {{ topic.name }}
-                                            </option>
-                                        </select>
-                                    </div>
-                                </div>
+                                <p v-if="form.errors.difficulty" class="mt-2 text-xs text-red-600">{{ form.errors.difficulty }}</p>
                             </div>
 
-                            <!-- Counts -->
-                            <div class="border-t border-gray-100 pt-4">
-                                <div class="mb-4 flex items-center justify-between">
-                                    <label class="text-xs font-bold text-gray-500 uppercase">Question Volume</label>
-                                    <span class="text-sm font-bold text-primary">{{ form.count }} Items</span>
+                            <div class="rounded-xl border border-gray-100 bg-gray-50 p-4">
+                                <div class="mb-3 flex items-center justify-between">
+                                    <label class="text-xs font-bold tracking-widest text-gray-500 uppercase">Question Volume</label>
+                                    <span class="text-sm font-semibold text-primary">{{ form.count }} items</span>
                                 </div>
                                 <input
-                                    v-model="form.count"
+                                    v-model.number="form.count"
                                     type="range"
                                     min="1"
                                     max="20"
-                                    class="h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-100 accent-primary"
+                                    class="h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200 accent-primary"
                                 />
+                                <p class="mt-3 text-xs text-gray-500">Keep smaller batches for tighter quality control, especially on narrow topics.</p>
+                                <p v-if="form.errors.count" class="mt-2 text-xs text-red-600">{{ form.errors.count }}</p>
                             </div>
-
-                            <!-- Complexity -->
-                            <div>
-                                <label class="mb-3 block text-xs font-bold text-gray-500 uppercase">Difficulty Level</label>
-                                <div class="grid grid-cols-3 gap-3">
-                                    <button
-                                        v-for="diff in difficulties"
-                                        :key="diff.value"
-                                        type="button"
-                                        @click="form.difficulty = diff.value"
-                                        class="rounded-lg border-2 py-2.5 text-[10px] font-black uppercase transition-all"
-                                        :class="
-                                            form.difficulty === diff.value
-                                                ? 'border-primary bg-primary text-white'
-                                                : 'border-gray-100 bg-white text-gray-400 hover:border-gray-200'
-                                        "
-                                    >
-                                        {{ diff.label }}
-                                    </button>
-                                </div>
-                            </div>
-
-                            <button
-                                type="submit"
-                                :disabled="isGenerating || form.processing"
-                                class="hover:bg-primary-hover inline-flex w-full items-center justify-center gap-x-2 rounded-xl border border-transparent bg-primary px-4 py-3.5 text-sm font-bold text-white shadow-sm transition-all disabled:opacity-50"
-                            >
-                                <span
-                                    v-if="isGenerating"
-                                    class="inline-block size-4 animate-spin rounded-full border-[3px] border-current border-t-transparent text-white"
-                                ></span>
-                                <svg v-else class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                </svg>
-                                {{ isGenerating ? 'Initializing AI...' : 'Seed Question Bank' }}
-                            </button>
-                        </form>
+                        </div>
                     </div>
+
+                    <button
+                        type="button"
+                        @click="startGeneration"
+                        :disabled="isGenerating || form.processing || !configurationReady"
+                        class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50"
+                    >
+                        <span
+                            v-if="isGenerating || form.processing"
+                            class="inline-block size-4 animate-spin rounded-full border-[3px] border-current border-t-transparent"
+                        ></span>
+                        <svg v-else class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        {{ isGenerating || form.processing ? 'Starting AI Seeding...' : 'Seed Question Bank' }}
+                    </button>
                 </div>
 
-                <!-- Live Log (Preline Card style) -->
-                <div class="space-y-6 lg:col-span-7">
-                    <div class="flex min-h-125 flex-col rounded-xl border border-gray-200 bg-gray-50 p-6 shadow-inner">
-                        <div class="mb-6 flex items-center justify-between">
-                            <h3 class="text-xs font-bold tracking-widest text-gray-400 uppercase">Generation Activity</h3>
-                            <div v-if="isGenerating" class="flex items-center gap-2">
-                                <div class="size-1.5 animate-pulse rounded-full bg-primary"></div>
-                                <span class="text-[10px] font-bold text-primary uppercase">Synchronizing</span>
+                <div class="space-y-6 xl:col-span-5">
+                    <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                        <div class="mb-5 flex items-center gap-3">
+                            <span class="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-sm font-semibold text-primary">3</span>
+                            <div>
+                                <h2 class="text-lg font-semibold text-gray-800">Request Summary</h2>
+                                <p class="text-sm text-gray-500">A quick sanity check before the background job starts.</p>
                             </div>
                         </div>
 
+                        <div class="space-y-4">
+                            <div class="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
+                                <p class="text-[10px] font-black tracking-[0.18em] text-gray-400 uppercase">Level</p>
+                                <p class="mt-1 text-sm font-semibold text-gray-800">{{ selectedLevel ? compactLevelTag(selectedLevel) : 'Not selected' }}</p>
+                            </div>
+                            <div class="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
+                                <p class="text-[10px] font-black tracking-[0.18em] text-gray-400 uppercase">Class and Subject</p>
+                                <p class="mt-1 text-sm font-semibold text-gray-800">
+                                    {{ selectedClass?.name || 'Choose class' }}<span class="text-gray-400"> • </span>{{ selectedSubject?.name || 'Choose subject' }}
+                                </p>
+                            </div>
+                            <div class="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
+                                <p class="text-[10px] font-black tracking-[0.18em] text-gray-400 uppercase">Topic</p>
+                                <p class="mt-1 text-sm font-semibold text-gray-800">{{ selectedTopic?.name || 'Choose topic' }}</p>
+                            </div>
+                            <div class="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
+                                <p class="text-[10px] font-black tracking-[0.18em] text-gray-400 uppercase">Rules</p>
+                                <p class="mt-1 text-sm font-semibold text-gray-800">
+                                    {{ selectedType?.label || 'Choose type' }} • {{ selectedDifficulty?.label || 'Choose difficulty' }} •
+                                    {{ form.count }} items
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex min-h-[24rem] flex-col rounded-xl border border-gray-200 bg-gray-50 p-6 shadow-inner">
+                        <div class="mb-5 flex items-center justify-between">
+                            <h3 class="text-xs font-bold tracking-widest text-gray-400 uppercase">Generation Activity</h3>
+                            <span v-if="isGenerating" class="text-[10px] font-black tracking-[0.18em] text-primary uppercase">Running</span>
+                        </div>
+
                         <div class="custom-scrollbar flex-1 space-y-3 overflow-y-auto">
-                            <div v-if="generationLogs.length === 0" class="flex h-full flex-col items-center justify-center text-center opacity-50">
-                                <div
-                                    class="mb-4 flex size-16 items-center justify-center rounded-2xl border border-gray-200 bg-white text-gray-300 shadow-sm"
-                                >
-                                    <svg class="size-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <div v-if="generationLogs.length === 0" class="flex h-full flex-col items-center justify-center text-center text-gray-400">
+                                <div class="mb-4 flex size-14 items-center justify-center rounded-2xl border border-gray-200 bg-white shadow-sm">
+                                    <svg class="size-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path
                                             stroke-linecap="round"
                                             stroke-linejoin="round"
@@ -310,44 +417,16 @@ const addLog = (type: 'info' | 'success' | 'error', message: string) => {
                                         />
                                     </svg>
                                 </div>
-                                <p class="text-xs font-bold tracking-widest text-gray-400 uppercase">Agent Standby</p>
+                                <p class="text-xs font-bold tracking-widest uppercase">Awaiting Configuration</p>
                             </div>
 
                             <div
-                                v-for="(log, idx) in generationLogs"
-                                :key="idx"
-                                class="rounded-xl border bg-white p-4 shadow-sm transition-all"
-                                :class="[log.type === 'info' ? 'border-gray-100' : log.type === 'success' ? 'border-teal-100' : 'border-red-100']"
+                                v-for="(log, index) in generationLogs"
+                                :key="index"
+                                class="rounded-xl border bg-white px-4 py-3 shadow-sm"
+                                :class="[log.type === 'error' ? 'border-red-100' : log.type === 'success' ? 'border-emerald-100' : 'border-gray-100']"
                             >
-                                <div class="flex gap-4">
-                                    <span class="font-mono text-[10px] text-gray-400">{{
-                                        new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                                    }}</span>
-                                    <p class="text-xs font-bold tracking-tight text-gray-600 uppercase">{{ log.message }}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Informational Card -->
-                    <div class="rounded-xl border border-blue-100 bg-blue-50 p-6">
-                        <div class="flex gap-4">
-                            <div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
-                                <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                    />
-                                </svg>
-                            </div>
-                            <div>
-                                <h4 class="mb-1 text-xs font-bold text-blue-900 uppercase">Tier-Aware Intelligence</h4>
-                                <p class="text-xs leading-relaxed font-medium text-blue-700">
-                                    AI generation respects your scope automatically. Staff with cross-level permission can author for both primary and
-                                    secondary without tier restrictions.
-                                </p>
+                                <p class="text-[11px] font-semibold leading-5 text-gray-700">{{ log.message }}</p>
                             </div>
                         </div>
                     </div>
@@ -361,11 +440,13 @@ const addLog = (type: 'info' | 'success' | 'error', message: string) => {
 .custom-scrollbar::-webkit-scrollbar {
     width: 4px;
 }
+
 .custom-scrollbar::-webkit-scrollbar-track {
     background: transparent;
 }
+
 .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.05);
-    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.08);
+    border-radius: 9999px;
 }
 </style>

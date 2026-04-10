@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AcademicSessionController;
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\AccessRecoveryController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\PermissionOverviewController;
 use App\Http\Controllers\Admin\RoleController;
@@ -74,6 +75,11 @@ Route::middleware(['auth', 'can:access:admin-portal'])->group(function () {
 
     // 05. Personnel Management
     Route::prefix('users')->group(function () {
+        Route::prefix('access-recovery')->middleware('permission:sys:manage_settings')->name('access-recovery.')->group(function () {
+            Route::get('/', [AccessRecoveryController::class, 'index'])->name('index');
+            Route::patch('/{user}', [AccessRecoveryController::class, 'update'])->name('update');
+        });
+
         Route::prefix('staff')->name('staff.')->group(function () {
             Route::get('/', [StaffController::class, 'index'])->name('index')->middleware('permission:staff:view');
             Route::get('/create', [StaffController::class, 'create'])->name('create')->middleware('permission:staff:create');

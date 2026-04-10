@@ -46,12 +46,28 @@ class RoleService
         return true;
     }
 
-    public function deleteRole(Role $role): bool
+    /**
+     * @return array{deleted: bool, reason: string|null}
+     */
+    public function deleteRole(Role $role): array
     {
         if ($role->name === 'super_admin') {
-            return false;
+            return [
+                'deleted' => false,
+                'reason' => 'Cannot delete the super admin role.',
+            ];
         }
 
-        return $role->delete();
+        if ($role->users()->exists()) {
+            return [
+                'deleted' => false,
+                'reason' => 'Cannot delete a role that is still assigned to users.',
+            ];
+        }
+
+        return [
+            'deleted' => (bool) $role->delete(),
+            'reason' => null,
+        ];
     }
 }

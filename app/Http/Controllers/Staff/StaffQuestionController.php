@@ -72,6 +72,7 @@ class StaffQuestionController extends Controller
             $request->validated('subject_id'),
             $request->validated('topic_id'),
             $request->validated('school_class_id'),
+            $request->validated('type'),
             $request->validated('count'),
             $request->validated('difficulty')
         );

@@ -29,6 +29,7 @@ class StaffController extends Controller
         return Inertia::render('Admin/Users/Staff', [
             'staff' => $data['staff'],
             'branches' => $data['branches'],
+            'usersWithoutRolesCount' => $data['usersWithoutRolesCount'],
             'filters' => $filters,
         ]);
     }

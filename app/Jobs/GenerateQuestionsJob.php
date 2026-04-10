@@ -37,6 +37,7 @@ class GenerateQuestionsJob implements ShouldQueue
         protected string $subjectId,
         protected string $topicId,
         protected string $schoolClassId,
+        protected string $type,
         protected int $count,
         protected string $difficulty
     ) {}
@@ -52,6 +53,24 @@ class GenerateQuestionsJob implements ShouldQueue
         $schoolClass = SchoolClass::find($this->schoolClassId);
 
         if (! $user || ! $subject || ! $topic || ! $schoolClass) {
+            return;
+        }
+
+        $subjectLevel = is_string($subject->level) ? $subject->level : $subject->level?->value;
+        $classLevel = is_string($schoolClass->level) ? $schoolClass->level : $schoolClass->level?->value;
+
+        if ($topic->subject_id !== $subject->id
+            || $topic->school_class_id !== $schoolClass->id
+            || $subjectLevel !== $classLevel) {
+            Log::warning('AI Question Generation Aborted: Invalid academic configuration.', [
+                'subject_id' => $subject->id,
+                'topic_id' => $topic->id,
+                'school_class_id' => $schoolClass->id,
+                'requested_type' => $this->type,
+            ]);
+
+            $user->notify(new AiQuestionsSeeded($subject->name, $topic->name, 0));
+
             return;
         }
 
@@ -75,7 +94,14 @@ class GenerateQuestionsJob implements ShouldQueue
                   "- Subject: {$subject->name}\n".
                   "- Topic: {$topic->name}\n".
                   "- Class Level: {$schoolClass->name}\n".
-                  "- Target Difficulty: {$this->difficulty}";
+                  "- Academic Level: {$classLevel}\n".
+                  "- Required Question Type: {$this->type}\n".
+                  "- Target Difficulty: {$this->difficulty}\n\n".
+                  "OUTPUT REQUIREMENTS:\n".
+                  "- Return exactly {$this->count} questions.\n".
+                  "- Every question type must be {$this->type}.\n".
+                  "- Every question difficulty must be {$this->difficulty}.\n".
+                  "- Include exactly one correct answer per question.";
 
         try {
             $response = $agent->prompt($prompt);
@@ -102,11 +128,7 @@ class GenerateQuestionsJob implements ShouldQueue
                 );
             }, $questions);
 
-            // Find a staff user to associate with the creation (consistent with previous logic)
-            $examiner = User::role('examiner')->first();
-            $creatorId = $examiner ? $examiner->id : $this->userId;
-
-            app(QuestionService::class)->createBatchQuestions($dtos, $creatorId);
+            app(QuestionService::class)->createBatchQuestions($dtos, $this->userId);
 
             $seededCount = count($dtos);
 

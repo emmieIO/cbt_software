@@ -20,6 +20,7 @@ interface StaffUser {
 const props = defineProps<{
     staff: PaginatedData<StaffUser>;
     branches: any[];
+    usersWithoutRolesCount: number;
     filters: {
         search?: string;
         school_id?: string;
@@ -96,6 +97,31 @@ const clearFilters = () => {
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                         </svg>
                         Add Personnel
+                    </Link>
+                </div>
+            </div>
+
+            <div
+                v-if="usersWithoutRolesCount > 0"
+                class="rounded-xl border border-amber-200 bg-amber-50 p-6 shadow-sm"
+            >
+                <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div>
+                        <h2 class="text-sm font-semibold tracking-wider text-amber-900 uppercase">Archived Access Records</h2>
+                        <p class="mt-2 text-sm leading-6 text-amber-800">
+                            {{ usersWithoutRolesCount }} user{{ usersWithoutRolesCount === 1 ? '' : 's' }} currently have no assigned role. They remain safe in the database, and you can reassign them from the dedicated recovery queue without crowding this directory.
+                        </p>
+                    </div>
+                    <span class="inline-flex items-center rounded-full border border-amber-300 bg-white px-3 py-1 text-xs font-semibold tracking-wider text-amber-900 uppercase">
+                        Needs Reassignment
+                    </span>
+                </div>
+                <div class="mt-4">
+                    <Link
+                        href="/admin/users/access-recovery"
+                        class="inline-flex items-center rounded-lg border border-amber-300 bg-white px-4 py-2 text-sm font-medium text-amber-900 hover:bg-amber-100"
+                    >
+                        Open Access Recovery
                     </Link>
                 </div>
             </div>

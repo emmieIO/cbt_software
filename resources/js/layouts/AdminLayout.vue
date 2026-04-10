@@ -259,6 +259,13 @@ const navigation: NavSection[] = [
                 icon: IconUsers,
                 permission: 'student:view',
             },
+            {
+                name: 'Access Recovery',
+                href: '/admin/users/access-recovery',
+                active: page.component === 'Admin/Users/AccessRecovery',
+                icon: IconUsers,
+                permission: 'sys:manage_settings',
+            },
         ],
     },
     {

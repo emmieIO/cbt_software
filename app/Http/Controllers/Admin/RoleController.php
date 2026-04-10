@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\DTOs\RoleDTO;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Services\RoleService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,9 +19,14 @@ class RoleController extends Controller
 
     public function index(): Response
     {
+        $usersWithoutRolesCount = User::query()
+            ->doesntHave('roles')
+            ->count();
+
         return Inertia::render('Admin/RBAC/Roles', [
-            'roles' => Role::with('permissions')->get(),
+            'roles' => Role::with('permissions')->withCount('users')->get(),
             'permissions' => Permission::all(),
+            'usersWithoutRolesCount' => $usersWithoutRolesCount,
         ]);
     }
 
@@ -56,10 +62,10 @@ class RoleController extends Controller
 
     public function destroy(Role $role): RedirectResponse
     {
-        $deleted = $this->roleService->deleteRole($role);
+        $result = $this->roleService->deleteRole($role);
 
-        if (! $deleted) {
-            return back()->with('error', 'Cannot delete the admin role.');
+        if (! $result['deleted']) {
+            return back()->with('error', $result['reason'] ?? 'Role could not be deleted.');
         }
 
         return back()->with('success', 'Role deleted successfully.');

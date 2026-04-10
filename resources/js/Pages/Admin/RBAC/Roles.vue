@@ -15,11 +15,13 @@ interface Role {
     name: string;
     category: string;
     permissions: Permission[];
+    users_count: number;
 }
 
 defineProps<{
     roles: Role[];
     permissions: Permission[];
+    usersWithoutRolesCount: number;
 }>();
 
 const categories = [
@@ -77,6 +79,10 @@ const isDeleteModalOpen = ref(false);
 const roleToDelete = ref<Role | null>(null);
 
 const confirmDelete = (role: Role) => {
+    if (role.users_count > 0) {
+        return;
+    }
+
     roleToDelete.value = role;
     isDeleteModalOpen.value = true;
 };
@@ -139,6 +145,26 @@ const togglePermission = (permissionName: string) => {
                 </button>
             </div>
 
+            <div
+                v-if="usersWithoutRolesCount > 0"
+                class="rounded-xl border border-amber-200 bg-amber-50 p-5 text-amber-900 shadow-sm"
+            >
+                <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div>
+                        <h2 class="text-sm font-semibold uppercase tracking-wider">Users Without Roles</h2>
+                        <p class="mt-2 text-sm leading-6 text-amber-800">
+                            {{ usersWithoutRolesCount }} user{{ usersWithoutRolesCount === 1 ? '' : 's' }} currently have no assigned role. Keep this page focused on role design and use the recovery queue for reassignment.
+                        </p>
+                    </div>
+                    <Link
+                        href="/admin/users/access-recovery"
+                        class="inline-flex items-center justify-center rounded-lg border border-amber-300 bg-white px-4 py-2 text-sm font-medium text-amber-900 hover:bg-amber-100"
+                    >
+                        Open Recovery Queue
+                    </Link>
+                </div>
+            </div>
+
             <!-- Roles Grid by Category -->
             <div v-for="cat in categories" :key="cat.id" class="space-y-4">
                 <div class="flex items-center gap-4">
@@ -159,6 +185,9 @@ const togglePermission = (permissionName: string) => {
                                     <p class="mt-1 text-xs font-medium tracking-wider text-primary uppercase">
                                         {{ role.permissions.length }} Permissions Assigned
                                     </p>
+                                    <p class="mt-1 text-[11px] font-medium tracking-wider text-gray-400 uppercase">
+                                        {{ role.users_count }} Assigned Users
+                                    </p>
                                 </div>
                                 <div class="flex gap-x-1" v-if="role.name !== 'super_admin'">
                                     <button
@@ -176,7 +205,8 @@ const togglePermission = (permissionName: string) => {
                                     </button>
                                     <button
                                         @click="confirmDelete(role)"
-                                        class="inline-flex size-8 items-center justify-center gap-x-2 rounded-lg border border-transparent text-gray-500 hover:bg-red-50 hover:text-red-600 focus:bg-red-50 focus:outline-none disabled:pointer-events-none disabled:opacity-50"
+                                        :disabled="role.users_count > 0"
+                                        class="inline-flex size-8 items-center justify-center gap-x-2 rounded-lg border border-transparent text-gray-500 hover:bg-red-50 hover:text-red-600 focus:bg-red-50 focus:outline-none disabled:pointer-events-none disabled:opacity-40"
                                     >
                                         <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path
@@ -212,6 +242,13 @@ const togglePermission = (permissionName: string) => {
                                     {{ permission.name }}
                                 </span>
                                 <span v-if="role.permissions.length === 0" class="text-xs font-medium text-gray-400">No permissions assigned.</span>
+                            </div>
+
+                            <div
+                                v-if="role.users_count > 0"
+                                class="mt-4 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-xs font-medium text-blue-800"
+                            >
+                                This role is currently in use and cannot be deleted until all assigned users are moved to another role.
                             </div>
                         </div>
                     </div>
