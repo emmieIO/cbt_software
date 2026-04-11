@@ -9,7 +9,7 @@ interface Exam {
     title: string;
     start_time: string;
     duration: number;
-    subject: { name: string };
+    subject: { name: string } | null;
 }
 
 defineProps<{
@@ -102,7 +102,7 @@ const formatDate = (dateString: string) => {
                                     <span
                                         class="mb-2 inline-flex items-center gap-1.5 rounded-md bg-primary/10 px-2 py-1 text-[10px] font-bold text-primary uppercase"
                                     >
-                                        {{ exam.subject.name }}
+                                        {{ exam.subject?.name || 'Multi-Subject' }}
                                     </span>
                                     <h3 class="text-base font-bold text-gray-800">{{ exam.title }}</h3>
                                     <div class="mt-2 flex items-center gap-4 text-xs font-medium text-gray-500">
@@ -173,7 +173,7 @@ const formatDate = (dateString: string) => {
                                 <tr v-for="result in recentResults" :key="result.id" class="transition-colors hover:bg-gray-50">
                                     <td class="px-6 py-4">
                                         <span class="text-sm font-bold text-gray-800">{{ result.exam.title }}</span>
-                                        <p class="text-xs text-gray-500">{{ result.exam.subject.name }}</p>
+                                        <p class="text-xs text-gray-500">{{ result.exam.subject?.name || 'Multi-Subject' }}</p>
                                     </td>
                                     <td class="px-6 py-4 text-center">
                                         <span

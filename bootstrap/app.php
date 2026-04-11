@@ -6,6 +6,8 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -14,6 +16,30 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
         then: function () {
+            RateLimiter::for('student-exam-start', fn (Request $request) => [
+                Limit::perMinute(6)->by((string) ($request->user()?->id ?? $request->ip())),
+            ]);
+
+            RateLimiter::for('student-exam-answer', fn (Request $request) => [
+                Limit::perMinute(120)->by((string) ($request->user()?->id ?? $request->ip())),
+            ]);
+
+            RateLimiter::for('student-exam-submit', fn (Request $request) => [
+                Limit::perMinute(6)->by((string) ($request->user()?->id ?? $request->ip())),
+            ]);
+
+            RateLimiter::for('staff-ai-generation', fn (Request $request) => [
+                Limit::perMinute(6)->by((string) ($request->user()?->id ?? $request->ip())),
+            ]);
+
+            RateLimiter::for('staff-heavy-write', fn (Request $request) => [
+                Limit::perMinute(15)->by((string) ($request->user()?->id ?? $request->ip())),
+            ]);
+
+            RateLimiter::for('admin-imports', fn (Request $request) => [
+                Limit::perMinute(10)->by((string) ($request->user()?->id ?? $request->ip())),
+            ]);
+
             Route::middleware('web')
                 ->prefix('admin')
                 ->name('admin.')

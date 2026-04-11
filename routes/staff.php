@@ -22,16 +22,16 @@ Route::middleware(['auth', 'can:access:staff-portal'])->group(function () {
 
         Route::middleware('permission:bank:use_ai')->group(function () {
             Route::get('/generate', [StaffQuestionController::class, 'generate'])->name('generate');
-            Route::post('/generate', [StaffQuestionController::class, 'processGeneration'])->name('generate.process');
+            Route::post('/generate', [StaffQuestionController::class, 'processGeneration'])->name('generate.process')->middleware('throttle:staff-ai-generation');
         });
 
         Route::middleware('permission:bank:create')->group(function () {
             Route::get('/batch', [StaffQuestionController::class, 'batchCreate'])->name('batch.create');
             Route::get('/import/setup', [StaffQuestionController::class, 'importPage'])->name('import.page');
-            Route::post('/batch', [StaffQuestionController::class, 'batchStore'])->name('batch.store');
+            Route::post('/batch', [StaffQuestionController::class, 'batchStore'])->name('batch.store')->middleware('throttle:staff-heavy-write');
             Route::get('/create', [StaffQuestionController::class, 'create'])->name('create');
             Route::post('/', [StaffQuestionController::class, 'store'])->name('store');
-            Route::post('/import', [StaffQuestionController::class, 'import'])->name('import');
+            Route::post('/import', [StaffQuestionController::class, 'import'])->name('import')->middleware('throttle:staff-heavy-write');
             Route::get('/template', [StaffQuestionController::class, 'downloadTemplate'])->name('template');
         });
 
@@ -76,9 +76,10 @@ Route::middleware(['auth', 'can:access:staff-portal'])->group(function () {
         Route::middleware('permission:exam:edit')->group(function () {
             Route::get('/{exam}/edit', [ExamController::class, 'edit'])->name('edit');
             Route::put('/{exam}', [ExamController::class, 'update'])->name('update');
+            Route::put('/{exam}/status', [ExamController::class, 'updateStatus'])->name('status.update');
             Route::get('/{exam}/questions', [ExamController::class, 'manageQuestions'])->name('questions');
-            Route::post('/{exam}/questions', [ExamController::class, 'updateQuestions'])->name('questions.update');
-            Route::post('/{exam}/ai-select', [ExamController::class, 'aiSelectQuestions'])->name('questions.ai-select');
+            Route::post('/{exam}/questions', [ExamController::class, 'updateQuestions'])->name('questions.update')->middleware('throttle:staff-heavy-write');
+            Route::post('/{exam}/ai-select', [ExamController::class, 'aiSelectQuestions'])->name('questions.ai-select')->middleware('throttle:staff-heavy-write');
         });
 
         Route::delete('/{exam}', [ExamController::class, 'destroy'])->name('destroy')->middleware('permission:exam:delete');

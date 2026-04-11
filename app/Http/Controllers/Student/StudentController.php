@@ -32,7 +32,7 @@ class StudentController extends Controller
     public function store(LoginRequest $request): RedirectResponse
     {
         // Allow both regular students and entrance candidates to login via this portal
-        $user = $this->authService->login($request->credentials(), $request->boolean('remember'), 'access:student-portal');
+        $user = $this->authService->login($request->credentials(), $request->boolean('remember'), 'access:student-portal', $request);
 
         return redirect()->intended(route('student.dashboard'));
     }
@@ -119,16 +119,23 @@ class StudentController extends Controller
             return back()->with('error', 'Exam attempt is not active.');
         }
 
+        if ($this->examService->attemptHasTimedOut($attempt)) {
+            return back()->with('error', 'Time is up for this examination. Please submit your attempt.');
+        }
+
         $request->validate([
             'question_id' => ['required', 'string'],
             'option_id' => ['required', 'string'],
         ]);
 
-        $this->studentPortalService->saveAnswer(
-            $attempt,
-            $request->string('question_id')->toString(),
-            $request->string('option_id')->toString()
-        );
+        $questionId = $request->string('question_id')->toString();
+        $optionId = $request->string('option_id')->toString();
+
+        if (! $this->studentPortalService->isValidAttemptAnswerSelection($attempt, $questionId, $optionId)) {
+            return back()->with('error', 'Invalid answer selection for this examination.');
+        }
+
+        $this->studentPortalService->saveAnswer($attempt, $questionId, $optionId);
 
         return back();
     }

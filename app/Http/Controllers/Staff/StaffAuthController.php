@@ -20,7 +20,7 @@ class StaffAuthController extends Controller
 
     public function store(LoginRequest $request): RedirectResponse
     {
-        $user = $this->authService->login($request->credentials(), $request->boolean('remember'), 'access:staff-portal');
+        $user = $this->authService->login($request->credentials(), $request->boolean('remember'), 'access:staff-portal', $request);
 
         return redirect()->intended(route('staff.dashboard'));
     }

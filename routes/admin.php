@@ -87,7 +87,7 @@ Route::middleware(['auth', 'can:access:admin-portal'])->group(function () {
             Route::get('/{staff}/edit', [StaffController::class, 'edit'])->name('edit')->middleware('permission:staff:edit');
             Route::put('/{staff}', [StaffController::class, 'update'])->name('update')->middleware('permission:staff:edit');
             Route::delete('/{staff}', [StaffController::class, 'destroy'])->name('destroy')->middleware('permission:staff:delete');
-            Route::post('/import', [StaffController::class, 'import'])->name('import')->middleware('permission:staff:create');
+            Route::post('/import', [StaffController::class, 'import'])->name('import')->middleware(['permission:staff:create', 'throttle:admin-imports']);
         });
 
         Route::prefix('students')->name('students.')->group(function () {
@@ -97,7 +97,7 @@ Route::middleware(['auth', 'can:access:admin-portal'])->group(function () {
             Route::get('/{student}/edit', [StudentController::class, 'edit'])->name('edit')->middleware('permission:student:edit');
             Route::put('/{student}', [StudentController::class, 'update'])->name('update')->middleware('permission:student:edit');
             Route::delete('/{student}', [StudentController::class, 'destroy'])->name('destroy')->middleware('permission:student:delete');
-            Route::post('/import', [StudentController::class, 'import'])->name('import')->middleware('permission:student:create');
+            Route::post('/import', [StudentController::class, 'import'])->name('import')->middleware(['permission:student:create', 'throttle:admin-imports']);
         });
     });
 

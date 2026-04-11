@@ -42,7 +42,7 @@ const showViolationWarning = ref(false);
 const isInExamHall = ref(false);
 const isFullscreen = ref(false);
 
-const currentQuestion = computed(() => props.questions[currentQuestionIndex.value]);
+const currentQuestion = computed<Question | null>(() => props.questions[currentQuestionIndex.value] ?? null);
 const resolveQuestionImageSrc = (imagePath?: string | null) => {
     if (!imagePath) return null;
     if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) return imagePath;
@@ -171,6 +171,41 @@ const handleVisibilityChange = () => {
     }
 };
 
+const handleWindowBlur = () => {
+    logViolation('window_blur');
+};
+
+const handleContextMenu = (e: Event) => {
+    if (isInExamHall.value) {
+        e.preventDefault();
+    }
+};
+
+const handleCopy = (e: ClipboardEvent) => {
+    if (isInExamHall.value) {
+        e.preventDefault();
+    }
+};
+
+const handleCut = (e: ClipboardEvent) => {
+    if (isInExamHall.value) {
+        e.preventDefault();
+    }
+};
+
+const handleDragStart = (e: DragEvent) => {
+    if (isInExamHall.value) {
+        e.preventDefault();
+    }
+};
+
+const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+    if (!isInExamHall.value || isSubmitting.value) return;
+
+    e.preventDefault();
+    e.returnValue = 'Examination in progress. Are you sure you want to leave?';
+};
+
 // Navigation
 const goToQuestion = (index: number) => {
     if (index >= 0 && index < props.questions.length) {
@@ -265,34 +300,19 @@ onMounted(() => {
     document.addEventListener('mozfullscreenchange', handleFullscreenChange);
     document.addEventListener('MSFullscreenChange', handleFullscreenChange);
 
-    window.addEventListener('blur', () => logViolation('window_blur'));
+    window.addEventListener('blur', handleWindowBlur);
     window.addEventListener('keydown', handleKeydown);
 
     // Prevent right-click, copy, and cut
-    document.addEventListener('contextmenu', (e) => e.preventDefault());
-    document.addEventListener('copy', (e) => {
-        if (isInExamHall.value) {
-            e.preventDefault();
-            return false;
-        }
-    });
-    document.addEventListener('cut', (e) => {
-        if (isInExamHall.value) {
-            e.preventDefault();
-            return false;
-        }
-    });
+    document.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener('copy', handleCopy);
+    document.addEventListener('cut', handleCut);
 
     // Prevent drag and drop of content
-    document.addEventListener('dragstart', (e) => {
-        if (isInExamHall.value) {
-            e.preventDefault();
-            return false;
-        }
-    });
+    document.addEventListener('dragstart', handleDragStart);
 
     // Prevent accidental back navigation
-    window.onbeforeunload = () => 'Examination in progress. Are you sure you want to leave?';
+    window.addEventListener('beforeunload', handleBeforeUnload);
 });
 
 onBeforeUnmount(() => {
@@ -303,9 +323,13 @@ onBeforeUnmount(() => {
     document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
     document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
 
-    window.removeEventListener('blur', () => logViolation('window_blur'));
+    window.removeEventListener('blur', handleWindowBlur);
     window.removeEventListener('keydown', handleKeydown);
-    window.onbeforeunload = null;
+    document.removeEventListener('contextmenu', handleContextMenu);
+    document.removeEventListener('copy', handleCopy);
+    document.removeEventListener('cut', handleCut);
+    document.removeEventListener('dragstart', handleDragStart);
+    window.removeEventListener('beforeunload', handleBeforeUnload);
 });
 </script>
 
@@ -429,6 +453,12 @@ onBeforeUnmount(() => {
                 <!-- Main Question Display -->
                 <div class="lg:col-span-8">
                     <div class="rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
+                        <div v-if="!currentQuestion" class="py-16 text-center">
+                            <p class="text-sm font-semibold text-gray-700">No question is available for this attempt.</p>
+                            <p class="mt-2 text-xs text-gray-500">Please refresh the page or contact your supervisor if this persists.</p>
+                        </div>
+
+                        <template v-else>
                         <!-- Question Progress -->
                         <div class="mb-8 flex items-center justify-between">
                             <span class="text-xs font-semibold text-primary">Question {{ currentQuestionIndex + 1 }} of {{ questions.length }}</span>
@@ -516,6 +546,7 @@ onBeforeUnmount(() => {
                                 </svg>
                             </button>
                         </div>
+                        </template>
                     </div>
                 </div>
 

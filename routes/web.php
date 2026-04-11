@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
+use App\Models\SchoolClass;
 use App\Models\Subject;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -17,6 +18,17 @@ Route::middleware('auth')->group(function () {
 
     // Dynamic UI API Helpers
     Route::get('/api/subjects/{subject}/topics', function (Subject $subject) {
-        return $subject->topics()->orderBy('name')->get(['id', 'name']);
+        $query = $subject->topics()->orderBy('name');
+        $schoolClassId = request()->query('school_class_id');
+
+        if (is_string($schoolClassId) && $schoolClassId !== '') {
+            $schoolClass = SchoolClass::query()->find($schoolClassId);
+
+            if ($schoolClass) {
+                $query->where('school_class_id', $schoolClass->id);
+            }
+        }
+
+        return $query->get(['id', 'name', 'school_class_id']);
     })->name('api.topics.index');
 });

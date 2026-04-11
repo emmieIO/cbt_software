@@ -6,6 +6,8 @@ use App\Models\AcademicSession;
 use App\Models\Exam;
 use App\Models\User;
 use App\Services\QuestionService;
+use Carbon\CarbonInterface;
+use Illuminate\Support\Carbon;
 
 class ExamPayloadService
 {
@@ -41,9 +43,27 @@ class ExamPayloadService
      */
     public function getEditPayload(User $user, Exam $exam): array
     {
+        $loadedExam = $exam->load(['subject', 'schoolClass', 'compositions.subject', 'compositions.topic']);
+        $examPayload = $loadedExam->toArray();
+        $examPayload['start_time'] = $this->formatDateTime($loadedExam->start_time);
+        $examPayload['end_time'] = $this->formatDateTime($loadedExam->end_time);
+
         return [
-            'exam' => $exam->load(['subject', 'schoolClass', 'compositions.subject', 'compositions.topic']),
+            'exam' => $examPayload,
             ...$this->getFormPayload($user),
         ];
+    }
+
+    protected function formatDateTime(mixed $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if ($value instanceof CarbonInterface) {
+            return $value->format('Y-m-d H:i:s');
+        }
+
+        return Carbon::parse($value)->format('Y-m-d H:i:s');
     }
 }

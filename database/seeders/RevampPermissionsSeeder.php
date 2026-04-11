@@ -45,9 +45,9 @@ class RevampPermissionsSeeder extends Seeder
             ],
             'exam' => [
                 'exam:create' => 'Initialization of new assessment configurations.',
-                'exam:edit' => 'Modification of live/scheduled exam settings.',
+                'exam:edit' => 'Modification of draft and live exam settings.',
                 'exam:delete' => 'Removal of assessments from the vault.',
-                'exam:view' => 'General visibility of scheduled assessments.',
+                'exam:view' => 'General visibility of configured assessments.',
                 'exam:take' => 'Entry into the secure CBT environment.',
                 'exam:manage_entrance' => 'Specialized control over admission testing blueprints.',
             ],

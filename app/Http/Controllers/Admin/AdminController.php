@@ -24,7 +24,7 @@ class AdminController extends Controller
 
     public function store(LoginRequest $request): RedirectResponse
     {
-        $this->authService->login($request->credentials(), $request->boolean('remember'), 'access:admin-portal');
+        $this->authService->login($request->credentials(), $request->boolean('remember'), 'access:admin-portal', $request);
 
         return to_route('admin.dashboard');
     }

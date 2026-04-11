@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onClickOutside } from '@vueuse/core';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 const props = withDefaults(
     defineProps<{
@@ -21,18 +21,53 @@ const emit = defineEmits(['update:modelValue', 'change']);
 
 const isOpen = ref(false);
 const container = ref<HTMLElement | null>(null);
+const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+const parseModelValue = (value: string | null | undefined): Date | null => {
+    if (!value) return null;
+
+    const normalized = String(value).trim();
+    const localMatch = normalized.match(
+        /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?$/,
+    );
+
+    if (localMatch) {
+        const [, year, month, day, hour = '00', minute = '00', second = '00'] = localMatch;
+        return new Date(
+            Number(year),
+            Number(month) - 1,
+            Number(day),
+            Number(hour),
+            Number(minute),
+            Number(second),
+        );
+    }
+
+    const parsed = new Date(normalized);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const formatDisplayValue = (value: Date) => {
+    const day = String(value.getDate()).padStart(2, '0');
+    const month = months[value.getMonth()].slice(0, 3);
+    const year = value.getFullYear();
+    const hour24 = value.getHours();
+    const minute = String(value.getMinutes()).padStart(2, '0');
+    const meridiem = hour24 >= 12 ? 'PM' : 'AM';
+    const hour12 = String(hour24 % 12 || 12).padStart(2, '0');
+
+    return `${day} ${month} ${year}, ${hour12}:${minute} ${meridiem}`;
+};
 
 // Date state
 const now = new Date();
 const currentMonth = ref(now.getMonth());
 const currentYear = ref(now.getFullYear());
-const selectedDate = ref<Date | null>(props.modelValue ? new Date(props.modelValue) : null);
+const selectedDate = ref<Date | null>(parseModelValue(props.modelValue));
 
 // Time state
 const hours = ref(selectedDate.value ? selectedDate.value.getHours() : 0);
 const minutes = ref(selectedDate.value ? selectedDate.value.getMinutes() : 0);
-
-const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 const daysOfWeek = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 
@@ -84,16 +119,8 @@ const calendarDays = computed(() => {
 });
 
 const formattedValue = computed(() => {
-    if (!props.modelValue) return '';
-    const date = new Date(props.modelValue);
-    return date.toLocaleString('en-GB', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true,
-    });
+    const date = parseModelValue(props.modelValue);
+    return date ? formatDisplayValue(date) : '';
 });
 
 const isSelected = (day: number, month: number, year: number) => {
@@ -154,6 +181,25 @@ const updateModel = () => {
         emit('change', val);
     }
 };
+
+watch(
+    () => props.modelValue,
+    (value) => {
+        const parsed = parseModelValue(value);
+        selectedDate.value = parsed;
+
+        if (!parsed) {
+            hours.value = 0;
+            minutes.value = 0;
+            return;
+        }
+
+        currentMonth.value = parsed.getMonth();
+        currentYear.value = parsed.getFullYear();
+        hours.value = parsed.getHours();
+        minutes.value = parsed.getMinutes();
+    },
+);
 
 onClickOutside(container, () => {
     isOpen.value = false;

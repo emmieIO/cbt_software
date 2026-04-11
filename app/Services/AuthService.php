@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Http\Requests\Auth\LoginRequest;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
@@ -13,15 +14,17 @@ class AuthService
      *
      * @throws ValidationException
      */
-    public function login(array $credentials, bool $remember, string $requiredPermission): User
+    public function login(array $credentials, bool $remember, string $requiredPermission, ?LoginRequest $loginRequest = null): User
     {
+        if ($loginRequest) {
+            $loginRequest->ensureIsNotRateLimited();
+        }
+
         // Unify all logins under the 'web' guard
         $guard = 'web';
 
         if (! Auth::guard($guard)->attempt($credentials, $remember)) {
-            throw ValidationException::withMessages([
-                'login_id' => [trans('auth.failed')],
-            ]);
+            $this->failLogin(trans('auth.failed'), $guard, $loginRequest);
         }
 
         $user = Auth::guard($guard)->user();
@@ -31,10 +34,14 @@ class AuthService
         $isAuthorized = $user->can('sys:manage_settings') || $user->can($requiredPermission);
 
         if (! $isAuthorized) {
-            $this->failLogin(trans('auth.failed'), $guard);
+            $this->failLogin(trans('auth.failed'), $guard, $loginRequest);
         }
 
         request()->session()->regenerate();
+
+        if ($loginRequest) {
+            $loginRequest->clearRateLimiter();
+        }
 
         return $user;
     }
@@ -42,8 +49,12 @@ class AuthService
     /**
      * Terminate session and throw validation error.
      */
-    protected function failLogin(string $message, string $guard = 'web'): void
+    protected function failLogin(string $message, string $guard = 'web', ?LoginRequest $loginRequest = null): void
     {
+        if ($loginRequest) {
+            $loginRequest->hitRateLimiter();
+        }
+
         Auth::guard($guard)->logout();
         request()->session()->invalidate();
         request()->session()->regenerateToken();

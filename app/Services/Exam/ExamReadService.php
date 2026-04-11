@@ -6,12 +6,29 @@ use App\Models\Exam;
 use App\Models\Question;
 use App\Models\User;
 use App\Services\ExamService;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection as SupportCollection;
+use Illuminate\Support\Carbon;
 
 class ExamReadService
 {
+    /**
+     * Normalize exam timestamps for frontend forms and tables so the browser
+     * does not apply an extra timezone shift on serialized model dates.
+     *
+     * @return array<string, mixed>
+     */
+    public function normalizeExamForFrontend(Exam $exam): array
+    {
+        $payload = $exam->toArray();
+        $payload['start_time'] = $this->formatDateTime($exam->start_time);
+        $payload['end_time'] = $this->formatDateTime($exam->end_time);
+
+        return $payload;
+    }
+
     /**
      * Build the scoped query for exam listing.
      */
@@ -34,9 +51,9 @@ class ExamReadService
     /**
      * Load full exam details for the staff show page.
      */
-    public function getExamDetails(Exam $exam): Exam
+    public function getExamDetails(Exam $exam): array
     {
-        return $exam->load([
+        $exam->load([
             'subject',
             'schoolClass',
             'academicSession',
@@ -44,6 +61,8 @@ class ExamReadService
             'compositions.subject',
             'compositions.topic',
         ]);
+
+        return $this->normalizeExamForFrontend($exam);
     }
 
     /**
@@ -58,9 +77,22 @@ class ExamReadService
         $availableQuestions = $examService->getAvailableQuestions($exam);
 
         return [
-            'exam' => $exam,
+            'exam' => $this->normalizeExamForFrontend($exam),
             'availableQuestions' => $availableQuestions,
             'selectedQuestionIds' => $exam->questions->pluck('id'),
         ];
+    }
+
+    protected function formatDateTime(mixed $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if ($value instanceof CarbonInterface) {
+            return $value->format('Y-m-d H:i:s');
+        }
+
+        return Carbon::parse($value)->format('Y-m-d H:i:s');
     }
 }

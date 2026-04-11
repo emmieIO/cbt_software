@@ -8,6 +8,7 @@ use App\Models\ExamAttempt;
 use App\Models\Question;
 use App\Models\User;
 use App\Repositories\Contracts\AttemptRepositoryInterface;
+use App\Services\Student\StudentPortalService;
 use Exception;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +16,8 @@ use Illuminate\Support\Facades\DB;
 class AttemptLifecycleService
 {
     public function __construct(
-        protected AttemptRepositoryInterface $attemptRepo
+        protected AttemptRepositoryInterface $attemptRepo,
+        protected StudentPortalService $studentPortalService
     ) {}
 
     /**
@@ -33,8 +35,14 @@ class AttemptLifecycleService
                     throw new Exception('You have already completed this examination. Only one attempt is permitted.');
                 }
 
+                if ($this->studentPortalService->examWindowHasClosed($exam)) {
+                    throw new Exception('This examination window has closed.');
+                }
+
                 return $existingAttempt;
             }
+
+            $this->ensureExamCanBeStarted($user, $exam);
 
             $attempt = $this->attemptRepo->create([
                 'user_id' => $user->id,
@@ -66,6 +74,17 @@ class AttemptLifecycleService
 
             return $attempt->fresh();
         });
+    }
+
+    protected function ensureExamCanBeStarted(User $user, Exam $exam): void
+    {
+        if (! $this->studentPortalService->userCanAccessExam($user, $exam)) {
+            throw new Exception('You are not allowed to start this examination.');
+        }
+
+        if (! $exam->questions()->exists()) {
+            throw new Exception('This examination is not ready yet because no questions have been assigned.');
+        }
     }
 
     /**

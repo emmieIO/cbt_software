@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\AttemptStatus;
+use App\Models\AcademicSession;
 use App\Models\Exam;
 use App\Models\ExamAnswer;
 use App\Models\Option;
@@ -55,17 +56,27 @@ class ExamLogicTest extends TestCase
 
         // Auto-select 1 question
         $this->service->autoSelectQuestions($exam, 1);
+        /** @var Question $selectedQuestion */
+        $selectedQuestion = $exam->questions()->firstOrFail();
 
         // Should have selected the fresh one, not the one used last month
         $this->assertCount(1, $exam->questions);
-        $this->assertEquals($freshQuestion->id, $exam->questions->first()->id);
+        $this->assertEquals($freshQuestion->id, $selectedQuestion->id);
     }
 
     public function test_exam_attempt_shuffling_is_deterministic_per_seed(): void
     {
-        $user = User::factory()->create();
-        $exam = Exam::factory()->create();
-        $questions = Question::factory()->count(10)->create();
+        $class = SchoolClass::factory()->create();
+        $session = AcademicSession::factory()->create(['is_current' => true]);
+        $user = User::factory()->create(['school_class_id' => $class->id]);
+        $exam = Exam::factory()->create([
+            'school_class_id' => $class->id,
+            'academic_session_id' => $session->id,
+            'status' => 'live',
+            'start_time' => now()->subHour(),
+            'end_time' => now()->addHour(),
+        ]);
+        $questions = Question::factory()->count(10)->create(['school_class_id' => $class->id]);
         $exam->questions()->attach($questions->pluck('id'));
 
         // Start attempt
@@ -82,9 +93,17 @@ class ExamLogicTest extends TestCase
 
     public function test_cannot_start_new_attempt_after_submission(): void
     {
-        $user = User::factory()->create();
-        $exam = Exam::factory()->create();
-        $question = Question::factory()->create();
+        $class = SchoolClass::factory()->create();
+        $session = AcademicSession::factory()->create(['is_current' => true]);
+        $user = User::factory()->create(['school_class_id' => $class->id]);
+        $exam = Exam::factory()->create([
+            'school_class_id' => $class->id,
+            'academic_session_id' => $session->id,
+            'status' => 'live',
+            'start_time' => now()->subHour(),
+            'end_time' => now()->addHour(),
+        ]);
+        $question = Question::factory()->create(['school_class_id' => $class->id]);
         $exam->questions()->attach($question->id);
 
         $attempt = $this->service->startExam($user, $exam);
@@ -98,9 +117,17 @@ class ExamLogicTest extends TestCase
 
     public function test_submit_attempt_is_idempotent_when_already_submitted(): void
     {
-        $user = User::factory()->create();
-        $exam = Exam::factory()->create();
-        $question = Question::factory()->create();
+        $class = SchoolClass::factory()->create();
+        $session = AcademicSession::factory()->create(['is_current' => true]);
+        $user = User::factory()->create(['school_class_id' => $class->id]);
+        $exam = Exam::factory()->create([
+            'school_class_id' => $class->id,
+            'academic_session_id' => $session->id,
+            'status' => 'live',
+            'start_time' => now()->subHour(),
+            'end_time' => now()->addHour(),
+        ]);
+        $question = Question::factory()->create(['school_class_id' => $class->id]);
         $correctOption = Option::factory()->create(['question_id' => $question->id, 'is_correct' => true]);
         Option::factory()->create(['question_id' => $question->id, 'is_correct' => false]);
         $exam->questions()->attach($question->id);
@@ -131,5 +158,44 @@ class ExamLogicTest extends TestCase
         $this->assertEquals($firstScore, $secondAttempt->score);
         $this->assertEquals($firstAnswersCount, $secondAnswersCount);
         $this->assertEquals('user_submit', $secondAttempt->metadata['termination_reason']);
+    }
+
+    public function test_submit_attempt_uses_saved_answers_after_timeout(): void
+    {
+        $class = SchoolClass::factory()->create();
+        $session = AcademicSession::factory()->create(['is_current' => true]);
+        $user = User::factory()->create(['school_class_id' => $class->id]);
+        $exam = Exam::factory()->create([
+            'school_class_id' => $class->id,
+            'academic_session_id' => $session->id,
+            'status' => 'live',
+            'duration' => 30,
+            'start_time' => now()->subHour(),
+            'end_time' => now()->addHour(),
+        ]);
+        $question = Question::factory()->create(['school_class_id' => $class->id]);
+        $correctOption = Option::factory()->create(['question_id' => $question->id, 'is_correct' => true]);
+        $wrongOption = Option::factory()->create(['question_id' => $question->id, 'is_correct' => false]);
+        $exam->questions()->attach($question->id);
+
+        $attempt = $this->service->startExam($user, $exam);
+        $attempt->update([
+            'started_at' => now()->subMinutes(45),
+            'metadata' => [
+                ...($attempt->metadata ?? []),
+                'saved_answers' => [$question->id => $correctOption->id],
+            ],
+        ]);
+
+        $this->service->submitAttempt(
+            $attempt->fresh(),
+            [$question->id => $wrongOption->id],
+            ['termination_reason' => 'user_submit']
+        );
+
+        $attempt->refresh();
+
+        $this->assertSame(1.0, (float) $attempt->score);
+        $this->assertSame('timeout', $attempt->metadata['termination_reason']);
     }
 }

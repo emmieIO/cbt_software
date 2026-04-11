@@ -109,10 +109,13 @@ const removeCompositionRow = (index: number) => {
 
 const fetchTopicsForComposition = async (index: number) => {
     const subjectId = form.compositions[index].subject_id;
-    if (!subjectId) return;
+    const classId = form.school_class_id;
+    form.compositions[index].topic_id = '';
+    form.compositions[index].available_topics = [];
+    if (!subjectId || !classId) return;
 
     try {
-        const response = await fetch(`/api/subjects/${subjectId}/topics`);
+        const response = await fetch(`/api/subjects/${subjectId}/topics?school_class_id=${classId}`);
         if (!response.ok) throw new Error('Network response was not ok');
         form.compositions[index].available_topics = await response.json();
     } catch (error) {
@@ -127,13 +130,59 @@ watch(
         if (newVal && oldVal && newVal !== oldVal) {
             form.subject_id = '';
             form.school_class_id = '';
+            form.compositions = form.compositions.map((composition) => ({
+                ...composition,
+                topic_id: '',
+                available_topics: [],
+            }));
+        }
+    },
+);
+
+watch(
+    () => form.school_class_id,
+    async (newVal, oldVal) => {
+        if (newVal === oldVal) return;
+
+        form.compositions = form.compositions.map((composition) => ({
+            ...composition,
+            topic_id: '',
+            available_topics: [],
+        }));
+
+        if (!newVal) return;
+
+        for (let index = 0; index < form.compositions.length; index += 1) {
+            if (form.compositions[index].subject_id) {
+                await fetchTopicsForComposition(index);
+            }
         }
     },
 );
 
 watch(isMultiSubject, (val) => {
     if (val && form.compositions.length === 0) {
+        if (form.subject_id) {
+            form.compositions.push({
+                subject_id: form.subject_id,
+                topic_id: '',
+                question_count: 10,
+                marks_per_question: 1,
+                available_topics: [],
+            });
+            form.subject_id = '';
+            void fetchTopicsForComposition(0);
+            return;
+        }
+
         addCompositionRow();
+        form.subject_id = '';
+        return;
+    }
+
+    if (!val) {
+        form.subject_id = form.subject_id || form.compositions[0]?.subject_id || '';
+        form.compositions = [];
     }
 });
 
@@ -297,7 +346,7 @@ const submit = () => {
                                     v-model="form.school_class_id"
                                     label="Target Academic Class"
                                     :options="filteredClasses"
-                                    placeholder="Choose Level"
+                                    placeholder="Choose Class"
                                     :error="form.errors.school_class_id"
                                     size="md"
                                 />
@@ -370,7 +419,7 @@ const submit = () => {
                                                 v-model="comp.topic_id"
                                                 label="Topic Context"
                                                 :options="comp.available_topics"
-                                                placeholder="Universal Coverage"
+                                                placeholder="Choose Topic"
                                                 size="sm"
                                                 :error="form.errors[`compositions.${index}.topic_id`]"
                                             />

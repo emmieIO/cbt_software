@@ -2,9 +2,15 @@
 
 namespace Tests\Feature;
 
+use App\Models\AcademicSession;
+use App\Models\Exam;
+use App\Models\Option;
+use App\Models\Question;
+use App\Models\SchoolClass;
 use App\Models\User;
 use App\Services\AuthService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -19,26 +25,32 @@ class SecurityTest extends TestCase
     {
         parent::setUp();
 
+        RateLimiter::clear('login@example.com|127.0.0.1');
+
         // Reset cached roles and permissions
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         // Seed basic roles and permissions
+        /** @var Role $adminRole */
         $adminRole = Role::findOrCreate('super_admin', 'web');
-        $adminRole->category = 'admin';
+        $adminRole->setAttribute('category', 'admin');
         $adminRole->save();
 
+        /** @var Role $studentRole */
         $studentRole = Role::findOrCreate('candidate', 'web');
-        $studentRole->category = 'student';
+        $studentRole->setAttribute('category', 'student');
         $studentRole->save();
 
         Role::findOrCreate('examiner', 'web');
 
         Permission::findOrCreate('access:admin-portal', 'web');
         Permission::findOrCreate('access:student-portal', 'web');
+        Permission::findOrCreate('exam:take', 'web');
         Permission::findOrCreate('sys:manage_settings', 'web');
 
         $adminRole->givePermissionTo('access:admin-portal');
         $adminRole->givePermissionTo('sys:manage_settings');
+        $studentRole->givePermissionTo(['access:student-portal', 'exam:take']);
     }
 
     public function test_student_cannot_access_admin_dashboard(): void
@@ -103,5 +115,60 @@ class SecurityTest extends TestCase
         $response = $this->get('/debug-exception');
 
         $response->assertNotFound();
+    }
+
+    public function test_login_is_rate_limited_after_too_many_failed_attempts(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'login@example.com',
+            'username' => 'login.user',
+            'password' => bcrypt('correct-password'),
+        ]);
+        $user->assignRole('super_admin');
+
+        foreach (range(1, 5) as $attempt) {
+            $response = $this->post('/admin/login', [
+                'login_id' => 'login@example.com',
+                'password' => 'wrong-password',
+            ]);
+
+            $response->assertSessionHasErrors('login_id');
+        }
+
+        $response = $this->post('/admin/login', [
+            'login_id' => 'login@example.com',
+            'password' => 'wrong-password',
+        ]);
+
+        $response->assertSessionHasErrors('login_id');
+        $this->assertStringContainsString(
+            'Too many login attempts.',
+            session('errors')->get('login_id')[0]
+        );
+    }
+
+    public function test_student_exam_start_is_throttled_after_repeated_requests(): void
+    {
+        $class = SchoolClass::factory()->create();
+        $session = AcademicSession::factory()->create(['is_current' => true]);
+        $student = User::factory()->create(['school_class_id' => $class->id]);
+        $student->assignRole('candidate');
+
+        $exam = Exam::factory()->create([
+            'school_class_id' => $class->id,
+            'academic_session_id' => $session->id,
+            'status' => 'live',
+        ]);
+        $question = Question::factory()->create(['school_class_id' => $class->id]);
+        Option::factory()->create(['question_id' => $question->id, 'is_correct' => true]);
+        $exam->questions()->attach($question->id);
+
+        foreach (range(1, 6) as $attempt) {
+            $this->actingAs($student)->post(route('student.exams.start', $exam->id));
+        }
+
+        $response = $this->actingAs($student)->post(route('student.exams.start', $exam->id));
+
+        $response->assertStatus(429);
     }
 }

@@ -90,4 +90,9 @@ class ExamService
     {
         $this->attemptSubmissionService->submitAttempt($attempt, $answers, $additionalMetadata, $violations);
     }
+
+    public function attemptHasTimedOut(ExamAttempt $attempt): bool
+    {
+        return $this->attemptSubmissionService->hasTimedOut($attempt);
+    }
 }

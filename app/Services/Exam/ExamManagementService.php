@@ -2,10 +2,13 @@
 
 namespace App\Services\Exam;
 
+use App\DTOs\ExamCompositionDTO;
+use App\Enums\ExamStatus;
 use App\DTOs\ExamDTO;
 use App\Models\Exam;
 use App\Models\School;
 use App\Services\ExamService;
+use InvalidArgumentException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -25,6 +28,7 @@ class ExamManagementService
         $school = School::find($validated['school_id']);
         $data = $dto->toArray();
         $data['branch'] = $school?->slug;
+        $data = $this->normalizeExamPayload($data);
 
         return $this->examService->createExam($data, $creatorId);
     }
@@ -40,13 +44,10 @@ class ExamManagementService
             $school = School::find($validated['school_id']);
             $data = $dto->toArray();
             $data['branch'] = $school?->slug;
+            $data = $this->normalizeExamPayload($data, $exam->subject_id);
 
             $compositions = $data['compositions'];
             unset($data['compositions']);
-
-            if (empty($compositions) && is_null($data['subject_id'])) {
-                $data['subject_id'] = $exam->subject_id;
-            }
 
             $exam->update($data);
 
@@ -59,6 +60,74 @@ class ExamManagementService
                 $exam->compositions()->delete();
             }
         });
+    }
+
+    public function updateStatus(Exam $exam, string $status): void
+    {
+        $normalizedStatus = ExamStatus::tryFrom($status);
+
+        if (! $normalizedStatus) {
+            throw new InvalidArgumentException('Invalid examination status selected.');
+        }
+
+        if ($normalizedStatus === ExamStatus::LIVE && ! $exam->start_time) {
+            throw new InvalidArgumentException('You cannot make this examination live until a start date and time has been set.');
+        }
+
+        if ($normalizedStatus === ExamStatus::LIVE && ! $exam->questions()->exists()) {
+            throw new InvalidArgumentException('You cannot make this examination live until questions have been allocated.');
+        }
+
+        $exam->update([
+            'status' => $normalizedStatus,
+        ]);
+    }
+
+    protected function normalizeExamPayload(array $data, ?string $fallbackSubjectId = null): array
+    {
+        $compositions = array_values(array_filter(
+            $data['compositions'] ?? [],
+            fn ($composition) => $this->compositionHasSubject($composition)
+        ));
+
+        if (! empty($compositions)) {
+            $data['subject_id'] = null;
+        } else {
+            $data['subject_id'] = $data['subject_id'] ?: $fallbackSubjectId;
+        }
+
+        $data['compositions'] = array_map(
+            fn ($composition) => $this->normalizeComposition($composition, $data['school_class_id'] ?? null),
+            $compositions
+        );
+
+        return $data;
+    }
+
+    protected function compositionHasSubject(mixed $composition): bool
+    {
+        if ($composition instanceof ExamCompositionDTO) {
+            return ! empty($composition->subject_id);
+        }
+
+        return is_array($composition) && ! empty($composition['subject_id']);
+    }
+
+    protected function normalizeComposition(mixed $composition, ?string $schoolClassId): mixed
+    {
+        if ($composition instanceof ExamCompositionDTO) {
+            if (empty($composition->source_class_id) && ! empty($schoolClassId)) {
+                $composition->source_class_id = $schoolClassId;
+            }
+
+            return $composition;
+        }
+
+        if (is_array($composition) && empty($composition['source_class_id']) && ! empty($schoolClassId)) {
+            $composition['source_class_id'] = $schoolClassId;
+        }
+
+        return $composition;
     }
 
     /**

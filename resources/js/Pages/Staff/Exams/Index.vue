@@ -73,8 +73,6 @@ const getStatusClasses = (status: string) => {
     switch (status) {
         case 'live':
             return 'bg-emerald-100 text-emerald-700 border-emerald-200';
-        case 'scheduled':
-            return 'bg-blue-100 text-blue-700 border-blue-200';
         case 'closed':
             return 'bg-rose-100 text-rose-700 border-rose-200';
         default:

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link, usePage } from '@inertiajs/vue3';
+import { Head, Link, usePage, router } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import {
     manageQuestions,
@@ -105,6 +105,32 @@ const formatDate = (dateStr: string | null) => {
         minute: '2-digit',
     });
 };
+
+const statusActions = computed(() => {
+    const currentStatus = props.exam.status.toLowerCase();
+
+    if (currentStatus === 'draft') {
+        return [
+            { label: 'Set Live', status: 'live', style: 'primary' },
+        ];
+    }
+
+    if (currentStatus === 'live') {
+        return [
+            { label: 'Close Exam', status: 'closed', style: 'danger' },
+            { label: 'Return Draft', status: 'draft', style: 'secondary' },
+        ];
+    }
+
+    return [
+        { label: 'Reopen as Draft', status: 'draft', style: 'secondary' },
+        { label: 'Set Live', status: 'live', style: 'primary' },
+    ];
+});
+
+const updateStatus = (status: string) => {
+    router.put(`/staff/exams/${props.exam.id}/status`, { status }, { preserveScroll: true });
+};
 </script>
 
 <template>
@@ -152,6 +178,22 @@ const formatDate = (dateStr: string | null) => {
                     </div>
 
                     <div class="flex flex-wrap items-center gap-2">
+                        <button
+                            v-for="action in statusActions"
+                            :key="action.status"
+                            type="button"
+                            @click="updateStatus(action.status)"
+                            class="inline-flex items-center gap-x-2 rounded-lg border px-4 py-2 text-xs font-semibold uppercase shadow-sm transition-all"
+                            :class="
+                                action.style === 'primary'
+                                    ? 'border-transparent bg-primary text-white hover:bg-primary/90'
+                                    : action.style === 'danger'
+                                        ? 'border-transparent bg-red-600 text-white hover:bg-red-700'
+                                        : 'border-gray-200 bg-white text-gray-800 hover:bg-gray-50'
+                            "
+                        >
+                            {{ action.label }}
+                        </button>
                         <div class="inline-flex rounded-lg shadow-sm">
                             <a
                                 :href="showHardCopyAction(exam.id).url"

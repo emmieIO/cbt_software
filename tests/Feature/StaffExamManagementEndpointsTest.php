@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\ClassLevel;
+use App\Models\AcademicSession;
 use App\Models\Exam;
 use App\Models\Question;
 use App\Models\School;
@@ -30,6 +31,7 @@ class StaffExamManagementEndpointsTest extends TestCase
 
         $permissions = [
             'access:staff-portal',
+            'exam:create',
             'exam:edit',
             'sys:manage_settings',
         ];
@@ -38,10 +40,11 @@ class StaffExamManagementEndpointsTest extends TestCase
             Permission::findOrCreate($permission, 'web');
         }
 
+        /** @var Role $examinerRole */
         $examinerRole = Role::findOrCreate('examiner', 'web');
-        $examinerRole->category = 'staff';
+        $examinerRole->setAttribute('category', 'staff');
         $examinerRole->save();
-        $examinerRole->syncPermissions(['access:staff-portal', 'exam:edit']);
+        $examinerRole->syncPermissions(['access:staff-portal', 'exam:create', 'exam:edit']);
 
         $school = School::factory()->create(['type' => 'secondary']);
 
@@ -147,5 +150,150 @@ class StaffExamManagementEndpointsTest extends TestCase
         $response->assertSessionHas('success');
         $exam->refresh();
         $this->assertCount(2, $exam->questions);
+    }
+
+    public function test_store_exam_rejects_subject_that_does_not_match_selected_class_level(): void
+    {
+        $session = AcademicSession::factory()->create(['is_current' => true]);
+        $school = School::factory()->create(['type' => ClassLevel::SECONDARY]);
+        $secondaryClass = SchoolClass::factory()->create([
+            'school_id' => $school->id,
+            'level' => ClassLevel::SECONDARY,
+        ]);
+        $primarySubject = Subject::factory()->create(['level' => ClassLevel::PRIMARY->value]);
+
+        $response = $this->actingAs($this->staff)->post(route('staff.exams.store'), [
+            'title' => 'Bad Level Exam',
+            'school_id' => $school->id,
+            'subject_id' => $primarySubject->id,
+            'school_class_id' => $secondaryClass->id,
+            'duration' => 60,
+            'type' => 'terminal',
+            'start_time' => now()->addHour()->toDateTimeString(),
+            'end_time' => now()->addHours(2)->toDateTimeString(),
+        ]);
+
+        $response->assertSessionHasErrors(['subject_id']);
+    }
+
+    public function test_store_exam_rejects_topic_that_does_not_belong_to_selected_class(): void
+    {
+        $session = AcademicSession::factory()->create(['is_current' => true]);
+        $school = School::factory()->create(['type' => ClassLevel::SECONDARY]);
+        $targetClass = SchoolClass::factory()->create([
+            'school_id' => $school->id,
+            'level' => ClassLevel::SECONDARY,
+        ]);
+        $otherClass = SchoolClass::factory()->create([
+            'school_id' => $school->id,
+            'level' => ClassLevel::SECONDARY,
+        ]);
+        $subject = Subject::factory()->create(['level' => ClassLevel::SECONDARY->value]);
+        $topic = Topic::factory()->create([
+            'subject_id' => $subject->id,
+            'school_class_id' => $otherClass->id,
+        ]);
+
+        $response = $this->actingAs($this->staff)->post(route('staff.exams.store'), [
+            'title' => 'Broken Composition Exam',
+            'school_id' => $school->id,
+            'school_class_id' => $targetClass->id,
+            'duration' => 60,
+            'type' => 'terminal',
+            'start_time' => now()->addHour()->toDateTimeString(),
+            'end_time' => now()->addHours(2)->toDateTimeString(),
+            'compositions' => [
+                [
+                    'subject_id' => $subject->id,
+                    'topic_id' => $topic->id,
+                    'question_count' => 10,
+                    'marks_per_question' => 1,
+                ],
+            ],
+        ]);
+
+        $response->assertSessionHasErrors(['compositions.0.topic_id']);
+    }
+
+    public function test_staff_can_update_exam_status(): void
+    {
+        $exam = Exam::factory()->create([
+            'created_by' => $this->staff->id,
+            'status' => 'draft',
+        ]);
+        $question = Question::factory()->create(['created_by' => $this->staff->id]);
+        $exam->questions()->attach($question->id);
+
+        $response = $this->actingAs($this->staff)->put(route('staff.exams.status.update', $exam->id), [
+            'status' => 'live',
+        ]);
+
+        $response->assertRedirect(route('staff.exams.show', $exam->id));
+        $response->assertSessionHas('success');
+        $liveStatus = $exam->fresh()->status;
+        $this->assertSame('live', is_string($liveStatus) ? $liveStatus : $liveStatus?->value);
+    }
+
+    public function test_staff_cannot_make_exam_live_without_questions(): void
+    {
+        $exam = Exam::factory()->create([
+            'created_by' => $this->staff->id,
+            'status' => 'draft',
+        ]);
+
+        $response = $this->from(route('staff.exams.show', $exam->id))
+            ->actingAs($this->staff)
+            ->put(route('staff.exams.status.update', $exam->id), [
+                'status' => 'live',
+            ]);
+
+        $response->assertRedirect(route('staff.exams.show', $exam->id));
+        $response->assertSessionHas('error', 'You cannot make this examination live until questions have been allocated.');
+        $draftStatus = $exam->fresh()->status;
+        $this->assertSame('draft', is_string($draftStatus) ? $draftStatus : $draftStatus?->value);
+    }
+
+    public function test_staff_cannot_make_exam_live_without_start_time(): void
+    {
+        $exam = Exam::factory()->create([
+            'created_by' => $this->staff->id,
+            'status' => 'draft',
+            'start_time' => null,
+        ]);
+        $question = Question::factory()->create(['created_by' => $this->staff->id]);
+        $exam->questions()->attach($question->id);
+
+        $response = $this->from(route('staff.exams.show', $exam->id))
+            ->actingAs($this->staff)
+            ->put(route('staff.exams.status.update', $exam->id), [
+                'status' => 'live',
+            ]);
+
+        $response->assertRedirect(route('staff.exams.show', $exam->id));
+        $response->assertSessionHas('error', 'You cannot make this examination live until a start date and time has been set.');
+        $draftStatus = $exam->fresh()->status;
+        $this->assertSame('draft', is_string($draftStatus) ? $draftStatus : $draftStatus?->value);
+    }
+
+    public function test_staff_cannot_update_exam_with_past_start_time(): void
+    {
+        $exam = Exam::factory()->create([
+            'created_by' => $this->staff->id,
+            'status' => 'draft',
+        ]);
+
+        $response = $this->actingAs($this->staff)->put(route('staff.exams.update', $exam->id), [
+            'title' => $exam->title,
+            'school_id' => $exam->school_id,
+            'subject_id' => $exam->subject_id,
+            'school_class_id' => $exam->school_class_id,
+            'duration' => $exam->duration,
+            'type' => is_string($exam->type) ? $exam->type : $exam->type->value,
+            'status' => 'draft',
+            'start_time' => now()->subHour()->toDateTimeString(),
+            'end_time' => now()->addHour()->toDateTimeString(),
+        ]);
+
+        $response->assertSessionHasErrors(['start_time']);
     }
 }

@@ -18,6 +18,7 @@ use App\Services\Exam\ExamResultService;
 use App\Services\ExamService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use InvalidArgumentException;
 use Illuminate\View\View;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -45,8 +46,13 @@ class ExamController extends Controller
             $request->school_id
         );
 
+        $exams = $query->latest()
+            ->paginate(10)
+            ->withQueryString()
+            ->through(fn (Exam $exam) => $this->examReadService->normalizeExamForFrontend($exam));
+
         return Inertia::render('Staff/Exams/Index', [
-            'exams' => $query->latest()->paginate(10)->withQueryString(),
+            'exams' => $exams,
             'filters' => $request->only(['status', 'type', 'school_id']),
         ]);
     }
@@ -146,6 +152,22 @@ class ExamController extends Controller
 
         return redirect()->route('staff.exams.show', $exam->id)
             ->with('success', 'Exam updated successfully.');
+    }
+
+    public function updateStatus(Request $request, Exam $exam): RedirectResponse
+    {
+        $validated = $request->validate([
+            'status' => ['required', 'string'],
+        ]);
+
+        try {
+            $this->examManagementService->updateStatus($exam, $validated['status']);
+        } catch (InvalidArgumentException $exception) {
+            return back()->with('error', $exception->getMessage());
+        }
+
+        return redirect()->route('staff.exams.show', $exam->id)
+            ->with('success', 'Examination status updated successfully.');
     }
 
     /**

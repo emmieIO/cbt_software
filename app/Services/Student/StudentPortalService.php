@@ -4,12 +4,13 @@ namespace App\Services\Student;
 
 use App\Enums\AttemptStatus;
 use App\Enums\ExamStatus;
-use App\Enums\ExamType;
 use App\Models\AcademicSession;
 use App\Models\Exam;
 use App\Models\ExamAttempt;
 use App\Models\User;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 class StudentPortalService
@@ -45,21 +46,33 @@ class StudentPortalService
             return collect();
         }
 
-        $query = Exam::query()
-            ->where('academic_session_id', $currentSession->id)
-            ->where('status', ExamStatus::LIVE)
+        return $this->queryScopedExams($user, $currentSession->id)
             ->with(['subject'])
             ->with(['attempts' => fn ($q) => $q->where('user_id', $user->id)])
-            ->withCount('questions');
+            ->withCount('questions')
+            ->orderBy('start_time')
+            ->get()
+            ->map(fn (Exam $exam) => $this->mapExamForListing($exam));
+    }
 
-        if ($user->status === 'candidate') {
-            $query->where('type', ExamType::ENTRANCE)
-                ->where('prospective_class_id', $user->prospective_class_id);
-        } else {
-            $query->where('school_class_id', $user->school_class_id);
+    public function userCanAccessExam(User $user, Exam $exam): bool
+    {
+        $currentSession = AcademicSession::current()->first();
+
+        if (! $currentSession) {
+            return false;
         }
 
-        return $query->get();
+        return $this->queryEligibleExams($user, $currentSession->id)
+            ->whereKey($exam->id)
+            ->exists();
+    }
+
+    public function examWindowHasClosed(Exam $exam): bool
+    {
+        $endTime = $this->parseDateTime($exam->end_time);
+
+        return $endTime !== null && $endTime->isPast();
     }
 
     public function getResultsHistory(User $user): Collection
@@ -83,23 +96,128 @@ class StudentPortalService
         $attempt->update(['metadata' => $metadata]);
     }
 
+    public function isValidAttemptAnswerSelection(ExamAttempt $attempt, string $questionId, string $optionId): bool
+    {
+        $metadata = $attempt->metadata ?? [];
+        $questionOrder = $metadata['question_order'] ?? [];
+        $optionOrders = $metadata['option_orders'] ?? [];
+
+        if (! is_array($questionOrder) || ! in_array($questionId, $questionOrder, true)) {
+            return false;
+        }
+
+        $questionOptions = $optionOrders[$questionId] ?? null;
+
+        return is_array($questionOptions) && in_array($optionId, $questionOptions, true);
+    }
+
     private function queryUpcomingExamsForDashboard(User $user, string $sessionId): Builder
     {
-        $query = Exam::query()
-            ->where('academic_session_id', $sessionId)
-            ->where('status', ExamStatus::LIVE)
+        return $this->queryScopedExams($user, $sessionId)
             ->with(['subject'])
             ->withCount('questions')
+            ->where(function ($query) {
+                $query->whereNull('end_time')
+                    ->orWhere('end_time', '>=', now());
+            })
             ->whereDoesntHave('attempts', fn ($q) => $q
                 ->where('user_id', $user->id)
                 ->where('status', AttemptStatus::SUBMITTED));
+    }
 
-        $query->where(function ($q) use ($user) {
-            $q->whereHas('users', fn ($sq) => $sq->where('user_id', $user->id))
-                ->orWhere('school_class_id', $user->school_class_id);
-        });
+    public function queryEligibleExams(User $user, string $sessionId): Builder
+    {
+        return $this->queryScopedExams($user, $sessionId)
+            ->where(function ($query) {
+                $query->whereNull('start_time')
+                    ->orWhere('start_time', '<=', now());
+            })
+            ->where(function ($query) {
+                $query->whereNull('end_time')
+                    ->orWhere('end_time', '>=', now());
+            });
+    }
 
-        return $query;
+    public function queryScopedExams(User $user, string $sessionId): Builder
+    {
+        return Exam::query()
+            ->where('academic_session_id', $sessionId)
+            ->where('status', ExamStatus::LIVE)
+            ->whereNotNull('start_time')
+            ->where(function ($query) use ($user) {
+                $query->whereHas('users', fn ($assigned) => $assigned->where('user_id', $user->id));
+
+                if ($user->school_class_id) {
+                    $query->orWhere('school_class_id', $user->school_class_id);
+                }
+            });
+    }
+
+    protected function mapExamForListing(Exam $exam): array
+    {
+        $attempts = $exam->attempts->map(function (ExamAttempt $attempt) {
+            $status = $attempt->status;
+
+            return [
+                'id' => $attempt->id,
+                'status' => $status instanceof AttemptStatus ? $status->value : (string) $status,
+            ];
+        })->values();
+
+        return [
+            ...$exam->toArray(),
+            'subject' => $exam->subject?->toArray(),
+            'attempts' => $attempts,
+            'start_time' => $this->formatDateTime($exam->start_time),
+            'end_time' => $this->formatDateTime($exam->end_time),
+            'availability_status' => $this->determineAvailabilityStatus($exam),
+        ];
+    }
+
+    protected function determineAvailabilityStatus(Exam $exam): string
+    {
+        /** @var ExamAttempt|null $attempt */
+        $attempt = $exam->attempts->first();
+        $attemptStatus = $attempt?->status instanceof AttemptStatus
+            ? $attempt->status->value
+            : (is_string($attempt?->status) ? $attempt->status : null);
+
+        if ($attemptStatus === AttemptStatus::SUBMITTED->value) {
+            return 'completed';
+        }
+
+        if ($attemptStatus === AttemptStatus::ONGOING->value) {
+            return $this->examWindowHasClosed($exam) ? 'expired' : 'ongoing';
+        }
+
+        if ($this->examWindowHasClosed($exam)) {
+            return 'missed';
+        }
+
+        $startTime = $this->parseDateTime($exam->start_time);
+        if ($startTime !== null && $startTime->isFuture()) {
+            return 'scheduled';
+        }
+
+        return 'available';
+    }
+
+    protected function formatDateTime(mixed $value): ?string
+    {
+        return $this->parseDateTime($value)?->format('Y-m-d H:i:s');
+    }
+
+    protected function parseDateTime(mixed $value): ?CarbonInterface
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if ($value instanceof CarbonInterface) {
+            return $value;
+        }
+
+        return Carbon::parse($value);
     }
 
     private function getRecentResults(User $user, int $limit): Collection

@@ -16,10 +16,10 @@ Route::middleware(['auth', 'can:access:student-portal'])->group(function () {
     Route::prefix('exams')->name('exams.')->group(function () {
         Route::get('/', [StudentController::class, 'index'])->name('index')->middleware('permission:exam:view');
         // Note: access:student-portal is the baseline, exam:take is the functional permission for the exam itself
-        Route::post('/{exam}/start', [StudentController::class, 'startExam'])->name('start')->middleware('permission:exam:take');
+        Route::post('/{exam}/start', [StudentController::class, 'startExam'])->name('start')->middleware(['permission:exam:take', 'throttle:student-exam-start']);
         Route::get('/{attempt}', [StudentController::class, 'showExam'])->name('show')->middleware('permission:exam:take');
-        Route::patch('/{attempt}/answer', [StudentController::class, 'saveAnswer'])->name('save-answer')->middleware('permission:exam:take');
-        Route::post('/{attempt}/submit', [StudentController::class, 'submitExam'])->name('submit')->middleware('permission:exam:take');
+        Route::patch('/{attempt}/answer', [StudentController::class, 'saveAnswer'])->name('save-answer')->middleware(['permission:exam:take', 'throttle:student-exam-answer']);
+        Route::post('/{attempt}/submit', [StudentController::class, 'submitExam'])->name('submit')->middleware(['permission:exam:take', 'throttle:student-exam-submit']);
         Route::get('/{attempt}/result', [StudentController::class, 'showResult'])->name('result')->middleware('permission:results:view');
     });
 
