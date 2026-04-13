@@ -13,9 +13,12 @@ use App\Repositories\Eloquent\EloquentExamRepository;
 use App\Repositories\Eloquent\EloquentQuestionRepository;
 use App\Repositories\Eloquent\EloquentUserRepository;
 use Carbon\CarbonImmutable;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -58,6 +61,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        $this->registerRateLimiters();
 
         Gate::before(function ($user, $ability) {
             return $user->hasPermissionTo('sys:manage_settings') ? true : null;
@@ -84,5 +88,32 @@ class AppServiceProvider extends ServiceProvider
                 ->uncompromised()
             : null
         );
+    }
+
+    protected function registerRateLimiters(): void
+    {
+        RateLimiter::for('student-exam-start', fn (Request $request) => [
+            Limit::perMinute(6)->by((string) ($request->user()?->id ?? $request->ip())),
+        ]);
+
+        RateLimiter::for('student-exam-answer', fn (Request $request) => [
+            Limit::perMinute(120)->by((string) ($request->user()?->id ?? $request->ip())),
+        ]);
+
+        RateLimiter::for('student-exam-submit', fn (Request $request) => [
+            Limit::perMinute(6)->by((string) ($request->user()?->id ?? $request->ip())),
+        ]);
+
+        RateLimiter::for('staff-ai-generation', fn (Request $request) => [
+            Limit::perMinute(6)->by((string) ($request->user()?->id ?? $request->ip())),
+        ]);
+
+        RateLimiter::for('staff-heavy-write', fn (Request $request) => [
+            Limit::perMinute(15)->by((string) ($request->user()?->id ?? $request->ip())),
+        ]);
+
+        RateLimiter::for('admin-imports', fn (Request $request) => [
+            Limit::perMinute(10)->by((string) ($request->user()?->id ?? $request->ip())),
+        ]);
     }
 }
