@@ -5,6 +5,7 @@ namespace App\Services\Student;
 use App\Enums\AttemptStatus;
 use App\Enums\ExamStatus;
 use App\Models\AcademicSession;
+use App\Models\ClassEnrollment;
 use App\Models\Exam;
 use App\Models\ExamAttempt;
 use App\Models\User;
@@ -140,15 +141,20 @@ class StudentPortalService
 
     public function queryScopedExams(User $user, string $sessionId): Builder
     {
+        $currentClassId = ClassEnrollment::query()
+            ->where('user_id', $user->id)
+            ->where('academic_session_id', $sessionId)
+            ->value('school_class_id') ?? $user->school_class_id;
+
         return Exam::query()
             ->where('academic_session_id', $sessionId)
             ->where('status', ExamStatus::LIVE)
             ->whereNotNull('start_time')
-            ->where(function ($query) use ($user) {
+            ->where(function ($query) use ($user, $currentClassId) {
                 $query->whereHas('users', fn ($assigned) => $assigned->where('user_id', $user->id));
 
-                if ($user->school_class_id) {
-                    $query->orWhere('school_class_id', $user->school_class_id);
+                if ($currentClassId) {
+                    $query->orWhere('school_class_id', $currentClassId);
                 }
             });
     }
