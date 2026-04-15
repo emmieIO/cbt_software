@@ -135,7 +135,7 @@ class StudentExamAuthorizationTest extends TestCase
             ->post(route('student.exams.start', $exam->id));
 
         $response->assertRedirect(route('student.exams.index'));
-        $response->assertSessionHas('error', 'You are not allowed to start this examination.');
+        $response->assertSessionHas('error', 'This examination is not available for your class.');
         $this->assertDatabaseMissing('exam_attempts', [
             'user_id' => $student->id,
             'exam_id' => $exam->id,
@@ -350,7 +350,7 @@ class StudentExamAuthorizationTest extends TestCase
             ->post(route('student.exams.start', $exam->id));
 
         $response->assertRedirect(route('student.exams.index'));
-        $response->assertSessionHas('error', 'You are not allowed to start this examination.');
+        $response->assertSessionHas('error', 'This examination is not available for your school branch.');
     }
 
     public function test_student_cannot_start_exam_without_questions(): void
@@ -404,7 +404,7 @@ class StudentExamAuthorizationTest extends TestCase
             ->post(route('student.exams.start', $exam->id));
 
         $response->assertRedirect(route('student.exams.index'));
-        $response->assertSessionHas('error', 'You are not allowed to start this examination.');
+        $response->assertSessionHas('error', 'This examination window has closed.');
         $this->assertDatabaseMissing('exam_attempts', [
             'user_id' => $student->id,
             'exam_id' => $exam->id,

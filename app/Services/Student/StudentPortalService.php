@@ -52,32 +52,41 @@ class StudentPortalService
 
     public function userCanAccessExam(User $user, Exam $exam): bool
     {
+        return $this->getExamAccessDenialReason($user, $exam) === null;
+    }
+
+    public function getExamAccessDenialReason(User $user, Exam $exam): ?string
+    {
         $status = $exam->status instanceof ExamStatus ? $exam->status : ExamStatus::tryFrom((string) $exam->status);
 
         if ($status !== ExamStatus::LIVE) {
-            return false;
+            return 'This examination is not live yet.';
         }
 
         $startTime = $this->parseDateTime($exam->start_time);
         if ($startTime === null || $startTime->isFuture()) {
-            return false;
+            return 'This examination has not opened yet.';
         }
 
         if ($this->examWindowHasClosed($exam)) {
-            return false;
+            return 'This examination window has closed.';
         }
 
         if (! $this->examMatchesUserSchool($exam, $user)) {
-            return false;
+            return 'This examination is not available for your school branch.';
         }
 
         if ($exam->users()->whereKey($user->id)->exists()) {
-            return true;
+            return null;
         }
 
         $eligibleClassIds = $this->resolveEligibleClassIds($user, $exam->academic_session_id);
 
-        return $exam->school_class_id !== null && in_array($exam->school_class_id, $eligibleClassIds, true);
+        if ($exam->school_class_id !== null && in_array($exam->school_class_id, $eligibleClassIds, true)) {
+            return null;
+        }
+
+        return 'This examination is not available for your class.';
     }
 
     public function examWindowHasClosed(Exam $exam): bool

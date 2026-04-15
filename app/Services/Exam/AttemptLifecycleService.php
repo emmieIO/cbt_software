@@ -78,8 +78,9 @@ class AttemptLifecycleService
 
     protected function ensureExamCanBeStarted(User $user, Exam $exam): void
     {
-        if (! $this->studentPortalService->userCanAccessExam($user, $exam)) {
-            throw new Exception('You are not allowed to start this examination.');
+        $denialReason = $this->studentPortalService->getExamAccessDenialReason($user, $exam);
+        if ($denialReason !== null) {
+            throw new Exception($denialReason);
         }
 
         if (! $exam->questions()->exists()) {
