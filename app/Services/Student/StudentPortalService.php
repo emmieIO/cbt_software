@@ -18,11 +18,10 @@ class StudentPortalService
 {
     public function getDashboardData(User $user): array
     {
-        $currentSession = AcademicSession::current()->first();
-
-        $upcomingExams = $currentSession
-            ? $this->queryUpcomingExamsForDashboard($user, $currentSession->id)->orderBy('start_time', 'asc')->take(4)->get()
-            : collect();
+        $upcomingExams = $this->queryUpcomingExamsForDashboard($user)
+            ->orderBy('start_time', 'asc')
+            ->take(4)
+            ->get();
 
         $recentResults = $this->getRecentResults($user, 5);
 
@@ -42,12 +41,7 @@ class StudentPortalService
 
     public function getAvailableExams(User $user): Collection
     {
-        $currentSession = AcademicSession::current()->first();
-        if (! $currentSession) {
-            return collect();
-        }
-
-        return $this->queryScopedExams($user, $currentSession->id)
+        return $this->queryScopedExams($user)
             ->with(['subject'])
             ->with(['attempts' => fn ($q) => $q->where('user_id', $user->id)])
             ->withCount('questions')
@@ -58,15 +52,32 @@ class StudentPortalService
 
     public function userCanAccessExam(User $user, Exam $exam): bool
     {
-        $currentSession = AcademicSession::current()->first();
+        $status = $exam->status instanceof ExamStatus ? $exam->status : ExamStatus::tryFrom((string) $exam->status);
 
-        if (! $currentSession) {
+        if ($status !== ExamStatus::LIVE) {
             return false;
         }
 
-        return $this->queryEligibleExams($user, $currentSession->id)
-            ->whereKey($exam->id)
-            ->exists();
+        $startTime = $this->parseDateTime($exam->start_time);
+        if ($startTime === null || $startTime->isFuture()) {
+            return false;
+        }
+
+        if ($this->examWindowHasClosed($exam)) {
+            return false;
+        }
+
+        if (! $this->examMatchesUserSchool($exam, $user)) {
+            return false;
+        }
+
+        if ($exam->users()->whereKey($user->id)->exists()) {
+            return true;
+        }
+
+        $eligibleClassIds = $this->resolveEligibleClassIds($user, $exam->academic_session_id);
+
+        return $exam->school_class_id !== null && in_array($exam->school_class_id, $eligibleClassIds, true);
     }
 
     public function examWindowHasClosed(Exam $exam): bool
@@ -112,9 +123,9 @@ class StudentPortalService
         return is_array($questionOptions) && in_array($optionId, $questionOptions, true);
     }
 
-    private function queryUpcomingExamsForDashboard(User $user, string $sessionId): Builder
+    private function queryUpcomingExamsForDashboard(User $user): Builder
     {
-        return $this->queryScopedExams($user, $sessionId)
+        return $this->queryScopedExams($user)
             ->with(['subject'])
             ->withCount('questions')
             ->where(function ($query) {
@@ -126,7 +137,7 @@ class StudentPortalService
                 ->where('status', AttemptStatus::SUBMITTED));
     }
 
-    public function queryEligibleExams(User $user, string $sessionId): Builder
+    public function queryEligibleExams(User $user, ?string $sessionId = null): Builder
     {
         return $this->queryScopedExams($user, $sessionId)
             ->where(function ($query) {
@@ -139,22 +150,22 @@ class StudentPortalService
             });
     }
 
-    public function queryScopedExams(User $user, string $sessionId): Builder
+    public function queryScopedExams(User $user, ?string $sessionId = null): Builder
     {
-        $enrolledClassId = ClassEnrollment::query()
-            ->where('user_id', $user->id)
-            ->where('academic_session_id', $sessionId)
-            ->value('school_class_id');
-
-        $eligibleClassIds = array_values(array_unique(array_filter([
-            $enrolledClassId,
-            $user->school_class_id,
-        ])));
+        $eligibleClassIds = $this->resolveEligibleClassIds($user, $sessionId);
 
         return Exam::query()
-            ->where('academic_session_id', $sessionId)
             ->where('status', ExamStatus::LIVE)
             ->whereNotNull('start_time')
+            ->when($sessionId, fn ($query, $sessionId) => $query->where('academic_session_id', $sessionId))
+            ->where(function ($query) use ($user) {
+                if ($user->school_id) {
+                    $query->where(function ($schoolScoped) use ($user) {
+                        $schoolScoped->whereNull('school_id')
+                            ->orWhere('school_id', $user->school_id);
+                    });
+                }
+            })
             ->where(function ($query) use ($user, $eligibleClassIds) {
                 $query->whereHas('users', fn ($assigned) => $assigned->where('user_id', $user->id));
 
@@ -162,6 +173,29 @@ class StudentPortalService
                     $query->orWhereIn('school_class_id', $eligibleClassIds);
                 }
             });
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function resolveEligibleClassIds(User $user, ?string $sessionId = null): array
+    {
+        $enrolledClassIds = ClassEnrollment::query()
+            ->where('user_id', $user->id)
+            ->when($sessionId, fn ($query, $sessionId) => $query->where('academic_session_id', $sessionId))
+            ->pluck('school_class_id')
+            ->filter()
+            ->all();
+
+        return array_values(array_unique(array_filter([
+            $user->school_class_id,
+            ...$enrolledClassIds,
+        ])));
+    }
+
+    protected function examMatchesUserSchool(Exam $exam, User $user): bool
+    {
+        return ! $exam->school_id || ! $user->school_id || $exam->school_id === $user->school_id;
     }
 
     protected function mapExamForListing(Exam $exam): array

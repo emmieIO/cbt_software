@@ -8,6 +8,7 @@ use App\Models\Exam;
 use App\Models\ExamAttempt;
 use App\Models\Option;
 use App\Models\Question;
+use App\Models\School;
 use App\Models\SchoolClass;
 use App\Models\User;
 use App\Services\ExamService;
@@ -245,6 +246,111 @@ class StudentExamAuthorizationTest extends TestCase
 
         $this->assertNotNull($attempt);
         $response->assertRedirect(route('student.exams.show', $attempt->id));
+    }
+
+    public function test_student_can_start_live_exam_even_when_exam_session_is_not_globally_current(): void
+    {
+        $class = SchoolClass::factory()->create();
+        AcademicSession::factory()->create(['is_current' => true]);
+        $examSession = AcademicSession::factory()->create(['is_current' => false]);
+        $student = User::factory()->create(['school_class_id' => $class->id]);
+        $student->assignRole('candidate');
+
+        ClassEnrollment::query()->create([
+            'user_id' => $student->id,
+            'school_class_id' => $class->id,
+            'academic_session_id' => $examSession->id,
+        ]);
+
+        $exam = Exam::factory()->create([
+            'school_class_id' => $class->id,
+            'academic_session_id' => $examSession->id,
+            'status' => 'live',
+            'start_time' => now()->subHour(),
+            'end_time' => now()->addHour(),
+        ]);
+
+        $question = Question::factory()->create(['school_class_id' => $class->id]);
+        Option::factory()->create(['question_id' => $question->id, 'is_correct' => true]);
+        $exam->questions()->attach($question->id);
+
+        $response = $this->actingAs($student)->post(route('student.exams.start', $exam->id));
+
+        $attempt = ExamAttempt::query()
+            ->where('user_id', $student->id)
+            ->where('exam_id', $exam->id)
+            ->first();
+
+        $this->assertNotNull($attempt);
+        $response->assertRedirect(route('student.exams.show', $attempt->id));
+    }
+
+    public function test_student_can_start_exam_when_branch_and_class_match(): void
+    {
+        $school = School::factory()->create();
+        $class = SchoolClass::factory()->create(['school_id' => $school->id]);
+        $session = AcademicSession::factory()->create(['is_current' => true]);
+        $student = User::factory()->create([
+            'school_id' => $school->id,
+            'school_class_id' => $class->id,
+        ]);
+        $student->assignRole('candidate');
+
+        $exam = Exam::factory()->create([
+            'school_id' => $school->id,
+            'school_class_id' => $class->id,
+            'academic_session_id' => $session->id,
+            'status' => 'live',
+            'start_time' => now()->subHour(),
+            'end_time' => now()->addHour(),
+        ]);
+
+        $question = Question::factory()->create(['school_class_id' => $class->id]);
+        Option::factory()->create(['question_id' => $question->id, 'is_correct' => true]);
+        $exam->questions()->attach($question->id);
+
+        $response = $this->actingAs($student)->post(route('student.exams.start', $exam->id));
+
+        $attempt = ExamAttempt::query()
+            ->where('user_id', $student->id)
+            ->where('exam_id', $exam->id)
+            ->first();
+
+        $this->assertNotNull($attempt);
+        $response->assertRedirect(route('student.exams.show', $attempt->id));
+    }
+
+    public function test_student_cannot_start_exam_when_branch_differs_even_if_class_matches(): void
+    {
+        $studentSchool = School::factory()->create();
+        $examSchool = School::factory()->create();
+        $class = SchoolClass::factory()->create(['school_id' => $studentSchool->id]);
+        $session = AcademicSession::factory()->create(['is_current' => true]);
+        $student = User::factory()->create([
+            'school_id' => $studentSchool->id,
+            'school_class_id' => $class->id,
+        ]);
+        $student->assignRole('candidate');
+
+        $exam = Exam::factory()->create([
+            'school_id' => $examSchool->id,
+            'school_class_id' => $class->id,
+            'academic_session_id' => $session->id,
+            'status' => 'live',
+            'start_time' => now()->subHour(),
+            'end_time' => now()->addHour(),
+        ]);
+
+        $question = Question::factory()->create(['school_class_id' => $class->id]);
+        Option::factory()->create(['question_id' => $question->id, 'is_correct' => true]);
+        $exam->questions()->attach($question->id);
+
+        $response = $this->from(route('student.exams.index'))
+            ->actingAs($student)
+            ->post(route('student.exams.start', $exam->id));
+
+        $response->assertRedirect(route('student.exams.index'));
+        $response->assertSessionHas('error', 'You are not allowed to start this examination.');
     }
 
     public function test_student_cannot_start_exam_without_questions(): void
