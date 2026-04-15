@@ -141,20 +141,25 @@ class StudentPortalService
 
     public function queryScopedExams(User $user, string $sessionId): Builder
     {
-        $currentClassId = ClassEnrollment::query()
+        $enrolledClassId = ClassEnrollment::query()
             ->where('user_id', $user->id)
             ->where('academic_session_id', $sessionId)
-            ->value('school_class_id') ?? $user->school_class_id;
+            ->value('school_class_id');
+
+        $eligibleClassIds = array_values(array_unique(array_filter([
+            $enrolledClassId,
+            $user->school_class_id,
+        ])));
 
         return Exam::query()
             ->where('academic_session_id', $sessionId)
             ->where('status', ExamStatus::LIVE)
             ->whereNotNull('start_time')
-            ->where(function ($query) use ($user, $currentClassId) {
+            ->where(function ($query) use ($user, $eligibleClassIds) {
                 $query->whereHas('users', fn ($assigned) => $assigned->where('user_id', $user->id));
 
-                if ($currentClassId) {
-                    $query->orWhere('school_class_id', $currentClassId);
+                if ($eligibleClassIds !== []) {
+                    $query->orWhereIn('school_class_id', $eligibleClassIds);
                 }
             });
     }

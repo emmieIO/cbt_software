@@ -210,6 +210,43 @@ class StudentExamAuthorizationTest extends TestCase
         $response->assertRedirect(route('student.exams.show', $attempt->id));
     }
 
+    public function test_student_can_start_exam_when_profile_class_matches_even_if_enrollment_differs(): void
+    {
+        $profileClass = SchoolClass::factory()->create();
+        $otherEnrolledClass = SchoolClass::factory()->create();
+        $session = AcademicSession::factory()->create(['is_current' => true]);
+        $student = User::factory()->create(['school_class_id' => $profileClass->id]);
+        $student->assignRole('candidate');
+
+        ClassEnrollment::query()->create([
+            'user_id' => $student->id,
+            'school_class_id' => $otherEnrolledClass->id,
+            'academic_session_id' => $session->id,
+        ]);
+
+        $exam = Exam::factory()->create([
+            'school_class_id' => $profileClass->id,
+            'academic_session_id' => $session->id,
+            'status' => 'live',
+            'start_time' => now()->subHour(),
+            'end_time' => now()->addHour(),
+        ]);
+
+        $question = Question::factory()->create(['school_class_id' => $profileClass->id]);
+        Option::factory()->create(['question_id' => $question->id, 'is_correct' => true]);
+        $exam->questions()->attach($question->id);
+
+        $response = $this->actingAs($student)->post(route('student.exams.start', $exam->id));
+
+        $attempt = ExamAttempt::query()
+            ->where('user_id', $student->id)
+            ->where('exam_id', $exam->id)
+            ->first();
+
+        $this->assertNotNull($attempt);
+        $response->assertRedirect(route('student.exams.show', $attempt->id));
+    }
+
     public function test_student_cannot_start_exam_without_questions(): void
     {
         $class = SchoolClass::factory()->create();
