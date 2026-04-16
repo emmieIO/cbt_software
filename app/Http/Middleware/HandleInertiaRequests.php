@@ -42,20 +42,43 @@ class HandleInertiaRequests extends Middleware
         // Use standard 'web' guard for all users
         $user = $request->user();
         $isSystemAdmin = $user ? $user->can('sys:manage_settings') : false;
-        $activeBranches = School::query()
-            ->where('is_active', true)
-            ->when($user && ! $isSystemAdmin, fn ($q) => $q->where('id', $user->school_id))
-            ->get();
 
         if ($user) {
-            $user->loadMissing(['roles', 'permissions']);
+            $user->loadMissing(['roles', 'permissions', 'schools']);
         }
+
+        $assignedSchoolIds = collect();
+        if ($user && ! $isSystemAdmin) {
+            $assignedSchoolIds = $user->schools
+                ->pluck('id')
+                ->filter()
+                ->values();
+
+            // fallback
+            if ($assignedSchoolIds->isEmpty() && $user->school_id) {
+                $assignedSchoolIds = collect([$user->school_id]);
+            }
+        }
+
+        $activeBranches = School::query()
+            ->where('is_active', true)
+            ->when(
+                $user && ! $isSystemAdmin && $assignedSchoolIds->isNotEmpty(),
+                fn ($q) => $q->whereIn('id', $assignedSchoolIds->all())
+            )
+            ->get();
 
         $fallbackBranchId = $activeBranches->firstWhere('slug', 'school_hq')?->id
             ?? $activeBranches->firstWhere('slug', 'primary_vgc')?->id
             ?? $activeBranches->first()?->id;
 
         $effectiveSchoolId = $user?->school_id;
+        if ($user && ! $effectiveSchoolId && $assignedSchoolIds->isNotEmpty()) {
+            $effectiveSchoolId = $user->schools
+                ->firstWhere('pivot.is_primary', true)?->id
+                ?? $assignedSchoolIds->first();
+        }
+
         if ($user && $isSystemAdmin && ! $effectiveSchoolId) {
             // Admin users without explicit branch assignment should default to School HQ context.
             $effectiveSchoolId = $fallbackBranchId;

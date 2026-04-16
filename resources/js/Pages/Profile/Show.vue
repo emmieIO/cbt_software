@@ -59,7 +59,7 @@ const formatRole = (role: string) => {
         <Head title="My Profile" />
 
         <div class="mx-auto max-w-6xl space-y-6">
-            <div class="relative overflow-hidden rounded-2xl border border-gray-200 bg-gradient-to-br from-white via-white to-primary/5 shadow-sm">
+            <div class="relative overflow-hidden rounded-2xl border border-gray-200 from-white via-white to-primary/5 shadow-sm">
                 <div class="pointer-events-none absolute -top-16 -right-16 size-48 rounded-full bg-primary/10 blur-2xl"></div>
                 <div class="relative flex flex-col gap-6 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
                     <div class="flex items-center gap-4">
