@@ -18,7 +18,9 @@ Route::middleware(['auth', 'can:access:staff-portal'])->group(function () {
 
     // 01. Question Repository
     Route::prefix('questions')->name('questions.')->group(function () {
-        Route::get('/', [StaffQuestionController::class, 'index'])->name('index');
+        Route::middleware("permission:bank:view")->group(function(){
+            Route::get('/', [StaffQuestionController::class, 'index'])->name('index');
+        });
 
         Route::middleware('permission:bank:use_ai')->group(function () {
             Route::get('/generate', [StaffQuestionController::class, 'generate'])->name('generate');
