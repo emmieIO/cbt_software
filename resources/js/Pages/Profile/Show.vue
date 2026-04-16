@@ -33,8 +33,8 @@ const primaryRole = computed(() => formatRole(props.user.roles[0] || 'User'));
 const hasAssignments = computed(() => (props.user.assignments?.length || 0) > 0);
 
 const Layout = computed(() => {
-    if (permissions.value.includes('sys:manage_settings')) return AdminLayout;
-    if (permissions.value.includes('bank:view')) return StaffLayout;
+    if (permissions.value.includes('access:admin-portal')) return AdminLayout;
+    if (permissions.value.includes('access:staff-portal')) return StaffLayout;
     return StudentLayout;
 });
 

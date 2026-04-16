@@ -316,7 +316,7 @@ const handleMarkAllAsRead = () => {
                         </button>
 
                         <div
-                            class="hs-dropdown-menu duration z-100 mt-2 hidden min-w-[240px] rounded-3xl bg-white p-2 opacity-0 shadow-2xl transition-[opacity,margin] before:absolute before:start-0 before:-top-4 before:h-4 before:w-full after:absolute after:start-0 after:-bottom-4 after:h-4 after:w-full hs-dropdown-open:opacity-100"
+                            class="hs-dropdown-menu duration z-100 mt-2 hidden min-w-60 rounded-3xl bg-white p-2 opacity-0 shadow-2xl transition-[opacity,margin] before:absolute before:start-0 before:-top-4 before:h-4 before:w-full after:absolute after:start-0 after:-bottom-4 after:h-4 after:w-full hs-dropdown-open:opacity-100"
                             aria-labelledby="hs-dropdown-profile"
                         >
                             <div class="mb-2 rounded-2xl bg-slate-50 p-4">
