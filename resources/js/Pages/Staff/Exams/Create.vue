@@ -75,15 +75,23 @@ const form = useForm({
 });
 
 const selectedBranch = computed(() => branches.value.find((b) => b.id === form.school_id));
+const selectedClass = computed(() => props.classes.find((schoolClass) => String(schoolClass.id) === String(form.school_class_id)));
+const selectedAcademicLevel = computed(() => {
+    if (selectedClass.value?.level) {
+        return String(selectedClass.value.level);
+    }
+
+    return selectedBranch.value?.type ? String(selectedBranch.value.type) : null;
+});
 
 // LEVEL-AWARE FILTERING
 const filteredSubjects = computed(() => {
-    if (canCreateCrossLevel.value || !selectedBranch.value) {
+    if (canCreateCrossLevel.value || !selectedAcademicLevel.value) {
         return props.subjects.map((s) => ({ ...s, name: s.name, badge: compactLevelTag(String(s.level)) }));
     }
 
     return props.subjects
-        .filter((s) => s.level === selectedBranch.value?.type)
+        .filter((s) => String(s.level) === selectedAcademicLevel.value)
         .map((s) => ({ ...s, name: s.name, badge: compactLevelTag(String(s.level)) }));
 });
 
@@ -143,6 +151,10 @@ watch(
     () => form.school_class_id,
     async (newVal, oldVal) => {
         if (newVal === oldVal) return;
+
+        if (form.subject_id && !filteredSubjects.value.some((subject) => String(subject.id) === String(form.subject_id))) {
+            form.subject_id = '';
+        }
 
         form.compositions = form.compositions.map((composition) => ({
             ...composition,
@@ -362,7 +374,7 @@ const submit = () => {
                                 />
                             </div>
 
-                            <div v-if="selectedBranch" class="mt-8 flex gap-3 rounded-xl border border-orange-100 bg-orange-50 p-4">
+                            <div v-if="selectedAcademicLevel" class="mt-8 flex gap-3 rounded-xl border border-orange-100 bg-orange-50 p-4">
                                 <svg class="size-5 shrink-0 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path
                                         stroke-linecap="round"
@@ -372,7 +384,7 @@ const submit = () => {
                                     />
                                 </svg>
                                 <p class="text-xs leading-relaxed font-medium text-orange-800">
-                                    Filtering for <strong class="uppercase">{{ selectedBranch.type }}</strong> tier based on your selected branch.
+                                    Filtering for <strong class="uppercase">{{ selectedAcademicLevel }}</strong> subjects based on your current academic context.
                                 </p>
                             </div>
                         </div>

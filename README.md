@@ -17,7 +17,7 @@ composer install
 npm install
 php artisan key:generate
 php artisan migrate --force
-php artisan db:seed --class=RolesAndPermissionsSeeder --force
+php artisan db:seed --class=RevampPermissionsSeeder --force
 npm run build
 php artisan serve
 ```

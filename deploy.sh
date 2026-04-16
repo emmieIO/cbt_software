@@ -27,7 +27,7 @@ npm run build
 php artisan migrate --force
 
 # Sync the new permission names and role categories
-php artisan db:seed --class=RolesAndPermissionsSeeder --force
+php artisan db:seed --class=RevampPermissionsSeeder --force
 
 # Reset Spatie permission cache
 php artisan permission:cache-reset

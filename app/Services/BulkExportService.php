@@ -85,7 +85,6 @@ class BulkExportService
 
             // Header
             $writer->addRow(Row::fromValues([
-                'subject_name',
                 'topic_name',
                 'content',
                 'explanation',
@@ -98,12 +97,11 @@ class BulkExportService
                 'image_url',
             ]));
 
-            // Add 100 example rows for import performance testing.
-            for ($i = 1; $i <= 100; $i++) {
-                $writer->addRow(Row::fromValues([
-                    'Mathematics',
+            // Add a few realistic sample rows so the template remains readable.
+            $sampleRows = [
+                [
                     'Number Bases',
-                    "Sample import question {$i}: What is the value of 10 in binary?",
+                    'What is the value of 10 in binary?',
                     '10 in base 10 is equal to 1010 in binary.',
                     'multiple_choice',
                     '1010',
@@ -112,7 +110,35 @@ class BulkExportService
                     '1001',
                     'A',
                     '',
-                ]));
+                ],
+                [
+                    'Algebraic Expressions',
+                    'Simplify 3x + 2x.',
+                    'Like terms are added together to give 5x.',
+                    'multiple_choice',
+                    '6x',
+                    '5x',
+                    '5',
+                    'x',
+                    'B',
+                    '',
+                ],
+                [
+                    'Measurement',
+                    'Which unit is used to measure mass?',
+                    'Mass is commonly measured in kilograms.',
+                    'multiple_choice',
+                    'Litre',
+                    'Metre',
+                    'Kilogram',
+                    'Second',
+                    'C',
+                    '',
+                ],
+            ];
+
+            foreach ($sampleRows as $row) {
+                $writer->addRow(Row::fromValues($row));
             }
 
             $writer->close();

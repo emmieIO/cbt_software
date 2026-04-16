@@ -50,7 +50,7 @@ Use this as the first navigation point when you want to modify a feature.
 - Config:
   - `config/permission.php`
 - Seeder:
-  - `database/seeders/RolesAndPermissionsSeeder.php`
+  - `database/seeders/RevampPermissionsSeeder.php`
 - UI:
   - `resources/js/Pages/Admin/RBAC/*`
 

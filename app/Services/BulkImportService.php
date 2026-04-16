@@ -53,7 +53,6 @@ class BulkImportService
             $allowedSchoolIds = collect([$user->school_id]);
         }
 
-        $setupLevel = strtolower(trim((string) ($setup['level'] ?? '')));
         $setupDifficultyRaw = trim((string) ($setup['difficulty'] ?? ''));
         $setupDifficulty = QuestionDifficulty::tryFrom($setupDifficultyRaw);
         if ($setupDifficultyRaw === '' || ! $setupDifficulty) {
@@ -68,21 +67,19 @@ class BulkImportService
 
         $setupClass = $this->resolveClass(
             classId: $setup['school_class_id'] ?? null,
-            className: null,
             isSystemAdmin: $isSystemAdmin,
             allowedSchoolIds: $allowedSchoolIds
         );
+        if (! $setupClass) {
+            throw ValidationException::withMessages(['school_class_id' => ['Select a valid target class before importing.']]);
+        }
 
         $setupSubject = $this->resolveSubject(
             subjectId: $setup['subject_id'] ?? null,
-            subjectName: null,
             classLevel: $setupClass ? $this->normalizeLevelValue($setupClass->level) : null
         );
-
-        if ($setupClass && $setupLevel !== '' && $this->normalizeLevelValue($setupClass->level) !== $setupLevel) {
-            throw ValidationException::withMessages([
-                'level' => ['Selected level does not match selected class level.'],
-            ]);
+        if (! $setupSubject) {
+            throw ValidationException::withMessages(['subject_id' => ['Select a valid subject before importing.']]);
         }
 
         if (
@@ -129,28 +126,8 @@ class BulkImportService
                         continue;
                     }
 
-                    $class = $setupClass ?? $this->resolveClass(
-                        classId: null,
-                        className: $rowData['class_name'] ?? null,
-                        isSystemAdmin: $isSystemAdmin,
-                        allowedSchoolIds: $allowedSchoolIds
-                    );
-                    if (! $class) {
-                        throw new \RuntimeException('Class could not be resolved. Provide setup class or class_name in sheet.');
-                    }
-
-                    if ($setupLevel !== '' && $this->normalizeLevelValue($class->level) !== $setupLevel) {
-                        throw new \RuntimeException("Class '{$class->name}' does not match selected setup level '{$setupLevel}'.");
-                    }
-
-                    $subject = $setupSubject ?? $this->resolveSubject(
-                        subjectId: null,
-                        subjectName: $rowData['subject_name'] ?? null,
-                        classLevel: $this->normalizeLevelValue($class->level)
-                    );
-                    if (! $subject) {
-                        throw new \RuntimeException('Subject could not be resolved. Provide setup subject or subject_name in sheet.');
-                    }
+                    $class = $setupClass;
+                    $subject = $setupSubject;
 
                     $topicName = $this->normalizeText($rowData['topic_name'] ?? '');
                     if ($topicName === '') {
@@ -226,7 +203,7 @@ class BulkImportService
         return $importedCount;
     }
 
-    private function resolveClass(mixed $classId, mixed $className, bool $isSystemAdmin, Collection $allowedSchoolIds): ?SchoolClass
+    private function resolveClass(mixed $classId, bool $isSystemAdmin, Collection $allowedSchoolIds): ?SchoolClass
     {
         $query = SchoolClass::query();
 
@@ -241,14 +218,10 @@ class BulkImportService
             return (clone $query)->where('id', $classId)->first();
         }
 
-        if (filled($className)) {
-            return (clone $query)->where('name', trim((string) $className))->first();
-        }
-
         return null;
     }
 
-    private function resolveSubject(mixed $subjectId, mixed $subjectName, ?string $classLevel): ?Subject
+    private function resolveSubject(mixed $subjectId, ?string $classLevel): ?Subject
     {
         $query = Subject::query();
         if ($classLevel) {
@@ -257,10 +230,6 @@ class BulkImportService
 
         if (filled($subjectId)) {
             return (clone $query)->where('id', $subjectId)->first();
-        }
-
-        if (filled($subjectName)) {
-            return (clone $query)->where('name', trim((string) $subjectName))->first();
         }
 
         return null;
@@ -352,7 +321,6 @@ class BulkImportService
     {
         return preg_replace('/\s+/', ' ', trim($value)) ?? '';
     }
-
     private function normalizeLevelValue(mixed $level): ?string
     {
         if ($level instanceof BackedEnum) {

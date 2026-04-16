@@ -3,13 +3,12 @@
 namespace App\Http\Controllers\Staff;
 
 use App\DTOs\QuestionDTO;
-use App\Enums\ClassLevel;
-use App\Enums\QuestionType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Question\BatchStoreQuestionRequest;
 use App\Http\Requests\Question\BulkDestroyQuestionRequest;
 use App\Http\Requests\Question\GenerateQuestionsRequest;
 use App\Http\Requests\Question\GetQuestionsRequest;
+use App\Http\Requests\Question\ImportQuestionRequest;
 use App\Http\Requests\Question\StoreQuestionRequest;
 use App\Http\Requests\Question\UpdateQuestionRequest;
 use App\Jobs\GenerateQuestionsJob;
@@ -172,21 +171,12 @@ class StaffQuestionController extends Controller
     /**
      * Import questions from supported spreadsheet formats.
      */
-    public function import(Request $request): RedirectResponse
+    public function import(ImportQuestionRequest $request): RedirectResponse
     {
-        $request->validate([
-            'file' => ['required', 'file', 'mimes:csv,txt,xlsx'],
-            'level' => ['required', 'in:'.implode(',', array_map(fn (ClassLevel $level) => $level->value, ClassLevel::cases()))],
-            'school_class_id' => ['required', 'exists:school_classes,id'],
-            'subject_id' => ['required', 'exists:subjects,id'],
-            'difficulty' => ['required', 'in:'.implode(',', array_map(fn (\App\Enums\QuestionDifficulty $difficulty) => $difficulty->value, \App\Enums\QuestionDifficulty::cases()))],
-            'question_type' => ['nullable', 'in:'.implode(',', array_map(fn (QuestionType $type) => $type->value, QuestionType::cases()))],
-        ]);
-
         $count = $this->bulkImportService->import(
             $request->file('file'),
             $request->user()->id,
-            $request->only(['level', 'school_class_id', 'subject_id', 'difficulty', 'question_type'])
+            $request->validated()
         );
 
         return redirect()->route('staff.questions.index')->with('success', "$count questions imported successfully.");

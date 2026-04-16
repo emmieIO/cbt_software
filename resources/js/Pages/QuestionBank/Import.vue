@@ -134,7 +134,7 @@ const submit = () => {
                                     <span class="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-sm font-semibold text-primary">1</span>
                                     <div>
                                         <h2 class="text-lg font-semibold text-gray-800">Import Context</h2>
-                                        <p class="text-sm text-gray-500">Choose the level, class, subject, and difficulty that should apply to this upload.</p>
+                                        <p class="text-sm text-gray-500">Choose the class, subject, and difficulty that should apply to every row in this upload.</p>
                                     </div>
                                 </div>
 
@@ -212,7 +212,7 @@ const submit = () => {
                                         <p class="text-sm font-semibold text-gray-800">{{ form.file ? 'Replace selected file' : 'Choose import file' }}</p>
                                         <p class="mt-1 text-sm text-gray-500">{{ selectedFileName }}</p>
                                         <p class="mt-3 max-w-lg text-xs leading-5 text-gray-500">
-                                            Since the setup is chosen here, your sheet can stay lean. Class and difficulty do not need to be typed into the import file, and missing topics will be created automatically.
+                                            Since the setup is chosen here, your sheet can stay lean. Class, subject, and difficulty do not need to be typed into the import file, and missing topics will be created automatically.
                                         </p>
                                     </div>
                                 </label>
@@ -261,7 +261,7 @@ const submit = () => {
                             <div class="rounded-xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
                                 <h3 class="text-sm font-semibold text-amber-900">Normalization rules</h3>
                                 <p class="mt-2 text-sm leading-6 text-amber-800">
-                                    Topics are matched case-insensitively. The selected setup class and difficulty are applied to every imported question, and missing topics are created automatically.
+                                    Topics are matched case-insensitively. The selected setup class, subject, and difficulty are applied to every imported question, and missing topics are created automatically.
                                 </p>
                             </div>
                         </div>
