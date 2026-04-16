@@ -14,7 +14,7 @@ class ProfileService
     {
         $user->load(['school', 'schoolClass', 'schools']);
 
-        $isStaff = $user->can('bank:view');
+        $isStaff = $user->can('access:access:staff-portal');
         $assignments = $isStaff
             ? $user->schools->map(fn (School $school) => [
                 'id' => $school->id,
