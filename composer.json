@@ -75,6 +75,7 @@
         "test": [
             "@php artisan config:clear --ansi",
             "@test:lint",
+            "mkdir -p tests/Unit tests/Feature",
             "@php artisan test"
         ],
         "post-autoload-dump": [

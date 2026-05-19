@@ -52,5 +52,8 @@ jobs:
       - name: Build Assets
         run: npm run build
 
+      - name: Create Test Directories
+        run: mkdir -p tests/Unit tests/Feature
+
       - name: Tests
         run: ./vendor/bin/pest
