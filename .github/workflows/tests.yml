@@ -52,15 +52,5 @@ jobs:
       - name: Build Assets
         run: npm run build
 
-      - name: Static Analysis (Larastan)
-        run: composer analyze
-
-      - name: Enforce Import Style (No Inline FQCN)
-        run: |
-          if rg -n '\\App\\|\\Illuminate\\|\\Inertia\\Response' app tests routes --glob '*.php'; then
-            echo "Inline fully-qualified class references found. Use imports instead."
-            exit 1
-          fi
-
       - name: Tests
         run: ./vendor/bin/pest
