@@ -9,18 +9,12 @@ use Illuminate\Validation\ValidationException;
 
 class AuthService
 {
-    /**
-     * Attempt to authenticate a user and verify their role for the target portal.
-     *
-     * @throws ValidationException
-     */
-    public function login(array $credentials, bool $remember, string $requiredPermission, ?LoginRequest $loginRequest = null): User
+    public function login(array $credentials, bool $remember, ?LoginRequest $loginRequest = null): User
     {
         if ($loginRequest) {
             $loginRequest->ensureIsNotRateLimited();
         }
 
-        // Unify all logins under the 'web' guard
         $guard = 'web';
 
         if (! Auth::guard($guard)->attempt($credentials, $remember)) {
@@ -28,14 +22,6 @@ class AuthService
         }
 
         $user = Auth::guard($guard)->user();
-
-        // Portal-specific security: Allow Super Admin (sys:manage_settings) to bypass,
-        // otherwise check for the specific portal access permission.
-        $isAuthorized = $user->can('sys:manage_settings') || $user->can($requiredPermission);
-
-        if (! $isAuthorized) {
-            $this->failLogin(trans('auth.failed'), $guard, $loginRequest);
-        }
 
         request()->session()->regenerate();
 
@@ -64,24 +50,13 @@ class AuthService
         ]);
     }
 
-    /**
-     * Get the appropriate dashboard URL based on the user's permissions.
-     */
     public function getRedirectUrl(User $user): string
     {
-        if ($user->can('sys:manage_settings')) {
+        if ($user->isAdmin()) {
             return route('admin.dashboard');
         }
 
-        if ($user->can('bank:view')) {
-            return route('staff.dashboard');
-        }
-
-        if ($user->can('exam:take')) {
-            return route('student.dashboard');
-        }
-
-        return route('home');
+        return route('admin.dashboard');
     }
 
     /**

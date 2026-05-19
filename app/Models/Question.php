@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\QuestionDifficulty;
+use App\Enums\QuestionLevel;
 use App\Enums\QuestionType;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,9 +13,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @property string $id
- * @property string|null $school_class_id
  * @property string|null $created_by
- * @property-read SchoolClass|null $schoolClass
  */
 class Question extends Model
 {
@@ -24,12 +22,13 @@ class Question extends Model
 
     protected $fillable = [
         'topic_id',
-        'school_class_id',
         'content',
         'image_path',
         'explanation',
         'type',
-        'difficulty',
+        'level',
+        'marking_scheme',
+        'used_count',
         'last_used_at',
         'created_by',
     ];
@@ -42,16 +41,6 @@ class Question extends Model
     public function topic(): BelongsTo
     {
         return $this->belongsTo(Topic::class);
-    }
-
-    /**
-     * Get the class that owns the question.
-     *
-     * @return BelongsTo<SchoolClass, $this>
-     */
-    public function schoolClass(): BelongsTo
-    {
-        return $this->belongsTo(SchoolClass::class);
     }
 
     /**
@@ -83,7 +72,8 @@ class Question extends Model
     {
         return [
             'type' => QuestionType::class,
-            'difficulty' => QuestionDifficulty::class,
+            'level' => QuestionLevel::class,
+            'marking_scheme' => 'array',
             'last_used_at' => 'datetime',
         ];
     }
@@ -99,10 +89,25 @@ class Question extends Model
             $query->whereHas('topic', function ($query) use ($subjectId) {
                 $query->where('subject_id', $subjectId);
             });
-        })->when($filters['school_class_id'] ?? null, function ($query, $classId) {
-            $query->where('school_class_id', $classId);
-        })->when($filters['difficulty'] ?? null, function ($query, $difficulty) {
-            $query->where('difficulty', $difficulty);
+        })->when($filters['level'] ?? null, function ($query, $level) {
+            $query->where('level', $level);
         });
+    }
+
+    /**
+     * Scope to flag frequently used questions above a threshold.
+     */
+    public function scopeFrequentlyUsed($query, int $threshold = 3): void
+    {
+        $query->where('used_count', '>=', $threshold);
+    }
+
+    /**
+     * Mark the question as used (increment count and update timestamp).
+     */
+    public function markAsUsed(): void
+    {
+        $this->increment('used_count');
+        $this->update(['last_used_at' => now()]);
     }
 }

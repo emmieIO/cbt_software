@@ -1,18 +1,23 @@
-@import url('https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100..900;1,100..900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 @import 'tailwindcss';
 @import 'preline/variants.css';
 @source "../../node_modules/preline/dist/*.js";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme inline {
-    --font-sans: 'Google Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
 @import './themes/theme.css';
 
 @layer base {
     a {
-        @apply text-slate-600 transition-colors hover:text-slate-900;
+        @apply text-slate-600 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-white;
+    }
+
+    body {
+        @apply bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100;
     }
 
     input[type='text'],
@@ -28,18 +33,121 @@
     input[type='url'],
     select,
     textarea {
-        @apply rounded-lg border border-gray-200 shadow-xs focus:border-primary focus:ring-primary/20;
+        @apply block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition-colors placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-slate-600 dark:bg-slate-800 dark:text-gray-100 dark:placeholder:text-slate-500 dark:focus:border-primary-light;
     }
 
-    input[type='checkbox'],
+    select {
+        @apply pr-8;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+        background-position: right 0.5rem center;
+        background-repeat: no-repeat;
+        background-size: 1.5em 1.5em;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+    }
+
+    textarea {
+        @apply min-h-[80px] resize-y;
+    }
+
+    input[type='checkbox'] {
+        @apply size-4 rounded border-slate-300 text-primary shadow-sm focus:ring-2 focus:ring-primary/20 focus:ring-offset-0 dark:border-slate-600;
+    }
+
     input[type='radio'] {
-        @apply rounded border border-gray-200 text-primary focus:ring-primary/20;
+        @apply size-4 border-slate-300 text-primary shadow-sm focus:ring-2 focus:ring-primary/20 focus:ring-offset-0 dark:border-slate-600;
+    }
+
+    /* Common dark mode overrides for page content */
+    h1, h2, h3, h4, h5, h6 {
+        @apply dark:text-gray-100;
+    }
+
+    p, li, td, th, label, dt, dd {
+        @apply dark:text-gray-300;
+    }
+
+    th {
+        @apply dark:text-gray-400;
+    }
+
+    table {
+        @apply dark:border-gray-700;
+    }
+
+    tr {
+        @apply dark:border-gray-700;
+    }
+
+    hr {
+        @apply dark:border-gray-700;
+    }
+
+    /* Card-like containers used across pages */
+    .card {
+        @apply rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:shadow-none;
+    }
+
+    .card-header {
+        @apply border-b border-gray-200 px-5 py-4 dark:border-gray-700;
+    }
+
+    .table-wrap {
+        @apply overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:shadow-none;
+    }
+
+    .table-wrap tbody tr:hover {
+        @apply dark:bg-gray-700/30;
     }
 }
 
-/* input[type='text'],
-input[type='email'],
-select,
-textarea {
-    @apply border border-primary ring-1 ring-primary;
-} */
+.dark .table-wrap thead tr {
+    background-color: rgba(30, 41, 59, 0.8);
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Button hierarchy */
+.btn-primary {
+    @apply inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-primary/20 transition-all hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/30 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-primary/40;
+}
+
+.btn-secondary {
+    @apply inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:shadow-md active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700;
+}
+
+.btn-danger {
+    @apply inline-flex items-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-red-600/20 transition-all hover:bg-red-700 hover:shadow-lg hover:shadow-red-600/30 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-red-400;
+}
+
+.btn-ghost {
+    @apply inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium text-gray-600 transition-all hover:bg-gray-100 active:scale-[0.98] dark:text-gray-300 dark:hover:bg-gray-800;
+}
+
+/* Card hover elevation */
+.card-hover {
+    @apply rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-200 dark:border-gray-700 dark:bg-gray-800 dark:shadow-none cursor-pointer hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 dark:hover:border-gray-600;
+}
+
+/* Focus ring consistency */
+*:focus-visible {
+    @apply outline-none ring-2 ring-primary/40;
+}
+
+/* Smooth page transitions */
+.page-enter-active {
+    @apply transition-all duration-200 ease-out;
+}
+.page-enter-from {
+    @apply opacity-0 translate-y-2;
+}
+
+/* Breadcrumb separator */
+.breadcrumb-sep {
+    @apply mx-2 text-xs text-gray-400 select-none;
+}
+

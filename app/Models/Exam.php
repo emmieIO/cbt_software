@@ -2,96 +2,52 @@
 
 namespace App\Models;
 
-use App\Enums\ExamStatus;
-use App\Enums\ExamType;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Exam extends Model
 {
     use HasFactory, HasUlids;
 
     protected $fillable = [
-        'branch',
-        'school_id',
-        'subject_id',
-        'school_class_id',
-        'academic_session_id',
-        'created_by',
         'title',
-        'description',
+        'subject_name',
+        'level',
         'instructions',
-        'duration',
-        'start_time',
-        'end_time',
-        'type',
-        'status',
-        'settings',
+        'mcq_count',
+        'theory_count',
+        'total_marks',
+        'created_by',
     ];
-
-    /**
-     * Get the school this exam belongs to.
-     */
-    public function school(): BelongsTo
-    {
-        return $this->belongsTo(School::class);
-    }
-
-    protected function casts(): array
-    {
-        return [
-            'type' => ExamType::class,
-            'status' => ExamStatus::class,
-            'settings' => 'array',
-            'start_time' => 'datetime',
-            'end_time' => 'datetime',
-        ];
-    }
-
-    public function subject(): BelongsTo
-    {
-        return $this->belongsTo(Subject::class);
-    }
-
-    public function schoolClass(): BelongsTo
-    {
-        return $this->belongsTo(SchoolClass::class);
-    }
-
-    public function academicSession(): BelongsTo
-    {
-        return $this->belongsTo(AcademicSession::class);
-    }
 
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function users(): BelongsToMany
-    {
-        return $this->belongsToMany(User::class, 'exam_user')->withTimestamps();
-    }
-
     public function questions(): BelongsToMany
     {
-        return $this->belongsToMany(Question::class, 'exam_questions')
-            ->using(ExamQuestion::class)
-            ->withPivot(['id', 'marks', 'order'])
-            ->withTimestamps();
+        return $this->belongsToMany(Question::class, 'exam_question')
+            ->withPivot('section', 'sort_order')
+            ->orderBy('exam_question.sort_order');
     }
 
-    public function attempts(): HasMany
+    public function mcqs(): BelongsToMany
     {
-        return $this->hasMany(ExamAttempt::class);
+        return $this->belongsToMany(Question::class, 'exam_question')
+            ->wherePivot('section', 'mcq')
+            ->withPivot('sort_order')
+            ->orderBy('exam_question.sort_order');
     }
 
-    public function compositions(): HasMany
+    public function theoryQuestions(): BelongsToMany
     {
-        return $this->hasMany(ExamComposition::class);
+        return $this->belongsToMany(Question::class, 'exam_question')
+            ->wherePivot('section', 'theory')
+            ->withPivot('sort_order')
+            ->orderBy('exam_question.sort_order');
     }
 }

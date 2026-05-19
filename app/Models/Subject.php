@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\ClassLevel;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -19,18 +18,6 @@ class Subject extends Model
         'description',
         'level',
     ];
-
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'level' => ClassLevel::class,
-        ];
-    }
 
     /**
      * Get the topics for the subject.

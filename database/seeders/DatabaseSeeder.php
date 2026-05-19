@@ -2,37 +2,29 @@
 
 namespace Database\Seeders;
 
-
-
+use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        $this->call([
-            // RevampPermissionsSeeder::class
-        ]);
+        if (User::query()->count('*') === 0) {
+            User::factory()->create([
+                'name' => 'System Administrator',
+                'username' => 'admin',
+                'email' => 'admin@chrisland.org',
+                'password' => bcrypt('password'),
+                'role' => User::ROLE_ADMIN,
+            ]);
+
+            User::factory()->create([
+                'name' => 'Question Uploader',
+                'username' => 'uploader',
+                'email' => 'uploader@chrisland.org',
+                'password' => bcrypt('password'),
+                'role' => User::ROLE_UPLOADER,
+            ]);
+        }
     }
-
-    // private function seedUsers(): array
-    // {
-    //     // Create Super Admin
-    //     $admin = User::updateOrCreate(
-    //         ['username' => config('app.admin_username', 'admin_root')],
-    //         [
-    //             'name' => 'System Admin',
-    //             'email' => config('app.admin_email', 'admin@chrisland.org'),
-    //             'password' => bcrypt(config('app.admin_password', 'password')),
-    //         ]
-    //     );
-    //     $admin->syncRoles(['super_admin']);
-
-    //     return [$admin];
-    // }
-
-
 }
