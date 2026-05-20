@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
-import AppLayout from '@/layouts/AppLayout.vue';
 import BatchQuestionRow from '@/components/Questions/BatchQuestionRow.vue';
+import AppLayout from '@/layouts/AppLayout.vue';
 
 type TopicOption = { id: string; name: string };
 type SubjectOption = { id: string; name: string; level?: string | null; topics: TopicOption[] };
@@ -56,6 +56,10 @@ const questionCount = computed(() => questions.value.length);
 
 const addQuestion = () => {
     questions.value.push(createQuestion());
+};
+
+const updateQuestion = (index: number, updatedQuestion: QuestionDraft) => {
+    questions.value[index] = updatedQuestion;
 };
 
 const removeQuestion = (index: number) => {
@@ -176,6 +180,7 @@ const submit = () => {
                     :row="question"
                     :row-errors="rowErrors[question.id]"
                     :subjects="subjects"
+                    @update-row="updateQuestion(index, $event)"
                     @remove="removeQuestion(index)"
                 />
             </div>

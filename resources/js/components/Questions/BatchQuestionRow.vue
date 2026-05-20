@@ -29,6 +29,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
     remove: [];
+    updateRow: [row: QuestionDraft];
 }>();
 
 const optionLabels = ['A', 'B', 'C', 'D'] as const;
@@ -37,44 +38,61 @@ const filteredSubjects = computed(() => props.subjects.filter((subject) => !subj
 const selectedSubject = computed(() => props.subjects.find((subject) => subject.id === props.row.subject_id));
 const filteredTopics = computed(() => selectedSubject.value?.topics ?? []);
 
+const updateRow = (patch: Partial<QuestionDraft>) => {
+    emit('updateRow', {
+        ...props.row,
+        ...patch,
+    });
+};
+
 const onLevelChange = () => {
-    props.row.subject_id = '';
-    props.row.topic_id = '';
+    updateRow({ subject_id: '', topic_id: '' });
 };
 
 const onSubjectChange = () => {
-    props.row.topic_id = '';
+    updateRow({ topic_id: '' });
 };
 
 const setType = (type: QuestionType) => {
-    props.row.type = type;
-
     if (type === 'multiple_choice') {
-        props.row.marking_scheme = [{ point: '', weight: 1 }];
+        updateRow({
+            type,
+            marking_scheme: [{ point: '', weight: 1 }],
+        });
         return;
     }
 
-    props.row.options = [
-        { content: '', is_correct: false },
-        { content: '', is_correct: false },
-        { content: '', is_correct: false },
-        { content: '', is_correct: false },
-    ];
+    updateRow({
+        type,
+        options: [
+            { content: '', is_correct: false },
+            { content: '', is_correct: false },
+            { content: '', is_correct: false },
+            { content: '', is_correct: false },
+        ],
+    });
 };
 
 const setCorrectOption = (index: number) => {
-    props.row.options.forEach((option, optionIndex) => {
-        option.is_correct = optionIndex === index;
+    updateRow({
+        options: props.row.options.map((option, optionIndex) => ({
+            ...option,
+            is_correct: optionIndex === index,
+        })),
     });
 };
 
 const addMarkingPoint = () => {
-    props.row.marking_scheme.push({ point: '', weight: 1 });
+    updateRow({
+        marking_scheme: [...props.row.marking_scheme, { point: '', weight: 1 }],
+    });
 };
 
 const removeMarkingPoint = (index: number) => {
     if (props.row.marking_scheme.length > 1) {
-        props.row.marking_scheme.splice(index, 1);
+        updateRow({
+            marking_scheme: props.row.marking_scheme.filter((_, pointIndex) => pointIndex !== index),
+        });
     }
 };
 </script>
@@ -117,13 +135,13 @@ const removeMarkingPoint = (index: number) => {
             <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Level</label>
-                    <select v-model="row.level" class="mt-1" @change="onLevelChange">
+                    <select :value="row.level" class="mt-1" @change="updateRow({ level: ($event.target as HTMLSelectElement).value }); onLevelChange()">
                         <option v-for="levelOption in levels" :key="levelOption.value" :value="levelOption.value">{{ levelOption.label }}</option>
                     </select>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Subject</label>
-                    <select v-model="row.subject_id" class="mt-1" @change="onSubjectChange">
+                    <select :value="row.subject_id" class="mt-1" @change="updateRow({ subject_id: ($event.target as HTMLSelectElement).value }); onSubjectChange()">
                         <option value="" disabled>Select subject</option>
                         <option v-for="subject in filteredSubjects" :key="subject.id" :value="subject.id">{{ subject.name }}</option>
                     </select>
@@ -131,7 +149,7 @@ const removeMarkingPoint = (index: number) => {
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Topic</label>
-                    <select :key="`${row.level}-${row.subject_id}`" v-model="row.topic_id" class="mt-1">
+                    <select :key="`${row.level}-${row.subject_id}`" :value="row.topic_id" class="mt-1" @change="updateRow({ topic_id: ($event.target as HTMLSelectElement).value })">
                         <option value="" disabled>Select topic</option>
                         <option v-for="topic in filteredTopics" :key="topic.id" :value="topic.id">{{ topic.name }}</option>
                     </select>
@@ -144,7 +162,7 @@ const removeMarkingPoint = (index: number) => {
             <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">Question</h3>
             <div class="mt-4">
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Question text</label>
-                <textarea v-model="row.content" rows="4" class="mt-1" placeholder="Enter the question text..." />
+                <textarea :value="row.content" rows="4" class="mt-1" placeholder="Enter the question text..." @input="updateRow({ content: ($event.target as HTMLTextAreaElement).value })" />
                 <p v-if="rowErrors?.content" class="mt-1 text-xs text-red-600">{{ rowErrors.content }}</p>
             </div>
         </div>
@@ -160,7 +178,7 @@ const removeMarkingPoint = (index: number) => {
                     <span class="flex size-7 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-bold text-gray-600 dark:bg-gray-700 dark:text-gray-100">
                         {{ optionLabels[index] }}
                     </span>
-                    <input v-model="option.content" type="text" class="flex-1" :placeholder="`Option ${optionLabels[index]}`" />
+                    <input :value="option.content" type="text" class="flex-1" :placeholder="`Option ${optionLabels[index]}`" @input="updateRow({ options: row.options.map((currentOption, optionIndex) => optionIndex === index ? { ...currentOption, content: ($event.target as HTMLInputElement).value } : currentOption) })" />
                     <label class="inline-flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
                         <input :checked="option.is_correct" type="radio" @change="setCorrectOption(index)" />
                         Correct
@@ -183,8 +201,8 @@ const removeMarkingPoint = (index: number) => {
 
             <div class="mt-4 space-y-3">
                 <div v-for="(item, index) in row.marking_scheme" :key="index" class="flex items-center gap-3 rounded-lg border border-gray-200 p-3 dark:border-gray-700">
-                    <input v-model="item.point" type="text" class="flex-1" placeholder="Expected point..." />
-                    <input v-model.number="item.weight" type="number" min="1" class="w-24" placeholder="Weight" />
+                    <input :value="item.point" type="text" class="flex-1" placeholder="Expected point..." @input="updateRow({ marking_scheme: row.marking_scheme.map((currentItem, itemIndex) => itemIndex === index ? { ...currentItem, point: ($event.target as HTMLInputElement).value } : currentItem) })" />
+                    <input :value="item.weight" type="number" min="1" class="w-24" placeholder="Weight" @input="updateRow({ marking_scheme: row.marking_scheme.map((currentItem, itemIndex) => itemIndex === index ? { ...currentItem, weight: Number(($event.target as HTMLInputElement).value) || 1 } : currentItem) })" />
                     <button type="button" @click="removeMarkingPoint(index)" class="text-xs text-red-600 hover:underline">Remove</button>
                 </div>
             </div>
