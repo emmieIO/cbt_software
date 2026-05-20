@@ -10,7 +10,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         if (User::query()->count('*') === 0) {
-            User::factory()->create([
+            User::create([
                 'name' => 'System Administrator',
                 'username' => 'admin',
                 'email' => 'admin@chrisland.org',
@@ -18,7 +18,7 @@ class DatabaseSeeder extends Seeder
                 'role' => User::ROLE_ADMIN,
             ]);
 
-            User::factory()->create([
+            User::create([
                 'name' => 'Question Uploader',
                 'username' => 'uploader',
                 'email' => 'uploader@chrisland.org',
