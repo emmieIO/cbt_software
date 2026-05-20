@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Question;
 use App\Models\Subject;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -121,6 +122,49 @@ class QuestionController extends Controller
         }
 
         return to_route('questions.index')->with('success', 'Question created successfully.');
+    }
+
+    public function bulkStore(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'questions' => 'required|array|min:1|max:100',
+            'questions.*.type' => 'required|in:multiple_choice,theory',
+            'questions.*.topic_id' => 'required|exists:topics,id',
+            'questions.*.content' => 'required|string',
+            'questions.*.level' => 'required|in:lp,hp,js,ss',
+            'questions.*.options' => 'nullable|array|size:4',
+            'questions.*.options.*.content' => 'required_with:questions.*.options|string',
+            'questions.*.options.*.is_correct' => 'nullable|boolean',
+            'questions.*.marking_scheme' => 'nullable|array',
+            'questions.*.marking_scheme.*.point' => 'required_with:questions.*.marking_scheme|string',
+            'questions.*.marking_scheme.*.weight' => 'nullable|integer|min:1',
+        ]);
+
+        DB::transaction(function () use ($validated, $request): void {
+            foreach ($validated['questions'] as $row) {
+                $question = Question::query()->create([
+                    'topic_id' => $row['topic_id'],
+                    'content' => $row['content'],
+                    'type' => $row['type'],
+                    'level' => $row['level'],
+                    'marking_scheme' => $row['type'] === 'theory' ? ($row['marking_scheme'] ?? []) : null,
+                    'created_by' => $request->user()->id,
+                ]);
+
+                if ($row['type'] !== 'multiple_choice') {
+                    continue;
+                }
+
+                foreach ($row['options'] ?? [] as $option) {
+                    $question->options()->create([
+                        'content' => $option['content'],
+                        'is_correct' => $option['is_correct'] ?? false,
+                    ]);
+                }
+            }
+        });
+
+        return to_route('questions.index')->with('success', count($validated['questions']).' questions created successfully.');
     }
 
     public function update(Request $request, Question $question): RedirectResponse

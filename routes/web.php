@@ -23,12 +23,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'destroy'])->name('logout');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    Route::resource('questions', QuestionController::class);
     Route::get('/questions/batch/create', [ImportController::class, 'batchCreate'])->name('questions.batch.create');
+    Route::get('/questions/import', [ImportController::class, 'index'])->name('questions.import.index');
     Route::get('/questions/import/template', [ImportController::class, 'downloadTemplate'])->name('questions.import.template');
     Route::post('/questions/import/preview', [ImportController::class, 'preview'])->name('questions.import.preview');
     Route::post('/questions/import/confirm', [ImportController::class, 'confirm'])->name('questions.import.confirm');
     Route::post('/questions/import/quick', [ImportController::class, 'quickStore'])->name('questions.import.quick');
+    Route::post('/questions/bulk-store', [QuestionController::class, 'bulkStore'])->name('questions.bulk-store');
+    Route::resource('questions', QuestionController::class);
 
     Route::get('/export', fn () => redirect()->route('exams.create'))->name('export.index');
     Route::post('/export/generate', [ExportController::class, 'generate'])->name('export.generate');
@@ -37,6 +39,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/exams/create', [ExamController::class, 'create'])->name('exams.create');
     Route::get('/exams/pool', [ExamController::class, 'pool'])->name('exams.pool');
     Route::post('/exams/generate', [ExamController::class, 'generate'])->name('exams.generate');
+    Route::get('/exams/{exam}/edit-questions', [ExamController::class, 'editQuestions'])->name('exams.edit-questions');
+    Route::post('/exams/{exam}/questions', [ExamController::class, 'updateQuestions'])->name('exams.update-questions');
     Route::get('/exams/{exam}', [ExamController::class, 'show'])->name('exams.show');
     Route::get('/exams/{exam}/download/questions', [ExamController::class, 'downloadQuestions'])->name('exams.download.questions');
     Route::get('/exams/{exam}/download/answer-key', [ExamController::class, 'downloadAnswerKey'])->name('exams.download.answer-key');

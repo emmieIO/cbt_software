@@ -1,15 +1,21 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { ref, computed, onMounted } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 
 const props = defineProps<{
     subjects: Array<{ id: string; name: string; topics: Array<{ id: string; name: string }> }>;
     levels: Array<{ value: string; label: string }>;
     exam?: any;
+    initialForm?: {
+        title: string;
+        subject_id: string;
+        level: string;
+        instructions: string;
+    };
 }>();
 
-const form = ref({ title: '', subject_id: '', level: 'js', instructions: 'Answer all questions carefully.' });
+const form = ref(props.initialForm ?? { title: '', subject_id: '', level: 'js', instructions: 'Answer all questions carefully.' });
 const mcqCount = ref(10);
 const theoryCount = ref(2);
 const submitting = ref(false);
@@ -26,6 +32,8 @@ interface PoolQ {
 const pool = ref<{ mcqs: PoolQ[]; theory: PoolQ[] }>({ mcqs: [], theory: [] });
 const selectedIds = ref<Set<string>>(new Set());
 const poolTab = ref<'all' | 'mcq' | 'theory'>('all');
+const isEditMode = computed(() => !!props.exam?.editable);
+const isReadOnlyExam = computed(() => !!props.exam && !props.exam?.editable);
 
 const filteredSubjects = computed(() => props.subjects.filter((s: any) => !s.level || s.level === form.value.level));
 
@@ -67,15 +75,28 @@ const allPoolQ = computed(() => {
 const generateExam = () => {
     if (selectedIds.value.size === 0) return;
     submitting.value = true;
-    router.post('/exams/generate', {
+    const payload = {
         title: form.value.title,
         instructions: form.value.instructions,
         question_ids: [...selectedIds.value],
-    }, { onFinish: () => { submitting.value = false; } });
+    };
+
+    const endpoint = isEditMode.value && props.exam?.id
+        ? `/exams/${props.exam.id}/questions`
+        : '/exams/generate';
+
+    router.post(endpoint, payload, { onFinish: () => { submitting.value = false; } });
 };
 
 const download = (examId: string, type: string) => window.open(`/exams/${examId}/download/${type}`, '_blank');
 const preview = (examId: string, type: string) => window.open(`/exams/${examId}/preview/${type}`, '_blank');
+
+onMounted(async () => {
+    if (!isEditMode.value || !props.initialForm?.subject_id || !props.initialForm.level) return;
+
+    selectedIds.value = new Set(props.exam?.selected_question_ids ?? []);
+    await loadPool();
+});
 </script>
 
 <template>
@@ -87,11 +108,14 @@ const preview = (examId: string, type: string) => window.open(`/exams/${examId}/
                 <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
                     {{ exam ? exam.title : 'Examination Configuration' }}
                 </h1>
-                <button v-if="exam" @click="router.get('/exams/create')" class="btn-secondary">New Exam</button>
+                <div class="flex items-center gap-2">
+                    <Link v-if="isReadOnlyExam" :href="`/exams/${exam.id}/edit-questions`" class="btn-secondary">Edit Questions</Link>
+                    <button v-if="exam" @click="router.get('/exams/create')" class="btn-secondary">New Exam</button>
+                </div>
             </div>
 
             <!-- Already generated exam view -->
-            <template v-if="exam">
+            <template v-if="isReadOnlyExam">
                 <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
                     <div class="card p-4"><p class="text-xs font-semibold text-gray-500 uppercase">Subject</p><p class="mt-1 text-lg font-bold text-gray-900 dark:text-gray-100">{{ exam.subject }}</p></div>
                     <div class="card p-4"><p class="text-xs font-semibold text-gray-500 uppercase">Level</p><p class="mt-1 text-lg font-bold text-gray-900 dark:text-gray-100">{{ exam.level }}</p></div>
@@ -227,7 +251,7 @@ const preview = (examId: string, type: string) => window.open(`/exams/${examId}/
                     <button @click="generateExam" :disabled="submitting || !form.title || selectedIds.size === 0"
                         class="inline-flex items-center gap-2 rounded-xl btn-primary disabled:opacity-50">
                         <span v-if="submitting" class="inline-block size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                        Generate Exam
+                        {{ isEditMode ? 'Save Exam Questions' : 'Generate Exam' }}
                     </button>
                 </div>
             </template>

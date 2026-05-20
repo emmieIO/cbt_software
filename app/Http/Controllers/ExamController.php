@@ -7,6 +7,7 @@ use App\Models\Question;
 use App\Models\Subject;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -42,12 +43,7 @@ class ExamController extends Controller
 
         return Inertia::render('Exam/Create', [
             'subjects' => $subjects,
-            'levels' => [
-                ['value' => 'lp', 'label' => 'Lower Primary'],
-                ['value' => 'hp', 'label' => 'Higher Primary'],
-                ['value' => 'js', 'label' => 'Junior Secondary'],
-                ['value' => 'ss', 'label' => 'Senior Secondary'],
-            ],
+            'levels' => $this->levelOptions(),
         ]);
     }
 
@@ -154,12 +150,7 @@ class ExamController extends Controller
 
         return Inertia::render('Exam/Create', [
             'subjects' => $subjects,
-            'levels' => [
-                ['value' => 'lp', 'label' => 'Lower Primary'],
-                ['value' => 'hp', 'label' => 'Higher Primary'],
-                ['value' => 'js', 'label' => 'Junior Secondary'],
-                ['value' => 'ss', 'label' => 'Senior Secondary'],
-            ],
+            'levels' => $this->levelOptions(),
             'exam' => [
                 'id' => $exam->id,
                 'title' => $exam->title,
@@ -195,38 +186,81 @@ class ExamController extends Controller
 
         return Inertia::render('Exam/Create', [
             'subjects' => $subjects,
-            'levels' => [
-                ['value' => 'lp', 'label' => 'Lower Primary'],
-                ['value' => 'hp', 'label' => 'Higher Primary'],
-                ['value' => 'js', 'label' => 'Junior Secondary'],
-                ['value' => 'ss', 'label' => 'Senior Secondary'],
-            ],
+            'levels' => $this->levelOptions(),
+            'exam' => $this->examPayload($exam),
+        ]);
+    }
+
+    public function editQuestions(Exam $exam): Response
+    {
+        $exam->load(['questions.topic.subject', 'mcqs.options', 'theoryQuestions']);
+        $subjects = Subject::query()->with('topics')->orderBy('name')->get();
+        $selectedSubjectId = optional($exam->questions->first()?->topic)->subject_id;
+        $level = $exam->level instanceof \App\Enums\QuestionLevel ? $exam->level->value : $exam->level;
+
+        return Inertia::render('Exam/Create', [
+            'subjects' => $subjects,
+            'levels' => $this->levelOptions(),
             'exam' => [
-                'id' => $exam->id,
+                ...$this->examPayload($exam),
+                'editable' => true,
+                'subject_id' => $selectedSubjectId,
+                'selected_question_ids' => $exam->questions->pluck('id')->values(),
+            ],
+            'initialForm' => [
                 'title' => $exam->title,
-                'subject' => $exam->subject_name,
-                'level' => strtoupper($exam->level instanceof \App\Enums\QuestionLevel ? $exam->level->value : $exam->level),
-                'date' => $exam->created_at->format('F j, Y'),
+                'subject_id' => $selectedSubjectId,
+                'level' => $level,
                 'instructions' => $exam->instructions,
-                'mcq_count' => $exam->mcqs->count(),
-                'theory_count' => $exam->theoryQuestions->count(),
-                'totalMarks' => $exam->total_marks,
-                'mcqs' => $exam->mcqs->map(fn ($q) => [
-                    'id' => $q->id,
-                    'content' => $q->content,
-                    'options' => $q->options->map(fn ($o) => [
-                        'id' => $o->id,
-                        'content' => $o->content,
-                        'is_correct' => $o->is_correct,
-                    ]),
-                ]),
-                'theory' => $exam->theoryQuestions->map(fn ($q) => [
-                    'id' => $q->id,
-                    'content' => $q->content,
-                    'marking_scheme' => $q->marking_scheme,
-                ]),
             ],
         ]);
+    }
+
+    public function updateQuestions(Request $request, Exam $exam): RedirectResponse
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'instructions' => 'nullable|string',
+            'question_ids' => 'required|array|min:1',
+            'question_ids.*' => 'exists:questions,id',
+        ]);
+
+        $questions = Question::query()
+            ->whereIn('id', $validated['question_ids'])
+            ->with(['options', 'topic.subject'])
+            ->get();
+
+        $mcqs = $questions->where('type', 'multiple_choice')->values();
+        $theory = $questions->where('type', 'theory')->values();
+        $subjectName = $mcqs->first()?->topic?->subject?->name
+            ?? $theory->first()?->topic?->subject?->name
+            ?? $exam->subject_name;
+        $level = $mcqs->first()?->level
+            ?? $theory->first()?->level
+            ?? $exam->level;
+        $levelValue = $level instanceof \App\Enums\QuestionLevel ? $level->value : $level;
+
+        $exam->update([
+            'title' => $validated['title'],
+            'subject_name' => $subjectName,
+            'level' => $levelValue,
+            'instructions' => $validated['instructions'] ?? 'Answer all questions carefully.',
+            'mcq_count' => $mcqs->count(),
+            'theory_count' => $theory->count(),
+            'total_marks' => $mcqs->count() + $theory->sum(fn ($q) => collect($q->marking_scheme)->sum('weight')),
+        ]);
+
+        $syncData = [];
+        foreach ($mcqs as $i => $q) {
+            $syncData[$q->id] = ['section' => 'mcq', 'sort_order' => $i];
+        }
+        foreach ($theory as $i => $q) {
+            $syncData[$q->id] = ['section' => 'theory', 'sort_order' => $i];
+        }
+
+        $exam->questions()->sync($syncData);
+
+        return to_route('exams.show', $exam)->with('success', 'Exam questions updated successfully.');
     }
 
     public function downloadQuestions(Exam $exam)
@@ -296,6 +330,45 @@ class ExamController extends Controller
             'mcqTotal' => ($exam->mcqs ?? collect())->count(),
             'theoryTotal' => ($exam->theoryQuestions ?? collect())->sum(fn ($q) => collect($q->marking_scheme)->sum('weight')),
             'totalMarks' => $exam->total_marks,
+        ];
+    }
+
+    private function levelOptions(): array
+    {
+        return [
+            ['value' => 'lp', 'label' => 'Lower Primary'],
+            ['value' => 'hp', 'label' => 'Higher Primary'],
+            ['value' => 'js', 'label' => 'Junior Secondary'],
+            ['value' => 'ss', 'label' => 'Senior Secondary'],
+        ];
+    }
+
+    private function examPayload(Exam $exam): array
+    {
+        return [
+            'id' => $exam->id,
+            'title' => $exam->title,
+            'subject' => $exam->subject_name,
+            'level' => strtoupper($exam->level instanceof \App\Enums\QuestionLevel ? $exam->level->value : $exam->level),
+            'date' => $exam->created_at->format('F j, Y'),
+            'instructions' => $exam->instructions,
+            'mcq_count' => $exam->mcqs->count(),
+            'theory_count' => $exam->theoryQuestions->count(),
+            'totalMarks' => $exam->total_marks,
+            'mcqs' => $exam->mcqs->map(fn ($q) => [
+                'id' => $q->id,
+                'content' => $q->content,
+                'options' => $q->options->map(fn ($o) => [
+                    'id' => $o->id,
+                    'content' => $o->content,
+                    'is_correct' => $o->is_correct,
+                ]),
+            ]),
+            'theory' => $exam->theoryQuestions->map(fn ($q) => [
+                'id' => $q->id,
+                'content' => $q->content,
+                'marking_scheme' => $q->marking_scheme,
+            ]),
         ];
     }
 }

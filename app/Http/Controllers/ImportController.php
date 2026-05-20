@@ -14,10 +14,17 @@ use OpenSpout\Reader\XLSX\Reader;
 
 class ImportController extends Controller
 {
+    public function index(): Response
+    {
+        return Inertia::render('Questions/ImportExcel');
+    }
+
     public function batchCreate(): Response
     {
-        $subjects = Subject::query()->orderBy('name')->pluck('name');
-        $topics = Topic::query()->orderBy('name')->pluck('name');
+        $subjects = Subject::query()
+            ->with(['topics:id,subject_id,name'])
+            ->orderBy('name')
+            ->get(['id', 'name', 'level']);
 
         return Inertia::render('Questions/BatchCreate', [
             'levels' => [
@@ -26,8 +33,7 @@ class ImportController extends Controller
                 ['value' => 'js', 'label' => 'Junior Secondary'],
                 ['value' => 'ss', 'label' => 'Senior Secondary'],
             ],
-            'subjectNames' => $subjects,
-            'topicNames' => $topics,
+            'subjects' => $subjects,
         ]);
     }
 

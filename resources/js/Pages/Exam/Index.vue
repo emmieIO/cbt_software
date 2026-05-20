@@ -67,7 +67,10 @@ defineProps<{
                             <td class="px-5 py-4 text-center text-sm font-semibold text-gray-900 dark:text-gray-100">{{ exam.total_marks }}</td>
                             <td class="px-5 py-4 text-right text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">{{ exam.created_at }}</td>
                             <td class="px-5 py-4 text-right">
-                                <Link :href="`/exams/${exam.id}`" class="text-xs font-medium text-primary hover:underline">View</Link>
+                                <div class="flex items-center justify-end gap-2">
+                                    <Link :href="`/exams/${exam.id}`" class="text-xs font-medium text-primary hover:underline">View</Link>
+                                    <Link :href="`/exams/${exam.id}/edit-questions`" class="text-xs font-medium text-gray-700 hover:underline dark:text-gray-300">Edit Questions</Link>
+                                </div>
                             </td>
                         </tr>
                         <tr v-if="exams.data.length === 0">

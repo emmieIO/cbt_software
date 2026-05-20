@@ -17,6 +17,33 @@ history.scrollRestoration = 'auto';
 // Toast store for global notifications
 import { toastStore } from '@/stores/toast';
 
+const extractFirstErrorMessage = (value: unknown): string | null => {
+    if (typeof value === 'string') {
+        return value;
+    }
+
+    if (Array.isArray(value)) {
+        for (const item of value) {
+            const message = extractFirstErrorMessage(item);
+            if (message) {
+                return message;
+            }
+        }
+        return null;
+    }
+
+    if (value && typeof value === 'object') {
+        for (const item of Object.values(value)) {
+            const message = extractFirstErrorMessage(item);
+            if (message) {
+                return message;
+            }
+        }
+    }
+
+    return null;
+};
+
 // Handle flash messages, errors, and scroll restoration
 router.on('success', (event) => {
     const page = event.detail?.page;
@@ -29,9 +56,9 @@ router.on('success', (event) => {
     }
 
     // Show Inertia validation errors that weren't caught inline
-    const errors = page?.props?.errors as Record<string, string> | undefined;
+    const errors = page?.props?.errors as Record<string, unknown> | undefined;
     if (errors && typeof errors === 'object' && Object.keys(errors).length > 0) {
-        const firstError = Object.values(errors)[0];
+        const firstError = extractFirstErrorMessage(errors);
         if (firstError) {
             toastStore.add(firstError, 'error');
         }
@@ -50,9 +77,9 @@ router.on('error', (event) => {
     if (typeof errors === 'string' && errors) {
         toastStore.add(errors, 'error');
     } else if (typeof errors === 'object' && errors) {
-        const vals = Object.values(errors) as string[];
-        if (vals.length > 0 && vals[0]) {
-            toastStore.add(vals[0], 'error');
+        const firstError = extractFirstErrorMessage(errors);
+        if (firstError) {
+            toastStore.add(firstError, 'error');
         }
     }
 });
