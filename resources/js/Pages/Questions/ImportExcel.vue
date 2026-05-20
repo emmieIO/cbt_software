@@ -46,7 +46,7 @@ const upload = () => {
         <Head title="Import Questions From Excel" />
 
         <div class="mx-auto max-w-4xl space-y-6">
-            <div class="flex items-center justify-between">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                     <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Import Questions From Excel</h1>
                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Download the template, fill it in, then upload it for preview and import.</p>
@@ -57,7 +57,7 @@ const upload = () => {
             <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:shadow-none">
                 <h2 class="text-sm font-bold text-gray-900 dark:text-gray-100">Step 1: Download template</h2>
                 <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Use the provided Excel template so your columns match the import format.</p>
-                <a href="/questions/import/template" class="mt-4 inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800/50">
+                <a href="/questions/import/template" class="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800/50 sm:w-auto sm:justify-start">
                     Download Template (XLSX)
                 </a>
             </div>
@@ -86,11 +86,11 @@ const upload = () => {
                     <input ref="fileInput" type="file" accept=".xlsx,.xls,.csv" class="hidden" @change="onFileChange" />
                 </div>
 
-                <div class="mt-6 flex justify-end">
+                <div class="mt-6 flex justify-stretch sm:justify-end">
                     <button
                         @click="upload"
                         :disabled="!file || submitting"
-                        class="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50"
+                        class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50 sm:w-auto"
                     >
                         <span v-if="submitting" class="inline-block size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                         Preview & Import

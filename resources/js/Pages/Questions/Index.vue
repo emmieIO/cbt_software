@@ -4,7 +4,6 @@ import { debounce } from 'lodash';
 import { ref, computed, watch } from 'vue';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
-import type { PaginatedData } from '@/types/academics';
 
 interface Question {
     id: string;
@@ -21,16 +20,26 @@ interface Question {
 interface Subject {
     id: string;
     name: string;
+    level?: string;
     topics: Array<{ id: string; name: string }>;
 }
 
+interface QuestionsPage {
+    data: Question[];
+    current_page: number;
+    last_page: number;
+    prev_page_url: string | null;
+    next_page_url: string | null;
+}
+
 const props = defineProps<{
-    questions: PaginatedData<Question>;
+    questions: QuestionsPage;
     subjects: Subject[];
     filters: {
         search?: string;
         subject_id?: string;
         level?: string;
+        overused?: string;
     };
     levels: Array<{ value: string; label: string }>;
 }>();
@@ -72,12 +81,12 @@ const levelTag = (lvl: { value: string; label: string }) => {
         <Head title="Questions" />
 
         <div class="space-y-6">
-            <div class="flex items-center justify-between">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                     <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Question Bank</h1>
                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500">Browse, create, and manage assessment questions.</p>
                 </div>
-                <div class="flex items-center gap-2">
+                <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
                     <Link href="/questions/import" class="inline-flex items-center gap-2 rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:bg-gray-800/50">
                         <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -100,18 +109,18 @@ const levelTag = (lvl: { value: string; label: string }) => {
             </div>
 
             <!-- Filters -->
-            <div class="flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
-                <div class="relative flex-1 min-w-[200px] max-w-md">
+            <div class="flex flex-col gap-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 sm:flex-row sm:flex-wrap sm:items-center">
+                <div class="relative w-full sm:max-w-md sm:flex-1">
                     <svg class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                     <input v-model="search" type="text" placeholder="Search questions..." class="w-full pl-9" />
                 </div>
-                <select v-model="level" class="w-auto min-w-[140px]">
+                <select v-model="level" class="w-full sm:w-auto sm:min-w-[140px]">
                     <option value="">All Levels</option>
                     <option v-for="l in levels" :key="l.value" :value="l.value">{{ l.label }}</option>
                 </select>
-                <select v-model="subjectId" class="w-auto min-w-[160px]">
+                <select v-model="subjectId" class="w-full sm:w-auto sm:min-w-[160px]">
                     <option value="">All Subjects</option>
                     <option v-for="s in filteredSubjects" :key="s.id" :value="s.id">{{ s.name }}</option>
                 </select>
@@ -123,7 +132,40 @@ const levelTag = (lvl: { value: string; label: string }) => {
 
             <!-- Questions List -->
             <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm dark:shadow-none dark:border-gray-700">
-                <table class="min-w-full divide-y divide-gray-200">
+                <div class="divide-y divide-gray-100 sm:hidden">
+                    <div v-for="q in questions.data" :key="q.id" class="space-y-3 p-4">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="min-w-0">
+                                <p class="text-sm font-medium text-gray-900 dark:text-gray-100" v-text="q.content" />
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">{{ q.creator?.name || 'Unknown' }}</p>
+                            </div>
+                            <span class="inline-flex shrink-0 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
+                                {{ levelTag(q.level) }}
+                            </span>
+                        </div>
+                        <div class="flex flex-wrap gap-2 text-xs">
+                            <span class="inline-flex rounded-full bg-gray-100 px-2.5 py-1 text-gray-700 dark:text-gray-200 capitalize">
+                                {{ q.type?.value?.replace('_', ' ') || q.type }}
+                            </span>
+                            <span class="inline-flex rounded-full bg-gray-100 px-2.5 py-1 text-gray-700 dark:text-gray-200">
+                                {{ q.topic?.subject?.name || '-' }}
+                            </span>
+                            <span class="inline-flex rounded-full px-2.5 py-1" :class="q.used_count >= 3 ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700 dark:text-gray-200'">
+                                Used {{ q.used_count }}x
+                            </span>
+                        </div>
+                        <div class="flex items-center gap-4 text-xs font-medium">
+                            <Link :href="`/questions/${q.id}/edit`" class="text-primary hover:underline">Edit</Link>
+                            <button @click="deleteTarget = q.id" class="text-red-600 hover:underline">Delete</button>
+                        </div>
+                    </div>
+                    <div v-if="questions.data.length === 0" class="px-5 py-12 text-center text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500">
+                        No questions found.
+                        <Link href="/questions/create" class="font-medium text-primary hover:underline">Create one</Link>.
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto"><table class="hidden min-w-full divide-y divide-gray-200 sm:table">
                     <thead class="bg-gray-50 dark:bg-gray-800/50">
                         <tr>
                             <th class="px-5 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase">Question</th>
@@ -171,14 +213,14 @@ const levelTag = (lvl: { value: string; label: string }) => {
                             </td>
                         </tr>
                     </tbody>
-                </table>
+                </table></div>
 
                 <!-- Pagination -->
-                <div v-if="questions.last_page > 1" class="flex items-center justify-between border-t border-gray-200 dark:border-gray-700 px-5 py-3">
+                <div v-if="questions.last_page > 1" class="flex flex-col gap-3 border-t border-gray-200 dark:border-gray-700 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
                     <p class="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500">
                         Page {{ questions.current_page }} of {{ questions.last_page }}
                     </p>
-                    <div class="flex gap-2">
+                    <div class="flex flex-wrap gap-2">
                         <Link v-if="questions.prev_page_url" :href="questions.prev_page_url" class="rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:bg-gray-800/50">Previous</Link>
                         <Link v-if="questions.next_page_url" :href="questions.next_page_url" class="rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:bg-gray-800/50">Next</Link>
                     </div>

@@ -7,6 +7,7 @@ const props = defineProps<{
     subjects: Array<{
         id: string;
         name: string;
+        level?: string;
         topics: Array<{ id: string; name: string }>;
     }>;
     levels: Array<{ value: string; label: string }>;
@@ -136,7 +137,7 @@ const submit = () => {
         <Head title="Create Question" />
 
         <div class="mx-auto max-w-5xl space-y-6">
-            <div class="flex items-center justify-between">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                     <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Create Question</h1>
                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500">Add a new question to the bank.</p>
@@ -149,7 +150,7 @@ const submit = () => {
             <form @submit.prevent="submit" class="space-y-6">
                 <!-- Question Type -->
                 <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm dark:shadow-none dark:border-gray-700">
-                    <div class="flex gap-4">
+                    <div class="flex flex-col gap-4 lg:flex-row">
                         <label class="flex cursor-pointer items-center gap-3 rounded-lg border-2 p-4 transition-colors"
                             :class="form.type === 'multiple_choice' ? 'border-primary bg-primary/5' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:border-gray-600'">
                             <input v-model="form.type" type="radio" value="multiple_choice" class="text-primary" />
@@ -209,7 +210,7 @@ const submit = () => {
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Image (optional)</label>
-                            <div class="mt-1 flex items-center gap-4">
+                            <div class="mt-1 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-4">
                                 <label class="flex cursor-pointer items-center gap-2 btn-secondary dark:bg-gray-800/50">
                                     <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -239,7 +240,7 @@ const submit = () => {
                     <p v-if="form.errors.options" class="mt-2 text-xs text-red-600">{{ form.errors.options }}</p>
 
                     <div class="mt-4 space-y-3">
-                        <div v-for="(option, idx) in form.options" :key="idx" class="flex items-center gap-3 rounded-lg border p-3"
+                        <div v-for="(option, idx) in form.options" :key="idx" class="flex flex-wrap items-center gap-3 rounded-lg border p-3"
                             :class="option.is_correct ? 'border-green-300 bg-green-50' : 'border-gray-200 dark:border-gray-700'">
                             <span class="flex size-7 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-bold text-gray-600 dark:text-gray-300">
                                 {{ ['A', 'B', 'C', 'D'][idx] }}
@@ -264,17 +265,17 @@ const submit = () => {
                     <p v-if="form.errors.marking_scheme" class="mt-2 text-xs text-red-600">{{ form.errors.marking_scheme }}</p>
 
                     <div class="mt-4 space-y-3">
-                        <div v-for="(row, idx) in form.marking_scheme" :key="idx" class="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+                        <div v-for="(row, idx) in form.marking_scheme" :key="idx" class="flex flex-col gap-3 rounded-lg border border-gray-200 dark:border-gray-700 p-3 sm:flex-row sm:items-center">
                             <span class="text-xs font-bold text-gray-500 dark:text-gray-400 dark:text-gray-500">#{{ idx + 1 }}</span>
                             <input v-model="row.point" type="text" class="flex-1 rounded-lg border-gray-200 dark:border-gray-700 text-sm" placeholder="Expected point..." />
-                            <input v-model.number="row.weight" type="number" min="1" class="w-20 rounded-lg border-gray-200 dark:border-gray-700 text-sm text-center" placeholder="Weight" />
+                            <input v-model.number="row.weight" type="number" min="1" class="w-full rounded-lg border-gray-200 dark:border-gray-700 text-sm text-center sm:w-20" placeholder="Weight" />
                             <button type="button" @click="removeSchemeRow(idx)" class="text-xs text-red-600 hover:underline">Remove</button>
                         </div>
                     </div>
                 </div>
 
                 <!-- Submit -->
-                <div class="flex items-center justify-end gap-3">
+                <div class="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-end">
                     <Link href="/questions" class="btn-secondary dark:bg-gray-800/50">Cancel</Link>
                     <button type="submit" :disabled="submitting"
                         class="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-semibold text-white shadow-sm dark:shadow-none dark:border-gray-700 hover:bg-primary/90 disabled:opacity-50">

@@ -45,12 +45,19 @@ const updateRow = (patch: Partial<QuestionDraft>) => {
     });
 };
 
-const onLevelChange = () => {
-    updateRow({ subject_id: '', topic_id: '' });
+const onLevelChange = (event: Event) => {
+    updateRow({
+        level: (event.target as HTMLSelectElement).value,
+        subject_id: '',
+        topic_id: '',
+    });
 };
 
-const onSubjectChange = () => {
-    updateRow({ topic_id: '' });
+const onSubjectChange = (event: Event) => {
+    updateRow({
+        subject_id: (event.target as HTMLSelectElement).value,
+        topic_id: '',
+    });
 };
 
 const setType = (type: QuestionType) => {
@@ -135,13 +142,13 @@ const removeMarkingPoint = (index: number) => {
             <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Level</label>
-                    <select :value="row.level" class="mt-1" @change="updateRow({ level: ($event.target as HTMLSelectElement).value }); onLevelChange()">
+                    <select :value="row.level" class="mt-1" @change="onLevelChange">
                         <option v-for="levelOption in levels" :key="levelOption.value" :value="levelOption.value">{{ levelOption.label }}</option>
                     </select>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Subject</label>
-                    <select :value="row.subject_id" class="mt-1" @change="updateRow({ subject_id: ($event.target as HTMLSelectElement).value }); onSubjectChange()">
+                    <select :value="row.subject_id" class="mt-1" @change="onSubjectChange">
                         <option value="" disabled>Select subject</option>
                         <option v-for="subject in filteredSubjects" :key="subject.id" :value="subject.id">{{ subject.name }}</option>
                     </select>

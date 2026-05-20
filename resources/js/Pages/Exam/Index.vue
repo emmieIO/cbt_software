@@ -41,7 +41,7 @@ defineProps<{
             </div>
 
             <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm dark:shadow-none dark:border-gray-700">
-                <table class="min-w-full divide-y divide-gray-200">
+                <div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50 dark:bg-gray-800/50">
                         <tr>
                             <th class="px-5 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase">Exam</th>
@@ -80,7 +80,7 @@ defineProps<{
                             </td>
                         </tr>
                     </tbody>
-                </table>
+                </table></div>
             </div>
 
             <div v-if="exams.last_page > 1" class="flex items-center justify-between">

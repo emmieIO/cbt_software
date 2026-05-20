@@ -12,7 +12,10 @@ class SubjectController extends Controller
 {
     public function index(Request $request): Response
     {
+        $filters = $request->only(['level']);
+
         $subjects = Subject::query()
+            ->when($filters['level'] ?? null, fn ($query, $level) => $query->where('level', $level))
             ->withCount('topics')
             ->orderBy('name')
             ->paginate(20);
@@ -25,6 +28,7 @@ class SubjectController extends Controller
                 ['value' => 'js', 'label' => 'Junior Secondary'],
                 ['value' => 'ss', 'label' => 'Senior Secondary'],
             ],
+            'filters' => $filters,
         ]);
     }
 

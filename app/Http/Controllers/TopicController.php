@@ -13,9 +13,12 @@ class TopicController extends Controller
 {
     public function index(Request $request): Response
     {
+        $filters = $request->only(['level']);
+
         $topics = Topic::query()
             ->with('subject')
             ->withCount('questions')
+            ->when($filters['level'] ?? null, fn ($query, $level) => $query->whereHas('subject', fn ($subjectQuery) => $subjectQuery->where('level', $level)))
             ->orderBy('name')
             ->paginate(20);
 
@@ -24,6 +27,7 @@ class TopicController extends Controller
         return Inertia::render('Topics/Index', [
             'topics' => $topics,
             'subjects' => $subjects,
+            'filters' => $filters,
             'levels' => [
                 ['value' => 'lp', 'label' => 'Lower Primary'],
                 ['value' => 'hp', 'label' => 'Higher Primary'],

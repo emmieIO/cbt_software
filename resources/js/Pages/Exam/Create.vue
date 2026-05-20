@@ -116,7 +116,7 @@ onMounted(async () => {
 
             <!-- Already generated exam view -->
             <template v-if="isReadOnlyExam">
-                <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:grid-cols-4">
                     <div class="card p-4"><p class="text-xs font-semibold text-gray-500 uppercase">Subject</p><p class="mt-1 text-lg font-bold text-gray-900 dark:text-gray-100">{{ exam.subject }}</p></div>
                     <div class="card p-4"><p class="text-xs font-semibold text-gray-500 uppercase">Level</p><p class="mt-1 text-lg font-bold text-gray-900 dark:text-gray-100">{{ exam.level }}</p></div>
                     <div class="card p-4"><p class="text-xs font-semibold text-gray-500 uppercase">Questions</p><p class="mt-1 text-lg font-bold text-gray-900 dark:text-gray-100">{{ exam.mcq_count + exam.theory_count }}</p></div>
@@ -143,7 +143,7 @@ onMounted(async () => {
                     <div class="p-5 space-y-3">
                         <div v-for="(q, i) in exam.mcqs" :key="q.id" class="rounded-lg bg-gray-50 dark:bg-gray-700/50 p-3">
                             <p class="text-sm"><span class="font-bold text-gray-500">{{ i + 1 }}.</span> {{ q.content }}</p>
-                            <div v-if="q.options" class="mt-1 grid grid-cols-2 gap-1 text-xs text-gray-600 dark:text-gray-400">
+                            <div v-if="q.options" class="mt-1 grid grid-cols-1 sm:grid-cols-2 gap-1 text-xs text-gray-600 dark:text-gray-400">
                                 <div v-for="(opt, oi) in q.options" :key="opt.id" :class="opt.is_correct ? 'font-semibold text-green-700' : ''">
                                     {{ ['A','B','C','D'][oi] }}. {{ opt.content }}
                                 </div>
@@ -160,7 +160,7 @@ onMounted(async () => {
             <template v-else>
                 <div class="card p-6">
                     <h2 class="text-sm font-bold text-gray-900 dark:text-gray-100">Exam Details</h2>
-                    <div class="mt-4 grid grid-cols-2 gap-4">
+                    <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="col-span-2">
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Exam Title</label>
                             <input v-model="form.title" type="text" class="mt-1" placeholder="e.g., First Term Examination" />

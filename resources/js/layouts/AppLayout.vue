@@ -132,31 +132,31 @@ const logout = () => {
         <!-- Main content -->
         <div class="flex flex-1 flex-col overflow-hidden">
             <!-- Top bar -->
-            <header class="flex h-16 items-center gap-4 border-b border-gray-200 bg-white px-4 dark:border-gray-800 dark:bg-gray-900 lg:px-6">
+            <header class="flex h-16 items-center gap-2 sm:gap-4 border-b border-gray-200 bg-white px-3 dark:border-gray-800 dark:bg-gray-900 sm:px-4 lg:px-6">
                 <button @click="sidebarOpen = !sidebarOpen" class="rounded-lg p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 lg:hidden">
                     <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
                 </button>
-                <div class="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
-                    <Link href="/dashboard" class="hover:text-gray-700 dark:hover:text-gray-200 transition-colors">
+                <div class="flex items-center gap-1 text-xs sm:text-sm text-gray-500 dark:text-gray-400 min-w-0 overflow-hidden">
+                    <Link href="/dashboard" class="shrink-0 hover:text-gray-700 dark:hover:text-gray-200 transition-colors">
                         <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                         </svg>
                     </Link>
                     <template v-for="(crumb, i) in breadcrumbs" :key="i">
-                        <span class="breadcrumb-sep">›</span>
-                        <Link v-if="crumb.href" :href="crumb.href" class="hover:text-gray-900 dark:hover:text-gray-100 transition-colors">{{ crumb.label }}</Link>
-                        <span v-else class="font-medium text-gray-900 dark:text-gray-100">{{ crumb.label }}</span>
+                        <span class="breadcrumb-sep shrink-0">›</span>
+                        <Link v-if="crumb.href" :href="crumb.href" class="truncate hover:text-gray-900 dark:hover:text-gray-100 transition-colors">{{ crumb.label }}</Link>
+                        <span v-else class="truncate font-medium text-gray-900 dark:text-gray-100">{{ crumb.label }}</span>
                     </template>
                 </div>
-                <div class="ml-auto flex items-center gap-3">
-                    <span class="hidden text-sm text-gray-500 dark:text-gray-400 sm:inline">{{ user?.name }}</span>
+                <div class="ml-auto flex items-center gap-2 sm:gap-3 shrink-0">
+                    <span class="hidden sm:inline text-sm text-gray-500 dark:text-gray-400 truncate max-w-[120px]">{{ user?.name }}</span>
                 </div>
             </header>
 
             <!-- Page content -->
-            <main class="flex-1 overflow-y-auto p-6 dark:text-gray-100 lg:p-8">
+            <main class="flex-1 overflow-y-auto p-3 dark:text-gray-100 sm:p-6 lg:p-8">
                 <slot />
             </main>
         </div>

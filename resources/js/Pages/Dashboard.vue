@@ -39,7 +39,7 @@ const kpis = [
             </div>
 
             <!-- KPI Cards -->
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                 <div v-for="kpi in kpis" :key="kpi.label" class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm dark:shadow-none dark:border-gray-700">
                     <p class="text-xs font-semibold tracking-wide text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase">{{ kpi.label }}</p>
                     <p class="mt-2 text-3xl font-bold" :class="kpi.color">{{ kpi.value }}</p>
@@ -48,7 +48,7 @@ const kpis = [
 
             <!-- Quick Actions -->
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <Link href="/questions/create" class="flex items-center gap-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-sm dark:shadow-none dark:border-gray-700 transition-all hover:border-primary/30 hover:shadow-md">
+                <Link href="/questions/create" class="flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-sm dark:shadow-none dark:border-gray-700 transition-all hover:border-primary/30 hover:shadow-md">
                     <div class="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
                         <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
@@ -60,7 +60,7 @@ const kpis = [
                     </div>
                 </Link>
 
-                <Link href="/questions" class="flex items-center gap-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-sm dark:shadow-none dark:border-gray-700 transition-all hover:border-primary/30 hover:shadow-md">
+                <Link href="/questions" class="flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-sm dark:shadow-none dark:border-gray-700 transition-all hover:border-primary/30 hover:shadow-md">
                     <div class="flex size-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
                         <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -72,7 +72,7 @@ const kpis = [
                     </div>
                 </Link>
 
-                <Link href="/subjects" class="flex items-center gap-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-sm dark:shadow-none dark:border-gray-700 transition-all hover:border-primary/30 hover:shadow-md">
+                <Link href="/subjects" class="flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-sm dark:shadow-none dark:border-gray-700 transition-all hover:border-primary/30 hover:shadow-md">
                     <div class="flex size-10 items-center justify-center rounded-lg bg-purple-50 text-purple-600">
                         <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 
@@ -14,16 +14,28 @@ const props = defineProps<{
     };
     subjects: Array<{ id: string; name: string; level: string }>;
     levels: Array<{ value: string; label: string }>;
+    filters: {
+        level?: string;
+    };
 }>();
 
 const showForm = ref(false);
 const editing = ref<string | null>(null);
 const deleteTarget = ref<string | null>(null);
-const filterLevel = ref('');
+const filterLevel = ref(props.filters.level || '');
 const formSubjectId = ref('');
 const form = ref({ name: '', subject_id: '', description: '' });
 
 const filteredSubjects = computed(() => props.subjects.filter(s => !filterLevel.value || s.level === filterLevel.value));
+
+watch(filterLevel, (value) => {
+    router.get('/topics', {
+        level: value || undefined,
+    }, {
+        preserveState: true,
+        replace: true,
+    });
+});
 
 const openCreate = () => {
     editing.value = null;
@@ -75,9 +87,9 @@ const confirmDelete = () => {
             </div>
 
             <!-- Level Filter -->
-            <div class="flex items-center gap-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
+            <div class="flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
                 <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Level:</label>
-                <select v-model="filterLevel" class="w-auto min-w-[160px]">
+                <select v-model="filterLevel" class="w-full sm:w-auto sm:min-w-[160px]">
                     <option value="">All Levels</option>
                     <option v-for="l in levels" :key="l.value" :value="l.value">{{ l.label }}</option>
                 </select>
@@ -115,7 +127,7 @@ const confirmDelete = () => {
 
             <!-- Topics List -->
             <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm dark:shadow-none dark:border-gray-700">
-                <table class="min-w-full divide-y divide-gray-200">
+                <div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50 dark:bg-gray-800/50">
                         <tr>
                             <th class="px-5 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase">Topic</th>
@@ -143,7 +155,7 @@ const confirmDelete = () => {
                             <td colspan="4" class="px-5 py-12 text-center text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500">No topics yet.</td>
                         </tr>
                     </tbody>
-                </table>
+                </table></div>
             </div>
 
             <div v-if="topics.last_page > 1" class="flex items-center justify-between">

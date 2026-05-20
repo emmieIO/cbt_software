@@ -58,7 +58,7 @@ const submit = () => {
                             <input v-model="form.title" type="text" required class="mt-1" placeholder="e.g., First Term Examination" />
                             <p v-if="errors.title" class="mt-1 text-xs text-red-600">{{ errors.title }}</p>
                         </div>
-                        <div class="grid grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Level</label>
                                 <select v-model="form.level" class="mt-1" @change="onLevelChange">
@@ -81,7 +81,7 @@ const submit = () => {
                 <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm dark:shadow-none dark:border-gray-700">
                     <h2 class="text-sm font-bold text-gray-900 dark:text-gray-100">Question Selection</h2>
                     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">Questions will be randomly selected from the question bank.</p>
-                    <div class="mt-4 grid grid-cols-2 gap-4">
+                    <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">MCQ Questions</label>
                             <input v-model.number="form.mcq_count" type="number" min="0" max="100" class="mt-1" />
