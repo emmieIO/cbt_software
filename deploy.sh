@@ -26,11 +26,8 @@ npm run build
 # 3. Laravel Housekeeping
 php artisan migrate --force
 
-# Sync the new permission names and role categories
-php artisan db:seed --class=RevampPermissionsSeeder --force
-
-# Reset Spatie permission cache
-php artisan permission:cache-reset
+# Seed default data if needed
+php artisan db:seed --force
 
 # Ensure public storage link exists for image uploads
 php artisan storage:link || true

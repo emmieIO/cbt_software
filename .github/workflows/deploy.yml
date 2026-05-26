@@ -112,8 +112,7 @@ jobs:
               php artisan optimize:clear
               
               php artisan migrate --force
-              php artisan db:seed --class=RolesAndPermissionsSeeder --force
-              php artisan permission:cache-reset
+              php artisan db:seed --force
               
               rm -rf resources/js/actions
               php artisan wayfinder:generate --with-form
