@@ -131,6 +131,11 @@ const parseQuestionLead = (content: string) => {
     };
 };
 
+const questionTypeClass = (type: string) =>
+    type === 'theory'
+        ? 'bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-200'
+        : 'bg-blue-100 text-blue-800 dark:bg-blue-500/15 dark:text-blue-200';
+
 onMounted(async () => {
     if (!isEditMode.value || !props.initialForm?.subject_id || !props.initialForm.level) return;
 
@@ -171,7 +176,7 @@ onMounted(async () => {
                             <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">{{ item.label }}</h3>
                             <p class="mt-1 text-xs text-gray-500">{{ item.desc }}</p>
                             <div class="mt-3 flex justify-center gap-2">
-                                <button @click="preview(exam.id, item.id, item.label)" class="rounded-lg border border-gray-300 dark:border-green-800/60 px-3 py-1.5 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-50">View</button>
+                                <button @click="preview(exam.id, item.id, item.label)" class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50 dark:border-green-800/60 dark:bg-green-950/45 dark:text-gray-200 dark:hover:bg-green-950/70">View</button>
                                 <button @click="download(exam.id, item.id)" class="rounded-lg bg-primary px-3 py-1.5 text-xs text-white hover:bg-primary/90">Download</button>
                             </div>
                         </div>
@@ -349,14 +354,14 @@ onMounted(async () => {
                                 <input v-model.number="mcqCount" type="number" min="0" :max="pool.mcqs.length" class="w-16 text-xs py-1" />
                                 <label class="text-xs text-gray-500">Theory:</label>
                                 <input v-model.number="theoryCount" type="number" min="0" :max="pool.theory.length" class="w-16 text-xs py-1" />
-                                <button @click="autoSelect" class="rounded-lg border border-primary px-3 py-1 text-xs font-medium text-primary hover:bg-primary/5">Auto Select (Least Used)</button>
+                                <button @click="autoSelect" class="rounded-lg border border-primary px-3 py-1 text-xs font-medium text-primary hover:bg-primary/5 dark:border-primary/60 dark:text-primary-light dark:hover:bg-primary/10">Auto Select (Least Used)</button>
                             </div>
                         </div>
 
                         <div class="flex gap-2 mb-3">
-                            <button @click="poolTab = 'all'" class="rounded-full px-3 py-1 text-xs font-medium" :class="poolTab === 'all' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600'">All</button>
-                            <button @click="poolTab = 'mcq'" class="rounded-full px-3 py-1 text-xs font-medium" :class="poolTab === 'mcq' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600'">MCQ ({{ pool.mcqs.length }})</button>
-                            <button @click="poolTab = 'theory'" class="rounded-full px-3 py-1 text-xs font-medium" :class="poolTab === 'theory' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600'">Theory ({{ pool.theory.length }})</button>
+                            <button @click="poolTab = 'all'" class="rounded-full px-3 py-1 text-xs font-medium transition-colors" :class="poolTab === 'all' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700 dark:bg-green-900/70 dark:text-gray-200 dark:hover:bg-green-900/85'">All</button>
+                            <button @click="poolTab = 'mcq'" class="rounded-full px-3 py-1 text-xs font-medium transition-colors" :class="poolTab === 'mcq' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700 dark:bg-green-900/70 dark:text-gray-200 dark:hover:bg-green-900/85'">MCQ ({{ pool.mcqs.length }})</button>
+                            <button @click="poolTab = 'theory'" class="rounded-full px-3 py-1 text-xs font-medium transition-colors" :class="poolTab === 'theory' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700 dark:bg-green-900/70 dark:text-gray-200 dark:hover:bg-green-900/85'">Theory ({{ pool.theory.length }})</button>
                             <span class="ml-auto text-xs font-semibold text-gray-600 dark:text-gray-300">{{ selectedIds.size }} selected</span>
                         </div>
 
@@ -374,8 +379,8 @@ onMounted(async () => {
                                 <div class="min-w-0 flex-1">
                                     <p class="text-sm text-gray-900 dark:text-gray-100 line-clamp-2">{{ q.content }}</p>
                                     <div class="mt-1 flex flex-wrap gap-2 text-[10px] text-gray-500">
-                                        <span class="rounded bg-gray-100 dark:bg-green-900/70 px-1.5 py-0.5">{{ q.topic }}</span>
-                                        <span class="rounded bg-gray-100 dark:bg-green-900/70 px-1.5 py-0.5 capitalize">{{ q.type }}</span>
+                                        <span class="rounded bg-gray-100 px-1.5 py-0.5 text-gray-700 dark:bg-green-900/70 dark:text-gray-200">{{ q.topic }}</span>
+                                        <span class="rounded px-1.5 py-0.5 font-semibold capitalize" :class="questionTypeClass(q.type)">{{ q.type }}</span>
                                         <span class="rounded px-1.5 py-0.5" :class="q.used_count >= 3 ? 'bg-red-100 text-red-700' : 'bg-gray-100 dark:bg-green-900/70 text-gray-500'">
                                             Used {{ q.used_count }}x
                                         </span>

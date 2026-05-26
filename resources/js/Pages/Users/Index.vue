@@ -81,6 +81,11 @@ const confirmDelete = () => {
 };
 
 const canDeleteUser = (userId: string) => isAdmin && userId !== currentUserId.value;
+
+const roleBadgeClass = (role: string) =>
+    role === 'admin'
+        ? 'bg-primary/10 text-primary dark:bg-primary/15 dark:text-primary-light'
+        : 'bg-slate-100 text-slate-700 dark:bg-slate-800/80 dark:text-slate-200';
 </script>
 
 <template>
@@ -130,8 +135,8 @@ const canDeleteUser = (userId: string) => isAdmin && userId !== currentUserId.va
                             </select>
                         </div>
                         <div class="flex justify-end gap-3">
-                            <button type="button" @click="showForm = false" class="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 dark:border-green-900/60 dark:bg-green-950/45 dark:text-gray-300">Cancel</button>
-                            <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90">Save</button>
+                            <button type="button" @click="showForm = false" class="btn-secondary">Cancel</button>
+                            <button type="submit" class="btn-primary">Save</button>
                         </div>
                     </form>
                 </div>
@@ -163,7 +168,7 @@ const canDeleteUser = (userId: string) => isAdmin && userId !== currentUserId.va
                             <td class="px-5 py-4">
                                 <span
                                     class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium"
-                                    :class="user.role === 'admin' ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-700 dark:text-gray-200'"
+                                    :class="roleBadgeClass(user.role)"
                                 >
                                     {{ user.role }}
                                 </span>

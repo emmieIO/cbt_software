@@ -118,8 +118,8 @@ const confirmDelete = () => {
                             <textarea v-model="form.description" rows="3" class="mt-1" />
                         </div>
                         <div class="flex justify-end gap-3">
-                            <button type="button" @click="showForm = false" class="rounded-lg border border-gray-200 dark:border-green-900/60 px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:bg-green-950/45">Cancel</button>
-                            <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90">Save</button>
+                            <button type="button" @click="showForm = false" class="btn-secondary">Cancel</button>
+                            <button type="submit" class="btn-primary">Save</button>
                         </div>
                     </form>
                 </div>

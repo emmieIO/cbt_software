@@ -185,7 +185,14 @@ const confirmImport = () => {
                                 </td>
                                 <td class="px-3 py-2 text-gray-900 dark:text-gray-100">{{ row.subject_name }}</td>
                                 <td class="px-3 py-2 text-gray-900 dark:text-gray-100">{{ row.topic_name }}</td>
-                                <td class="px-3 py-2 text-gray-600 capitalize dark:text-gray-300">{{ row.type.replace('_', ' ') }}</td>
+                                <td class="px-3 py-2">
+                                    <span
+                                        class="inline-flex rounded-full px-2 py-1 text-xs font-semibold capitalize"
+                                        :class="row.type === 'theory' ? 'bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-200' : 'bg-blue-100 text-blue-800 dark:bg-blue-500/15 dark:text-blue-200'"
+                                    >
+                                        {{ row.type.replace('_', ' ') }}
+                                    </span>
+                                </td>
                                 <td class="px-3 py-2 text-gray-600 dark:text-gray-300">{{ row.content }}</td>
                                 <td class="px-3 py-2 text-gray-600 dark:text-gray-300">{{ row.image_url || 'None' }}</td>
                                 <td class="px-3 py-2 text-red-600 dark:text-red-300">{{ row.errors.join(' ') || 'None' }}</td>

@@ -69,6 +69,18 @@ const confirmDelete = () => {
     }
 };
 
+const questionTypeValue = (type: Question['type'] | string) =>
+    typeof type === 'string' ? type : type?.value;
+
+const questionTypeLabel = (type: Question['type'] | string) =>
+    (typeof type === 'string' ? type : type?.label || type?.value || '')
+        .replace(/_/g, ' ');
+
+const questionTypeClass = (type: Question['type'] | string) =>
+    questionTypeValue(type) === 'theory'
+        ? 'bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-200'
+        : 'bg-blue-100 text-blue-800 dark:bg-blue-500/15 dark:text-blue-200';
+
 const levelTag = (lvl: { value: string; label: string }) => {
     const value = typeof lvl === 'string' ? lvl : lvl?.value;
     const map: Record<string, string> = { lp: 'LP', hp: 'HP', js: 'JS', ss: 'SS' };
@@ -87,13 +99,13 @@ const levelTag = (lvl: { value: string; label: string }) => {
                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500">Browse, create, and manage assessment questions.</p>
                 </div>
                 <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
-                    <Link href="/questions/import" class="inline-flex items-center gap-2 rounded-lg border border-gray-300 dark:border-green-800/60 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:bg-green-950/45">
+                    <Link href="/questions/import" class="btn-secondary">
                         <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                         </svg>
                         Import from Excel
                     </Link>
-                    <Link href="/questions/batch/create" class="inline-flex items-center gap-2 rounded-lg border border-gray-300 dark:border-green-800/60 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:bg-green-950/45">
+                    <Link href="/questions/batch/create" class="btn-secondary">
                         <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                         </svg>
@@ -144,8 +156,8 @@ const levelTag = (lvl: { value: string; label: string }) => {
                             </span>
                         </div>
                         <div class="flex flex-wrap gap-2 text-xs">
-                            <span class="inline-flex rounded-full bg-gray-100 px-2.5 py-1 text-gray-700 dark:text-gray-200 capitalize">
-                                {{ q.type?.value?.replace('_', ' ') || q.type }}
+                            <span class="inline-flex rounded-full px-2.5 py-1 font-medium capitalize" :class="questionTypeClass(q.type)">
+                                {{ questionTypeLabel(q.type) }}
                             </span>
                             <span class="inline-flex rounded-full bg-gray-100 px-2.5 py-1 text-gray-700 dark:text-gray-200">
                                 {{ q.topic?.subject?.name || '-' }}
@@ -184,8 +196,8 @@ const levelTag = (lvl: { value: string; label: string }) => {
                             </td>
                             <td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-300">{{ q.topic?.subject?.name || '-' }}</td>
                             <td class="px-5 py-4">
-                                <span class="inline-flex rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700 dark:text-gray-200 capitalize">
-                                    {{ q.type?.value?.replace('_', ' ') || q.type }}
+                                <span class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium capitalize" :class="questionTypeClass(q.type)">
+                                    {{ questionTypeLabel(q.type) }}
                                 </span>
                             </td>
                             <td class="px-5 py-4">

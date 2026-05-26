@@ -26,6 +26,11 @@ const kpis = [
     { label: 'Topics', value: props.stats.totalTopics, color: 'text-purple-600' },
     { label: 'Flagged (Overused)', value: props.stats.flaggedQuestions, color: 'text-red-600' },
 ];
+
+const questionTypeClass = (type: string) =>
+    type === 'theory'
+        ? 'bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-200'
+        : 'bg-blue-100 text-blue-800 dark:bg-blue-500/15 dark:text-blue-200';
 </script>
 
 <template>
@@ -97,7 +102,9 @@ const kpis = [
                             <p class="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">
                                 {{ q.subject || 'No subject' }}
                                 <span class="mx-1">&middot;</span>
-                                <span class="capitalize">{{ q.type.replace('_', ' ') }}</span>
+                                <span class="inline-flex rounded-full px-2 py-0.5 font-medium capitalize" :class="questionTypeClass(q.type)">
+                                    {{ q.type.replace('_', ' ') }}
+                                </span>
                                 <span class="mx-1">&middot;</span>
                                 Used {{ q.used_count }} times
                             </p>
