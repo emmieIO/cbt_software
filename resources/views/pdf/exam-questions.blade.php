@@ -86,8 +86,8 @@
                 {!! nl2br(e($q->content)) !!}
                 <span class="marks">[1]</span>
             </div>
-            @if($q->image_path)
-                <div style="margin:2px 0;">@php $src = str_starts_with($q->image_path, 'http') ? $q->image_path : public_path(ltrim($q->image_path, '/')); @endphp<img src="{{ $src }}" alt="Image" style="max-width:340px;" /></div>
+            @if($src = $q->imagePdfSource())
+                <div style="margin:2px 0;"><img src="{{ $src }}" alt="Image" style="max-width:340px;" /></div>
             @endif
             <div class="options">
                 @foreach($q->options as $oi => $opt)
@@ -110,8 +110,8 @@
                 {!! nl2br(e($q->content)) !!}
                 <span class="marks">[{{ $qm }}]</span>
             </div>
-            @if($q->image_path)
-                <div style="margin:2px 0;">@php $src = str_starts_with($q->image_path, 'http') ? $q->image_path : public_path(ltrim($q->image_path, '/')); @endphp<img src="{{ $src }}" alt="Image" style="max-width:340px;" /></div>
+            @if($src = $q->imagePdfSource())
+                <div style="margin:2px 0;"><img src="{{ $src }}" alt="Image" style="max-width:340px;" /></div>
             @endif
         </div>
     @endforeach

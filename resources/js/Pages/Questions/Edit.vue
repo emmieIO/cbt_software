@@ -44,7 +44,7 @@ const removeExistingImage = ref(false);
 const existingImage = computed(() => {
     if (removeExistingImage.value) return null;
     if (imageFile.value) return null;
-    return props.question.image_path ? '/storage/' + props.question.image_path : null;
+    return props.question.image_url || null;
 });
 
 const pickImage = (e: Event) => {
@@ -62,7 +62,7 @@ const removeImage = () => {
         URL.revokeObjectURL(imagePreview.value);
         imagePreview.value = null;
     }
-    if (props.question.image_path) {
+    if (props.question.image_url) {
         removeExistingImage.value = true;
     }
 };

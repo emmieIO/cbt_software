@@ -36,6 +36,9 @@ jobs:
       - name: Run Pint
         run: composer lint
 
+      - name: Run PHPStan
+        run: composer analyze
+
       - name: Format Frontend
         run: npm run format
 

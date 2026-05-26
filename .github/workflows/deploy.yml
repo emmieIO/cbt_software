@@ -55,6 +55,9 @@ jobs:
       - name: Check PHP Code Style (Pint)
         run: composer run lint
 
+      - name: Run PHPStan
+        run: composer analyze
+
       - name: Lint Frontend (ESLint)
         run: npm run lint
 

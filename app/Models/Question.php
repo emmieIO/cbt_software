@@ -4,21 +4,38 @@ namespace App\Models;
 
 use App\Enums\QuestionLevel;
 use App\Enums\QuestionType;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * @property string $id
  * @property string|null $created_by
+ * @property string $content
+ * @property string|null $image_path
+ * @property string|null $image_url
+ * @property QuestionType|string $type
+ * @property QuestionLevel|string|null $level
+ * @property array<int, array{point: string, weight: int}>|null $marking_scheme
+ * @property int $used_count
+ * @property Carbon|null $last_used_at
+ * @property Topic|null $topic
+ * @property User|null $creator
+ * @property Collection<int, Option> $options
  */
 class Question extends Model
 {
     /** @use HasFactory<\Database\Factories\QuestionFactory> */
     use HasFactory, HasUlids, SoftDeletes;
+
+    protected $appends = ['image_url'];
 
     protected $fillable = [
         'topic_id',
@@ -78,6 +95,11 @@ class Question extends Model
         ];
     }
 
+    protected function imageUrl(): Attribute
+    {
+        return Attribute::get(fn () => $this->resolveImageUrl());
+    }
+
     /**
      * Scope a query to filter questions.
      */
@@ -109,5 +131,37 @@ class Question extends Model
     {
         $this->increment('used_count');
         $this->update(['last_used_at' => now()]);
+    }
+
+    public function imagePdfSource(): ?string
+    {
+        if (! $this->image_path) {
+            return null;
+        }
+
+        if ($this->isExternalImagePath()) {
+            return $this->image_path;
+        }
+
+        return Storage::disk('public')->path($this->image_path);
+    }
+
+    private function resolveImageUrl(): ?string
+    {
+        if (! $this->image_path) {
+            return null;
+        }
+
+        if ($this->isExternalImagePath()) {
+            return $this->image_path;
+        }
+
+        return Storage::disk('public')->url($this->image_path);
+    }
+
+    private function isExternalImagePath(): bool
+    {
+        return str_starts_with($this->image_path ?? '', 'http://')
+            || str_starts_with($this->image_path ?? '', 'https://');
     }
 }

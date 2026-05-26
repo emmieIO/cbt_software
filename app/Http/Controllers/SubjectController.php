@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Subjects\SaveSubjectRequest;
 use App\Models\Subject;
+use App\Services\SubjectService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -10,6 +12,8 @@ use Inertia\Response;
 
 class SubjectController extends Controller
 {
+    public function __construct(private readonly SubjectService $subjectService) {}
+
     public function index(Request $request): Response
     {
         $filters = $request->only(['level']);
@@ -32,38 +36,16 @@ class SubjectController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(SaveSubjectRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'level' => 'required|in:lp,hp,js,ss',
-        ]);
-
-        Subject::query()->create([
-            'name' => $validated['name'],
-            'slug' => str($validated['name'])->slug(),
-            'description' => $validated['description'] ?? null,
-            'level' => $validated['level'],
-        ]);
+        $this->subjectService->create($request->payload());
 
         return back()->with('success', 'Subject created successfully.');
     }
 
-    public function update(Request $request, Subject $subject): RedirectResponse
+    public function update(SaveSubjectRequest $request, Subject $subject): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'level' => 'required|in:lp,hp,js,ss',
-        ]);
-
-        $subject->update([
-            'name' => $validated['name'],
-            'slug' => str($validated['name'])->slug(),
-            'description' => $validated['description'] ?? null,
-            'level' => $validated['level'],
-        ]);
+        $this->subjectService->update($subject, $request->payload());
 
         return back()->with('success', 'Subject updated successfully.');
     }

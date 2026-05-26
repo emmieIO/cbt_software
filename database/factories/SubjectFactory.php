@@ -23,6 +23,7 @@ class SubjectFactory extends Factory
             'name' => Str::title($name),
             'slug' => Str::slug($name),
             'description' => $this->faker->sentence(),
+            'level' => $this->faker->randomElement(['lp', 'hp', 'js', 'ss']),
         ];
     }
 }

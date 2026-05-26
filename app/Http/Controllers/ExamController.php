@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Exams\ExamPoolRequest;
+use App\Http\Requests\Exams\SaveExamSelectionRequest;
 use App\Models\Exam;
-use App\Models\Question;
 use App\Models\Subject;
+use App\Services\ExamGenerationService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -14,6 +16,8 @@ use Inertia\Response;
 
 class ExamController extends Controller
 {
+    public function __construct(private readonly ExamGenerationService $examGenerationService) {}
+
     public function index(): Response
     {
         $exams = Exam::query()
@@ -47,105 +51,19 @@ class ExamController extends Controller
         ]);
     }
 
-    public function pool(Request $request): JsonResponse
+    public function pool(ExamPoolRequest $request): JsonResponse
     {
-        $subjectId = $request->input('subject_id');
-        $level = $request->input('level');
-
-        if (! $subjectId || ! $level) {
-            return response()->json(['error' => 'subject_id and level required'], 422);
-        }
-
-        $mcqs = Question::query()
-            ->where('type', 'multiple_choice')
-            ->where('level', $level)
-            ->whereHas('topic', fn ($q) => $q->where('subject_id', $subjectId))
-            ->with('options')
-            ->orderBy('used_count')
-            ->orderBy('last_used_at')
-            ->get()
-            ->map(fn ($q) => [
-                'id' => $q->id,
-                'content' => $q->content,
-                'used_count' => $q->used_count,
-                'last_used_at' => $q->last_used_at?->diffForHumans(),
-                'topic' => $q->topic?->name,
-                'type' => 'mcq',
-                'options' => $q->options->map(fn ($o) => [
-                    'id' => $o->id,
-                    'content' => $o->content,
-                    'is_correct' => $o->is_correct,
-                ]),
-            ]);
-
-        $theory = Question::query()
-            ->where('type', 'theory')
-            ->where('level', $level)
-            ->whereHas('topic', fn ($q) => $q->where('subject_id', $subjectId))
-            ->orderBy('used_count')
-            ->orderBy('last_used_at')
-            ->get()
-            ->map(fn ($q) => [
-                'id' => $q->id,
-                'content' => $q->content,
-                'used_count' => $q->used_count,
-                'last_used_at' => $q->last_used_at?->diffForHumans(),
-                'topic' => $q->topic?->name,
-                'type' => 'theory',
-                'marking_scheme' => $q->marking_scheme,
-            ]);
-
-        return response()->json(['mcqs' => $mcqs, 'theory' => $theory]);
+        return response()->json($this->examGenerationService->pool(
+            (string) $request->input('subject_id'),
+            (string) $request->input('level'),
+        ));
     }
 
-    public function generate(Request $request)
+    public function generate(SaveExamSelectionRequest $request)
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'instructions' => 'nullable|string',
-            'question_ids' => 'required|array|min:1',
-            'question_ids.*' => 'exists:questions,id',
-        ]);
-
-        $questions = Question::query()
-            ->whereIn('id', $validated['question_ids'])
-            ->with('options')
-            ->get();
-
-        $mcqs = $questions->where('type', 'multiple_choice');
-        $theory = $questions->where('type', 'theory');
-
-        $subjectName = $mcqs->first()?->topic?->subject?->name
-            ?? $theory->first()?->topic?->subject?->name
-            ?? 'General';
-
-        $level = $mcqs->first()?->level
-            ?? $theory->first()?->level
-            ?? 'js';
-        $levelValue = $level instanceof \App\Enums\QuestionLevel ? $level->value : $level;
-
-        $exam = Exam::query()->create([
-            'title' => $validated['title'],
-            'subject_name' => $subjectName,
-            'level' => $levelValue,
-            'instructions' => $validated['instructions'] ?? 'Answer all questions carefully.',
-            'mcq_count' => $mcqs->count(),
-            'theory_count' => $theory->count(),
-            'total_marks' => $mcqs->count() + $theory->sum(fn ($q) => collect($q->marking_scheme)->sum('weight')),
-            'created_by' => $request->user()->id,
-        ]);
-
-        foreach ($mcqs as $i => $q) {
-            $exam->questions()->attach($q->id, ['section' => 'mcq', 'sort_order' => $i]);
-            $q->markAsUsed();
-        }
-
-        foreach ($theory as $i => $q) {
-            $exam->questions()->attach($q->id, ['section' => 'theory', 'sort_order' => $i]);
-            $q->markAsUsed();
-        }
-
-        $exam->load(['mcqs.options', 'theoryQuestions']);
+        $exam = $this->examGenerationService->generateFromSelection($request->payload(), $request->user()->id);
+        $mcqs = $exam->mcqs;
+        $theory = $exam->theoryQuestions;
         $subjects = Subject::query()->with('topics')->orderBy('name')->get();
 
         return Inertia::render('Exam/Create', [
@@ -216,49 +134,9 @@ class ExamController extends Controller
         ]);
     }
 
-    public function updateQuestions(Request $request, Exam $exam): RedirectResponse
+    public function updateQuestions(SaveExamSelectionRequest $request, Exam $exam): RedirectResponse
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'instructions' => 'nullable|string',
-            'question_ids' => 'required|array|min:1',
-            'question_ids.*' => 'exists:questions,id',
-        ]);
-
-        $questions = Question::query()
-            ->whereIn('id', $validated['question_ids'])
-            ->with(['options', 'topic.subject'])
-            ->get();
-
-        $mcqs = $questions->where('type', 'multiple_choice')->values();
-        $theory = $questions->where('type', 'theory')->values();
-        $subjectName = $mcqs->first()?->topic?->subject?->name
-            ?? $theory->first()?->topic?->subject?->name
-            ?? $exam->subject_name;
-        $level = $mcqs->first()?->level
-            ?? $theory->first()?->level
-            ?? $exam->level;
-        $levelValue = $level instanceof \App\Enums\QuestionLevel ? $level->value : $level;
-
-        $exam->update([
-            'title' => $validated['title'],
-            'subject_name' => $subjectName,
-            'level' => $levelValue,
-            'instructions' => $validated['instructions'] ?? 'Answer all questions carefully.',
-            'mcq_count' => $mcqs->count(),
-            'theory_count' => $theory->count(),
-            'total_marks' => $mcqs->count() + $theory->sum(fn ($q) => collect($q->marking_scheme)->sum('weight')),
-        ]);
-
-        $syncData = [];
-        foreach ($mcqs as $i => $q) {
-            $syncData[$q->id] = ['section' => 'mcq', 'sort_order' => $i];
-        }
-        foreach ($theory as $i => $q) {
-            $syncData[$q->id] = ['section' => 'theory', 'sort_order' => $i];
-        }
-
-        $exam->questions()->sync($syncData);
+        $this->examGenerationService->updateSelection($exam, $request->payload());
 
         return to_route('exams.show', $exam)->with('success', 'Exam questions updated successfully.');
     }

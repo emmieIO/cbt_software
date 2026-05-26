@@ -262,9 +262,9 @@
                     </div>
                 </div>
 
-                @if($question->image_path)
+                @if($question->image_url)
                     <div class="question-image">
-                        <img src="{{ asset('storage/' . $question->image_path) }}" alt="Question Diagram">
+                        <img src="{{ $question->image_url }}" alt="Question Diagram">
                     </div>
                 @endif
 

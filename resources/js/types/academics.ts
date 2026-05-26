@@ -39,8 +39,8 @@ export type Question = {
     type: 'multiple_choice' | 'true_false' | 'theory';
     difficulty: 'easy' | 'medium' | 'hard';
     image_path: string | null;
+    image_url: string | null;
     version: number;
-    is_active: boolean;
     topic: Topic;
     school_class: SchoolClass;
     creator?: {

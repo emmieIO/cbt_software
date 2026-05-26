@@ -5,11 +5,25 @@ import laravel from 'laravel-vite-plugin';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
+    server: {
+        watch: {
+            ignored: [
+                '**/vendor/**',
+                '**/storage/**',
+                '**/bootstrap/cache/**',
+                '**/public/build/**',
+            ],
+        },
+    },
     plugins: [
         laravel({
             input: ['resources/js/app.ts'],
             ssr: 'resources/js/ssr.ts',
-            refresh: true,
+            refresh: [
+                'app/Livewire/**',
+                'resources/views/**',
+                'routes/**',
+            ],
         }),
         tailwindcss(),
         vue({

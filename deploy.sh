@@ -47,4 +47,7 @@ sudo chmod -R 775 storage bootstrap/cache
 # 5. Restart FrankenPHP
 sudo systemctl restart frankenphp
 
+# Ensure queue workers pick up the new release code
+php artisan queue:restart || true
+
 echo "✅ Site is live!"

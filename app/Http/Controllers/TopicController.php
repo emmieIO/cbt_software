@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Topics\SaveTopicRequest;
 use App\Models\Subject;
 use App\Models\Topic;
+use App\Services\TopicService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -11,6 +13,8 @@ use Inertia\Response;
 
 class TopicController extends Controller
 {
+    public function __construct(private readonly TopicService $topicService) {}
+
     public function index(Request $request): Response
     {
         $filters = $request->only(['level']);
@@ -37,38 +41,16 @@ class TopicController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(SaveTopicRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'subject_id' => 'required|exists:subjects,id',
-            'description' => 'nullable|string',
-        ]);
-
-        Topic::query()->create([
-            'name' => $validated['name'],
-            'slug' => str($validated['name'])->slug(),
-            'subject_id' => $validated['subject_id'],
-            'description' => $validated['description'] ?? null,
-        ]);
+        $this->topicService->create($request->payload());
 
         return back()->with('success', 'Topic created successfully.');
     }
 
-    public function update(Request $request, Topic $topic): RedirectResponse
+    public function update(SaveTopicRequest $request, Topic $topic): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'subject_id' => 'required|exists:subjects,id',
-            'description' => 'nullable|string',
-        ]);
-
-        $topic->update([
-            'name' => $validated['name'],
-            'slug' => str($validated['name'])->slug(),
-            'subject_id' => $validated['subject_id'],
-            'description' => $validated['description'] ?? null,
-        ]);
+        $this->topicService->update($topic, $request->payload());
 
         return back()->with('success', 'Topic updated successfully.');
     }
