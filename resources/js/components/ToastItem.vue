@@ -9,7 +9,7 @@ const emit = defineEmits(['close']);
 
 <template>
     <div
-        class="group pointer-events-auto relative flex w-full max-w-md overflow-hidden rounded-xl border border-slate-200 bg-white p-4 shadow-xl transition-all hover:scale-[1.01] sm:min-w-[320px]"
+        class="group pointer-events-auto relative flex w-full max-w-md overflow-hidden rounded-xl border border-slate-200 bg-white p-4 shadow-xl transition-all hover:scale-[1.01] dark:border-slate-800 dark:bg-slate-900 dark:shadow-black/30 sm:min-w-[320px]"
     >
         <div class="flex w-full items-start gap-3.5">
             <!-- Icon Indicator -->
@@ -17,10 +17,10 @@ const emit = defineEmits(['close']);
                 :class="[
                     'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-colors',
                     type === 'success'
-                        ? 'bg-emerald-50 text-emerald-600'
+                        ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300'
                         : type === 'error'
-                          ? 'bg-rose-50 text-rose-600'
-                          : 'bg-primary/5 text-primary',
+                          ? 'bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-300'
+                          : 'bg-primary/5 text-primary dark:bg-primary/15 dark:text-primary-light',
                 ]"
             >
                 <svg v-if="type === 'success'" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -41,12 +41,12 @@ const emit = defineEmits(['close']);
 
             <!-- Text Content -->
             <div class="min-w-0 flex-1">
-                <p class="text-[13px] leading-snug font-bold text-slate-800">
+                <p class="text-[13px] leading-snug font-bold text-slate-800 dark:text-slate-100">
                     {{ message }}
                 </p>
                 <p
                     class="mt-1 text-[10px] font-black tracking-widest uppercase opacity-40"
-                    :class="[type === 'success' ? 'text-emerald-700' : type === 'error' ? 'text-rose-700' : 'text-primary']"
+                    :class="[type === 'success' ? 'text-emerald-700 dark:text-emerald-300' : type === 'error' ? 'text-rose-700 dark:text-rose-300' : 'text-primary dark:text-primary-light']"
                 >
                     {{ type === 'success' ? 'System Success' : type === 'error' ? 'System Error' : 'System Alert' }}
                 </p>
@@ -55,7 +55,7 @@ const emit = defineEmits(['close']);
             <!-- Actions -->
             <button
                 @click="emit('close')"
-                class="flex h-6 w-6 shrink-0 items-center justify-center rounded text-slate-300 transition-all hover:bg-slate-50 hover:text-slate-500 active:scale-90"
+                class="flex h-6 w-6 shrink-0 items-center justify-center rounded text-slate-300 transition-all hover:bg-slate-50 hover:text-slate-500 active:scale-90 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-300"
             >
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
@@ -64,7 +64,7 @@ const emit = defineEmits(['close']);
         </div>
 
         <!-- Progress Indicator -->
-        <div class="absolute bottom-0 left-0 h-0.5 w-full bg-slate-50">
+        <div class="absolute bottom-0 left-0 h-0.5 w-full bg-slate-50 dark:bg-slate-800">
             <div
                 class="h-full transition-all ease-linear"
                 :class="type === 'success' ? 'bg-emerald-500' : type === 'error' ? 'bg-rose-500' : 'bg-primary'"

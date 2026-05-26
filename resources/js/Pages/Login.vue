@@ -27,7 +27,7 @@ const submit = () => {
                 <p class="mt-1 text-sm text-white/70">Sign in to continue</p>
             </div>
 
-            <div class="rounded-2xl bg-white dark:bg-gray-800 p-8 shadow-xl">
+            <div class="rounded-2xl bg-white dark:bg-green-950/60 p-8 shadow-xl">
                 <form @submit.prevent="submit" class="space-y-5">
                     <div>
                         <label for="login_id" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Username or Email</label>

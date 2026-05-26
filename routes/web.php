@@ -43,11 +43,17 @@ Route::middleware('auth')->group(function () {
     Route::post('/exams/{exam}/questions', [ExamController::class, 'updateQuestions'])->name('exams.update-questions');
     Route::get('/exams/{exam}', [ExamController::class, 'show'])->name('exams.show');
     Route::get('/exams/{exam}/download/questions', [ExamController::class, 'downloadQuestions'])->name('exams.download.questions');
+    Route::get('/exams/{exam}/download/answer-sheet', [ExamController::class, 'downloadAnswerSheet'])->name('exams.download.answer-sheet');
     Route::get('/exams/{exam}/download/answer-key', [ExamController::class, 'downloadAnswerKey'])->name('exams.download.answer-key');
     Route::get('/exams/{exam}/download/marking-guide', [ExamController::class, 'downloadMarkingGuide'])->name('exams.download.marking-guide');
     Route::get('/exams/{exam}/preview/questions', [ExamController::class, 'previewQuestions'])->name('exams.preview.questions');
+    Route::get('/exams/{exam}/preview-html/questions', [ExamController::class, 'previewQuestionsHtml'])->name('exams.preview-html.questions');
+    Route::get('/exams/{exam}/preview/answer-sheet', [ExamController::class, 'previewAnswerSheet'])->name('exams.preview.answer-sheet');
+    Route::get('/exams/{exam}/preview-html/answer-sheet', [ExamController::class, 'previewAnswerSheetHtml'])->name('exams.preview-html.answer-sheet');
     Route::get('/exams/{exam}/preview/answer-key', [ExamController::class, 'previewAnswerKey'])->name('exams.preview.answer-key');
+    Route::get('/exams/{exam}/preview-html/answer-key', [ExamController::class, 'previewAnswerKeyHtml'])->name('exams.preview-html.answer-key');
     Route::get('/exams/{exam}/preview/marking-guide', [ExamController::class, 'previewMarkingGuide'])->name('exams.preview.marking-guide');
+    Route::get('/exams/{exam}/preview-html/marking-guide', [ExamController::class, 'previewMarkingGuideHtml'])->name('exams.preview-html.marking-guide');
 
     Route::resource('users', UserController::class)->except(['show', 'create', 'edit']);
 

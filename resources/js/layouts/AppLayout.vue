@@ -1,17 +1,26 @@
 <script setup lang="ts">
 import { Link, usePage, router } from '@inertiajs/vue3';
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import ToastList from '@/components/ToastList.vue';
 
 const page = usePage();
 const user = computed(() => (page.props.auth as any)?.user);
 const sidebarOpen = ref(false);
 const darkMode = ref(localStorage.getItem('darkMode') === 'true');
+const accountMenuOpen = ref(false);
+const accountMenuRef = ref<HTMLElement | null>(null);
 
 const pageLabels: Record<string, string> = {
-    dashboard: 'Dashboard', questions: 'Questions', 'questions/batch/create': 'Batch Import',
-    'questions/create': 'New Question', subjects: 'Subjects', topics: 'Topics',
-    exams: 'Exams', 'exams/create': 'Create Exam', users: 'Users', export: 'Export',
+    dashboard: 'Dashboard',
+    questions: 'Questions',
+    'questions/batch/create': 'Batch Import',
+    'questions/create': 'New Question',
+    subjects: 'Subjects',
+    topics: 'Topics',
+    exams: 'Exams',
+    'exams/create': 'Create Exam',
+    users: 'Users',
+    export: 'Export',
 };
 
 const breadcrumbs = computed(() => {
@@ -19,15 +28,18 @@ const breadcrumbs = computed(() => {
     const segments = path.split('/').filter(Boolean);
     const crumbs: Array<{ label: string; href?: string }> = [];
     let acc = '';
+
     segments.forEach((seg, i) => {
-        // Skip UUID-like segments (exam IDs, question IDs)
-        if (/^[0-9a-f]{26}$/.test(seg) || seg === 'download' || seg === 'preview') return;
+        if (/^[0-9a-f]{26}$/.test(seg) || seg === 'download' || seg === 'preview') {
+            return;
+        }
+
         acc += '/' + seg;
-        // Try full path first, then just the segment label
         const fullKey = segments.slice(0, i + 1).join('/');
         const label = pageLabels[fullKey] || pageLabels[seg] || seg.charAt(0).toUpperCase() + seg.slice(1);
         crumbs.push({ label, href: i < segments.length - 1 ? acc : undefined });
     });
+
     return crumbs;
 });
 
@@ -37,9 +49,13 @@ const toggleDark = () => {
     document.documentElement.classList.toggle('dark', darkMode.value);
 };
 
-watch(darkMode, (val) => {
-    document.documentElement.classList.toggle('dark', val);
-}, { immediate: true });
+watch(
+    darkMode,
+    (val) => {
+        document.documentElement.classList.toggle('dark', val);
+    },
+    { immediate: true },
+);
 
 const navItems = [
     { name: 'Dashboard', href: '/dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
@@ -52,28 +68,56 @@ const navItems = [
 
 const visibleNav = computed(() => {
     if (user.value?.role === 'admin') return navItems;
-    return navItems.filter(n => !n.adminOnly);
+    return navItems.filter((n) => !n.adminOnly);
 });
 
 const isActive = (href: string) => page.url.startsWith(href);
 
 const logout = () => {
+    accountMenuOpen.value = false;
     router.post('/logout');
 };
+
+const toggleAccountMenu = () => {
+    accountMenuOpen.value = !accountMenuOpen.value;
+};
+
+const closeAccountMenu = () => {
+    accountMenuOpen.value = false;
+};
+
+const handleDocumentClick = (event: MouseEvent) => {
+    if (accountMenuRef.value && !accountMenuRef.value.contains(event.target as Node)) {
+        closeAccountMenu();
+    }
+};
+
+const handleEscape = (event: KeyboardEvent) => {
+    if (event.key === 'Escape') {
+        closeAccountMenu();
+    }
+};
+
+onMounted(() => {
+    document.addEventListener('click', handleDocumentClick);
+    document.addEventListener('keydown', handleEscape);
+});
+
+onUnmounted(() => {
+    document.removeEventListener('click', handleDocumentClick);
+    document.removeEventListener('keydown', handleEscape);
+});
 </script>
 
 <template>
-    <div class="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-950">
+    <div class="flex h-screen overflow-hidden bg-gray-50 dark:bg-[color:var(--color-canvas-dark)]">
         <ToastList />
-        <!-- Mobile overlay -->
         <div v-if="sidebarOpen" class="fixed inset-0 z-40 bg-black/50 lg:hidden dark:bg-black/70" @click="sidebarOpen = false" />
 
-        <!-- Sidebar -->
         <aside
-            class="fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-primary transition-transform lg:static lg:translate-x-0"
+            class="fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-[rgb(8,65,23)] transition-transform lg:static lg:translate-x-0"
             :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
         >
-            <!-- Logo -->
             <div class="flex h-16 items-center gap-3 border-b border-white/10 px-6">
                 <img src="/assets/img/chrisland-school-logo.png" alt="Chrisland Schools" class="h-9 w-auto" />
                 <div class="text-sm font-semibold leading-tight text-white">
@@ -82,18 +126,14 @@ const logout = () => {
                 </div>
             </div>
 
-            <!-- Navigation -->
             <nav class="flex-1 space-y-1 overflow-y-auto p-3">
                 <Link
                     v-for="item in visibleNav"
                     :key="item.name"
                     :href="item.href"
                     class="group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150"
-                    :class="isActive(item.href)
-                        ? 'bg-white/15 text-white shadow-sm'
-                        : 'text-white/70 hover:bg-white/10 hover:text-white'"
+                    :class="isActive(item.href) ? 'bg-white/15 text-white shadow-sm' : 'text-white/70 hover:bg-white/10 hover:text-white'"
                 >
-                    <!-- Active indicator bar -->
                     <span v-if="isActive(item.href)" class="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-r-full bg-lemon-yellow" />
                     <svg class="size-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" :d="item.icon" />
@@ -102,7 +142,6 @@ const logout = () => {
                 </Link>
             </nav>
 
-            <!-- User footer -->
             <div class="border-t border-white/10 p-4">
                 <div class="flex items-center gap-3">
                     <div class="flex size-9 items-center justify-center rounded-full bg-white/20 text-sm font-bold text-white">
@@ -129,34 +168,87 @@ const logout = () => {
             </div>
         </aside>
 
-        <!-- Main content -->
-        <div class="flex flex-1 flex-col overflow-hidden">
-            <!-- Top bar -->
-            <header class="flex h-16 items-center gap-2 sm:gap-4 border-b border-gray-200 bg-white px-3 dark:border-gray-800 dark:bg-gray-900 sm:px-4 lg:px-6">
-                <button @click="sidebarOpen = !sidebarOpen" class="rounded-lg p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 lg:hidden">
+        <div class="flex flex-1 flex-col overflow-hidden dark:bg-[color:var(--color-canvas-dark)]">
+            <header class="flex h-16 items-center gap-2 border-b border-gray-200 bg-white px-3 dark:border-green-950 dark:bg-green-950 sm:gap-4 sm:px-4 lg:px-6">
+                <button @click="sidebarOpen = !sidebarOpen" class="rounded-lg p-2 text-gray-500 transition hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-green-950/55 lg:hidden">
                     <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
                 </button>
-                <div class="flex items-center gap-1 text-xs sm:text-sm text-gray-500 dark:text-gray-400 min-w-0 overflow-hidden">
-                    <Link href="/dashboard" class="shrink-0 hover:text-gray-700 dark:hover:text-gray-200 transition-colors">
+
+                <div class="flex min-w-0 items-center gap-1 overflow-hidden text-xs text-gray-500 dark:text-gray-400 sm:text-sm">
+                    <Link href="/dashboard" class="shrink-0 transition-colors hover:text-gray-700 dark:hover:text-gray-200">
                         <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                         </svg>
                     </Link>
                     <template v-for="(crumb, i) in breadcrumbs" :key="i">
-                        <span class="breadcrumb-sep shrink-0">›</span>
-                        <Link v-if="crumb.href" :href="crumb.href" class="truncate hover:text-gray-900 dark:hover:text-gray-100 transition-colors">{{ crumb.label }}</Link>
+                        <span class="shrink-0">›</span>
+                        <Link v-if="crumb.href" :href="crumb.href" class="truncate transition-colors hover:text-gray-900 dark:hover:text-gray-100">{{ crumb.label }}</Link>
                         <span v-else class="truncate font-medium text-gray-900 dark:text-gray-100">{{ crumb.label }}</span>
                     </template>
                 </div>
-                <div class="ml-auto flex items-center gap-2 sm:gap-3 shrink-0">
-                    <span class="hidden sm:inline text-sm text-gray-500 dark:text-gray-400 truncate max-w-[120px]">{{ user?.name }}</span>
+
+                <div class="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
+                    <div class="relative" ref="accountMenuRef">
+                        <button
+                            @click="toggleAccountMenu"
+                            class="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-left transition hover:bg-gray-50 dark:border-green-900/60 dark:bg-green-950/60 dark:hover:bg-green-900/70"
+                        >
+                            <div class="flex size-7 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                                {{ user?.name?.charAt(0)?.toUpperCase() }}
+                            </div>
+                            <div class="hidden min-w-0 sm:block">
+                                <p class="max-w-[120px] truncate text-xs font-medium text-gray-700 dark:text-gray-200">{{ user?.name }}</p>
+                                <p class="text-[11px] text-gray-500 dark:text-gray-400 capitalize">{{ user?.role }}</p>
+                            </div>
+                            <svg class="size-3.5 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+
+                        <div
+                            v-if="accountMenuOpen"
+                            class="absolute right-0 z-50 mt-2 w-52 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg dark:border-green-900/60 dark:bg-green-950"
+                        >
+                            <div class="border-b border-gray-100 px-4 py-3 dark:border-green-900/60">
+                                <p class="truncate text-sm font-semibold text-gray-900 dark:text-gray-100">{{ user?.name }}</p>
+                                <p class="truncate text-xs text-gray-500 dark:text-gray-400">{{ user?.role }}</p>
+                            </div>
+
+                            <div class="p-2">
+                                <button
+                                    @click="
+                                        toggleDark();
+                                        closeAccountMenu();
+                                    "
+                                    class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-700 transition hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-green-900/70"
+                                >
+                                    <svg v-if="!darkMode" class="size-4 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                                    </svg>
+                                    <svg v-else class="size-4 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                                    </svg>
+                                    <span>{{ darkMode ? 'Switch to light mode' : 'Switch to dark mode' }}</span>
+                                </button>
+
+                                <button
+                                    @click="logout"
+                                    class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
+                                >
+                                    <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                    </svg>
+                                    <span>Logout</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </header>
 
-            <!-- Page content -->
-            <main class="flex-1 overflow-y-auto p-3 dark:text-gray-100 sm:p-6 lg:p-8">
+            <main class="flex-1 overflow-y-auto bg-transparent p-3 dark:bg-green-950/20 dark:text-gray-100 sm:p-6 lg:p-8">
                 <slot />
             </main>
         </div>

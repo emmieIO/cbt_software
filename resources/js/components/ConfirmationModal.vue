@@ -83,14 +83,16 @@ watch(
                 >
                     <div
                         v-if="show"
-                        class="relative w-full max-w-md overflow-hidden rounded-xl bg-white p-6 shadow-2xl shadow-slate-900/20 sm:p-8 md:p-10"
+                        class="relative w-full max-w-md overflow-hidden rounded-xl border border-slate-200 bg-white p-6 shadow-2xl shadow-slate-900/20 dark:border-slate-800 dark:bg-slate-900 dark:shadow-black/30 sm:p-8 md:p-10"
                     >
                         <!-- Icon Header -->
                         <div class="mb-6 flex flex-col items-center text-center md:mb-8">
                             <div
                                 :class="[
                                     'mb-4 flex h-16 w-16 items-center justify-center rounded-xl shadow-lg transition-transform hover:scale-110 md:mb-6 md:h-20 md:w-20',
-                                    variant === 'danger' ? 'bg-red-50 text-red-500 shadow-red-500/20' : 'bg-primary/5 text-primary shadow-primary/20',
+                                    variant === 'danger'
+                                        ? 'bg-red-50 text-red-500 shadow-red-500/20 dark:bg-red-500/10 dark:text-red-300'
+                                        : 'bg-primary/5 text-primary shadow-primary/20 dark:bg-primary/15 dark:text-primary-light',
                                 ]"
                             >
                                 <svg
@@ -116,8 +118,8 @@ watch(
                                     />
                                 </svg>
                             </div>
-                            <h3 class="text-xl font-black tracking-tight text-slate-900 md:text-2xl">{{ title }}</h3>
-                            <p class="mt-2 text-xs leading-relaxed font-medium text-slate-500 md:mt-3 md:text-sm">
+                            <h3 class="text-xl font-black tracking-tight text-slate-900 dark:text-slate-100 md:text-2xl">{{ title }}</h3>
+                            <p class="mt-2 text-xs leading-relaxed font-medium text-slate-500 dark:text-slate-400 md:mt-3 md:text-sm">
                                 {{ message }}
                             </p>
                         </div>
@@ -140,7 +142,7 @@ watch(
                             <button
                                 @click="close"
                                 :disabled="loading"
-                                class="flex h-12 w-full items-center justify-center rounded-xl bg-slate-50 text-xs font-black tracking-widest text-slate-400 uppercase transition-all hover:bg-slate-100 hover:text-slate-600 active:scale-95 disabled:opacity-50 md:h-14 md:text-sm"
+                                class="flex h-12 w-full items-center justify-center rounded-xl bg-slate-50 text-xs font-black tracking-widest text-slate-400 uppercase transition-all hover:bg-slate-100 hover:text-slate-600 active:scale-95 disabled:opacity-50 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-slate-100 md:h-14 md:text-sm"
                             >
                                 {{ cancelLabel }}
                             </button>

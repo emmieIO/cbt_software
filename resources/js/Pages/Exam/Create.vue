@@ -34,6 +34,9 @@ const selectedIds = ref<Set<string>>(new Set());
 const poolTab = ref<'all' | 'mcq' | 'theory'>('all');
 const isEditMode = computed(() => !!props.exam?.editable);
 const isReadOnlyExam = computed(() => !!props.exam && !props.exam?.editable);
+const previewUrl = ref<string | null>(null);
+const previewTitle = ref('');
+const previewFrame = ref<HTMLIFrameElement | null>(null);
 
 const filteredSubjects = computed(() => props.subjects.filter((s: any) => !s.level || s.level === form.value.level));
 
@@ -89,7 +92,44 @@ const generateExam = () => {
 };
 
 const download = (examId: string, type: string) => window.open(`/exams/${examId}/download/${type}`, '_blank');
-const preview = (examId: string, type: string) => window.open(`/exams/${examId}/preview/${type}`, '_blank');
+const preview = (examId: string, type: string, label: string) => {
+    if (type === 'questions') {
+        window.open(`/exams/${examId}/preview-html/${type}`, '_blank', 'noopener');
+        return;
+    }
+
+    previewUrl.value = `/exams/${examId}/preview-html/${type}`;
+    previewTitle.value = label;
+    document.body.style.overflow = 'hidden';
+};
+
+const closePreview = () => {
+    previewUrl.value = null;
+    previewTitle.value = '';
+    document.body.style.overflow = '';
+};
+
+const printPreview = () => {
+    previewFrame.value?.contentWindow?.print();
+};
+
+const parseQuestionLead = (content: string) => {
+    const match = content.match(/^([^:]+):\s*(Question\s+\d+\s+on\s+[^.?!]+[.?!])\s*(.*)$/i);
+
+    if (!match) {
+        return {
+            subject: null,
+            context: null,
+            body: content,
+        };
+    }
+
+    return {
+        subject: match[1].trim(),
+        context: match[2].trim(),
+        body: match[3].trim(),
+    };
+};
 
 onMounted(async () => {
     if (!isEditMode.value || !props.initialForm?.subject_id || !props.initialForm.level) return;
@@ -123,15 +163,15 @@ onMounted(async () => {
                     <div class="card p-4"><p class="text-xs font-semibold text-gray-500 uppercase">Marks</p><p class="mt-1 text-lg font-bold text-primary">{{ exam.totalMarks }}</p></div>
                 </div>
 
-                <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
+                <div class="rounded-xl border border-gray-200 dark:border-green-900/60 bg-white dark:bg-green-950/60 p-6 shadow-sm">
                     <h2 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-4">Download Examination Papers</h2>
-                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                        <div v-for="item in [{id:'questions',label:'Question Paper',desc:'For students',color:'primary'},{id:'answer-key',label:'Answer Key',desc:'MCQ answers',color:'green'},{id:'marking-guide',label:'Marking Guide',desc:'Theory marking scheme',color:'amber'}]" :key="item.id"
-                            class="rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 text-center shadow-sm">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                        <div v-for="item in [{id:'questions',label:'Question Paper',desc:'For students'},{id:'answer-sheet',label:'Answer Sheet',desc:'MCQ response sheet'},{id:'answer-key',label:'Answer Key',desc:'MCQ answers'},{id:'marking-guide',label:'Marking Guide',desc:'Theory marking scheme'}]" :key="item.id"
+                            class="rounded-xl border-2 border-gray-200 dark:border-green-900/60 bg-white dark:bg-green-950/60 p-6 text-center shadow-sm">
                             <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">{{ item.label }}</h3>
                             <p class="mt-1 text-xs text-gray-500">{{ item.desc }}</p>
                             <div class="mt-3 flex justify-center gap-2">
-                                <button @click="preview(exam.id, item.id)" class="rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-50">View</button>
+                                <button @click="preview(exam.id, item.id, item.label)" class="rounded-lg border border-gray-300 dark:border-green-800/60 px-3 py-1.5 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-50">View</button>
                                 <button @click="download(exam.id, item.id)" class="rounded-lg bg-primary px-3 py-1.5 text-xs text-white hover:bg-primary/90">Download</button>
                             </div>
                         </div>
@@ -139,18 +179,123 @@ onMounted(async () => {
                 </div>
 
                 <div class="card">
-                    <div class="card-header"><h2 class="text-sm font-bold text-gray-900 dark:text-gray-100">Selected Questions</h2></div>
-                    <div class="p-5 space-y-3">
-                        <div v-for="(q, i) in exam.mcqs" :key="q.id" class="rounded-lg bg-gray-50 dark:bg-gray-700/50 p-3">
-                            <p class="text-sm"><span class="font-bold text-gray-500">{{ i + 1 }}.</span> {{ q.content }}</p>
-                            <div v-if="q.options" class="mt-1 grid grid-cols-1 sm:grid-cols-2 gap-1 text-xs text-gray-600 dark:text-gray-400">
-                                <div v-for="(opt, oi) in q.options" :key="opt.id" :class="opt.is_correct ? 'font-semibold text-green-700' : ''">
-                                    {{ ['A','B','C','D'][oi] }}. {{ opt.content }}
+                    <div class="card-header flex items-center justify-between gap-3">
+                        <h2 class="text-sm font-bold text-gray-900 dark:text-gray-100">Selected Questions</h2>
+                        <span class="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                            {{ exam.mcq_count + exam.theory_count }} total
+                        </span>
+                    </div>
+                    <div class="p-5 space-y-6">
+                        <div v-if="exam.mcqs.length" class="space-y-3">
+                            <div class="flex items-center justify-between gap-3">
+                                <div>
+                                    <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Multiple Choice</h3>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Objective questions and answer options.</p>
+                                </div>
+                                <span class="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-500/15 dark:text-blue-200">
+                                    {{ exam.mcqs.length }} questions
+                                </span>
+                            </div>
+
+                            <div
+                                v-for="(q, i) in exam.mcqs"
+                                :key="q.id"
+                                class="overflow-hidden rounded-xl border border-gray-200 bg-gray-50/80 shadow-sm dark:border-green-900/60 dark:bg-green-950/45"
+                            >
+                                <div class="flex items-start gap-4 p-4">
+                                    <div class="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">
+                                        {{ i + 1 }}
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <div v-if="parseQuestionLead(q.content).subject || parseQuestionLead(q.content).context" class="mb-2 flex flex-wrap gap-2">
+                                            <span
+                                                v-if="parseQuestionLead(q.content).subject"
+                                                class="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary"
+                                            >
+                                                {{ parseQuestionLead(q.content).subject }}
+                                            </span>
+                                            <span
+                                                v-if="parseQuestionLead(q.content).context"
+                                                class="inline-flex items-center rounded-full bg-gray-200 px-2.5 py-1 text-[11px] font-medium text-gray-700 dark:bg-green-900/70 dark:text-gray-200"
+                                            >
+                                                {{ parseQuestionLead(q.content).context }}
+                                            </span>
+                                        </div>
+                                        <p class="text-sm leading-6 text-gray-800 dark:text-gray-100">
+                                            {{ parseQuestionLead(q.content).body }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div
+                                    v-if="q.options"
+                                    class="grid grid-cols-1 gap-2 border-t border-gray-200 bg-white/70 px-4 py-4 dark:border-green-900/60 dark:bg-green-950/60 sm:grid-cols-2"
+                                >
+                                    <div
+                                        v-for="(opt, oi) in q.options"
+                                        :key="opt.id"
+                                        class="flex items-start gap-3 rounded-lg border px-3 py-2.5 text-xs transition-colors"
+                                        :class="opt.is_correct
+                                            ? 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200'
+                                            : 'border-gray-200 bg-white text-gray-600 dark:border-green-900/60 dark:bg-green-950/55 dark:text-gray-300'"
+                                    >
+                                        <span
+                                            class="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold"
+                                            :class="opt.is_correct
+                                                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200'
+                                                : 'bg-gray-100 text-gray-600 dark:bg-green-900/70 dark:text-gray-200'"
+                                        >
+                                            {{ ['A', 'B', 'C', 'D'][oi] }}
+                                        </span>
+                                        <div class="min-w-0 flex-1">
+                                            <p>{{ opt.content }}</p>
+                                            <p v-if="opt.is_correct" class="mt-1 text-[10px] font-semibold uppercase tracking-wide">Correct answer</p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div v-for="(q, i) in exam.theory" :key="q.id" class="rounded-lg bg-gray-50 dark:bg-gray-700/50 p-3">
-                            <p class="text-sm"><span class="font-bold text-gray-500">{{ exam.mcqs.length + i + 1 }}.</span> {{ q.content }}</p>
+
+                        <div v-if="exam.theory.length" class="space-y-3">
+                            <div class="flex items-center justify-between gap-3">
+                                <div>
+                                    <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Theory</h3>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Long-form questions for written responses.</p>
+                                </div>
+                                <span class="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-500/15 dark:text-amber-200">
+                                    {{ exam.theory.length }} questions
+                                </span>
+                            </div>
+
+                            <div
+                                v-for="(q, i) in exam.theory"
+                                :key="q.id"
+                                class="rounded-xl border border-gray-200 bg-gray-50/80 p-4 shadow-sm dark:border-green-900/60 dark:bg-green-950/45"
+                            >
+                                <div class="flex items-start gap-4">
+                                    <div class="flex size-9 shrink-0 items-center justify-center rounded-full bg-amber-500 text-sm font-bold text-white">
+                                        {{ exam.mcqs.length + i + 1 }}
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <div v-if="parseQuestionLead(q.content).subject || parseQuestionLead(q.content).context" class="mb-2 flex flex-wrap gap-2">
+                                            <span
+                                                v-if="parseQuestionLead(q.content).subject"
+                                                class="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary"
+                                            >
+                                                {{ parseQuestionLead(q.content).subject }}
+                                            </span>
+                                            <span
+                                                v-if="parseQuestionLead(q.content).context"
+                                                class="inline-flex items-center rounded-full bg-gray-200 px-2.5 py-1 text-[11px] font-medium text-gray-700 dark:bg-green-900/70 dark:text-gray-200"
+                                            >
+                                                {{ parseQuestionLead(q.content).context }}
+                                            </span>
+                                        </div>
+                                        <p class="text-sm leading-6 text-gray-800 dark:text-gray-100">
+                                            {{ parseQuestionLead(q.content).body }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -219,7 +364,7 @@ onMounted(async () => {
                             <div v-for="q in allPoolQ" :key="q.id"
                                 @click="toggleQuestion(q.id)"
                                 class="flex items-start gap-3 rounded-lg border p-3 cursor-pointer transition-colors"
-                                :class="selectedIds.has(q.id) ? 'border-primary bg-primary/5' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'">
+                                :class="selectedIds.has(q.id) ? 'border-primary bg-primary/5' : 'border-gray-200 dark:border-green-900/60 hover:border-gray-300'">
                                 <div class="flex size-5 shrink-0 items-center justify-center rounded border mt-0.5"
                                     :class="selectedIds.has(q.id) ? 'bg-primary border-primary text-white' : 'border-gray-300'">
                                     <svg v-if="selectedIds.has(q.id)" class="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
@@ -229,9 +374,9 @@ onMounted(async () => {
                                 <div class="min-w-0 flex-1">
                                     <p class="text-sm text-gray-900 dark:text-gray-100 line-clamp-2">{{ q.content }}</p>
                                     <div class="mt-1 flex flex-wrap gap-2 text-[10px] text-gray-500">
-                                        <span class="rounded bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5">{{ q.topic }}</span>
-                                        <span class="rounded bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 capitalize">{{ q.type }}</span>
-                                        <span class="rounded px-1.5 py-0.5" :class="q.used_count >= 3 ? 'bg-red-100 text-red-700' : 'bg-gray-100 dark:bg-gray-700 text-gray-500'">
+                                        <span class="rounded bg-gray-100 dark:bg-green-900/70 px-1.5 py-0.5">{{ q.topic }}</span>
+                                        <span class="rounded bg-gray-100 dark:bg-green-900/70 px-1.5 py-0.5 capitalize">{{ q.type }}</span>
+                                        <span class="rounded px-1.5 py-0.5" :class="q.used_count >= 3 ? 'bg-red-100 text-red-700' : 'bg-gray-100 dark:bg-green-900/70 text-gray-500'">
                                             Used {{ q.used_count }}x
                                         </span>
                                     </div>
@@ -256,5 +401,50 @@ onMounted(async () => {
                 </div>
             </template>
         </div>
+
+        <Teleport to="body">
+            <Transition
+                enter-active-class="transition duration-200 ease-out"
+                enter-from-class="opacity-0"
+                enter-to-class="opacity-100"
+                leave-active-class="transition duration-150 ease-in"
+                leave-from-class="opacity-100"
+                leave-to-class="opacity-0"
+            >
+                <div v-if="previewUrl" class="fixed inset-0 z-[120] flex flex-col bg-slate-950/90 backdrop-blur-sm">
+                    <div class="flex items-center justify-between gap-4 border-b border-white/10 px-4 py-3 text-white sm:px-6">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-[0.24em] text-white/60">Document Preview</p>
+                            <h2 class="text-lg font-semibold">{{ previewTitle }}</h2>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button
+                                type="button"
+                                @click="printPreview"
+                                class="rounded-lg bg-white px-4 py-2 text-sm font-medium text-slate-900 transition hover:bg-white/90"
+                            >
+                                Print
+                            </button>
+                            <button
+                                type="button"
+                                @click="closePreview"
+                                class="rounded-lg border border-white/15 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex-1 p-3 sm:p-4">
+                        <iframe
+                            ref="previewFrame"
+                            :src="previewUrl"
+                            class="h-full w-full rounded-xl border border-white/10 bg-white shadow-2xl"
+                            title="Document preview"
+                        />
+                    </div>
+                </div>
+            </Transition>
+        </Teleport>
     </AppLayout>
 </template>

@@ -8,6 +8,7 @@ use App\Models\Exam;
 use App\Models\Subject;
 use App\Services\ExamGenerationService;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,7 +22,7 @@ class ExamController extends Controller
     public function index(): Response
     {
         $exams = Exam::query()
-            ->with('creator')
+            ->with(['creator', 'questions.topic'])
             ->withCount('questions')
             ->orderBy('created_at', 'desc')
             ->paginate(20)
@@ -34,6 +35,11 @@ class ExamController extends Controller
                 'questions_count' => $e->questions_count,
                 'created_at' => $e->created_at->format('M j, Y'),
                 'creator' => ['name' => $e->creator?->name],
+                'topics' => $e->questions
+                    ->map(fn ($question) => $question->topic?->name)
+                    ->filter()
+                    ->unique()
+                    ->values(),
             ]);
 
         return Inertia::render('Exam/Index', [
@@ -159,6 +165,15 @@ class ExamController extends Controller
         return $pdf->download('answer_key_'.str($exam->title)->slug().'.pdf');
     }
 
+    public function downloadAnswerSheet(Exam $exam)
+    {
+        $exam->load(['mcqs.options']);
+        $pdf = Pdf::loadView('pdf.exam-answer-sheet', $this->pdfData($exam));
+        $pdf->setPaper('a4');
+
+        return $pdf->download('answer_sheet_'.str($exam->title)->slug().'.pdf');
+    }
+
     public function downloadMarkingGuide(Exam $exam)
     {
         $exam->load(['theoryQuestions']);
@@ -177,6 +192,16 @@ class ExamController extends Controller
         return $pdf->stream('questions_'.str($exam->title)->slug().'.pdf');
     }
 
+    public function previewQuestionsHtml(Exam $exam): View
+    {
+        $exam->load(['mcqs.options', 'theoryQuestions']);
+
+        return view('staff.exams.print', [
+            ...$this->pdfData($exam),
+            'examId' => $exam->id,
+        ]);
+    }
+
     public function previewAnswerKey(Exam $exam)
     {
         $exam->load(['mcqs.options']);
@@ -186,6 +211,29 @@ class ExamController extends Controller
         return $pdf->stream('answer_key_'.str($exam->title)->slug().'.pdf');
     }
 
+    public function previewAnswerKeyHtml(Exam $exam): View
+    {
+        $exam->load(['mcqs.options']);
+
+        return view('pdf.exam-answer-key', $this->pdfData($exam));
+    }
+
+    public function previewAnswerSheet(Exam $exam)
+    {
+        $exam->load(['mcqs.options']);
+        $pdf = Pdf::loadView('pdf.exam-answer-sheet', $this->pdfData($exam));
+        $pdf->setPaper('a4');
+
+        return $pdf->stream('answer_sheet_'.str($exam->title)->slug().'.pdf');
+    }
+
+    public function previewAnswerSheetHtml(Exam $exam): View
+    {
+        $exam->load(['mcqs.options']);
+
+        return view('pdf.exam-answer-sheet', $this->pdfData($exam));
+    }
+
     public function previewMarkingGuide(Exam $exam)
     {
         $exam->load(['theoryQuestions']);
@@ -193,6 +241,13 @@ class ExamController extends Controller
         $pdf->setPaper('a4');
 
         return $pdf->stream('marking_guide_'.str($exam->title)->slug().'.pdf');
+    }
+
+    public function previewMarkingGuideHtml(Exam $exam): View
+    {
+        $exam->load(['theoryQuestions']);
+
+        return view('pdf.exam-marking-guide', $this->pdfData($exam));
     }
 
     private function pdfData(Exam $exam): array

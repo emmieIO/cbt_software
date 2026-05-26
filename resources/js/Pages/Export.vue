@@ -50,7 +50,7 @@ const submit = () => {
             </div>
 
             <form @submit.prevent="submit" class="space-y-6">
-                <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm dark:shadow-none dark:border-gray-700">
+                <div class="rounded-xl border border-gray-200 dark:border-green-900/60 bg-white dark:bg-green-950/60 p-6 shadow-sm dark:shadow-none dark:border-green-900/60">
                     <h2 class="text-sm font-bold text-gray-900 dark:text-gray-100">Exam Details</h2>
                     <div class="mt-4 space-y-4">
                         <div>
@@ -78,7 +78,7 @@ const submit = () => {
                     </div>
                 </div>
 
-                <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm dark:shadow-none dark:border-gray-700">
+                <div class="rounded-xl border border-gray-200 dark:border-green-900/60 bg-white dark:bg-green-950/60 p-6 shadow-sm dark:shadow-none dark:border-green-900/60">
                     <h2 class="text-sm font-bold text-gray-900 dark:text-gray-100">Question Selection</h2>
                     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">Questions will be randomly selected from the question bank.</p>
                     <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -95,7 +95,7 @@ const submit = () => {
                     </div>
                 </div>
 
-                <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm dark:shadow-none dark:border-gray-700">
+                <div class="rounded-xl border border-gray-200 dark:border-green-900/60 bg-white dark:bg-green-950/60 p-6 shadow-sm dark:shadow-none dark:border-green-900/60">
                     <h2 class="text-sm font-bold text-gray-900 dark:text-gray-100">Instructions</h2>
                     <div class="mt-4">
                         <textarea v-model="form.instructions" rows="3" class="mt-1" placeholder="Instructions for the exam..." />
@@ -103,9 +103,9 @@ const submit = () => {
                 </div>
 
                 <div class="flex items-center justify-end gap-3">
-                    <Link href="/dashboard" class="btn-secondary dark:bg-gray-800/50">Cancel</Link>
+                    <Link href="/dashboard" class="btn-secondary dark:bg-green-950/45">Cancel</Link>
                     <button type="submit" :disabled="submitting"
-                        class="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-semibold text-white shadow-sm dark:shadow-none dark:border-gray-700 hover:bg-primary/90 disabled:opacity-50">
+                        class="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-semibold text-white shadow-sm dark:shadow-none dark:border-green-900/60 hover:bg-primary/90 disabled:opacity-50">
                         <svg v-if="!submitting" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>

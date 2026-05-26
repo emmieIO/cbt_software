@@ -87,19 +87,19 @@ const levelTag = (lvl: { value: string; label: string }) => {
                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500">Browse, create, and manage assessment questions.</p>
                 </div>
                 <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
-                    <Link href="/questions/import" class="inline-flex items-center gap-2 rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:bg-gray-800/50">
+                    <Link href="/questions/import" class="inline-flex items-center gap-2 rounded-lg border border-gray-300 dark:border-green-800/60 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:bg-green-950/45">
                         <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                         </svg>
                         Import from Excel
                     </Link>
-                    <Link href="/questions/batch/create" class="inline-flex items-center gap-2 rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:bg-gray-800/50">
+                    <Link href="/questions/batch/create" class="inline-flex items-center gap-2 rounded-lg border border-gray-300 dark:border-green-800/60 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:bg-green-950/45">
                         <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                         </svg>
                         Batch Create
                     </Link>
-                    <Link href="/questions/create" class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm dark:shadow-none dark:border-gray-700 transition-all hover:bg-primary/90">
+                    <Link href="/questions/create" class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm dark:shadow-none dark:border-green-900/60 transition-all hover:bg-primary/90">
                         <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                         </svg>
@@ -109,7 +109,7 @@ const levelTag = (lvl: { value: string; label: string }) => {
             </div>
 
             <!-- Filters -->
-            <div class="flex flex-col gap-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 sm:flex-row sm:flex-wrap sm:items-center">
+            <div class="flex flex-col gap-3 rounded-xl border border-gray-200 dark:border-green-900/60 bg-white dark:bg-green-950/60 p-4 sm:flex-row sm:flex-wrap sm:items-center">
                 <div class="relative w-full sm:max-w-md sm:flex-1">
                     <svg class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -131,7 +131,7 @@ const levelTag = (lvl: { value: string; label: string }) => {
             </div>
 
             <!-- Questions List -->
-            <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm dark:shadow-none dark:border-gray-700">
+            <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-green-900/60 bg-white dark:bg-green-950/60 shadow-sm dark:shadow-none dark:border-green-900/60">
                 <div class="divide-y divide-gray-100 sm:hidden">
                     <div v-for="q in questions.data" :key="q.id" class="space-y-3 p-4">
                         <div class="flex items-start justify-between gap-3">
@@ -166,7 +166,7 @@ const levelTag = (lvl: { value: string; label: string }) => {
                 </div>
 
                 <div class="overflow-x-auto"><table class="hidden min-w-full divide-y divide-gray-200 sm:table">
-                    <thead class="bg-gray-50 dark:bg-gray-800/50">
+                    <thead class="bg-gray-50 dark:bg-green-950/45">
                         <tr>
                             <th class="px-5 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase">Question</th>
                             <th class="px-5 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase">Subject</th>
@@ -177,7 +177,7 @@ const levelTag = (lvl: { value: string; label: string }) => {
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
-                        <tr v-for="q in questions.data" :key="q.id" class="hover:bg-gray-50 dark:bg-gray-800/50/50">
+                        <tr v-for="q in questions.data" :key="q.id" class="hover:bg-gray-50 dark:hover:bg-slate-800/40">
                             <td class="max-w-xs px-5 py-4">
                                 <p class="truncate text-sm font-medium text-gray-900 dark:text-gray-100" v-text="q.content" />
                                 <p class="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">{{ q.creator?.name || 'Unknown' }}</p>
@@ -216,13 +216,13 @@ const levelTag = (lvl: { value: string; label: string }) => {
                 </table></div>
 
                 <!-- Pagination -->
-                <div v-if="questions.last_page > 1" class="flex flex-col gap-3 border-t border-gray-200 dark:border-gray-700 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+                <div v-if="questions.last_page > 1" class="flex flex-col gap-3 border-t border-gray-200 dark:border-green-900/60 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
                     <p class="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500">
                         Page {{ questions.current_page }} of {{ questions.last_page }}
                     </p>
                     <div class="flex flex-wrap gap-2">
-                        <Link v-if="questions.prev_page_url" :href="questions.prev_page_url" class="rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:bg-gray-800/50">Previous</Link>
-                        <Link v-if="questions.next_page_url" :href="questions.next_page_url" class="rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:bg-gray-800/50">Next</Link>
+                        <Link v-if="questions.prev_page_url" :href="questions.prev_page_url" class="rounded-lg border border-gray-200 dark:border-green-900/60 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:bg-green-950/45">Previous</Link>
+                        <Link v-if="questions.next_page_url" :href="questions.next_page_url" class="rounded-lg border border-gray-200 dark:border-green-900/60 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:bg-green-950/45">Next</Link>
                     </div>
                 </div>
             </div>

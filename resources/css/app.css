@@ -17,7 +17,15 @@
     }
 
     body {
-        @apply bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100;
+        @apply bg-gray-50 text-gray-900 dark:bg-[color:var(--color-surface-dark)] dark:text-gray-100;
+        background-image: none;
+    }
+
+    .dark body {
+        background-image:
+            linear-gradient(180deg, rgba(8, 65, 23, 0.28) 0%, rgba(3, 10, 6, 0) 28%),
+            radial-gradient(circle at top, rgba(18, 90, 38, 0.22) 0%, rgba(2, 6, 23, 0) 42%);
+        background-attachment: fixed;
     }
 
     input[type='text'],
@@ -33,7 +41,7 @@
     input[type='url'],
     select,
     textarea {
-        @apply block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition-colors placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-slate-600 dark:bg-slate-800 dark:text-gray-100 dark:placeholder:text-slate-500 dark:focus:border-primary-light;
+        @apply block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition-colors placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-[color:var(--color-border-dark)] dark:bg-[color:var(--color-surface-dark-soft)] dark:text-gray-100 dark:placeholder:text-slate-500 dark:focus:border-primary-light;
     }
 
     select {
@@ -52,11 +60,11 @@
     }
 
     input[type='checkbox'] {
-        @apply size-4 rounded border-slate-300 text-primary shadow-sm focus:ring-2 focus:ring-primary/20 focus:ring-offset-0 dark:border-slate-600;
+        @apply size-4 rounded border-slate-300 text-primary shadow-sm focus:ring-2 focus:ring-primary/20 focus:ring-offset-0 dark:border-[color:var(--color-border-dark)];
     }
 
     input[type='radio'] {
-        @apply size-4 border-slate-300 text-primary shadow-sm focus:ring-2 focus:ring-primary/20 focus:ring-offset-0 dark:border-slate-600;
+        @apply size-4 border-slate-300 text-primary shadow-sm focus:ring-2 focus:ring-primary/20 focus:ring-offset-0 dark:border-[color:var(--color-border-dark)];
     }
 
     /* Common dark mode overrides for page content */
@@ -64,46 +72,58 @@
         @apply dark:text-gray-100;
     }
 
-    p, li, td, th, label, dt, dd {
+    p, li, label, dt, dd {
         @apply dark:text-gray-300;
     }
 
     th {
-        @apply dark:text-gray-400;
+        @apply text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400;
+    }
+
+    td {
+        @apply text-gray-700 dark:text-slate-300;
     }
 
     table {
-        @apply dark:border-gray-700;
+        @apply w-full dark:border-[color:var(--color-border-dark)];
     }
 
     tr {
-        @apply dark:border-gray-700;
+        @apply dark:border-[color:var(--color-border-dark)];
+    }
+
+    thead {
+        @apply bg-gray-50 dark:bg-[color:var(--color-surface-dark-soft)];
+    }
+
+    tbody tr {
+        @apply transition-colors;
+    }
+
+    tbody tr:hover {
+        @apply bg-gray-50 dark:bg-green-950/45;
     }
 
     hr {
-        @apply dark:border-gray-700;
+        @apply dark:border-[color:var(--color-border-dark)];
     }
 
     /* Card-like containers used across pages */
     .card {
-        @apply rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:shadow-none;
+        @apply rounded-xl border border-gray-200 bg-white shadow-sm dark:border-[color:var(--color-border-dark)] dark:bg-[color:var(--color-surface-dark-soft)] dark:shadow-none;
     }
 
     .card-header {
-        @apply border-b border-gray-200 px-5 py-4 dark:border-gray-700;
+        @apply border-b border-gray-200 px-5 py-4 dark:border-[color:var(--color-border-dark)];
     }
 
     .table-wrap {
-        @apply overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:shadow-none;
+        @apply overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-[color:var(--color-border-dark)] dark:bg-[color:var(--color-surface-dark-soft)] dark:shadow-none;
     }
 
     .table-wrap tbody tr:hover {
-        @apply dark:bg-gray-700/30;
+        @apply bg-gray-50 dark:bg-green-950/45;
     }
-}
-
-.dark .table-wrap thead tr {
-    background-color: rgba(30, 41, 59, 0.8);
 }
 
 button:disabled {
@@ -117,7 +137,7 @@ button:disabled {
 }
 
 .btn-secondary {
-    @apply inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:shadow-md active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700;
+    @apply inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:shadow-md active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-gray-200 dark:border-[color:var(--color-border-dark)] dark:bg-[color:var(--color-surface-dark-soft)] dark:text-gray-200 dark:hover:bg-green-900/60;
 }
 
 .btn-danger {
@@ -125,12 +145,12 @@ button:disabled {
 }
 
 .btn-ghost {
-    @apply inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium text-gray-600 transition-all hover:bg-gray-100 active:scale-[0.98] dark:text-gray-300 dark:hover:bg-gray-800;
+    @apply inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium text-gray-600 transition-all hover:bg-gray-100 active:scale-[0.98] dark:text-gray-300 dark:hover:bg-green-950/55;
 }
 
 /* Card hover elevation */
 .card-hover {
-    @apply rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-200 dark:border-gray-700 dark:bg-gray-800 dark:shadow-none cursor-pointer hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 dark:hover:border-gray-600;
+    @apply cursor-pointer rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-200 hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 dark:border-[color:var(--color-border-dark)] dark:bg-[color:var(--color-surface-dark-soft)] dark:shadow-none dark:hover:border-green-800/70;
 }
 
 /* Focus ring consistency */
@@ -150,4 +170,3 @@ button:disabled {
 .breadcrumb-sep {
     @apply mx-2 text-xs text-gray-400 select-none;
 }
-

@@ -3,285 +3,469 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Print Examination: {{ $exam->title }}</title>
+    <title>Question Preview: {{ $title }}</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+        :root {
+            color-scheme: light;
+            --page-padding-x: 14mm;
+            --page-padding-y: 15mm;
+            --ink: #111827;
+            --muted: #6b7280;
+            --line: #d1d5db;
+            --brand: #0f5a2b;
+            --panel: #f4f7f5;
+            --surface: #ffffff;
+            --shell: #e5efe8;
+        }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #fff;
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
             margin: 0;
-            padding: 30px;
-            color: #000;
-            line-height: 1.5;
+            min-height: 100%;
+            font-family: "Segoe UI", Arial, sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at top, rgba(15, 90, 43, 0.12), transparent 35%),
+                linear-gradient(180deg, #edf5ef 0%, #dbe8df 100%);
         }
 
-        /* Top Action Bar - Non-blocking */
-        .no-print {
-            margin-bottom: 30px;
-            display: flex;
-            gap: 10px;
-            border-bottom: 1px solid #000;
-            padding-bottom: 15px;
+        .shell {
+            min-height: 100vh;
+            padding: 24px;
         }
 
-        .print-btn {
-            background: #000;
-            color: #fff;
-            border: none;
-            padding: 10px 20px;
-            font-weight: 800;
-            font-size: 11px;
-            text-transform: uppercase;
-            cursor: pointer;
-        }
-
-        .back-btn {
-            background: #fff;
-            color: #000;
-            border: 1px solid #000;
-            padding: 10px 20px;
-            font-weight: 800;
-            font-size: 11px;
-            text-transform: uppercase;
-            text-decoration: none;
-        }
-
-        .header {
-            padding-bottom: 20px;
-            border-bottom: 3px double #000;
-            margin-bottom: 25px;
-        }
-
-        .header-content {
+        .toolbar {
+            position: sticky;
+            top: 16px;
+            z-index: 10;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            gap: 16px;
+            max-width: 1200px;
+            margin: 0 auto 24px;
+            padding: 16px 18px;
+            border: 1px solid rgba(17, 24, 39, 0.08);
+            border-radius: 22px;
+            background: rgba(15, 23, 42, 0.9);
+            color: #f9fafb;
+            backdrop-filter: blur(18px);
+            box-shadow: 0 20px 45px rgba(15, 23, 42, 0.16);
         }
 
-        .school-info {
-            text-align: right;
-        }
-
-        .school-info h2 {
+        .toolbar-copy p,
+        .toolbar-copy h1 {
             margin: 0;
-            font-size: 24px;
-            font-weight: 900;
-            text-transform: uppercase;
         }
 
-        .school-info p {
-            margin: 3px 0 0;
+        .toolbar-copy p {
             font-size: 11px;
-            color: #000;
-            font-weight: 600;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: rgba(249, 250, 251, 0.65);
         }
 
-        .logo {
-            height: 90px;
-            width: auto;
-        }
-
-        .exam-title-main {
-            text-align: center;
-            margin: 20px 0;
+        .toolbar-copy h1 {
+            margin-top: 4px;
             font-size: 20px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .meta-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            margin-bottom: 30px;
-            border: 1px solid #000;
-            padding: 15px;
-        }
-
-        .meta-label {
-            font-size: 9px;
-            font-weight: 800;
-            text-transform: uppercase;
-            color: #444;
-            display: block;
-        }
-
-        .meta-item {
-            font-size: 13px;
             font-weight: 700;
         }
 
-        .instructions {
-            margin-bottom: 40px;
-            padding: 15px;
-            border: 1px solid #000;
-        }
-
-        .instructions h3 {
-            margin: 0 0 5px 0;
-            font-size: 11px;
-            font-weight: 800;
-            text-transform: uppercase;
-        }
-
-        .instructions p {
-            margin: 0;
-            font-size: 12px;
-        }
-
-        .question-block {
-            margin-bottom: 30px;
-            page-break-inside: avoid;
-        }
-
-        .question-header {
+        .toolbar-actions {
             display: flex;
-            gap: 12px;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 44px;
+            padding: 0 18px;
+            border-radius: 12px;
+            border: 1px solid transparent;
+            font-size: 13px;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+            transition: transform 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn-primary {
+            background: #f9fafb;
+            color: #111827;
+        }
+
+        .btn-secondary {
+            border-color: rgba(249, 250, 251, 0.18);
+            background: transparent;
+            color: #f9fafb;
+        }
+
+        .preview-stage {
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .paper {
+            width: 100%;
+            margin: 0 auto;
+            padding: var(--page-padding-y) var(--page-padding-x) 16mm;
+            background: var(--surface);
+            box-shadow: 0 28px 60px rgba(15, 23, 42, 0.14);
+            border-radius: 18px;
+        }
+
+        .header {
+            text-align: center;
             margin-bottom: 10px;
         }
 
-        .question-num {
-            font-weight: 900;
-            font-size: 16px;
-            min-width: 25px;
+        .logo {
+            max-height: 44px;
+            margin-bottom: 4px;
         }
 
-        .question-text {
+        .school {
+            font-size: 13pt;
             font-weight: 700;
-            font-size: 15px;
-            flex: 1;
+            text-transform: uppercase;
+            color: var(--brand);
+            letter-spacing: 1px;
+        }
+
+        .exam-title {
+            font-size: 12pt;
+            font-weight: 700;
+            margin-top: 3px;
+        }
+
+        .meta {
+            margin-top: 6px;
+            font-size: 8.5pt;
+            color: #4b5563;
+        }
+
+        .rule {
+            border-top: 1.5px solid var(--brand);
+            margin: 8px 0 10px;
+        }
+
+        .candidate-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+        }
+
+        .candidate-table td {
+            padding: 5px 6px;
+            font-size: 8.5pt;
+            border: 1px solid #6b7280;
+        }
+
+        .candidate-label {
+            width: 110px;
+            font-weight: 700;
+            background: var(--panel);
+        }
+
+        .instructions {
+            margin-bottom: 10px;
+            font-size: 8.5pt;
+        }
+
+        .instructions strong {
+            color: var(--brand);
+        }
+
+        .section-title {
+            margin: 12px 0 4px;
+            font-size: 10pt;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--brand);
+        }
+
+        .section-note {
+            margin: 0 0 8px;
+            font-size: 8.5pt;
+            color: #4b5563;
+        }
+
+        .theory-section {
+            page-break-before: always;
+        }
+
+        .question-list {
+            margin: 0;
+            padding: 0;
+        }
+
+        .question-item {
+            margin: 0 0 9px;
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+
+        .question-row {
+            display: table;
+            width: 100%;
+        }
+
+        .question-no {
+            display: table-cell;
+            width: 22px;
+            font-weight: 700;
+            vertical-align: top;
+        }
+
+        .question-body {
+            display: table-cell;
+            vertical-align: top;
+        }
+
+        .marks {
+            font-size: 8pt;
+            color: #4b5563;
+            font-weight: 700;
+            white-space: nowrap;
         }
 
         .question-image {
-            margin: 15px 0 15px 37px;
-            max-width: 350px;
+            margin: 4px 0;
         }
 
         .question-image img {
-            max-width: 100%;
-            height: auto;
-            border: 1px solid #eee;
+            max-width: min(100%, 480px);
+            max-height: 280px;
         }
 
-        .options-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px 30px;
-            margin-left: 37px;
+        .options-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 5px;
+            margin-bottom: 6px;
+            table-layout: fixed;
         }
 
-        .option {
-            font-size: 13px;
-            font-weight: 600;
-            display: flex;
-            gap: 8px;
+        .options-table td {
+            width: 50%;
+            padding: 2px 8px 2px 0;
+            vertical-align: top;
         }
 
-        .option-letter {
-            font-weight: 800;
-            color: #444;
+        .option-line {
+            padding-left: 14px;
+            text-indent: -14px;
+        }
+
+        .option-label {
+            font-weight: 700;
         }
 
         .footer {
-            margin-top: 50px;
+            margin-top: 14px;
+            padding-top: 6px;
+            border-top: 1px solid #d1d5db;
             text-align: center;
-            border-top: 1px solid #000;
-            padding-top: 20px;
-            font-size: 10px;
+            font-size: 7.5pt;
+            color: #6b7280;
+        }
+
+        .end {
+            margin-top: 12px;
+            text-align: center;
+            font-size: 8pt;
             font-weight: 700;
-            text-transform: uppercase;
+            color: var(--brand);
+        }
+
+        @media (max-width: 768px) {
+            .shell {
+                padding: 12px;
+            }
+
+            .toolbar {
+                position: static;
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .toolbar-actions {
+                flex-direction: column-reverse;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .paper {
+                border-radius: 14px;
+                padding: 14mm 10mm;
+            }
+
+            .options-table,
+            .options-table tbody,
+            .options-table tr,
+            .options-table td {
+                display: block;
+                width: 100%;
+            }
+
+            .question-image img {
+                max-width: 100%;
+                height: auto;
+            }
         }
 
         @media print {
-            .no-print { display: none; }
-            body { padding: 0; }
-            .header { border-bottom: 3px double #000; }
+            @page {
+                margin: 15mm 14mm 16mm;
+            }
+
+            html, body {
+                background: #fff;
+            }
+
+            .shell {
+                padding: 0;
+            }
+
+            .toolbar {
+                display: none;
+            }
+
+            .paper {
+                width: 100%;
+                margin: 0;
+                padding: 0;
+                box-shadow: none;
+                border-radius: 0;
+            }
         }
     </style>
 </head>
 <body>
-    @php
-        $school = $exam->school;
-    @endphp
+@php
+    $examLink = isset($examId) ? route('exams.show', $examId) : url()->previous();
+    $lbl = ['SS' => 'Senior Secondary', 'JS' => 'Junior Secondary', 'HP' => 'Higher Primary', 'LP' => 'Lower Primary'][$level] ?? $level;
+@endphp
 
-    <div class="no-print">
-        <a href="{{ route('staff.exams.show', $exam->id) }}" class="back-btn">← Back to Exam</a>
-        <button onclick="window.print()" class="print-btn">Print Question Paper</button>
+<div class="shell">
+    <div class="toolbar">
+        <div class="toolbar-copy">
+            <p>Question Preview</p>
+            <h1>{{ $title }}</h1>
+        </div>
+        <div class="toolbar-actions">
+            <a href="{{ $examLink }}" class="btn btn-secondary">Back to Exam</a>
+            <button type="button" onclick="window.print()" class="btn btn-primary">Print Question Paper</button>
+        </div>
     </div>
 
-    <div class="header">
-        <div class="header-content">
-            <img src="{{ asset('assets/img/chrisland-school-logo.png') }}" alt="Chrisland Logo" class="logo">
-            <div class="school-info">
-                <h2>{{ $school->name ?? 'Chrisland Schools' }}</h2>
-                <p>{{ $school->address ?? 'Lagos, Nigeria' }}</p>
-                @if($school && $school->contact_phone)
-                    <p>TEL: {{ is_array($school->contact_phone) ? implode(', ', $school->contact_phone) : $school->contact_phone }}</p>
-                @endif
+    <div class="preview-stage">
+        <main class="paper">
+            <div class="header">
+                <img src="{{ asset('assets/img/chrisland-school-logo.png') }}" alt="Chrisland Schools" class="logo" />
+                <div class="school">Chrisland Schools</div>
+                <div class="exam-title">{{ $title }}</div>
+                <div class="meta">{{ $subject }} | {{ $lbl }} Level | {{ $totalMarks }} Marks | {{ $date }}</div>
             </div>
-        </div>
-    </div>
 
-    <div class="exam-title-main">
-        {{ $exam->title }}
-    </div>
+            <div class="rule"></div>
 
-    <div class="meta-grid">
-        <div>
-            <span class="meta-label">Subject(s)</span>
-            <span class="meta-item">{{ $exam->subject?->name ?? 'General Assessment' }}</span>
-        </div>
-        <div>
-            <span class="meta-label">Class / Batch</span>
-            <span class="meta-item">{{ $exam->schoolClass?->name ?? 'General Assessment' }}</span>
-        </div>
-        <div>
-            <span class="meta-label">Duration</span>
-            <span class="meta-item">{{ $exam->duration }} Minutes</span>
-        </div>
-        <div>
-            <span class="meta-label">Session</span>
-            <span class="meta-item">{{ $exam->academicSession->name }}</span>
-        </div>
-    </div>
+            <table class="candidate-table">
+                <tr>
+                    <td class="candidate-label">Candidate Name</td>
+                    <td></td>
+                    <td class="candidate-label" style="width:70px;">Class</td>
+                    <td style="width:120px;"></td>
+                </tr>
+            </table>
 
-    <div class="instructions">
-        <h3>Instructions:</h3>
-        <p>{{ $exam->instructions ?? 'Attempt all questions. Select the most appropriate option for each question.' }}</p>
-    </div>
+            <div class="instructions">
+                <strong>Instructions:</strong> {{ $instructions }}
+                <br>Answer all questions. Write your answers neatly in the spaces or booklet provided by the invigilator.
+            </div>
 
-    <div class="questions-container">
-        @foreach($exam->questions as $index => $question)
-            <div class="question-block">
-                <div class="question-header">
-                    <span class="question-num">{{ $index + 1 }}.</span>
-                    <div class="question-text">
-                        {!! nl2br(e($question->content)) !!}
-                    </div>
-                </div>
+            @if($mcqs->isNotEmpty())
+                <div class="section-title">Section A: Multiple Choice</div>
+                <div class="section-note">Choose the correct option from A to D for each question.</div>
 
-                @if($question->image_url)
-                    <div class="question-image">
-                        <img src="{{ $question->image_url }}" alt="Question Diagram">
-                    </div>
-                @endif
-
-                <div class="options-grid">
-                    @foreach($question->options as $oIndex => $option)
-                        <div class="option">
-                            <span class="option-letter">{{ chr(65 + $oIndex) }}.</span>
-                            <span class="option-content">{{ $option->content }}</span>
+                <div class="question-list">
+                    @foreach($mcqs as $index => $q)
+                        <div class="question-item">
+                            <div class="question-row">
+                                <div class="question-no">{{ $index + 1 }}.</div>
+                                <div class="question-body">
+                                    {!! nl2br(e($q->printableContent())) !!}
+                                    <span class="marks">[1]</span>
+                                    @if($src = $q->imageUrl)
+                                        <div class="question-image">
+                                            <img src="{{ $src }}" alt="Question image" />
+                                        </div>
+                                    @endif
+                                    <table class="options-table">
+                                        <tr>
+                                            @foreach($q->options->values() as $oi => $opt)
+                                                <td>
+                                                    <div class="option-line">
+                                                        <span class="option-label">{{ chr(65 + $oi) }}.</span> {{ $opt->content }}
+                                                    </div>
+                                                </td>
+                                                @if($oi % 2 === 1 && $oi !== $q->options->count() - 1)
+                                                    </tr><tr>
+                                                @endif
+                                            @endforeach
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     @endforeach
                 </div>
-            </div>
-        @endforeach
-    </div>
+            @endif
 
-    <div class="footer">
-        End of Examination Paper - {{ $school->name ?? 'Chrisland Schools' }}
+            @if($theory->isNotEmpty())
+                <div class="theory-section">
+                    <div class="section-title">Section B: Theory</div>
+                    <div class="section-note">Answer all questions clearly. Show all necessary workings.</div>
+
+                    <div class="question-list">
+                        @foreach($theory as $index => $q)
+                            @php $qm = collect($q->marking_scheme)->sum('weight'); @endphp
+                            <div class="question-item">
+                                <div class="question-row">
+                                    <div class="question-no">{{ $mcqs->count() + $index + 1 }}.</div>
+                                    <div class="question-body">
+                                        {!! nl2br(e($q->printableContent())) !!}
+                                        <span class="marks">[{{ $qm }}]</span>
+                                        @if($src = $q->imageUrl)
+                                            <div class="question-image">
+                                                <img src="{{ $src }}" alt="Question image" />
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            <div class="end">END OF EXAMINATION</div>
+            <div class="footer">Chrisland Schools • {{ $date }}</div>
+        </main>
     </div>
+</div>
 </body>
 </html>

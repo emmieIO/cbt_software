@@ -146,6 +146,15 @@ class Question extends Model
         return Storage::disk('public')->path($this->image_path);
     }
 
+    public function printableContent(): string
+    {
+        return trim((string) preg_replace(
+            '/^[^:]+:\s*Question\s+\d+\s+on\s+[^.?!]+[.?!]\s*/i',
+            '',
+            $this->content,
+        ));
+    }
+
     private function resolveImageUrl(): ?string
     {
         if (! $this->image_path) {

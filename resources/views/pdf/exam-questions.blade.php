@@ -4,37 +4,44 @@
     <meta charset="utf-8">
     <title>{{ $title }}</title>
     <style>
-        @page { margin: 18mm 16mm 16mm; }
-        body { font-family: 'DejaVu Sans', sans-serif; font-size: 10.5pt; color: #1a1a1a; line-height: 1.5; }
+        @page { margin: 15mm 14mm 16mm; }
+        body { font-family: 'DejaVu Sans', sans-serif; font-size: 10pt; line-height: 1.45; color: #111; }
 
-        .header { text-align: center; margin-bottom: 16px; border-bottom: 3px solid #084117; padding-bottom: 14px; }
-        .header .logo { max-height: 50px; margin-bottom: 6px; }
-        .header .school { font-size: 13pt; font-weight: bold; color: #084117; text-transform: uppercase; letter-spacing: 1.5px; }
-        .header .exam-title { font-size: 11pt; font-weight: bold; margin: 4px 0 2px; }
-        .header .exam-meta { font-size: 8pt; color: #555; }
-        .header .exam-meta span { display: inline-block; padding: 0 6px; }
-        .header .exam-meta .sep { color: #084117; font-weight: bold; }
+        .header { text-align: center; margin-bottom: 10px; }
+        .logo { max-height: 44px; margin-bottom: 4px; }
+        .school { font-size: 13pt; font-weight: bold; text-transform: uppercase; color: #084117; letter-spacing: 1px; }
+        .title { font-size: 12pt; font-weight: bold; margin-top: 3px; }
+        .meta { margin-top: 6px; font-size: 8.5pt; color: #444; }
 
-        .candidate-info { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
-        .candidate-info td { border: 1px solid #555; padding: 3px 6px; font-size: 8.5pt; color: #333; }
-        .candidate-info .label { width: 100px; background: #e8f0e8; font-weight: bold; color: #084117; font-size: 8pt; }
+        .rule { border-top: 1.5px solid #084117; margin: 8px 0 10px; }
 
-        .section-title { font-size: 10pt; font-weight: bold; margin: 14px 0 6px; padding: 4px 0; border-bottom: 2px solid #084117; color: #084117; text-transform: uppercase; letter-spacing: 0.5px; }
+        .candidate-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+        .candidate-table td { padding: 5px 6px; font-size: 8.5pt; border: 1px solid #777; }
+        .candidate-label { width: 110px; font-weight: bold; background: #f2f6f2; }
 
-        .instructions { border: 1px solid #084117; padding: 7px 10px; margin-bottom: 12px; font-size: 8.5pt; background: #f5faf5; }
+        .instructions { margin-bottom: 10px; font-size: 8.5pt; }
         .instructions strong { color: #084117; }
 
-        .warn { background: #fff8e6; border: 1px solid #e6c300; padding: 5px 8px; font-size: 8pt; color: #665000; margin-bottom: 10px; text-align: center; }
+        .section-title { margin: 12px 0 4px; font-size: 10pt; font-weight: bold; text-transform: uppercase; color: #084117; }
+        .section-note { margin: 0 0 8px; font-size: 8.5pt; color: #555; }
+        .theory-section { page-break-before: always; }
 
-        .question { margin: 7px 0; page-break-inside: avoid; }
-        .question .q-text { margin-bottom: 2px; }
-        .question .marks { font-size: 8.5pt; color: #666; }
+        .question-list { margin: 0; padding: 0; }
+        .question-item { margin: 0 0 9px; page-break-inside: avoid; }
+        .question-row { display: table; width: 100%; }
+        .question-no { display: table-cell; width: 22px; font-weight: bold; vertical-align: top; }
+        .question-body { display: table-cell; vertical-align: top; }
+        .marks { font-size: 8pt; color: #555; font-weight: bold; white-space: nowrap; }
+        .question-image { margin: 4px 0 4px 0; }
+        .question-image img { max-width: 320px; max-height: 180px; }
 
-        .options { margin: 2px 0 2px 22px; font-size: 10pt; }
-        .options .opt { margin: 1px 0; }
+        .options-table { width: 100%; border-collapse: collapse; margin-top: 5px; margin-bottom: 6px; table-layout: fixed; }
+        .options-table td { width: 50%; padding: 2px 8px 2px 0; vertical-align: top; }
+        .option-line { padding-left: 14px; text-indent: -14px; }
+        .option-label { font-weight: bold; }
 
-        .footer { text-align: center; font-size: 7pt; color: #999; margin-top: 20px; border-top: 1px solid #ddd; padding-top: 5px; }
-        .end-marker { text-align: center; font-size: 8pt; font-weight: bold; color: #084117; margin-top: 20px; padding-top: 10px; border-top: 1px solid #084117; }
+        .footer { margin-top: 14px; padding-top: 6px; border-top: 1px solid #ccc; text-align: center; font-size: 7.5pt; color: #777; }
+        .end { margin-top: 12px; text-align: center; font-size: 8pt; font-weight: bold; color: #084117; }
     </style>
 </head>
 <body>
@@ -44,80 +51,92 @@
 <div class="header">
     <img src="{{ public_path('assets/img/chrisland-school-logo.png') }}" alt="Chrisland Schools" class="logo" />
     <div class="school">Chrisland Schools</div>
-    <div class="exam-title">{{ $title }}</div>
-    <div class="exam-meta">
-        <span>{{ $subject }}</span>
-        <span class="sep">|</span>
-        <span>{{ $lbl }} Level</span>
-        <span class="sep">|</span>
-        <span>{{ $totalMarks }} marks</span>
-        <span class="sep">|</span>
-        <span>{{ $date }}</span>
-    </div>
+    <div class="title">{{ $title }}</div>
+    <div class="meta">{{ $subject }} | {{ $lbl }} Level | {{ $totalMarks }} Marks | {{ $date }}</div>
 </div>
 
-<table class="candidate-info">
+<div class="rule"></div>
+
+<table class="candidate-table">
     <tr>
-        <td class="label">Candidate Name:</td>
-        <td style="width:200px;"></td>
-        <td class="label" style="width:60px;">Class:</td>
+        <td class="candidate-label">Candidate Name</td>
+        <td></td>
+        <td class="candidate-label" style="width:70px;">Class</td>
         <td style="width:120px;"></td>
     </tr>
 </table>
 
 <div class="instructions">
     <strong>Instructions:</strong> {{ $instructions }}
-    <br>Answer all questions in the spaces provided on the answer booklet.
-    <br>Do NOT write on this question paper.
-</div>
-
-<div class="warn">
-    Do not write on this paper. All answers must be written on the separate answer booklet provided.
+    <br>Answer all questions. Write your answers neatly in the spaces or booklet provided by the invigilator.
 </div>
 
 @if($mcqs->isNotEmpty())
-    <div class="section-title">Section A: Multiple Choice ({{ $mcqTotal }} marks)</div>
-    <p style="font-size:8.5pt;color:#555;margin:0 0 6px;">Choose the correct answer. Write the letter (A, B, C or D) in your answer booklet.</p>
+    <div class="section-title">Section A: Multiple Choice</div>
+    <div class="section-note">Choose the correct option from A to D for each question.</div>
 
-    @foreach($mcqs as $index => $q)
-        <div class="question">
-            <div class="q-text">
-                <span style="font-weight:bold;">{{ $index + 1 }}.</span>
-                {!! nl2br(e($q->content)) !!}
-                <span class="marks">[1]</span>
+    <div class="question-list">
+        @foreach($mcqs as $index => $q)
+            <div class="question-item">
+                <div class="question-row">
+                    <div class="question-no">{{ $index + 1 }}.</div>
+                    <div class="question-body">
+                        {!! nl2br(e($q->printableContent())) !!}
+                        <span class="marks">[1]</span>
+                        @if($src = $q->imagePdfSource())
+                            <div class="question-image">
+                                <img src="{{ $src }}" alt="Question image" />
+                            </div>
+                        @endif
+                        <table class="options-table">
+                            <tr>
+                                @foreach($q->options->values() as $oi => $opt)
+                                    <td>
+                                        <div class="option-line">
+                                            <span class="option-label">{{ chr(65 + $oi) }}.</span> {{ $opt->content }}
+                                        </div>
+                                    </td>
+                                    @if($oi % 2 === 1 && $oi !== $q->options->count() - 1)
+                                        </tr><tr>
+                                    @endif
+                                @endforeach
+                            </tr>
+                        </table>
+                    </div>
+                </div>
             </div>
-            @if($src = $q->imagePdfSource())
-                <div style="margin:2px 0;"><img src="{{ $src }}" alt="Image" style="max-width:340px;" /></div>
-            @endif
-            <div class="options">
-                @foreach($q->options as $oi => $opt)
-                    <div class="opt">{{ chr(65 + $oi) }}. {{ $opt->content }}</div>
-                @endforeach
-            </div>
-        </div>
-    @endforeach
+        @endforeach
+    </div>
 @endif
 
 @if($theory->isNotEmpty())
-    <div class="section-title">Section B: Theory ({{ $theoryTotal }} marks)</div>
-    <p style="font-size:8.5pt;color:#555;margin:0 0 6px;">Answer all questions in your answer booklet. Show all workings where applicable.</p>
+    <div class="theory-section">
+        <div class="section-title">Section B: Theory</div>
+        <div class="section-note">Answer all questions clearly. Show all necessary workings.</div>
 
-    @foreach($theory as $index => $q)
-        @php $qm = collect($q->marking_scheme)->sum('weight'); @endphp
-        <div class="question">
-            <div class="q-text">
-                <span style="font-weight:bold;">{{ $mcqs->count() + $index + 1 }}.</span>
-                {!! nl2br(e($q->content)) !!}
-                <span class="marks">[{{ $qm }}]</span>
+        <div class="question-list">
+        @foreach($theory as $index => $q)
+            @php $qm = collect($q->marking_scheme)->sum('weight'); @endphp
+            <div class="question-item">
+                <div class="question-row">
+                    <div class="question-no">{{ $mcqs->count() + $index + 1 }}.</div>
+                    <div class="question-body">
+                        {!! nl2br(e($q->printableContent())) !!}
+                        <span class="marks">[{{ $qm }}]</span>
+                        @if($src = $q->imagePdfSource())
+                            <div class="question-image">
+                                <img src="{{ $src }}" alt="Question image" />
+                            </div>
+                        @endif
+                    </div>
+                </div>
             </div>
-            @if($src = $q->imagePdfSource())
-                <div style="margin:2px 0;"><img src="{{ $src }}" alt="Image" style="max-width:340px;" /></div>
-            @endif
+        @endforeach
         </div>
-    @endforeach
+    </div>
 @endif
 
-<div class="end-marker">END OF EXAMINATION</div>
-<div class="footer">Chrisland Schools &bull; {{ $date }}</div>
+<div class="end">END OF EXAMINATION</div>
+<div class="footer">Chrisland Schools • {{ $date }}</div>
 </body>
 </html>

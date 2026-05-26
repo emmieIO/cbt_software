@@ -78,7 +78,7 @@ const confirmDelete = () => {
                     <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Topics</h1>
                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500">Manage topics under each subject.</p>
                 </div>
-                <button @click="openCreate" class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm dark:shadow-none dark:border-gray-700 hover:bg-primary/90">
+                <button @click="openCreate" class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm dark:shadow-none dark:border-green-900/60 hover:bg-primary/90">
                     <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                     </svg>
@@ -87,7 +87,7 @@ const confirmDelete = () => {
             </div>
 
             <!-- Level Filter -->
-            <div class="flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
+            <div class="flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 dark:border-green-900/60 bg-white dark:bg-green-950/60 p-4">
                 <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Level:</label>
                 <select v-model="filterLevel" class="w-full sm:w-auto sm:min-w-[160px]">
                     <option value="">All Levels</option>
@@ -100,7 +100,7 @@ const confirmDelete = () => {
 
             <!-- Form Modal -->
             <div v-if="showForm" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" @click.self="showForm = false">
-                <div class="w-full max-w-md rounded-2xl bg-white dark:bg-gray-800 p-6 shadow-xl">
+                <div class="w-full max-w-md rounded-2xl bg-white dark:bg-green-950/60 p-6 shadow-xl">
                     <h2 class="text-lg font-bold text-gray-900 dark:text-gray-100">{{ editing ? 'Edit Topic' : 'New Topic' }}</h2>
                     <form @submit.prevent="save" class="mt-4 space-y-4">
                         <div>
@@ -118,7 +118,7 @@ const confirmDelete = () => {
                             <textarea v-model="form.description" rows="3" class="mt-1" />
                         </div>
                         <div class="flex justify-end gap-3">
-                            <button type="button" @click="showForm = false" class="rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:bg-gray-800/50">Cancel</button>
+                            <button type="button" @click="showForm = false" class="rounded-lg border border-gray-200 dark:border-green-900/60 px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:bg-green-950/45">Cancel</button>
                             <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90">Save</button>
                         </div>
                     </form>
@@ -126,9 +126,9 @@ const confirmDelete = () => {
             </div>
 
             <!-- Topics List -->
-            <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm dark:shadow-none dark:border-gray-700">
+            <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-green-900/60 bg-white dark:bg-green-950/60 shadow-sm dark:shadow-none dark:border-green-900/60">
                 <div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50 dark:bg-gray-800/50">
+                    <thead class="bg-gray-50 dark:bg-green-950/45">
                         <tr>
                             <th class="px-5 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase">Topic</th>
                             <th class="px-5 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase">Subject</th>
@@ -137,7 +137,7 @@ const confirmDelete = () => {
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
-                        <tr v-for="topic in topics.data" :key="topic.id" class="hover:bg-gray-50 dark:bg-gray-800/50/50">
+                        <tr v-for="topic in topics.data" :key="topic.id" class="hover:bg-gray-50 dark:hover:bg-slate-800/40">
                             <td class="px-5 py-4">
                                 <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ topic.name }}</p>
                                 <p v-if="topic.description" class="mt-0.5 text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 line-clamp-1">{{ topic.description }}</p>
@@ -161,8 +161,8 @@ const confirmDelete = () => {
             <div v-if="topics.last_page > 1" class="flex items-center justify-between">
                 <p class="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500">Page {{ topics.current_page }} of {{ topics.last_page }}</p>
                 <div class="flex gap-2">
-                    <Link v-if="topics.prev_page_url" :href="topics.prev_page_url" class="rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:bg-gray-800/50">Previous</Link>
-                    <Link v-if="topics.next_page_url" :href="topics.next_page_url" class="rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:bg-gray-800/50">Next</Link>
+                    <Link v-if="topics.prev_page_url" :href="topics.prev_page_url" class="rounded-lg border border-gray-200 dark:border-green-900/60 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:bg-green-950/45">Previous</Link>
+                    <Link v-if="topics.next_page_url" :href="topics.next_page_url" class="rounded-lg border border-gray-200 dark:border-green-900/60 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:bg-green-950/45">Next</Link>
                 </div>
             </div>
         </div>

@@ -91,15 +91,15 @@ const confirmImport = () => {
                 <Link href="/questions" class="text-sm font-medium text-primary hover:underline">&larr; Back to questions</Link>
             </div>
 
-            <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:shadow-none">
+            <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-green-900/60 dark:bg-green-950/60 dark:shadow-none">
                 <h2 class="text-sm font-bold text-gray-900 dark:text-gray-100">Step 1: Download template</h2>
                 <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Use the provided Excel template so your columns, including optional `image_url`, match the import format.</p>
-                <a href="/questions/import/template" class="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800/50 sm:w-auto sm:justify-start">
+                <a href="/questions/import/template" class="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-green-800/60 dark:text-gray-200 dark:hover:bg-green-950/55 sm:w-auto sm:justify-start">
                     Download Template (XLSX)
                 </a>
             </div>
 
-            <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:shadow-none">
+            <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-green-900/60 dark:bg-green-950/60 dark:shadow-none">
                 <h2 class="text-sm font-bold text-gray-900 dark:text-gray-100">Step 2: Upload file</h2>
                 <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Accepted formats: `.xlsx`, `.csv`.</p>
 
@@ -109,7 +109,7 @@ const confirmImport = () => {
                     @dragleave.prevent="dragOver = false"
                     @click="openFilePicker"
                     class="mt-4 flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed p-8 transition-colors"
-                    :class="dragOver ? 'border-primary bg-primary/5' : 'border-gray-300 hover:border-gray-400 dark:border-gray-600'"
+                    :class="dragOver ? 'border-primary bg-primary/5' : 'border-gray-300 hover:border-gray-400 dark:border-green-800/60'"
                 >
                     <div v-if="!file" class="text-center">
                         <p class="text-sm font-medium text-gray-600 dark:text-gray-300">Drop file here, or <span class="text-primary">browse</span></p>
@@ -135,7 +135,7 @@ const confirmImport = () => {
                 </div>
             </div>
 
-            <div v-if="hasPreview" class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:shadow-none">
+            <div v-if="hasPreview" class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-green-900/60 dark:bg-green-950/60 dark:shadow-none">
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                         <h2 class="text-sm font-bold text-gray-900 dark:text-gray-100">Step 3: Review preview</h2>
@@ -153,14 +153,14 @@ const confirmImport = () => {
                     </button>
                 </div>
 
-                <div v-if="preview?.new_subjects?.length || preview?.new_topics?.length" class="mt-4 rounded-lg bg-gray-50 p-4 text-xs text-gray-600 dark:bg-gray-900/60 dark:text-gray-300">
+                <div v-if="preview?.new_subjects?.length || preview?.new_topics?.length" class="mt-4 rounded-lg bg-gray-50 p-4 text-xs text-gray-600 dark:bg-green-950/60 dark:text-gray-300">
                     <p v-if="preview?.new_subjects?.length">New subjects: {{ preview.new_subjects.join(', ') }}</p>
                     <p v-if="preview?.new_topics?.length" class="mt-1">New topics: {{ preview.new_topics.join(', ') }}</p>
                 </div>
 
                 <div class="mt-4 overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200 text-left text-sm dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-900/60">
+                        <thead class="bg-gray-50 dark:bg-green-950/60">
                             <tr>
                                 <th class="px-3 py-2 font-semibold text-gray-700 dark:text-gray-200">Row</th>
                                 <th class="px-3 py-2 font-semibold text-gray-700 dark:text-gray-200">Status</th>

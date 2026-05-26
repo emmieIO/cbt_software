@@ -155,13 +155,13 @@ const submit = () => {
                 <Link href="/questions" class="text-sm font-medium text-primary hover:underline">&larr; Back to questions</Link>
             </div>
 
-            <div class="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:shadow-none sm:flex-row sm:items-center sm:justify-between">
+            <div class="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-green-900/60 dark:bg-green-950/60 dark:shadow-none sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ questionCount }} {{ questionCount === 1 ? 'question' : 'questions' }}</p>
                     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Each card is a normal question form.</p>
                 </div>
                 <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-                    <button type="button" @click="addQuestion" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800/50 sm:w-auto">
+                    <button type="button" @click="addQuestion" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-green-800/60 dark:text-gray-200 dark:hover:bg-green-950/55 sm:w-auto">
                         + Add question
                     </button>
                     <button type="button" @click="submit" :disabled="submitting" class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50 sm:w-auto">

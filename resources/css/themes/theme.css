@@ -2,6 +2,10 @@
     --color-primary: rgb(8, 65, 23);
     --color-primary-light: rgb(40, 120, 60);
     --color-accent: #fdff00;
+    --color-canvas-dark: rgb(10, 34, 18);
+    --color-surface-dark: rgb(13, 31, 20);
+    --color-surface-dark-soft: rgb(18, 43, 27);
+    --color-border-dark: rgb(31, 63, 42);
 
     --color-lemon-green-deep: rgb(8, 65, 23);
     --color-lemon-yellow: #fdff00;

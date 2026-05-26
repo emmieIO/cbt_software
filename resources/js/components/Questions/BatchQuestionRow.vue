@@ -105,7 +105,7 @@ const removeMarkingPoint = (index: number) => {
 </script>
 
 <template>
-    <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:shadow-none">
+    <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-green-900/60 dark:bg-green-950/60 dark:shadow-none">
         <div class="flex items-center justify-between">
             <div>
                 <h2 class="text-sm font-bold text-gray-900 dark:text-gray-100">Question {{ index + 1 }}</h2>
@@ -116,10 +116,10 @@ const removeMarkingPoint = (index: number) => {
             </button>
         </div>
 
-        <div class="mt-5 rounded-xl border border-gray-200 p-4 dark:border-gray-700">
+        <div class="mt-5 rounded-xl border border-gray-200 p-4 dark:border-green-900/60">
             <div class="flex gap-4">
                 <label class="flex cursor-pointer items-center gap-3 rounded-lg border-2 p-4 transition-colors"
-                    :class="row.type === 'multiple_choice' ? 'border-primary bg-primary/5' : 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600'">
+                    :class="row.type === 'multiple_choice' ? 'border-primary bg-primary/5' : 'border-gray-200 hover:border-gray-300 dark:border-green-900/60 dark:hover:border-gray-600'">
                     <input :checked="row.type === 'multiple_choice'" type="radio" class="text-primary" @change="setType('multiple_choice')" />
                     <div>
                         <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">Multiple Choice</p>
@@ -127,7 +127,7 @@ const removeMarkingPoint = (index: number) => {
                     </div>
                 </label>
                 <label class="flex cursor-pointer items-center gap-3 rounded-lg border-2 p-4 transition-colors"
-                    :class="row.type === 'theory' ? 'border-primary bg-primary/5' : 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600'">
+                    :class="row.type === 'theory' ? 'border-primary bg-primary/5' : 'border-gray-200 hover:border-gray-300 dark:border-green-900/60 dark:hover:border-gray-600'">
                     <input :checked="row.type === 'theory'" type="radio" class="text-primary" @change="setType('theory')" />
                     <div>
                         <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">Theory</p>
@@ -137,7 +137,7 @@ const removeMarkingPoint = (index: number) => {
             </div>
         </div>
 
-        <div class="mt-5 rounded-xl border border-gray-200 p-4 dark:border-gray-700">
+        <div class="mt-5 rounded-xl border border-gray-200 p-4 dark:border-green-900/60">
             <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">Classification</h3>
             <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div>
@@ -165,7 +165,7 @@ const removeMarkingPoint = (index: number) => {
             </div>
         </div>
 
-        <div class="mt-5 rounded-xl border border-gray-200 p-4 dark:border-gray-700">
+        <div class="mt-5 rounded-xl border border-gray-200 p-4 dark:border-green-900/60">
             <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">Question</h3>
             <div class="mt-4">
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Question text</label>
@@ -174,15 +174,15 @@ const removeMarkingPoint = (index: number) => {
             </div>
         </div>
 
-        <div v-if="row.type === 'multiple_choice'" class="mt-5 rounded-xl border border-gray-200 p-4 dark:border-gray-700">
+        <div v-if="row.type === 'multiple_choice'" class="mt-5 rounded-xl border border-gray-200 p-4 dark:border-green-900/60">
             <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">Answer Options</h3>
             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Fill the options and select the correct answer.</p>
             <p v-if="rowErrors?.options" class="mt-2 text-xs text-red-600">{{ rowErrors.options }}</p>
 
             <div class="mt-4 space-y-3">
-                <div v-for="(option, index) in row.options" :key="index" class="flex items-center gap-3 rounded-lg border border-gray-200 p-3 dark:border-gray-700"
+                <div v-for="(option, index) in row.options" :key="index" class="flex items-center gap-3 rounded-lg border border-gray-200 p-3 dark:border-green-900/60"
                     :class="option.is_correct ? 'border-green-300 bg-green-50 dark:bg-green-950/20' : ''">
-                    <span class="flex size-7 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-bold text-gray-600 dark:bg-gray-700 dark:text-gray-100">
+                    <span class="flex size-7 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-bold text-gray-600 dark:bg-green-900/70 dark:text-gray-100">
                         {{ optionLabels[index] }}
                     </span>
                     <input :value="option.content" type="text" class="flex-1" :placeholder="`Option ${optionLabels[index]}`" @input="updateRow({ options: row.options.map((currentOption, optionIndex) => optionIndex === index ? { ...currentOption, content: ($event.target as HTMLInputElement).value } : currentOption) })" />
@@ -194,20 +194,20 @@ const removeMarkingPoint = (index: number) => {
             </div>
         </div>
 
-        <div v-else class="mt-5 rounded-xl border border-gray-200 p-4 dark:border-gray-700">
+        <div v-else class="mt-5 rounded-xl border border-gray-200 p-4 dark:border-green-900/60">
             <div class="flex items-center justify-between">
                 <div>
                     <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">Marking Scheme</h3>
                     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Add one or more expected points.</p>
                 </div>
-                <button type="button" @click="addMarkingPoint" class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800/50">
+                <button type="button" @click="addMarkingPoint" class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-green-800/60 dark:text-gray-200 dark:hover:bg-green-950/55">
                     + Add point
                 </button>
             </div>
             <p v-if="rowErrors?.marking_scheme" class="mt-2 text-xs text-red-600">{{ rowErrors.marking_scheme }}</p>
 
             <div class="mt-4 space-y-3">
-                <div v-for="(item, index) in row.marking_scheme" :key="index" class="flex items-center gap-3 rounded-lg border border-gray-200 p-3 dark:border-gray-700">
+                <div v-for="(item, index) in row.marking_scheme" :key="index" class="flex items-center gap-3 rounded-lg border border-gray-200 p-3 dark:border-green-900/60">
                     <input :value="item.point" type="text" class="flex-1" placeholder="Expected point..." @input="updateRow({ marking_scheme: row.marking_scheme.map((currentItem, itemIndex) => itemIndex === index ? { ...currentItem, point: ($event.target as HTMLInputElement).value } : currentItem) })" />
                     <input :value="item.weight" type="number" min="1" class="w-24" placeholder="Weight" @input="updateRow({ marking_scheme: row.marking_scheme.map((currentItem, itemIndex) => itemIndex === index ? { ...currentItem, weight: Number(($event.target as HTMLInputElement).value) || 1 } : currentItem) })" />
                     <button type="button" @click="removeMarkingPoint(index)" class="text-xs text-red-600 hover:underline">Remove</button>
