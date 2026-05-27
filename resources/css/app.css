@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+@import 'katex/dist/katex.min.css';
 @import 'tailwindcss';
 @import 'preline/variants.css';
 @source "../../node_modules/preline/dist/*.js";
@@ -68,16 +69,25 @@
     }
 
     /* Common dark mode overrides for page content */
-    h1, h2, h3, h4, h5, h6 {
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
         @apply dark:text-gray-100;
     }
 
-    p, li, label, dt, dd {
+    p,
+    li,
+    label,
+    dt,
+    dd {
         @apply dark:text-gray-300;
     }
 
     th {
-        @apply text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400;
+        @apply text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-slate-400;
     }
 
     td {
@@ -133,15 +143,15 @@ button:disabled {
 
 /* Button hierarchy */
 .btn-primary {
-    @apply inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-primary/20 transition-all hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/30 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-primary/40;
+    @apply inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-primary/20 transition-all hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/30 focus:ring-2 focus:ring-primary/40 focus:outline-none active:scale-[0.98];
 }
 
 .btn-secondary {
-    @apply inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:shadow-md active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-gray-200 dark:border-[color:var(--color-border-dark)] dark:bg-[color:var(--color-surface-dark-soft)] dark:text-gray-200 dark:hover:bg-green-900/60;
+    @apply inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:shadow-md focus:ring-2 focus:ring-gray-200 focus:outline-none active:scale-[0.98] dark:border-[color:var(--color-border-dark)] dark:bg-[color:var(--color-surface-dark-soft)] dark:text-gray-200 dark:hover:bg-green-900/60;
 }
 
 .btn-danger {
-    @apply inline-flex items-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-red-600/20 transition-all hover:bg-red-700 hover:shadow-lg hover:shadow-red-600/30 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-red-400;
+    @apply inline-flex items-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-red-600/20 transition-all hover:bg-red-700 hover:shadow-lg hover:shadow-red-600/30 focus:ring-2 focus:ring-red-400 focus:outline-none active:scale-[0.98];
 }
 
 .btn-ghost {
@@ -150,12 +160,12 @@ button:disabled {
 
 /* Card hover elevation */
 .card-hover {
-    @apply cursor-pointer rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-200 hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 dark:border-[color:var(--color-border-dark)] dark:bg-[color:var(--color-surface-dark-soft)] dark:shadow-none dark:hover:border-green-800/70;
+    @apply cursor-pointer rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-gray-300 hover:shadow-md dark:border-[color:var(--color-border-dark)] dark:bg-[color:var(--color-surface-dark-soft)] dark:shadow-none dark:hover:border-green-800/70;
 }
 
 /* Focus ring consistency */
 *:focus-visible {
-    @apply outline-none ring-2 ring-primary/40;
+    @apply ring-2 ring-primary/40 outline-none;
 }
 
 /* Smooth page transitions */
@@ -163,10 +173,183 @@ button:disabled {
     @apply transition-all duration-200 ease-out;
 }
 .page-enter-from {
-    @apply opacity-0 translate-y-2;
+    @apply translate-y-2 opacity-0;
 }
 
 /* Breadcrumb separator */
 .breadcrumb-sep {
     @apply mx-2 text-xs text-gray-400 select-none;
+}
+
+.rich-content-editor {
+    @apply overflow-hidden rounded-lg border border-slate-300 bg-white shadow-sm transition-colors focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 dark:border-[color:var(--color-border-dark)] dark:bg-[color:var(--color-surface-dark-soft)];
+}
+
+.rich-content-toolbar {
+    @apply flex flex-wrap items-center gap-2 border-b border-slate-200 bg-slate-50 px-2 py-2 dark:border-[color:var(--color-border-dark)] dark:bg-green-950/45;
+}
+
+.rich-content-toolbar-group {
+    @apply flex flex-wrap items-center gap-1 border-r border-slate-200 pr-2 last:border-r-0 last:pr-0 dark:border-green-900/70;
+}
+
+.rich-content-toolbar button {
+    @apply inline-flex h-8 min-w-8 items-center justify-center rounded-md px-2 text-xs font-semibold text-slate-600 transition-colors hover:bg-white hover:text-slate-950 dark:text-slate-300 dark:hover:bg-green-900/55 dark:hover:text-white;
+}
+
+.rich-content-toolbar button.active {
+    @apply bg-primary text-white hover:bg-primary hover:text-white;
+}
+
+.rich-content-toolbar button:disabled {
+    @apply cursor-not-allowed opacity-40;
+}
+
+.rich-content-select {
+    @apply h-8 rounded-md border-slate-200 bg-white py-1 pr-7 pl-2 text-xs shadow-none dark:border-green-900/70 dark:bg-green-950/60;
+}
+
+.rich-content-panel {
+    @apply border-b border-slate-200 bg-white px-3 py-3 dark:border-[color:var(--color-border-dark)] dark:bg-green-950/35;
+}
+
+.rich-content-panel-head {
+    @apply mb-3 flex items-center justify-between gap-3;
+}
+
+.rich-content-panel-title {
+    @apply text-xs font-bold tracking-wide text-slate-500 uppercase dark:text-slate-300;
+}
+
+.rich-content-panel-close {
+    @apply rounded-md px-2 py-1 text-xs font-semibold text-slate-500 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-green-900/55;
+}
+
+.rich-content-segment {
+    @apply inline-flex overflow-hidden rounded-lg border border-slate-200 bg-slate-50 p-0.5 dark:border-green-900/70 dark:bg-green-950/55;
+}
+
+.rich-content-segment button {
+    @apply rounded-md px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-white dark:text-slate-300 dark:hover:bg-green-900/60;
+}
+
+.rich-content-segment button.active {
+    @apply bg-primary text-white hover:bg-primary;
+}
+
+.rich-content-formula-grid {
+    @apply grid grid-cols-1 gap-3 lg:grid-cols-2;
+}
+
+.rich-content-formula-input {
+    @apply min-h-[88px] font-mono text-sm;
+}
+
+.rich-content-formula-preview {
+    @apply min-h-[88px] overflow-x-auto rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-500 dark:border-green-900/70 dark:bg-green-950/55 dark:text-slate-300;
+}
+
+.rich-content-panel-actions,
+.rich-content-link-row {
+    @apply mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end;
+}
+
+.rich-content-link-row {
+    @apply mt-0 justify-start;
+}
+
+.rich-content-link-row input {
+    @apply flex-1;
+}
+
+.rich-content-action-primary,
+.rich-content-action-secondary {
+    @apply inline-flex items-center justify-center rounded-lg px-3 py-2 text-xs font-semibold transition-colors;
+}
+
+.rich-content-action-primary {
+    @apply bg-primary text-white hover:bg-primary/90;
+}
+
+.rich-content-action-secondary {
+    @apply border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-green-900/70 dark:bg-green-950/45 dark:text-slate-200 dark:hover:bg-green-900/55;
+}
+
+.rich-content-input {
+    @apply min-h-[140px] px-3 py-2.5 text-sm text-slate-900 outline-none dark:text-gray-100;
+}
+
+.rich-content-input-compact {
+    @apply min-h-[44px];
+}
+
+.rich-content-input p.is-editor-empty:first-child::before {
+    @apply pointer-events-none float-left h-0 text-slate-400 dark:text-slate-500;
+    content: attr(data-placeholder);
+}
+
+.rich-content-input p {
+    @apply my-1;
+}
+
+.rich-content-input h3,
+.rich-content-viewer h3 {
+    @apply my-2 text-base font-bold text-gray-900 dark:text-gray-100;
+}
+
+.rich-content-input h4,
+.rich-content-viewer h4 {
+    @apply my-2 text-sm font-bold text-gray-900 dark:text-gray-100;
+}
+
+.rich-content-input blockquote,
+.rich-content-viewer blockquote {
+    @apply my-2 border-l-4 border-primary/40 pl-3 text-slate-600 dark:text-slate-300;
+}
+
+.rich-content-input code,
+.rich-content-viewer code {
+    @apply rounded bg-slate-100 px-1 py-0.5 font-mono text-xs text-slate-800 dark:bg-green-950/70 dark:text-slate-100;
+}
+
+.rich-content-input mark,
+.rich-content-viewer mark {
+    @apply rounded bg-yellow-200 px-0.5 text-slate-950;
+}
+
+.rich-content-input a,
+.rich-content-viewer a {
+    @apply font-medium text-primary underline underline-offset-2;
+}
+
+.rich-content-input ul,
+.rich-content-viewer ul {
+    @apply my-2 list-disc pl-5;
+}
+
+.rich-content-input ol,
+.rich-content-viewer ol {
+    @apply my-2 list-decimal pl-5;
+}
+
+.rich-content-input [data-type='block-math'],
+.rich-content-viewer [data-type='block-math'] {
+    @apply my-2 overflow-x-auto rounded-md bg-slate-50 px-3 py-2 dark:bg-green-950/45;
+}
+
+.rich-content-input [data-type='inline-math'],
+.rich-content-viewer [data-type='inline-math'] {
+    @apply rounded bg-slate-100 px-1 dark:bg-green-950/60;
+}
+
+.rich-content-viewer {
+    @apply text-sm leading-relaxed text-gray-900 dark:text-gray-100;
+}
+
+.rich-content-viewer p {
+    @apply my-0.5;
+}
+
+.rich-content-viewer-truncate {
+    @apply max-h-12 overflow-hidden;
 }

@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <title>{{ $title }} - Answer Key</title>
     <style>
+        {!! file_get_contents(base_path('node_modules/katex/dist/katex.min.css')) ?: '' !!}
         @page { margin: 15mm 14mm 16mm; }
         body { font-family: 'DejaVu Sans', sans-serif; font-size: 10pt; line-height: 1.4; color: #101510; }
         .confidential { text-align: center; font-size: 8.5pt; color: #9f1239; font-weight: bold; border: 1px solid #fda4af; background: #fff1f2; padding: 4px 8px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1.4px; }
@@ -32,6 +33,9 @@
         .detail-note { color: #566056; font-size: 8.1pt; }
         .missing-text { color: #be123c; font-weight: bold; }
         .footer { margin-top: 16px; padding-top: 6px; border-top: 1px solid #d0d7d0; text-align: center; font-size: 7.5pt; color: #777; }
+        .katex { font-size: 1em; }
+        .katex-display { margin: 4px 0; text-align: center; }
+        .pdf-math-fallback { font-family: 'DejaVu Sans Mono', monospace; }
     </style>
 </head>
 <body>
@@ -109,7 +113,7 @@
                         <span class="missing-text">N/A</span>
                     @endif
                 </td>
-                <td>{{ $item['content'] ?? 'No answer set' }}</td>
+                <td>{!! \App\Support\RichContent::pdf($item['content'] ?? 'No answer set') !!}</td>
                 <td class="detail-note">{{ $item['stem'] }}</td>
             </tr>
         @endforeach

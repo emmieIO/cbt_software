@@ -27,7 +27,7 @@ const props = defineProps<{
     subjects: SubjectOption[];
 }>();
 
-const defaultLevel = props.levels[0]?.value ?? 'js';
+const defaultLevel = props.levels[0]?.value ?? '';
 const nextId = ref(2);
 const submitting = ref(false);
 const rowErrors = ref<Record<number, RowErrors>>({});
@@ -39,18 +39,18 @@ const createQuestion = (overrides: Partial<QuestionDraft> = {}): QuestionDraft =
     topic_id: overrides.topic_id ?? '',
     level: overrides.level ?? defaultLevel,
     content: overrides.content ?? '',
-    options: overrides.options ? overrides.options.map((option) => ({ ...option })) : [
-        { content: '', is_correct: false },
-        { content: '', is_correct: false },
-        { content: '', is_correct: false },
-        { content: '', is_correct: false },
-    ],
+    options: overrides.options
+        ? overrides.options.map((option) => ({ ...option }))
+        : [
+            { content: '', is_correct: false },
+            { content: '', is_correct: false },
+            { content: '', is_correct: false },
+            { content: '', is_correct: false },
+        ],
     marking_scheme: overrides.marking_scheme ? overrides.marking_scheme.map((item) => ({ ...item })) : [{ point: '', weight: 1 }],
 });
 
-const questions = ref<QuestionDraft[]>([
-    createQuestion({ id: 1 }),
-]);
+const questions = ref<QuestionDraft[]>([createQuestion({ id: 1 })]);
 
 const questionCount = computed(() => questions.value.length);
 
@@ -75,21 +75,28 @@ const removeQuestion = (index: number) => {
     }
 };
 
+const richText = (value: string) => {
+    const element = document.createElement('div');
+    element.innerHTML = value || '';
+    const latex = Array.from(element.querySelectorAll<HTMLElement>('[data-latex]')).map((node) => node.dataset.latex || '');
+    return [element.textContent || '', ...latex].join(' ').replace(/\s+/g, ' ').trim();
+};
+
 const validateQuestion = (question: QuestionDraft): RowErrors => {
     const errors: RowErrors = {};
 
     if (!question.subject_id) errors.subject_id = 'Subject is required.';
     if (!question.topic_id) errors.topic_id = 'Topic is required.';
-    if (!question.content.trim()) errors.content = 'Question text is required.';
+    if (!richText(question.content)) errors.content = 'Question text is required.';
 
     if (question.type === 'multiple_choice') {
-        const hasEmptyOption = question.options.some((option) => !option.content.trim());
+        const hasEmptyOption = question.options.some((option) => !richText(option.content));
         const hasCorrectOption = question.options.some((option) => option.is_correct);
 
         if (hasEmptyOption || !hasCorrectOption) {
             errors.options = hasEmptyOption ? 'Fill all four options.' : 'Select the correct answer.';
         }
-    } else if (!question.marking_scheme.some((item) => item.point.trim())) {
+    } else if (!question.marking_scheme.some((item) => richText(item.point))) {
         errors.marking_scheme = 'Add at least one marking point.';
     }
 
@@ -108,22 +115,24 @@ const submit = () => {
         return {
             type: question.type,
             topic_id: question.topic_id,
-            content: question.content.trim(),
+            content: question.content,
             level: question.level,
-            options: question.type === 'multiple_choice'
-                ? question.options.map((option) => ({
-                    content: option.content.trim(),
-                    is_correct: option.is_correct,
-                }))
-                : [],
-            marking_scheme: question.type === 'theory'
-                ? question.marking_scheme
-                    .filter((item) => item.point.trim())
-                    .map((item) => ({
-                        point: item.point.trim(),
-                        weight: Math.max(1, Number(item.weight) || 1),
+            options:
+                question.type === 'multiple_choice'
+                    ? question.options.map((option) => ({
+                        content: option.content,
+                        is_correct: option.is_correct,
                     }))
-                : [],
+                    : [],
+            marking_scheme:
+                question.type === 'theory'
+                    ? question.marking_scheme
+                        .filter((item) => richText(item.point))
+                        .map((item) => ({
+                            point: item.point,
+                            weight: Math.max(1, Number(item.weight) || 1),
+                        }))
+                    : [],
         };
     });
 
@@ -134,56 +143,85 @@ const submit = () => {
     }
 
     submitting.value = true;
-    router.post('/questions/bulk-store', { questions: payload }, {
-        onFinish: () => {
-            submitting.value = false;
+    router.post(
+        '/questions/bulk-store',
+        { questions: payload },
+        {
+            onFinish: () => {
+                submitting.value = false;
+            },
         },
-    });
+    );
 };
 </script>
 
 <template>
     <AppLayout>
+
         <Head title="Batch Create Questions" />
 
         <div class="mx-auto max-w-6xl space-y-6">
             <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                     <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Batch Create Questions</h1>
-                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Add simple question forms, remove the ones you do not need, then submit everything at once.</p>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        Add simple question forms, remove the ones you do not need, then submit everything at once.
+                    </p>
                 </div>
-                <Link href="/questions" class="text-sm font-medium text-primary hover:underline">&larr; Back to questions</Link>
+                <Link href="/questions" class="text-sm font-medium text-primary hover:underline">&larr; Back to
+                    questions</Link>
             </div>
 
-            <div class="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-green-900/60 dark:bg-green-950/60 dark:shadow-none sm:flex-row sm:items-center sm:justify-between">
+            <div
+                class="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between dark:border-green-900/60 dark:bg-green-950/60 dark:shadow-none">
                 <div>
-                    <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ questionCount }} {{ questionCount === 1 ? 'question' : 'questions' }}</p>
+                    <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                        {{ questionCount }} {{ questionCount === 1 ? 'question' : 'questions' }}
+                    </p>
                     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Each card is a normal question form.</p>
                 </div>
                 <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-                    <button type="button" @click="addQuestion" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-green-800/60 dark:text-gray-200 dark:hover:bg-green-950/55 sm:w-auto">
+                    <button type="button" @click="addQuestion"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 sm:w-auto dark:border-green-800/60 dark:text-gray-200 dark:hover:bg-green-950/55">
                         + Add question
                     </button>
-                    <button type="button" @click="submit" :disabled="submitting" class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50 sm:w-auto">
-                        <span v-if="submitting" class="inline-block size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    <button type="button" @click="submit" :disabled="submitting"
+                        class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50 sm:w-auto">
+                        <span v-if="submitting"
+                            class="inline-block size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                         Create Many
                     </button>
                 </div>
             </div>
 
+
             <div class="space-y-4">
-                <BatchQuestionRow
-                    v-for="(question, index) in questions"
-                    :key="question.id"
-                    :index="index"
-                    :levels="levels"
-                    :row="question"
-                    :row-errors="rowErrors[question.id]"
-                    :subjects="subjects"
-                    @update-row="updateQuestion(index, $event)"
-                    @remove="removeQuestion(index)"
-                />
+                <BatchQuestionRow v-for="(question, index) in questions" :key="question.id" :index="index"
+                    :levels="levels" :row="question" :row-errors="rowErrors[question.id]" :subjects="subjects"
+                    @update-row="updateQuestion(index, $event)" @remove="removeQuestion(index)" />
             </div>
+
         </div>
     </AppLayout>
 </template>
+
+<style scoped>
+.collapse-enter-active,
+.collapse-leave-active {
+    transition: all 0.25s ease;
+    overflow: hidden;
+}
+
+.collapse-enter-from,
+.collapse-leave-to {
+    opacity: 0;
+    max-height: 0;
+    margin-bottom: 0;
+}
+
+.collapse-enter-to,
+.collapse-leave-from {
+    opacity: 1;
+    max-height: 1000px;
+}
+</style>

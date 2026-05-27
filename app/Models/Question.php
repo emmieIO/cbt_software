@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\QuestionLevel;
 use App\Enums\QuestionType;
+use App\Support\RichContent;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
@@ -151,8 +152,13 @@ class Question extends Model
         return trim((string) preg_replace(
             '/^[^:]+:\s*Question\s+\d+\s+on\s+[^.?!]+[.?!]\s*/i',
             '',
-            $this->content,
+            RichContent::text($this->content),
         ));
+    }
+
+    public function printableHtml(): string
+    {
+        return RichContent::pdf($this->content);
     }
 
     private function resolveImageUrl(): ?string

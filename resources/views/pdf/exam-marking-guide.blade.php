@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <title>{{ $title }} - Marking Guide</title>
     <style>
+        {!! file_get_contents(base_path('node_modules/katex/dist/katex.min.css')) ?: '' !!}
         @page { margin: 18mm 16mm 18mm; }
         body { font-family: 'DejaVu Sans', sans-serif; font-size: 10pt; color: #182118; line-height: 1.5; }
         .confidential { text-align: center; font-size: 9pt; color: #b42318; font-weight: bold; border: 1.5px solid #b42318; padding: 5px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1.8px; }
@@ -26,6 +27,9 @@
         .weight { width: 72px; text-align: center; font-weight: bold; color: #084117; }
         .total td { font-weight: bold; border-top: 1.5px solid #084117; background: #eef5ee !important; }
         .footer { margin-top: 18px; padding-top: 6px; border-top: 1px solid #dbe4dc; text-align: center; font-size: 7.5pt; color: #7b857c; }
+        .katex { font-size: 1em; }
+        .katex-display { margin: 4px 0; text-align: center; }
+        .pdf-math-fallback { font-family: 'DejaVu Sans Mono', monospace; }
     </style>
 </head>
 <body>
@@ -63,7 +67,7 @@
         <div class="q-block">
             <div class="q-text">
                 {{ $mcqs->count() + $index + 1 }}.
-                {!! nl2br(e($q->printableContent())) !!}
+                {!! $q->printableHtml() !!}
                 <span class="marks">[{{ $qm }} marks]</span>
             </div>
 
@@ -75,7 +79,7 @@
                     </tr>
                     @foreach($q->marking_scheme as $point)
                         <tr>
-                            <td>{{ $point['point'] }}</td>
+                            <td>{!! \App\Support\RichContent::pdf($point['point'] ?? '') !!}</td>
                             <td class="weight">{{ $point['weight'] }}</td>
                         </tr>
                     @endforeach

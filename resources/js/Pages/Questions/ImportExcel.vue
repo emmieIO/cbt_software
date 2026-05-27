@@ -32,8 +32,9 @@ const confirming = ref(false);
 const file = ref<File | null>(null);
 const fileInput = ref<HTMLInputElement | null>(null);
 const dragOver = ref(false);
+const fallbackLevel = ref<'lp' | 'hp' | 'js' | 'ss'>('ss');
 const page = usePage();
-const preview = computed(() => ((page.props.flash as { preview?: PreviewPayload })?.preview ?? null));
+const preview = computed(() => (page.props.flash as { preview?: PreviewPayload })?.preview ?? null);
 const hasPreview = computed(() => Boolean(preview.value?.rows?.length));
 
 const handleFile = (selected: File | null) => {
@@ -70,11 +71,15 @@ const upload = () => {
 
 const confirmImport = () => {
     confirming.value = true;
-    router.post('/questions/import/confirm', {}, {
-        onFinish: () => {
-            confirming.value = false;
+    router.post(
+        '/questions/import/confirm',
+        { level: fallbackLevel.value },
+        {
+            onFinish: () => {
+                confirming.value = false;
+            },
         },
-    });
+    );
 };
 </script>
 
@@ -86,15 +91,22 @@ const confirmImport = () => {
             <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                     <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Import Questions From Excel</h1>
-                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Download the template, fill it in, then upload it for preview and import.</p>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        Download the template, fill it in, then upload it for preview and import.
+                    </p>
                 </div>
                 <Link href="/questions" class="text-sm font-medium text-primary hover:underline">&larr; Back to questions</Link>
             </div>
 
             <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-green-900/60 dark:bg-green-950/60 dark:shadow-none">
                 <h2 class="text-sm font-bold text-gray-900 dark:text-gray-100">Step 1: Download template</h2>
-                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Use the provided Excel template so your columns, including optional `image_url`, match the import format.</p>
-                <a href="/questions/import/template" class="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-green-800/60 dark:text-gray-200 dark:hover:bg-green-950/55 sm:w-auto sm:justify-start">
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    Use the provided Excel template so your columns, including optional `image_url`, match the import format.
+                </p>
+                <a
+                    href="/questions/import/template"
+                    class="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 sm:w-auto sm:justify-start dark:border-green-800/60 dark:text-gray-200 dark:hover:bg-green-950/55"
+                >
                     Download Template (XLSX)
                 </a>
             </div>
@@ -112,7 +124,9 @@ const confirmImport = () => {
                     :class="dragOver ? 'border-primary bg-primary/5' : 'border-gray-300 hover:border-gray-400 dark:border-green-800/60'"
                 >
                     <div v-if="!file" class="text-center">
-                        <p class="text-sm font-medium text-gray-600 dark:text-gray-300">Drop file here, or <span class="text-primary">browse</span></p>
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-300">
+                            Drop file here, or <span class="text-primary">browse</span>
+                        </p>
                         <p class="text-xs text-gray-500 dark:text-gray-400">.xlsx, .csv</p>
                     </div>
                     <div v-else class="text-center">
@@ -135,13 +149,25 @@ const confirmImport = () => {
                 </div>
             </div>
 
-            <div v-if="hasPreview" class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-green-900/60 dark:bg-green-950/60 dark:shadow-none">
+            <div
+                v-if="hasPreview"
+                class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-green-900/60 dark:bg-green-950/60 dark:shadow-none"
+            >
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                         <h2 class="text-sm font-bold text-gray-900 dark:text-gray-100">Step 3: Review preview</h2>
                         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                             {{ preview?.valid }} valid row(s), {{ preview?.errors }} row(s) with errors, {{ preview?.total }} total.
                         </p>
+                        <div class="mt-3 max-w-xs">
+                            <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300">Fallback level for rows without level</label>
+                            <select v-model="fallbackLevel" class="mt-1">
+                                <option value="lp">Lower Primary</option>
+                                <option value="hp">Higher Primary</option>
+                                <option value="js">Junior Secondary</option>
+                                <option value="ss">Senior Secondary</option>
+                            </select>
+                        </div>
                     </div>
                     <button
                         @click="confirmImport"
@@ -153,7 +179,10 @@ const confirmImport = () => {
                     </button>
                 </div>
 
-                <div v-if="preview?.new_subjects?.length || preview?.new_topics?.length" class="mt-4 rounded-lg bg-gray-50 p-4 text-xs text-gray-600 dark:bg-green-950/60 dark:text-gray-300">
+                <div
+                    v-if="preview?.new_subjects?.length || preview?.new_topics?.length"
+                    class="mt-4 rounded-lg bg-gray-50 p-4 text-xs text-gray-600 dark:bg-green-950/60 dark:text-gray-300"
+                >
                     <p v-if="preview?.new_subjects?.length">New subjects: {{ preview.new_subjects.join(', ') }}</p>
                     <p v-if="preview?.new_topics?.length" class="mt-1">New topics: {{ preview.new_topics.join(', ') }}</p>
                 </div>
@@ -166,6 +195,7 @@ const confirmImport = () => {
                                 <th class="px-3 py-2 font-semibold text-gray-700 dark:text-gray-200">Status</th>
                                 <th class="px-3 py-2 font-semibold text-gray-700 dark:text-gray-200">Subject</th>
                                 <th class="px-3 py-2 font-semibold text-gray-700 dark:text-gray-200">Topic</th>
+                                <th class="px-3 py-2 font-semibold text-gray-700 dark:text-gray-200">Level</th>
                                 <th class="px-3 py-2 font-semibold text-gray-700 dark:text-gray-200">Type</th>
                                 <th class="px-3 py-2 font-semibold text-gray-700 dark:text-gray-200">Content</th>
                                 <th class="px-3 py-2 font-semibold text-gray-700 dark:text-gray-200">Image</th>
@@ -178,17 +208,26 @@ const confirmImport = () => {
                                 <td class="px-3 py-2">
                                     <span
                                         class="inline-flex rounded-full px-2 py-1 text-xs font-semibold"
-                                        :class="row.valid ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300' : 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300'"
+                                        :class="
+                                            row.valid
+                                                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300'
+                                                : 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300'
+                                        "
                                     >
                                         {{ row.valid ? 'Valid' : 'Error' }}
                                     </span>
                                 </td>
                                 <td class="px-3 py-2 text-gray-900 dark:text-gray-100">{{ row.subject_name }}</td>
                                 <td class="px-3 py-2 text-gray-900 dark:text-gray-100">{{ row.topic_name }}</td>
+                                <td class="px-3 py-2 text-gray-600 dark:text-gray-300">{{ (row.level || fallbackLevel).toUpperCase() }}</td>
                                 <td class="px-3 py-2">
                                     <span
                                         class="inline-flex rounded-full px-2 py-1 text-xs font-semibold capitalize"
-                                        :class="row.type === 'theory' ? 'bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-200' : 'bg-blue-100 text-blue-800 dark:bg-blue-500/15 dark:text-blue-200'"
+                                        :class="
+                                            row.type === 'theory'
+                                                ? 'bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-200'
+                                                : 'bg-blue-100 text-blue-800 dark:bg-blue-500/15 dark:text-blue-200'
+                                        "
                                     >
                                         {{ row.type.replace('_', ' ') }}
                                     </span>

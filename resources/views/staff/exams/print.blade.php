@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Question Preview: {{ $title }}</title>
     <style>
+        {!! file_get_contents(base_path('node_modules/katex/dist/katex.min.css')) ?: '' !!}
         :root {
             color-scheme: light;
             --page-padding-x: 14mm;
@@ -201,7 +202,7 @@
             color: #4b5563;
         }
 
-        .theory-section {
+        .theory-section.page-break {
             page-break-before: always;
         }
 
@@ -271,6 +272,10 @@
         .option-label {
             font-weight: 700;
         }
+
+        .katex { font-size: 1em; }
+        .katex-display { margin: 4px 0; text-align: center; }
+        .pdf-math-fallback { font-family: 'DejaVu Sans Mono', monospace; }
 
         .footer {
             margin-top: 14px;
@@ -407,7 +412,7 @@
                             <div class="question-row">
                                 <div class="question-no">{{ $index + 1 }}.</div>
                                 <div class="question-body">
-                                    {!! nl2br(e($q->printableContent())) !!}
+                                    {!! $q->printableHtml() !!}
                                     <span class="marks">[1]</span>
                                     @if($src = $q->imageUrl)
                                         <div class="question-image">
@@ -419,7 +424,7 @@
                                             @foreach($q->options->values() as $oi => $opt)
                                                 <td>
                                                     <div class="option-line">
-                                                        <span class="option-label">{{ chr(65 + $oi) }}.</span> {{ $opt->content }}
+                                                        <span class="option-label">{{ chr(65 + $oi) }}.</span> {!! \App\Support\RichContent::pdf($opt->content) !!}
                                                     </div>
                                                 </td>
                                                 @if($oi % 2 === 1 && $oi !== $q->options->count() - 1)
@@ -436,7 +441,7 @@
             @endif
 
             @if($theory->isNotEmpty())
-                <div class="theory-section">
+                <div class="theory-section {{ $mcqs->isNotEmpty() ? 'page-break' : '' }}">
                     <div class="section-title">Section B: Theory</div>
                     <div class="section-note">Answer all questions clearly. Show all necessary workings.</div>
 
@@ -447,7 +452,7 @@
                                 <div class="question-row">
                                     <div class="question-no">{{ $mcqs->count() + $index + 1 }}.</div>
                                     <div class="question-body">
-                                        {!! nl2br(e($q->printableContent())) !!}
+                                        {!! $q->printableHtml() !!}
                                         <span class="marks">[{{ $qm }}]</span>
                                         @if($src = $q->imageUrl)
                                             <div class="question-image">

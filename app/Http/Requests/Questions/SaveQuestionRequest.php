@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Questions;
 
+use App\Support\RichContent;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
@@ -33,6 +34,10 @@ class SaveQuestionRequest extends FormRequest
     {
         $validator->after(function (Validator $validator): void {
             $type = $this->input('type');
+            if (RichContent::text($this->input('content')) === '') {
+                $validator->errors()->add('content', 'Question content is required.');
+            }
+
             $options = $this->decodedArrayInput('options');
             $markingScheme = $this->decodedArrayInput('marking_scheme');
 
@@ -46,7 +51,7 @@ class SaveQuestionRequest extends FormRequest
                 $correctCount = 0;
 
                 foreach ($options as $index => $option) {
-                    if (! is_array($option) || trim((string) ($option['content'] ?? '')) === '') {
+                    if (! is_array($option) || RichContent::text($option['content'] ?? '') === '') {
                         $validator->errors()->add("options.$index.content", 'Each option must include content.');
                     }
 
@@ -68,7 +73,7 @@ class SaveQuestionRequest extends FormRequest
                 }
 
                 foreach ($markingScheme as $index => $item) {
-                    if (! is_array($item) || trim((string) ($item['point'] ?? '')) === '') {
+                    if (! is_array($item) || RichContent::text($item['point'] ?? '') === '') {
                         $validator->errors()->add("marking_scheme.$index.point", 'Each marking point must include a description.');
                     }
 
@@ -90,10 +95,12 @@ class SaveQuestionRequest extends FormRequest
 
         return [
             ...$validated,
+            'content' => RichContent::sanitize($validated['content'] ?? ''),
+            'explanation' => RichContent::sanitize($validated['explanation'] ?? ''),
             'image' => $this->file('image'),
             'remove_image' => $this->boolean('remove_image'),
-            'options' => $this->decodedArrayInput('options'),
-            'marking_scheme' => $this->decodedArrayInput('marking_scheme'),
+            'options' => $this->sanitizeOptions($this->decodedArrayInput('options')),
+            'marking_scheme' => $this->sanitizeMarkingScheme($this->decodedArrayInput('marking_scheme')),
         ];
     }
 
@@ -111,5 +118,29 @@ class SaveQuestionRequest extends FormRequest
         }
 
         return is_array($value) ? $value : [];
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $options
+     * @return array<int, array<string, mixed>>
+     */
+    private function sanitizeOptions(array $options): array
+    {
+        return array_map(fn (array $option) => [
+            ...$option,
+            'content' => RichContent::sanitize($option['content'] ?? ''),
+        ], $options);
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $items
+     * @return array<int, array<string, mixed>>
+     */
+    private function sanitizeMarkingScheme(array $items): array
+    {
+        return array_map(fn (array $item) => [
+            ...$item,
+            'point' => RichContent::sanitize($item['point'] ?? ''),
+        ], $items);
     }
 }

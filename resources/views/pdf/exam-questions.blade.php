@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <title>{{ $title }}</title>
     <style>
+        {!! file_get_contents(base_path('node_modules/katex/dist/katex.min.css')) ?: '' !!}
         @page { margin: 15mm 14mm 16mm; }
         body { font-family: 'DejaVu Sans', sans-serif; font-size: 10pt; line-height: 1.45; color: #111; }
 
@@ -24,7 +25,7 @@
 
         .section-title { margin: 12px 0 4px; font-size: 10pt; font-weight: bold; text-transform: uppercase; color: #084117; }
         .section-note { margin: 0 0 8px; font-size: 8.5pt; color: #555; }
-        .theory-section { page-break-before: always; }
+        .theory-section.page-break { page-break-before: always; }
 
         .question-list { margin: 0; padding: 0; }
         .question-item { margin: 0 0 9px; page-break-inside: avoid; }
@@ -39,6 +40,9 @@
         .options-table td { width: 50%; padding: 2px 8px 2px 0; vertical-align: top; }
         .option-line { padding-left: 14px; text-indent: -14px; }
         .option-label { font-weight: bold; }
+        .katex { font-size: 1em; }
+        .katex-display { margin: 4px 0; text-align: center; }
+        .pdf-math-fallback { font-family: 'DejaVu Sans Mono', monospace; }
 
         .footer { margin-top: 14px; padding-top: 6px; border-top: 1px solid #ccc; text-align: center; font-size: 7.5pt; color: #777; }
         .end { margin-top: 12px; text-align: center; font-size: 8pt; font-weight: bold; color: #084117; }
@@ -81,7 +85,7 @@
                 <div class="question-row">
                     <div class="question-no">{{ $index + 1 }}.</div>
                     <div class="question-body">
-                        {!! nl2br(e($q->printableContent())) !!}
+                        {!! $q->printableHtml() !!}
                         <span class="marks">[1]</span>
                         @if($src = $q->imagePdfSource())
                             <div class="question-image">
@@ -93,7 +97,7 @@
                                 @foreach($q->options->values() as $oi => $opt)
                                     <td>
                                         <div class="option-line">
-                                            <span class="option-label">{{ chr(65 + $oi) }}.</span> {{ $opt->content }}
+                                            <span class="option-label">{{ chr(65 + $oi) }}.</span> {!! \App\Support\RichContent::pdf($opt->content) !!}
                                         </div>
                                     </td>
                                     @if($oi % 2 === 1 && $oi !== $q->options->count() - 1)
@@ -110,7 +114,7 @@
 @endif
 
 @if($theory->isNotEmpty())
-    <div class="theory-section">
+    <div class="theory-section {{ $mcqs->isNotEmpty() ? 'page-break' : '' }}">
         <div class="section-title">Section B: Theory</div>
         <div class="section-note">Answer all questions clearly. Show all necessary workings.</div>
 
@@ -121,7 +125,7 @@
                 <div class="question-row">
                     <div class="question-no">{{ $mcqs->count() + $index + 1 }}.</div>
                     <div class="question-body">
-                        {!! nl2br(e($q->printableContent())) !!}
+                        {!! $q->printableHtml() !!}
                         <span class="marks">[{{ $qm }}]</span>
                         @if($src = $q->imagePdfSource())
                             <div class="question-image">

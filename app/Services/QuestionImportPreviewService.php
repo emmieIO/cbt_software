@@ -30,7 +30,7 @@ class QuestionImportPreviewService
         $reader->open($file->getRealPath());
 
         $rows = [];
-        $subjectNames = [];
+        $subjectKeys = [];
         $topicNames = [];
 
         foreach ($reader->getSheetIterator() as $sheet) {
@@ -52,7 +52,11 @@ class QuestionImportPreviewService
                 $rows[] = $previewRow;
 
                 if (! empty($previewRow['subject_name'])) {
-                    $subjectNames[$previewRow['subject_name']] = true;
+                    $level = $previewRow['level'] ?? 'js';
+                    $subjectKeys[$previewRow['subject_name'].'::'.$level] = [
+                        'name' => $previewRow['subject_name'],
+                        'level' => $level,
+                    ];
                 }
                 if (! empty($previewRow['topic_name'])) {
                     $topicNames[$previewRow['topic_name']] = true;
@@ -62,10 +66,19 @@ class QuestionImportPreviewService
 
         $reader->close();
 
-        $existingSubjects = Subject::query()
-            ->whereIn('name', array_keys($subjectNames))
-            ->pluck('name')
-            ->toArray();
+        $existingSubjects = $subjectKeys === []
+            ? []
+            : Subject::query()
+                ->where(function ($query) use ($subjectKeys) {
+                    foreach ($subjectKeys as $subject) {
+                        $query->orWhere(fn ($subjectQuery) => $subjectQuery
+                            ->where('name', $subject['name'])
+                            ->where('level', $subject['level']));
+                    }
+                })
+                ->get(['name', 'level'])
+                ->map(fn (Subject $subject) => $subject->name.'::'.$subject->level)
+                ->all();
         $existingTopics = Topic::query()
             ->whereIn('name', array_keys($topicNames))
             ->pluck('name')
@@ -76,7 +89,10 @@ class QuestionImportPreviewService
             'total' => count($rows),
             'valid' => count(array_filter($rows, fn ($row) => $row['valid'])),
             'errors' => count(array_filter($rows, fn ($row) => ! $row['valid'])),
-            'new_subjects' => array_values(array_diff(array_keys($subjectNames), $existingSubjects)),
+            'new_subjects' => array_values(array_map(
+                fn (array $subject) => $subject['name'].' ('.strtoupper($subject['level']).')',
+                array_intersect_key($subjectKeys, array_flip(array_diff(array_keys($subjectKeys), $existingSubjects))),
+            )),
             'new_topics' => array_values(array_diff(array_keys($topicNames), $existingTopics)),
         ];
     }

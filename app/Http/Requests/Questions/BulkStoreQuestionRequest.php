@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Questions;
 
+use App\Support\RichContent;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
@@ -41,6 +42,10 @@ class BulkStoreQuestionRequest extends FormRequest
                 $options = is_array($question['options'] ?? null) ? $question['options'] : [];
                 $markingScheme = is_array($question['marking_scheme'] ?? null) ? $question['marking_scheme'] : [];
 
+                if (RichContent::text($question['content'] ?? '') === '') {
+                    $validator->errors()->add("questions.$index.content", 'Question content is required.');
+                }
+
                 if ($type === 'multiple_choice') {
                     if (count($options) !== 4) {
                         $validator->errors()->add("questions.$index.options", 'Multiple choice questions must have exactly 4 options.');
@@ -50,11 +55,23 @@ class BulkStoreQuestionRequest extends FormRequest
                     if ($correctCount !== 1) {
                         $validator->errors()->add("questions.$index.options", 'Multiple choice questions must have exactly one correct answer.');
                     }
+
+                    foreach ($options as $optionIndex => $option) {
+                        if (RichContent::text($option['content'] ?? '') === '') {
+                            $validator->errors()->add("questions.$index.options.$optionIndex.content", 'Each option must include content.');
+                        }
+                    }
                 }
 
                 if ($type === 'theory') {
                     if ($markingScheme === []) {
                         $validator->errors()->add("questions.$index.marking_scheme", 'Theory questions must include at least one marking point.');
+                    }
+
+                    foreach ($markingScheme as $pointIndex => $item) {
+                        if (RichContent::text($item['point'] ?? '') === '') {
+                            $validator->errors()->add("questions.$index.marking_scheme.$pointIndex.point", 'Each marking point must include a description.');
+                        }
                     }
                 }
             }
@@ -69,6 +86,18 @@ class BulkStoreQuestionRequest extends FormRequest
         /** @var array{questions: array<int, array<string, mixed>>} $validated */
         $validated = $this->validated();
 
-        return $validated['questions'];
+        return array_map(function (array $question) {
+            $question['content'] = RichContent::sanitize($question['content'] ?? '');
+            $question['options'] = array_map(fn (array $option) => [
+                ...$option,
+                'content' => RichContent::sanitize($option['content'] ?? ''),
+            ], $question['options'] ?? []);
+            $question['marking_scheme'] = array_map(fn (array $item) => [
+                ...$item,
+                'point' => RichContent::sanitize($item['point'] ?? ''),
+            ], $question['marking_scheme'] ?? []);
+
+            return $question;
+        }, $validated['questions']);
     }
 }

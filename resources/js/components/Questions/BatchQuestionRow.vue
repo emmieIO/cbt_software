@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
+import RichContentEditor from '@/components/Questions/RichContentEditor.vue';
 
 type TopicOption = { id: string; name: string };
 type SubjectOption = { id: string; name: string; level?: string | null; topics: TopicOption[] };
@@ -31,6 +32,12 @@ const emit = defineEmits<{
     remove: [];
     updateRow: [row: QuestionDraft];
 }>();
+
+const collapsed = ref(false);
+
+const toggleCollapse = () => {
+    collapsed.value = !collapsed.value;
+};
 
 const optionLabels = ['A', 'B', 'C', 'D'] as const;
 
@@ -106,28 +113,64 @@ const removeMarkingPoint = (index: number) => {
 
 <template>
     <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-green-900/60 dark:bg-green-950/60 dark:shadow-none">
-        <div class="flex items-center justify-between">
-            <div>
-                <h2 class="text-sm font-bold text-gray-900 dark:text-gray-100">Question {{ index + 1 }}</h2>
-                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Fill this question like a normal form, then add or remove cards as needed.</p>
+        <div class="flex cursor-pointer items-center justify-between" @click="toggleCollapse">
+            <div class="flex items-center gap-3">
+                <svg
+                    class="size-4 shrink-0 text-gray-400 transition-transform duration-200"
+                    :class="collapsed ? '' : 'rotate-180'"
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24" height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <path d="m6 9 6 6 6-6" />
+                </svg>
+                <div>
+                    <h2 class="text-sm font-bold text-gray-900 dark:text-gray-100">Question {{ index + 1 }}</h2>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        Fill this question like a normal form, then add or remove cards as needed.
+                    </p>
+                </div>
             </div>
-            <button type="button" @click="emit('remove')" class="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 dark:border-red-900/40 dark:hover:bg-red-950/30">
+            <button
+                type="button"
+                @click.stop="emit('remove')"
+                class="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 dark:border-red-900/40 dark:hover:bg-red-950/30"
+            >
                 Remove
             </button>
         </div>
 
-        <div class="mt-5 rounded-xl border border-gray-200 p-4 dark:border-green-900/60">
+        <Transition name="collapse">
+            <div v-show="!collapsed">
+                <div class="mt-5 rounded-xl border border-gray-200 p-4 dark:border-green-900/60">
             <div class="flex gap-4">
-                <label class="flex cursor-pointer items-center gap-3 rounded-lg border-2 p-4 transition-colors"
-                    :class="row.type === 'multiple_choice' ? 'border-primary bg-primary/5' : 'border-gray-200 hover:border-gray-300 dark:border-green-900/60 dark:hover:border-gray-600'">
+                <label
+                    class="flex cursor-pointer items-center gap-3 rounded-lg border-2 p-4 transition-colors"
+                    :class="
+                        row.type === 'multiple_choice'
+                            ? 'border-primary bg-primary/5'
+                            : 'border-gray-200 hover:border-gray-300 dark:border-green-900/60 dark:hover:border-gray-600'
+                    "
+                >
                     <input :checked="row.type === 'multiple_choice'" type="radio" class="text-primary" @change="setType('multiple_choice')" />
                     <div>
                         <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">Multiple Choice</p>
                         <p class="text-xs text-gray-500 dark:text-gray-400">Four options with one correct answer</p>
                     </div>
                 </label>
-                <label class="flex cursor-pointer items-center gap-3 rounded-lg border-2 p-4 transition-colors"
-                    :class="row.type === 'theory' ? 'border-primary bg-primary/5' : 'border-gray-200 hover:border-gray-300 dark:border-green-900/60 dark:hover:border-gray-600'">
+                <label
+                    class="flex cursor-pointer items-center gap-3 rounded-lg border-2 p-4 transition-colors"
+                    :class="
+                        row.type === 'theory'
+                            ? 'border-primary bg-primary/5'
+                            : 'border-gray-200 hover:border-gray-300 dark:border-green-900/60 dark:hover:border-gray-600'
+                    "
+                >
                     <input :checked="row.type === 'theory'" type="radio" class="text-primary" @change="setType('theory')" />
                     <div>
                         <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">Theory</p>
@@ -156,7 +199,12 @@ const removeMarkingPoint = (index: number) => {
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Topic</label>
-                    <select :key="`${row.level}-${row.subject_id}`" :value="row.topic_id" class="mt-1" @change="updateRow({ topic_id: ($event.target as HTMLSelectElement).value })">
+                    <select
+                        :key="`${row.level}-${row.subject_id}`"
+                        :value="row.topic_id"
+                        class="mt-1"
+                        @change="updateRow({ topic_id: ($event.target as HTMLSelectElement).value })"
+                    >
                         <option value="" disabled>Select topic</option>
                         <option v-for="topic in filteredTopics" :key="topic.id" :value="topic.id">{{ topic.name }}</option>
                     </select>
@@ -169,7 +217,12 @@ const removeMarkingPoint = (index: number) => {
             <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">Question</h3>
             <div class="mt-4">
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Question text</label>
-                <textarea :value="row.content" rows="4" class="mt-1" placeholder="Enter the question text..." @input="updateRow({ content: ($event.target as HTMLTextAreaElement).value })" />
+                <RichContentEditor
+                    :model-value="row.content"
+                    class="mt-1"
+                    placeholder="Enter the question text..."
+                    @update:model-value="updateRow({ content: $event })"
+                />
                 <p v-if="rowErrors?.content" class="mt-1 text-xs text-red-600">{{ rowErrors.content }}</p>
             </div>
         </div>
@@ -180,12 +233,30 @@ const removeMarkingPoint = (index: number) => {
             <p v-if="rowErrors?.options" class="mt-2 text-xs text-red-600">{{ rowErrors.options }}</p>
 
             <div class="mt-4 space-y-3">
-                <div v-for="(option, index) in row.options" :key="index" class="flex items-center gap-3 rounded-lg border border-gray-200 p-3 dark:border-green-900/60"
-                    :class="option.is_correct ? 'border-green-300 bg-green-50 dark:bg-green-950/20' : ''">
-                    <span class="flex size-7 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-bold text-gray-600 dark:bg-green-900/70 dark:text-gray-100">
+                <div
+                    v-for="(option, index) in row.options"
+                    :key="index"
+                    class="flex items-center gap-3 rounded-lg border border-gray-200 p-3 dark:border-green-900/60"
+                    :class="option.is_correct ? 'border-green-300 bg-green-50 dark:bg-green-950/20' : ''"
+                >
+                    <span
+                        class="flex size-7 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-bold text-gray-600 dark:bg-green-900/70 dark:text-gray-100"
+                    >
                         {{ optionLabels[index] }}
                     </span>
-                    <input :value="option.content" type="text" class="flex-1" :placeholder="`Option ${optionLabels[index]}`" @input="updateRow({ options: row.options.map((currentOption, optionIndex) => optionIndex === index ? { ...currentOption, content: ($event.target as HTMLInputElement).value } : currentOption) })" />
+                    <RichContentEditor
+                        :model-value="option.content"
+                        class="min-w-64 flex-1"
+                        :placeholder="`Option ${optionLabels[index]}`"
+                        compact
+                        @update:model-value="
+                            updateRow({
+                                options: row.options.map((currentOption, optionIndex) =>
+                                    optionIndex === index ? { ...currentOption, content: $event } : currentOption,
+                                ),
+                            })
+                        "
+                    />
                     <label class="inline-flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
                         <input :checked="option.is_correct" type="radio" @change="setCorrectOption(index)" />
                         Correct
@@ -200,19 +271,75 @@ const removeMarkingPoint = (index: number) => {
                     <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">Marking Scheme</h3>
                     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Add one or more expected points.</p>
                 </div>
-                <button type="button" @click="addMarkingPoint" class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-green-800/60 dark:text-gray-200 dark:hover:bg-green-950/55">
+                <button
+                    type="button"
+                    @click="addMarkingPoint"
+                    class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-green-800/60 dark:text-gray-200 dark:hover:bg-green-950/55"
+                >
                     + Add point
                 </button>
             </div>
             <p v-if="rowErrors?.marking_scheme" class="mt-2 text-xs text-red-600">{{ rowErrors.marking_scheme }}</p>
 
             <div class="mt-4 space-y-3">
-                <div v-for="(item, index) in row.marking_scheme" :key="index" class="flex items-center gap-3 rounded-lg border border-gray-200 p-3 dark:border-green-900/60">
-                    <input :value="item.point" type="text" class="flex-1" placeholder="Expected point..." @input="updateRow({ marking_scheme: row.marking_scheme.map((currentItem, itemIndex) => itemIndex === index ? { ...currentItem, point: ($event.target as HTMLInputElement).value } : currentItem) })" />
-                    <input :value="item.weight" type="number" min="1" class="w-24" placeholder="Weight" @input="updateRow({ marking_scheme: row.marking_scheme.map((currentItem, itemIndex) => itemIndex === index ? { ...currentItem, weight: Number(($event.target as HTMLInputElement).value) || 1 } : currentItem) })" />
+                <div
+                    v-for="(item, index) in row.marking_scheme"
+                    :key="index"
+                    class="flex items-center gap-3 rounded-lg border border-gray-200 p-3 dark:border-green-900/60"
+                >
+                    <RichContentEditor
+                        :model-value="item.point"
+                        class="min-w-64 flex-1"
+                        placeholder="Expected point..."
+                        compact
+                        @update:model-value="
+                            updateRow({
+                                marking_scheme: row.marking_scheme.map((currentItem, itemIndex) =>
+                                    itemIndex === index ? { ...currentItem, point: $event } : currentItem,
+                                ),
+                            })
+                        "
+                    />
+                    <input
+                        :value="item.weight"
+                        type="number"
+                        min="1"
+                        class="w-24"
+                        placeholder="Weight"
+                        @input="
+                            updateRow({
+                                marking_scheme: row.marking_scheme.map((currentItem, itemIndex) =>
+                                    itemIndex === index
+                                        ? { ...currentItem, weight: Number(($event.target as HTMLInputElement).value) || 1 }
+                                        : currentItem,
+                                ),
+                            })
+                        "
+                    />
                     <button type="button" @click="removeMarkingPoint(index)" class="text-xs text-red-600 hover:underline">Remove</button>
                 </div>
             </div>
         </div>
+        </div>
+        </Transition>
     </section>
 </template>
+
+<style scoped>
+.collapse-enter-active,
+.collapse-leave-active {
+    transition: all 0.2s ease;
+    overflow: hidden;
+}
+.collapse-enter-from,
+.collapse-leave-to {
+    opacity: 0;
+    max-height: 0;
+    margin-top: 0;
+}
+.collapse-enter-to,
+.collapse-leave-from {
+    opacity: 1;
+    max-height: 2000px;
+}
+</style>

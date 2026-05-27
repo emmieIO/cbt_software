@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, computed, onMounted } from 'vue';
+import RichContentViewer from '@/components/Questions/RichContentViewer.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 
 const props = defineProps<{
@@ -23,8 +24,12 @@ const loadingPool = ref(false);
 const poolError = ref('');
 
 interface PoolQ {
-    id: string; content: string; used_count: number; topic: string;
-    type: string; last_used_at: string | null;
+    id: string;
+    content: string;
+    used_count: number;
+    topic: string;
+    type: string;
+    last_used_at: string | null;
     options?: Array<{ id: string; content: string; is_correct: boolean }>;
     marking_scheme?: Array<{ point: string; weight: number }>;
 }
@@ -58,13 +63,14 @@ const autoSelect = () => {
     selectedIds.value = new Set();
     const leastUsedMcqs = [...pool.value.mcqs].sort((a, b) => a.used_count - b.used_count).slice(0, mcqCount.value);
     const leastUsedTheory = [...pool.value.theory].sort((a, b) => a.used_count - b.used_count).slice(0, theoryCount.value);
-    leastUsedMcqs.forEach(q => selectedIds.value.add(q.id));
-    leastUsedTheory.forEach(q => selectedIds.value.add(q.id));
+    leastUsedMcqs.forEach((q) => selectedIds.value.add(q.id));
+    leastUsedTheory.forEach((q) => selectedIds.value.add(q.id));
 };
 
 const toggleQuestion = (id: string) => {
     const set = new Set(selectedIds.value);
-    if (set.has(id)) set.delete(id); else set.add(id);
+    if (set.has(id)) set.delete(id);
+    else set.add(id);
     selectedIds.value = set;
 };
 
@@ -84,11 +90,13 @@ const generateExam = () => {
         question_ids: [...selectedIds.value],
     };
 
-    const endpoint = isEditMode.value && props.exam?.id
-        ? `/exams/${props.exam.id}/questions`
-        : '/exams/generate';
+    const endpoint = isEditMode.value && props.exam?.id ? `/exams/${props.exam.id}/questions` : '/exams/generate';
 
-    router.post(endpoint, payload, { onFinish: () => { submitting.value = false; } });
+    router.post(endpoint, payload, {
+        onFinish: () => {
+            submitting.value = false;
+        },
+    });
 };
 
 const download = (examId: string, type: string) => window.open(`/exams/${examId}/download/${type}`, '_blank');
@@ -161,23 +169,53 @@ onMounted(async () => {
 
             <!-- Already generated exam view -->
             <template v-if="isReadOnlyExam">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:grid-cols-4">
-                    <div class="card p-4"><p class="text-xs font-semibold text-gray-500 uppercase">Subject</p><p class="mt-1 text-lg font-bold text-gray-900 dark:text-gray-100">{{ exam.subject }}</p></div>
-                    <div class="card p-4"><p class="text-xs font-semibold text-gray-500 uppercase">Level</p><p class="mt-1 text-lg font-bold text-gray-900 dark:text-gray-100">{{ exam.level }}</p></div>
-                    <div class="card p-4"><p class="text-xs font-semibold text-gray-500 uppercase">Questions</p><p class="mt-1 text-lg font-bold text-gray-900 dark:text-gray-100">{{ exam.mcq_count + exam.theory_count }}</p></div>
-                    <div class="card p-4"><p class="text-xs font-semibold text-gray-500 uppercase">Marks</p><p class="mt-1 text-lg font-bold text-primary">{{ exam.totalMarks }}</p></div>
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:grid-cols-4">
+                    <div class="card p-4">
+                        <p class="text-xs font-semibold text-gray-500 uppercase">Subject</p>
+                        <p class="mt-1 text-lg font-bold text-gray-900 dark:text-gray-100">{{ exam.subject }}</p>
+                    </div>
+                    <div class="card p-4">
+                        <p class="text-xs font-semibold text-gray-500 uppercase">Level</p>
+                        <p class="mt-1 text-lg font-bold text-gray-900 dark:text-gray-100">{{ exam.level }}</p>
+                    </div>
+                    <div class="card p-4">
+                        <p class="text-xs font-semibold text-gray-500 uppercase">Questions</p>
+                        <p class="mt-1 text-lg font-bold text-gray-900 dark:text-gray-100">{{ exam.mcq_count + exam.theory_count }}</p>
+                    </div>
+                    <div class="card p-4">
+                        <p class="text-xs font-semibold text-gray-500 uppercase">Marks</p>
+                        <p class="mt-1 text-lg font-bold text-primary">{{ exam.totalMarks }}</p>
+                    </div>
                 </div>
 
-                <div class="rounded-xl border border-gray-200 dark:border-green-900/60 bg-white dark:bg-green-950/60 p-6 shadow-sm">
-                    <h2 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-4">Download Examination Papers</h2>
+                <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-green-900/60 dark:bg-green-950/60">
+                    <h2 class="mb-4 text-sm font-bold text-gray-900 dark:text-gray-100">Download Examination Papers</h2>
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                        <div v-for="item in [{id:'questions',label:'Question Paper',desc:'For students'},{id:'answer-sheet',label:'Answer Sheet',desc:'MCQ response sheet'},{id:'answer-key',label:'Answer Key',desc:'MCQ answers'},{id:'marking-guide',label:'Marking Guide',desc:'Theory marking scheme'}]" :key="item.id"
-                            class="rounded-xl border-2 border-gray-200 dark:border-green-900/60 bg-white dark:bg-green-950/60 p-6 text-center shadow-sm">
+                        <div
+                            v-for="item in [
+                                { id: 'questions', label: 'Question Paper', desc: 'For students' },
+                                { id: 'answer-sheet', label: 'Answer Sheet', desc: 'MCQ response sheet' },
+                                { id: 'answer-key', label: 'Answer Key', desc: 'MCQ answers' },
+                                { id: 'marking-guide', label: 'Marking Guide', desc: 'Theory marking scheme' },
+                            ]"
+                            :key="item.id"
+                            class="rounded-xl border-2 border-gray-200 bg-white p-6 text-center shadow-sm dark:border-green-900/60 dark:bg-green-950/60"
+                        >
                             <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">{{ item.label }}</h3>
                             <p class="mt-1 text-xs text-gray-500">{{ item.desc }}</p>
                             <div class="mt-3 flex justify-center gap-2">
-                                <button @click="preview(exam.id, item.id, item.label)" class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50 dark:border-green-800/60 dark:bg-green-950/45 dark:text-gray-200 dark:hover:bg-green-950/70">View</button>
-                                <button @click="download(exam.id, item.id)" class="rounded-lg bg-primary px-3 py-1.5 text-xs text-white hover:bg-primary/90">Download</button>
+                                <button
+                                    @click="preview(exam.id, item.id, item.label)"
+                                    class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50 dark:border-green-800/60 dark:bg-green-950/45 dark:text-gray-200 dark:hover:bg-green-950/70"
+                                >
+                                    View
+                                </button>
+                                <button
+                                    @click="download(exam.id, item.id)"
+                                    class="rounded-lg bg-primary px-3 py-1.5 text-xs text-white hover:bg-primary/90"
+                                >
+                                    Download
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -190,14 +228,16 @@ onMounted(async () => {
                             {{ exam.mcq_count + exam.theory_count }} total
                         </span>
                     </div>
-                    <div class="p-5 space-y-6">
+                    <div class="space-y-6 p-5">
                         <div v-if="exam.mcqs.length" class="space-y-3">
                             <div class="flex items-center justify-between gap-3">
                                 <div>
                                     <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Multiple Choice</h3>
                                     <p class="text-xs text-gray-500 dark:text-gray-400">Objective questions and answer options.</p>
                                 </div>
-                                <span class="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-500/15 dark:text-blue-200">
+                                <span
+                                    class="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-500/15 dark:text-blue-200"
+                                >
                                     {{ exam.mcqs.length }} questions
                                 </span>
                             </div>
@@ -208,11 +248,16 @@ onMounted(async () => {
                                 class="overflow-hidden rounded-xl border border-gray-200 bg-gray-50/80 shadow-sm dark:border-green-900/60 dark:bg-green-950/45"
                             >
                                 <div class="flex items-start gap-4 p-4">
-                                    <div class="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">
+                                    <div
+                                        class="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white"
+                                    >
                                         {{ i + 1 }}
                                     </div>
                                     <div class="min-w-0 flex-1">
-                                        <div v-if="parseQuestionLead(q.content).subject || parseQuestionLead(q.content).context" class="mb-2 flex flex-wrap gap-2">
+                                        <div
+                                            v-if="parseQuestionLead(q.content).subject || parseQuestionLead(q.content).context"
+                                            class="mb-2 flex flex-wrap gap-2"
+                                        >
                                             <span
                                                 v-if="parseQuestionLead(q.content).subject"
                                                 class="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary"
@@ -226,34 +271,36 @@ onMounted(async () => {
                                                 {{ parseQuestionLead(q.content).context }}
                                             </span>
                                         </div>
-                                        <p class="text-sm leading-6 text-gray-800 dark:text-gray-100">
-                                            {{ parseQuestionLead(q.content).body }}
-                                        </p>
+                                        <RichContentViewer :content="parseQuestionLead(q.content).body" />
                                     </div>
                                 </div>
                                 <div
                                     v-if="q.options"
-                                    class="grid grid-cols-1 gap-2 border-t border-gray-200 bg-white/70 px-4 py-4 dark:border-green-900/60 dark:bg-green-950/60 sm:grid-cols-2"
+                                    class="grid grid-cols-1 gap-2 border-t border-gray-200 bg-white/70 px-4 py-4 sm:grid-cols-2 dark:border-green-900/60 dark:bg-green-950/60"
                                 >
                                     <div
                                         v-for="(opt, oi) in q.options"
                                         :key="opt.id"
                                         class="flex items-start gap-3 rounded-lg border px-3 py-2.5 text-xs transition-colors"
-                                        :class="opt.is_correct
-                                            ? 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200'
-                                            : 'border-gray-200 bg-white text-gray-600 dark:border-green-900/60 dark:bg-green-950/55 dark:text-gray-300'"
+                                        :class="
+                                            opt.is_correct
+                                                ? 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200'
+                                                : 'border-gray-200 bg-white text-gray-600 dark:border-green-900/60 dark:bg-green-950/55 dark:text-gray-300'
+                                        "
                                     >
                                         <span
                                             class="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold"
-                                            :class="opt.is_correct
-                                                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200'
-                                                : 'bg-gray-100 text-gray-600 dark:bg-green-900/70 dark:text-gray-200'"
+                                            :class="
+                                                opt.is_correct
+                                                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200'
+                                                    : 'bg-gray-100 text-gray-600 dark:bg-green-900/70 dark:text-gray-200'
+                                            "
                                         >
                                             {{ ['A', 'B', 'C', 'D'][oi] }}
                                         </span>
                                         <div class="min-w-0 flex-1">
-                                            <p>{{ opt.content }}</p>
-                                            <p v-if="opt.is_correct" class="mt-1 text-[10px] font-semibold uppercase tracking-wide">Correct answer</p>
+                                            <RichContentViewer :content="opt.content" />
+                                            <p v-if="opt.is_correct" class="mt-1 text-[10px] font-semibold tracking-wide uppercase">Correct answer</p>
                                         </div>
                                     </div>
                                 </div>
@@ -266,7 +313,9 @@ onMounted(async () => {
                                     <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Theory</h3>
                                     <p class="text-xs text-gray-500 dark:text-gray-400">Long-form questions for written responses.</p>
                                 </div>
-                                <span class="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-500/15 dark:text-amber-200">
+                                <span
+                                    class="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-500/15 dark:text-amber-200"
+                                >
                                     {{ exam.theory.length }} questions
                                 </span>
                             </div>
@@ -277,11 +326,16 @@ onMounted(async () => {
                                 class="rounded-xl border border-gray-200 bg-gray-50/80 p-4 shadow-sm dark:border-green-900/60 dark:bg-green-950/45"
                             >
                                 <div class="flex items-start gap-4">
-                                    <div class="flex size-9 shrink-0 items-center justify-center rounded-full bg-amber-500 text-sm font-bold text-white">
+                                    <div
+                                        class="flex size-9 shrink-0 items-center justify-center rounded-full bg-amber-500 text-sm font-bold text-white"
+                                    >
                                         {{ exam.mcqs.length + i + 1 }}
                                     </div>
                                     <div class="min-w-0 flex-1">
-                                        <div v-if="parseQuestionLead(q.content).subject || parseQuestionLead(q.content).context" class="mb-2 flex flex-wrap gap-2">
+                                        <div
+                                            v-if="parseQuestionLead(q.content).subject || parseQuestionLead(q.content).context"
+                                            class="mb-2 flex flex-wrap gap-2"
+                                        >
                                             <span
                                                 v-if="parseQuestionLead(q.content).subject"
                                                 class="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary"
@@ -295,9 +349,7 @@ onMounted(async () => {
                                                 {{ parseQuestionLead(q.content).context }}
                                             </span>
                                         </div>
-                                        <p class="text-sm leading-6 text-gray-800 dark:text-gray-100">
-                                            {{ parseQuestionLead(q.content).body }}
-                                        </p>
+                                        <RichContentViewer :content="parseQuestionLead(q.content).body" />
                                     </div>
                                 </div>
                             </div>
@@ -310,14 +362,21 @@ onMounted(async () => {
             <template v-else>
                 <div class="card p-6">
                     <h2 class="text-sm font-bold text-gray-900 dark:text-gray-100">Exam Details</h2>
-                    <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div class="col-span-2">
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Exam Title</label>
                             <input v-model="form.title" type="text" class="mt-1" placeholder="e.g., First Term Examination" />
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Level</label>
-                            <select v-model="form.level" class="mt-1" @change="form.subject_id = ''; pool = { mcqs: [], theory: [] }">
+                            <select
+                                v-model="form.level"
+                                class="mt-1"
+                                @change="
+                                    form.subject_id = '';
+                                    pool = { mcqs: [], theory: [] };
+                                "
+                            >
                                 <option v-for="l in levels" :key="l.value" :value="l.value">{{ l.label }}</option>
                             </select>
                         </div>
@@ -338,50 +397,115 @@ onMounted(async () => {
 
                 <!-- Pool browser -->
                 <div v-if="form.subject_id && form.level" class="card p-6">
-                    <div class="flex items-center justify-between mb-4">
+                    <div class="mb-4 flex items-center justify-between">
                         <h2 class="text-sm font-bold text-gray-900 dark:text-gray-100">Question Pool</h2>
-                        <button @click="loadPool" :disabled="loadingPool" class="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-white hover:bg-primary/90 disabled:opacity-50">
+                        <button
+                            @click="loadPool"
+                            :disabled="loadingPool"
+                            class="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-white hover:bg-primary/90 disabled:opacity-50"
+                        >
                             {{ loadingPool ? 'Loading...' : 'Browse Question Pool' }}
                         </button>
                     </div>
-                    <p v-if="poolError" class="text-xs text-red-600 mb-3">{{ poolError }}</p>
+                    <p v-if="poolError" class="mb-3 text-xs text-red-600">{{ poolError }}</p>
 
                     <template v-if="pool.mcqs.length || pool.theory.length">
-                        <div class="flex items-center gap-4 mb-4">
-                            <span class="text-xs text-gray-500">Total: {{ pool.mcqs.length + pool.theory.length }} questions ({{ pool.mcqs.length }} MCQ, {{ pool.theory.length }} Theory)</span>
-                            <div class="flex gap-2 ml-auto">
+                        <div class="mb-4 flex items-center gap-4">
+                            <span class="text-xs text-gray-500"
+                                >Total: {{ pool.mcqs.length + pool.theory.length }} questions ({{ pool.mcqs.length }} MCQ,
+                                {{ pool.theory.length }} Theory)</span
+                            >
+                            <div class="ml-auto flex gap-2">
                                 <label class="text-xs text-gray-500">MCQ:</label>
-                                <input v-model.number="mcqCount" type="number" min="0" :max="pool.mcqs.length" class="w-16 text-xs py-1" />
+                                <input v-model.number="mcqCount" type="number" min="0" :max="pool.mcqs.length" class="w-16 py-1 text-xs" />
                                 <label class="text-xs text-gray-500">Theory:</label>
-                                <input v-model.number="theoryCount" type="number" min="0" :max="pool.theory.length" class="w-16 text-xs py-1" />
-                                <button @click="autoSelect" class="rounded-lg border border-primary px-3 py-1 text-xs font-medium text-primary hover:bg-primary/5 dark:border-primary/60 dark:text-primary-light dark:hover:bg-primary/10">Auto Select (Least Used)</button>
+                                <input v-model.number="theoryCount" type="number" min="0" :max="pool.theory.length" class="w-16 py-1 text-xs" />
+                                <button
+                                    @click="autoSelect"
+                                    class="rounded-lg border border-primary px-3 py-1 text-xs font-medium text-primary hover:bg-primary/5 dark:border-primary/60 dark:text-primary-light dark:hover:bg-primary/10"
+                                >
+                                    Auto Select (Least Used)
+                                </button>
                             </div>
                         </div>
 
-                        <div class="flex gap-2 mb-3">
-                            <button @click="poolTab = 'all'" class="rounded-full px-3 py-1 text-xs font-medium transition-colors" :class="poolTab === 'all' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700 dark:bg-green-900/70 dark:text-gray-200 dark:hover:bg-green-900/85'">All</button>
-                            <button @click="poolTab = 'mcq'" class="rounded-full px-3 py-1 text-xs font-medium transition-colors" :class="poolTab === 'mcq' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700 dark:bg-green-900/70 dark:text-gray-200 dark:hover:bg-green-900/85'">MCQ ({{ pool.mcqs.length }})</button>
-                            <button @click="poolTab = 'theory'" class="rounded-full px-3 py-1 text-xs font-medium transition-colors" :class="poolTab === 'theory' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700 dark:bg-green-900/70 dark:text-gray-200 dark:hover:bg-green-900/85'">Theory ({{ pool.theory.length }})</button>
+                        <div class="mb-3 flex gap-2">
+                            <button
+                                @click="poolTab = 'all'"
+                                class="rounded-full px-3 py-1 text-xs font-medium transition-colors"
+                                :class="
+                                    poolTab === 'all'
+                                        ? 'bg-primary text-white'
+                                        : 'bg-gray-100 text-gray-700 dark:bg-green-900/70 dark:text-gray-200 dark:hover:bg-green-900/85'
+                                "
+                            >
+                                All
+                            </button>
+                            <button
+                                @click="poolTab = 'mcq'"
+                                class="rounded-full px-3 py-1 text-xs font-medium transition-colors"
+                                :class="
+                                    poolTab === 'mcq'
+                                        ? 'bg-primary text-white'
+                                        : 'bg-gray-100 text-gray-700 dark:bg-green-900/70 dark:text-gray-200 dark:hover:bg-green-900/85'
+                                "
+                            >
+                                MCQ ({{ pool.mcqs.length }})
+                            </button>
+                            <button
+                                @click="poolTab = 'theory'"
+                                class="rounded-full px-3 py-1 text-xs font-medium transition-colors"
+                                :class="
+                                    poolTab === 'theory'
+                                        ? 'bg-primary text-white'
+                                        : 'bg-gray-100 text-gray-700 dark:bg-green-900/70 dark:text-gray-200 dark:hover:bg-green-900/85'
+                                "
+                            >
+                                Theory ({{ pool.theory.length }})
+                            </button>
                             <span class="ml-auto text-xs font-semibold text-gray-600 dark:text-gray-300">{{ selectedIds.size }} selected</span>
                         </div>
 
-                        <div class="grid grid-cols-1 gap-2 max-h-96 overflow-y-auto">
-                            <div v-for="q in allPoolQ" :key="q.id"
+                        <div class="grid max-h-96 grid-cols-1 gap-2 overflow-y-auto">
+                            <div
+                                v-for="q in allPoolQ"
+                                :key="q.id"
                                 @click="toggleQuestion(q.id)"
-                                class="flex items-start gap-3 rounded-lg border p-3 cursor-pointer transition-colors"
-                                :class="selectedIds.has(q.id) ? 'border-primary bg-primary/5' : 'border-gray-200 dark:border-green-900/60 hover:border-gray-300'">
-                                <div class="flex size-5 shrink-0 items-center justify-center rounded border mt-0.5"
-                                    :class="selectedIds.has(q.id) ? 'bg-primary border-primary text-white' : 'border-gray-300'">
-                                    <svg v-if="selectedIds.has(q.id)" class="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                class="flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors"
+                                :class="
+                                    selectedIds.has(q.id)
+                                        ? 'border-primary bg-primary/5'
+                                        : 'border-gray-200 hover:border-gray-300 dark:border-green-900/60'
+                                "
+                            >
+                                <div
+                                    class="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded border"
+                                    :class="selectedIds.has(q.id) ? 'border-primary bg-primary text-white' : 'border-gray-300'"
+                                >
+                                    <svg
+                                        v-if="selectedIds.has(q.id)"
+                                        class="size-3"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                        stroke-width="3"
+                                    >
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                                     </svg>
                                 </div>
                                 <div class="min-w-0 flex-1">
-                                    <p class="text-sm text-gray-900 dark:text-gray-100 line-clamp-2">{{ q.content }}</p>
+                                    <RichContentViewer :content="q.content" truncate />
                                     <div class="mt-1 flex flex-wrap gap-2 text-[10px] text-gray-500">
-                                        <span class="rounded bg-gray-100 px-1.5 py-0.5 text-gray-700 dark:bg-green-900/70 dark:text-gray-200">{{ q.topic }}</span>
-                                        <span class="rounded px-1.5 py-0.5 font-semibold capitalize" :class="questionTypeClass(q.type)">{{ q.type }}</span>
-                                        <span class="rounded px-1.5 py-0.5" :class="q.used_count >= 3 ? 'bg-red-100 text-red-700' : 'bg-gray-100 dark:bg-green-900/70 text-gray-500'">
+                                        <span class="rounded bg-gray-100 px-1.5 py-0.5 text-gray-700 dark:bg-green-900/70 dark:text-gray-200">{{
+                                            q.topic
+                                        }}</span>
+                                        <span class="rounded px-1.5 py-0.5 font-semibold capitalize" :class="questionTypeClass(q.type)">{{
+                                            q.type
+                                        }}</span>
+                                        <span
+                                            class="rounded px-1.5 py-0.5"
+                                            :class="q.used_count >= 3 ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-500 dark:bg-green-900/70'"
+                                        >
                                             Used {{ q.used_count }}x
                                         </span>
                                     </div>
@@ -398,8 +522,11 @@ onMounted(async () => {
                 <!-- Generate -->
                 <div v-if="selectedIds.size > 0" class="flex items-center justify-between">
                     <span class="text-sm text-gray-500">{{ selectedIds.size }} question{{ selectedIds.size !== 1 ? 's' : '' }} selected</span>
-                    <button @click="generateExam" :disabled="submitting || !form.title || selectedIds.size === 0"
-                        class="inline-flex items-center gap-2 rounded-xl btn-primary disabled:opacity-50">
+                    <button
+                        @click="generateExam"
+                        :disabled="submitting || !form.title || selectedIds.size === 0"
+                        class="btn-primary inline-flex items-center gap-2 rounded-xl disabled:opacity-50"
+                    >
                         <span v-if="submitting" class="inline-block size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                         {{ isEditMode ? 'Save Exam Questions' : 'Generate Exam' }}
                     </button>
@@ -419,7 +546,7 @@ onMounted(async () => {
                 <div v-if="previewUrl" class="fixed inset-0 z-[120] flex flex-col bg-slate-950/90 backdrop-blur-sm">
                     <div class="flex items-center justify-between gap-4 border-b border-white/10 px-4 py-3 text-white sm:px-6">
                         <div>
-                            <p class="text-xs font-semibold uppercase tracking-[0.24em] text-white/60">Document Preview</p>
+                            <p class="text-xs font-semibold tracking-[0.24em] text-white/60 uppercase">Document Preview</p>
                             <h2 class="text-lg font-semibold">{{ previewTitle }}</h2>
                         </div>
                         <div class="flex items-center gap-2">

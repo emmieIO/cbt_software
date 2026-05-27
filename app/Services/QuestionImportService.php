@@ -21,17 +21,20 @@ class QuestionImportService
             $created = 0;
 
             foreach ($rows as $row) {
-                if (! isset($subjectCache[$row['subject_name']])) {
-                    $subjectCache[$row['subject_name']] = Subject::firstOrCreate(
-                        ['name' => $row['subject_name']],
-                        ['slug' => str($row['subject_name'])->slug(), 'level' => $defaultLevel]
+                $level = $this->effectiveLevel($row, $defaultLevel);
+                $subjectKey = strtolower($row['subject_name']).'::'.$level;
+
+                if (! isset($subjectCache[$subjectKey])) {
+                    $subjectCache[$subjectKey] = Subject::firstOrCreate(
+                        ['name' => $row['subject_name'], 'level' => $level],
+                        ['slug' => str($row['subject_name'].'-'.$level)->slug()]
                     )->id;
                 }
 
-                $topicKey = $row['subject_name'].'::'.$row['topic_name'];
+                $topicKey = $subjectKey.'::'.strtolower($row['topic_name']);
                 if (! isset($topicCache[$topicKey])) {
                     $topicCache[$topicKey] = Topic::firstOrCreate(
-                        ['name' => $row['topic_name'], 'subject_id' => $subjectCache[$row['subject_name']]],
+                        ['name' => $row['topic_name'], 'subject_id' => $subjectCache[$subjectKey]],
                         ['slug' => str($row['topic_name'])->slug()]
                     )->id;
                 }
@@ -42,7 +45,7 @@ class QuestionImportService
                     'image_path' => $row['image_url'] ?? null,
                     'explanation' => $row['explanation'] ?? null,
                     'type' => $row['type'],
-                    'level' => $row['level'] ?? $defaultLevel,
+                    'level' => $level,
                     'marking_scheme' => $row['type'] === 'theory' ? ($row['marking_scheme'] ?? []) : null,
                     'created_by' => $createdBy,
                 ]);
@@ -56,6 +59,16 @@ class QuestionImportService
 
             return $created;
         });
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     */
+    private function effectiveLevel(array $row, string $defaultLevel): string
+    {
+        $level = strtolower(trim((string) ($row['level'] ?? $defaultLevel)));
+
+        return in_array($level, ['lp', 'hp', 'js', 'ss'], true) ? $level : $defaultLevel;
     }
 
     /**
