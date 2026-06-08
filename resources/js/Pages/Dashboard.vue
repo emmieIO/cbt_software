@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
+import RichContentViewer from '@/components/Questions/RichContentViewer.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 
 const props = defineProps<{
@@ -98,7 +99,7 @@ const questionTypeClass = (type: string) =>
                 <div class="divide-y divide-gray-100">
                     <div v-for="q in recentQuestions" :key="q.id" class="flex items-center gap-4 px-5 py-3">
                         <div class="min-w-0 flex-1">
-                            <p class="truncate text-sm font-medium text-gray-900 dark:text-gray-100">{{ q.content }}</p>
+                            <RichContentViewer class="font-medium" :content="q.content" truncate />
                             <p class="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">
                                 {{ q.subject || 'No subject' }}
                                 <span class="mx-1">&middot;</span>

@@ -6,7 +6,6 @@ use App\Models\Question;
 use App\Models\Subject;
 use App\Models\Topic;
 use App\Models\User;
-use App\Support\RichContent;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -29,7 +28,7 @@ class DashboardController extends Controller
                 ->get()
                 ->map(fn ($q) => [
                     'id' => $q->id,
-                    'content' => RichContent::text($q->content),
+                    'content' => $q->content,
                     'type' => $q->type->value,
                     'used_count' => $q->used_count,
                     'subject' => $q->topic?->subject?->name,
