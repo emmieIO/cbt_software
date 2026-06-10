@@ -1,5 +1,11 @@
 <?php
 
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+require_once __DIR__.'/TestCase.php';
+
 /*
 |--------------------------------------------------------------------------
 | Test Case
@@ -12,8 +18,8 @@
 */
 
 uses(
-    Tests\TestCase::class,
-    Illuminate\Foundation\Testing\RefreshDatabase::class,
+    TestCase::class,
+    RefreshDatabase::class,
 )->in('Feature');
 
 /*
@@ -49,4 +55,3 @@ function actingAsAdmin()
 
     return test()->actingAs($user);
 }
-use App\Models\User;
