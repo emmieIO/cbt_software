@@ -18,6 +18,7 @@ class UserManagementService
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
             'role' => $data['role'],
+            'permissions' => $this->permissionsForRole($data),
         ]);
     }
 
@@ -31,6 +32,7 @@ class UserManagementService
             'username' => $data['username'],
             'email' => $data['email'],
             'role' => $data['role'],
+            'permissions' => $this->permissionsForRole($data),
         ];
 
         if (! empty($data['password'])) {
@@ -38,5 +40,18 @@ class UserManagementService
         }
 
         $user->update($payload);
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     * @return array<int, string>
+     */
+    private function permissionsForRole(array $data): array
+    {
+        if (($data['role'] ?? null) === User::ROLE_ADMIN) {
+            return [];
+        }
+
+        return array_values(array_intersect($data['permissions'] ?? [], User::QUESTION_PERMISSIONS));
     }
 }

@@ -28,6 +28,8 @@ class SaveUserRequest extends FormRequest
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($userId)],
             'password' => [$userId ? 'nullable' : 'required', 'string', 'min:6'],
             'role' => ['required', 'in:admin,uploader'],
+            'permissions' => ['nullable', 'array'],
+            'permissions.*' => ['string', Rule::in(User::QUESTION_PERMISSIONS)],
         ];
     }
 

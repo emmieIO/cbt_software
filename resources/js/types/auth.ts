@@ -8,6 +8,8 @@ export type User = {
     updated_at: string;
     roles: string[];
     permissions: string[];
+    can_create_questions: boolean;
+    can_edit_questions: boolean;
     [key: string]: unknown;
 };
 

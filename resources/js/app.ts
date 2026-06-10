@@ -1,4 +1,3 @@
-import 'preline/dist/index.js';
 import { createInertiaApp, router } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { HSStaticMethods } from 'preline';

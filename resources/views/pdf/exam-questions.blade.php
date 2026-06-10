@@ -25,7 +25,7 @@
 
         .section-title { margin: 12px 0 4px; font-size: 10pt; font-weight: bold; text-transform: uppercase; color: #084117; }
         .section-note { margin: 0 0 8px; font-size: 8.5pt; color: #555; }
-        .theory-section.page-break { page-break-before: always; }
+        .exam-section.page-break { page-break-before: always; }
 
         .question-list { margin: 0; padding: 0; }
         .question-item { margin: 0 0 9px; page-break-inside: avoid; }
@@ -75,70 +75,47 @@
     <br>Answer all questions. Write your answers neatly in the spaces or booklet provided by the invigilator.
 </div>
 
-@if($mcqs->isNotEmpty())
-    <div class="section-title">Section A: Multiple Choice</div>
-    <div class="section-note">Choose the correct option from A to D for each question.</div>
-
-    <div class="question-list">
-        @foreach($mcqs as $index => $q)
-            <div class="question-item">
-                <div class="question-row">
-                    <div class="question-no">{{ $index + 1 }}.</div>
-                    <div class="question-body">
-                        {!! $q->printableHtml() !!}
-                        <span class="marks">[1]</span>
-                        @if($src = $q->imagePdfSource())
-                            <div class="question-image">
-                                <img src="{{ $src }}" alt="Question image" />
-                            </div>
-                        @endif
-                        <table class="options-table">
-                            <tr>
-                                @foreach($q->options->values() as $oi => $opt)
-                                    <td>
-                                        <div class="option-line">
-                                            <span class="option-label">{{ chr(65 + $oi) }}.</span> {!! \App\Support\RichContent::pdf($opt->content) !!}
-                                        </div>
-                                    </td>
-                                    @if($oi % 2 === 1 && $oi !== $q->options->count() - 1)
-                                        </tr><tr>
-                                    @endif
-                                @endforeach
-                            </tr>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        @endforeach
-    </div>
-@endif
-
-@if($theory->isNotEmpty())
-    <div class="theory-section {{ $mcqs->isNotEmpty() ? 'page-break' : '' }}">
-        <div class="section-title">Section B: Theory</div>
-        <div class="section-note">Answer all questions clearly. Show all necessary workings.</div>
-
+@foreach($questionSections as $sectionIndex => $section)
+    <div class="exam-section {{ $sectionIndex > 0 ? 'page-break' : '' }}">
+        <div class="section-title">{{ $section['label'] }}: {{ $section['title'] }}</div>
+        <div class="section-note">{{ $section['note'] }}</div>
         <div class="question-list">
-        @foreach($theory as $index => $q)
-            @php $qm = collect($q->marking_scheme)->sum('weight'); @endphp
-            <div class="question-item">
-                <div class="question-row">
-                    <div class="question-no">{{ $mcqs->count() + $index + 1 }}.</div>
-                    <div class="question-body">
-                        {!! $q->printableHtml() !!}
-                        <span class="marks">[{{ $qm }}]</span>
-                        @if($src = $q->imagePdfSource())
-                            <div class="question-image">
-                                <img src="{{ $src }}" alt="Question image" />
-                            </div>
-                        @endif
+            @foreach($section['questions'] as $index => $q)
+                @php $marks = $section['type'] === 'mcq' ? 1 : collect($q->marking_scheme)->sum('weight'); @endphp
+                <div class="question-item">
+                    <div class="question-row">
+                        <div class="question-no">{{ $section['start'] + $index }}.</div>
+                        <div class="question-body">
+                            {!! $q->printableHtml() !!}
+                            <span class="marks">[{{ $marks }}]</span>
+                            @if($src = $q->imagePdfSource())
+                                <div class="question-image">
+                                    <img src="{{ $src }}" alt="Question image" />
+                                </div>
+                            @endif
+                            @if($section['type'] === 'mcq')
+                                <table class="options-table">
+                                    <tr>
+                                        @foreach($q->options->values() as $oi => $opt)
+                                            <td>
+                                                <div class="option-line">
+                                                    <span class="option-label">{{ chr(65 + $oi) }}.</span> {!! \App\Support\RichContent::pdf($opt->content) !!}
+                                                </div>
+                                            </td>
+                                            @if($oi % 2 === 1 && $oi !== $q->options->count() - 1)
+                                                </tr><tr>
+                                            @endif
+                                        @endforeach
+                                    </tr>
+                                </table>
+                            @endif
+                        </div>
                     </div>
                 </div>
-            </div>
-        @endforeach
+            @endforeach
         </div>
     </div>
-@endif
+@endforeach
 
 <div class="end">END OF EXAMINATION</div>
 <div class="footer">Chrisland Schools • {{ $date }}</div>

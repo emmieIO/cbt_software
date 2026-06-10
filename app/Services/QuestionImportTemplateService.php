@@ -40,6 +40,10 @@ class QuestionImportTemplateService
                 'English', 'Composition', 'theory', 'Write a paragraph about your school.', '', '', '', '', '', '', '',
                 'Proper structure|Good grammar|Relevant content', '3|2|2', 'js',
             ],
+            [
+                'Basic Science', 'Matter', 'short_answer', 'State one property of matter.', '', '', '', '', '', '', '',
+                'Has mass and occupies space', '1', 'js',
+            ],
         ];
     }
 }

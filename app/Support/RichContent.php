@@ -49,6 +49,18 @@ class RichContent
 
     private static function convertDelimitedMath(string $html): string
     {
+        $html = preg_replace_callback(
+            '/\\\\\[(.+?)\\\\\]/s',
+            fn (array $matches) => '<div data-type="block-math" data-latex="'.htmlspecialchars(trim($matches[1]), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"></div>',
+            $html,
+        ) ?? $html;
+
+        $html = preg_replace_callback(
+            '/\\\\\((.+?)\\\\\)/s',
+            fn (array $matches) => '<span data-type="inline-math" data-latex="'.htmlspecialchars(trim($matches[1]), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"></span>',
+            $html,
+        ) ?? $html;
+
         return preg_replace_callback(
             '/\$(?!\d+\$)(.+?)\$(?!\d)/s',
             fn (array $matches) => '<span data-type="inline-math" data-latex="'.htmlspecialchars(trim($matches[1]), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"></span>',

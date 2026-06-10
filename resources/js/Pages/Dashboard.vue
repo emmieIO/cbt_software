@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import RichContentViewer from '@/components/Questions/RichContentViewer.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 
@@ -21,6 +22,11 @@ const props = defineProps<{
     }>;
 }>();
 
+const page = usePage();
+const authUser = computed(() => (page.props.auth as any)?.user);
+const canCreateQuestions = computed(() => Boolean(authUser.value?.can_create_questions));
+const canEditQuestions = computed(() => Boolean(authUser.value?.can_edit_questions));
+
 const kpis = [
     { label: 'Total Questions', value: props.stats.totalQuestions, color: 'text-primary' },
     { label: 'Subjects', value: props.stats.totalSubjects, color: 'text-blue-600' },
@@ -29,9 +35,11 @@ const kpis = [
 ];
 
 const questionTypeClass = (type: string) =>
-    type === 'theory'
-        ? 'bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-200'
-        : 'bg-blue-100 text-blue-800 dark:bg-blue-500/15 dark:text-blue-200';
+    ({
+        multiple_choice: 'bg-blue-100 text-blue-800 dark:bg-blue-500/15 dark:text-blue-200',
+        short_answer: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-200',
+        theory: 'bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-200',
+    })[type] ?? 'bg-gray-100 text-gray-700 dark:bg-gray-700/40 dark:text-gray-200';
 </script>
 
 <template>
@@ -54,7 +62,7 @@ const questionTypeClass = (type: string) =>
 
             <!-- Quick Actions -->
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <Link href="/questions/create" class="flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 dark:border-green-900/60 bg-white dark:bg-green-950/60 p-4 shadow-sm dark:shadow-none dark:border-green-900/60 transition-all hover:border-primary/30 hover:shadow-md">
+                <Link v-if="canCreateQuestions" href="/questions/create" class="flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 dark:border-green-900/60 bg-white dark:bg-green-950/60 p-4 shadow-sm dark:shadow-none dark:border-green-900/60 transition-all hover:border-primary/30 hover:shadow-md">
                     <div class="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
                         <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
@@ -62,7 +70,7 @@ const questionTypeClass = (type: string) =>
                     </div>
                     <div>
                         <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">Add Question</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">Create a new MCQ or theory question</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">Create MCQ, short answer, or theory questions</p>
                     </div>
                 </Link>
 
@@ -110,13 +118,13 @@ const questionTypeClass = (type: string) =>
                                 Used {{ q.used_count }} times
                             </p>
                         </div>
-                        <Link :href="`/questions/${q.id}/edit`" class="shrink-0 text-xs font-medium text-primary hover:underline">
+                        <Link v-if="canEditQuestions" :href="`/questions/${q.id}/edit`" class="shrink-0 text-xs font-medium text-primary hover:underline">
                             Edit
                         </Link>
                     </div>
                     <p v-if="recentQuestions.length === 0" class="px-5 py-8 text-center text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500">
                         No questions yet.
-                        <Link href="/questions/create" class="font-medium text-primary hover:underline">Create the first one</Link>.
+                        <Link v-if="canCreateQuestions" href="/questions/create" class="font-medium text-primary hover:underline">Create the first one</Link>.
                     </p>
                 </div>
             </div>

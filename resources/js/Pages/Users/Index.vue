@@ -16,6 +16,7 @@ defineProps<{
             username: string;
             email: string;
             role: string;
+            permissions: string[];
             created_at: string;
         }>;
         current_page: number;
@@ -23,6 +24,7 @@ defineProps<{
         prev_page_url: string | null;
         next_page_url: string | null;
     };
+    availablePermissions: Array<{ value: string; label: string }>;
 }>();
 
 const showForm = ref(false);
@@ -33,11 +35,12 @@ const form = ref({
     email: '',
     password: '',
     role: 'uploader',
+    permissions: [] as string[],
 });
 
 const openCreate = () => {
     editing.value = null;
-    form.value = { name: '', username: '', email: '', password: '', role: 'uploader' };
+    form.value = { name: '', username: '', email: '', password: '', role: 'uploader', permissions: [] };
     showForm.value = true;
 };
 
@@ -49,8 +52,15 @@ const openEdit = (user: any) => {
         email: user.email,
         password: '',
         role: user.role,
+        permissions: user.permissions ?? [],
     };
     showForm.value = true;
+};
+
+const togglePermission = (permission: string, checked: boolean) => {
+    form.value.permissions = checked
+        ? Array.from(new Set([...form.value.permissions, permission]))
+        : form.value.permissions.filter((item) => item !== permission);
 };
 
 const save = () => {
@@ -86,6 +96,12 @@ const roleBadgeClass = (role: string) =>
     role === 'admin'
         ? 'bg-primary/10 text-primary dark:bg-primary/15 dark:text-primary-light'
         : 'bg-slate-100 text-slate-700 dark:bg-slate-800/80 dark:text-slate-200';
+
+const permissionLabel = (permission: string) =>
+    ({
+        'questions.create': 'Create questions',
+        'questions.edit': 'Edit questions',
+    })[permission] ?? permission;
 </script>
 
 <template>
@@ -134,6 +150,26 @@ const roleBadgeClass = (role: string) =>
                                 <option value="admin">Admin</option>
                             </select>
                         </div>
+                        <div v-if="form.role === 'uploader'" class="rounded-xl border border-gray-200 p-4 dark:border-green-900/60">
+                            <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">Question Permissions</p>
+                            <div class="mt-3 space-y-2">
+                                <label
+                                    v-for="permission in availablePermissions"
+                                    :key="permission.value"
+                                    class="flex cursor-pointer items-center gap-2 text-sm text-gray-700 dark:text-gray-200"
+                                >
+                                    <input
+                                        type="checkbox"
+                                        :checked="form.permissions.includes(permission.value)"
+                                        @change="togglePermission(permission.value, ($event.target as HTMLInputElement).checked)"
+                                    />
+                                    {{ permission.label }}
+                                </label>
+                            </div>
+                        </div>
+                        <p v-else class="rounded-xl bg-primary/5 px-4 py-3 text-xs text-primary dark:bg-primary/10">
+                            Admin users automatically have all question permissions.
+                        </p>
                         <div class="flex justify-end gap-3">
                             <button type="button" @click="showForm = false" class="btn-secondary">Cancel</button>
                             <button type="submit" class="btn-primary">Save</button>
@@ -150,6 +186,7 @@ const roleBadgeClass = (role: string) =>
                             <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Name</th>
                             <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Username</th>
                             <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Role</th>
+                            <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Permissions</th>
                             <th class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Actions</th>
                         </tr>
                     </thead>
@@ -172,6 +209,19 @@ const roleBadgeClass = (role: string) =>
                                 >
                                     {{ user.role }}
                                 </span>
+                            </td>
+                            <td class="px-5 py-4">
+                                <div v-if="user.role === 'admin'" class="text-xs font-medium text-primary">All permissions</div>
+                                <div v-else-if="user.permissions?.length" class="flex flex-wrap gap-1.5">
+                                    <span
+                                        v-for="permission in user.permissions"
+                                        :key="permission"
+                                        class="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200"
+                                    >
+                                        {{ permissionLabel(permission) }}
+                                    </span>
+                                </div>
+                                <span v-else class="text-xs text-gray-400">None</span>
                             </td>
                             <td class="px-5 py-4 text-right">
                                 <div v-if="isAdmin" class="flex justify-end gap-2">

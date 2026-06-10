@@ -22,7 +22,7 @@ class QuestionService
                 'level' => $data['level'],
                 'explanation' => $data['explanation'] ?? null,
                 'image_path' => $this->storeImage($data['image'] ?? null),
-                'marking_scheme' => $data['type'] === 'theory' ? ($data['marking_scheme'] ?? []) : null,
+                'marking_scheme' => $this->usesMarkingScheme($data['type']) ? ($data['marking_scheme'] ?? []) : null,
                 'created_by' => $createdBy,
             ]);
 
@@ -44,7 +44,7 @@ class QuestionService
                     'content' => $row['content'],
                     'type' => $row['type'],
                     'level' => $row['level'],
-                    'marking_scheme' => $row['type'] === 'theory' ? ($row['marking_scheme'] ?? []) : null,
+                    'marking_scheme' => $this->usesMarkingScheme($row['type']) ? ($row['marking_scheme'] ?? []) : null,
                     'created_by' => $createdBy,
                 ]);
 
@@ -82,7 +82,7 @@ class QuestionService
                 'level' => $data['level'],
                 'explanation' => $data['explanation'] ?? null,
                 'image_path' => $imagePath,
-                'marking_scheme' => $data['type'] === 'theory' ? ($data['marking_scheme'] ?? []) : null,
+                'marking_scheme' => $this->usesMarkingScheme($data['type']) ? ($data['marking_scheme'] ?? []) : null,
             ]);
 
             $question->options()->delete();
@@ -93,6 +93,11 @@ class QuestionService
     private function storeImage(?UploadedFile $image): ?string
     {
         return $image?->store('questions', 'public');
+    }
+
+    private function usesMarkingScheme(string $type): bool
+    {
+        return in_array($type, ['short_answer', 'theory'], true);
     }
 
     /**

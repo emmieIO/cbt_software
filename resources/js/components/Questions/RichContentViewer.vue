@@ -121,7 +121,10 @@ const convertDelimitedMath = (rootNode: ParentNode) => {
     while (walker.nextNode()) {
         const node = walker.currentNode as Text;
         const parent = node.parentElement;
-        if (!node.nodeValue?.includes('$') || parent?.closest('[data-type="inline-math"], [data-type="block-math"]')) {
+        if (
+            (!node.nodeValue?.includes('$') && !node.nodeValue?.includes('\\(') && !node.nodeValue?.includes('\\[')) ||
+            parent?.closest('[data-type="inline-math"], [data-type="block-math"]')
+        ) {
             continue;
         }
         textNodes.push(node);
@@ -131,15 +134,15 @@ const convertDelimitedMath = (rootNode: ParentNode) => {
         const text = node.nodeValue || '';
         const fragment = document.createDocumentFragment();
         let lastIndex = 0;
-        const regex = /\$(?!\d+\$)(.+?)\$(?!\d)/g;
+        const regex = /\\\[(.+?)\\\]|\\\((.+?)\\\)|\$(?!\d+\$)(.+?)\$(?!\d)/g;
         let match: RegExpExecArray | null;
 
         while ((match = regex.exec(text)) !== null) {
             fragment.append(document.createTextNode(text.slice(lastIndex, match.index)));
 
-            const math = document.createElement('span');
-            math.dataset.type = 'inline-math';
-            math.dataset.latex = match[1].trim();
+            const math = document.createElement(match[1] ? 'div' : 'span');
+            math.dataset.type = match[1] ? 'block-math' : 'inline-math';
+            math.dataset.latex = (match[1] || match[2] || match[3] || '').trim();
             fragment.append(math);
 
             lastIndex = match.index + match[0].length;

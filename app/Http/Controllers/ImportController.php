@@ -23,11 +23,15 @@ class ImportController extends Controller
 
     public function index(): Response
     {
+        abort_unless(request()->user()?->canCreateQuestions(), 403);
+
         return Inertia::render('Questions/ImportExcel');
     }
 
     public function batchCreate(): Response
     {
+        abort_unless(request()->user()?->canCreateQuestions(), 403);
+
         $subjects = Subject::query()
             ->with(['topics:id,subject_id,name'])
             ->orderBy('name')
@@ -46,11 +50,15 @@ class ImportController extends Controller
 
     public function downloadTemplate(): never
     {
+        abort_unless(request()->user()?->canCreateQuestions(), 403);
+
         $this->templateService->downloadTemplate();
     }
 
     public function preview(QuestionImportPreviewRequest $request)
     {
+        abort_unless($request->user()?->canCreateQuestions(), 403);
+
         $preview = $this->previewService->buildPreview($request->uploadedFile());
 
         session(['import_preview' => [
@@ -64,6 +72,8 @@ class ImportController extends Controller
 
     public function confirm(ConfirmQuestionImportRequest $request)
     {
+        abort_unless($request->user()?->canCreateQuestions(), 403);
+
         $preview = session('import_preview');
         if (! $preview) {
             return back()->with('error', 'No preview data found. Please upload the file again.');
@@ -80,6 +90,8 @@ class ImportController extends Controller
 
     public function quickStore(QuickStoreQuestionImportRequest $request)
     {
+        abort_unless($request->user()?->canCreateQuestions(), 403);
+
         return $this->handleImport($request->rows(), $request);
     }
 

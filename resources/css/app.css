@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 @import 'katex/dist/katex.min.css';
 @import 'tailwindcss';
-@import 'preline/variants.css';
+@import '../../node_modules/preline/variants.css';
 @source "../../node_modules/preline/dist/*.js";
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -136,6 +136,11 @@
     }
 }
 
+button:not(:disabled),
+[role='button']:not([aria-disabled='true']) {
+    cursor: pointer;
+}
+
 button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
@@ -143,19 +148,19 @@ button:disabled {
 
 /* Button hierarchy */
 .btn-primary {
-    @apply inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-primary/20 transition-all hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/30 focus:ring-2 focus:ring-primary/40 focus:outline-none active:scale-[0.98];
+    @apply inline-flex cursor-pointer items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-primary/20 transition-all hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/30 focus:ring-2 focus:ring-primary/40 focus:outline-none active:scale-[0.98];
 }
 
 .btn-secondary {
-    @apply inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:shadow-md focus:ring-2 focus:ring-gray-200 focus:outline-none active:scale-[0.98] dark:border-[color:var(--color-border-dark)] dark:bg-[color:var(--color-surface-dark-soft)] dark:text-gray-200 dark:hover:bg-green-900/60;
+    @apply inline-flex cursor-pointer items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:shadow-md focus:ring-2 focus:ring-gray-200 focus:outline-none active:scale-[0.98] dark:border-[color:var(--color-border-dark)] dark:bg-[color:var(--color-surface-dark-soft)] dark:text-gray-200 dark:hover:bg-green-900/60;
 }
 
 .btn-danger {
-    @apply inline-flex items-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-red-600/20 transition-all hover:bg-red-700 hover:shadow-lg hover:shadow-red-600/30 focus:ring-2 focus:ring-red-400 focus:outline-none active:scale-[0.98];
+    @apply inline-flex cursor-pointer items-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-red-600/20 transition-all hover:bg-red-700 hover:shadow-lg hover:shadow-red-600/30 focus:ring-2 focus:ring-red-400 focus:outline-none active:scale-[0.98];
 }
 
 .btn-ghost {
-    @apply inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium text-gray-600 transition-all hover:bg-gray-100 active:scale-[0.98] dark:text-gray-300 dark:hover:bg-green-950/55;
+    @apply inline-flex cursor-pointer items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium text-gray-600 transition-all hover:bg-gray-100 active:scale-[0.98] dark:text-gray-300 dark:hover:bg-green-950/55;
 }
 
 /* Card hover elevation */

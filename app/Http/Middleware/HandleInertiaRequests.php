@@ -27,6 +27,9 @@ class HandleInertiaRequests extends Middleware
                     'name' => $user->name,
                     'email' => $user->email,
                     'role' => $user->role,
+                    'permissions' => $user->permissions ?? [],
+                    'can_create_questions' => $user->canCreateQuestions(),
+                    'can_edit_questions' => $user->canEditQuestions(),
                 ] : null,
             ],
             'flash' => [

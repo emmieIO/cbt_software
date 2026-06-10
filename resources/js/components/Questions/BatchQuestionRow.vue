@@ -5,7 +5,7 @@ import RichContentEditor from '@/components/Questions/RichContentEditor.vue';
 type TopicOption = { id: string; name: string };
 type SubjectOption = { id: string; name: string; level?: string | null; topics: TopicOption[] };
 type LevelOption = { value: string; label: string };
-type QuestionType = 'multiple_choice' | 'theory';
+type QuestionType = 'multiple_choice' | 'short_answer' | 'theory';
 type QuestionOption = { content: string; is_correct: boolean };
 type MarkingPoint = { point: string; weight: number };
 type QuestionDraft = {
@@ -40,6 +40,7 @@ const toggleCollapse = () => {
 };
 
 const optionLabels = ['A', 'B', 'C', 'D'] as const;
+const usesMarkingScheme = computed(() => ['short_answer', 'theory'].includes(props.row.type));
 
 const filteredSubjects = computed(() => props.subjects.filter((subject) => !subject.level || subject.level === props.row.level));
 const selectedSubject = computed(() => props.subjects.find((subject) => subject.id === props.row.subject_id));
@@ -166,6 +167,20 @@ const removeMarkingPoint = (index: number) => {
                 <label
                     class="flex cursor-pointer items-center gap-3 rounded-lg border-2 p-4 transition-colors"
                     :class="
+                        row.type === 'short_answer'
+                            ? 'border-primary bg-primary/5'
+                            : 'border-gray-200 hover:border-gray-300 dark:border-green-900/60 dark:hover:border-gray-600'
+                    "
+                >
+                    <input :checked="row.type === 'short_answer'" type="radio" class="text-primary" @change="setType('short_answer')" />
+                    <div>
+                        <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">Short Answer</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Brief response with marking points</p>
+                    </div>
+                </label>
+                <label
+                    class="flex cursor-pointer items-center gap-3 rounded-lg border-2 p-4 transition-colors"
+                    :class="
                         row.type === 'theory'
                             ? 'border-primary bg-primary/5'
                             : 'border-gray-200 hover:border-gray-300 dark:border-green-900/60 dark:hover:border-gray-600'
@@ -265,7 +280,7 @@ const removeMarkingPoint = (index: number) => {
             </div>
         </div>
 
-        <div v-else class="mt-5 rounded-xl border border-gray-200 p-4 dark:border-green-900/60">
+        <div v-if="usesMarkingScheme" class="mt-5 rounded-xl border border-gray-200 p-4 dark:border-green-900/60">
             <div class="flex items-center justify-between">
                 <div>
                     <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">Marking Scheme</h3>

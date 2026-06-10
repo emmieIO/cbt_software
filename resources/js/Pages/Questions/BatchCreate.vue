@@ -7,7 +7,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 type TopicOption = { id: string; name: string };
 type SubjectOption = { id: string; name: string; level?: string | null; topics: TopicOption[] };
 type LevelOption = { value: string; label: string };
-type QuestionType = 'multiple_choice' | 'theory';
+type QuestionType = 'multiple_choice' | 'short_answer' | 'theory';
 type QuestionOption = { content: string; is_correct: boolean };
 type MarkingPoint = { point: string; weight: number };
 type QuestionDraft = {
@@ -125,7 +125,7 @@ const submit = () => {
                     }))
                     : [],
             marking_scheme:
-                question.type === 'theory'
+                question.type !== 'multiple_choice'
                     ? question.marking_scheme
                         .filter((item) => richText(item.point))
                         .map((item) => ({

@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\DB;
 
 class ExamGenerationService
 {
+    private const WRITTEN_TYPES = ['short_answer', 'theory'];
+
     /**
      * @return array{mcqs: Collection<int, array<string, mixed>>, theory: Collection<int, array<string, mixed>>}
      */
@@ -29,6 +31,7 @@ class ExamGenerationService
                 'content' => $question->content,
                 'used_count' => $question->used_count,
                 'last_used_at' => $question->last_used_at?->diffForHumans(),
+                'topic_id' => $question->topic_id,
                 'topic' => $question->topic?->name,
                 'type' => 'mcq',
                 'options' => $question->options->map(fn ($option) => [
@@ -39,7 +42,7 @@ class ExamGenerationService
             ]);
 
         $theory = Question::query()
-            ->where('type', 'theory')
+            ->whereIn('type', self::WRITTEN_TYPES)
             ->where('level', $level)
             ->whereHas('topic', fn ($query) => $query->where('subject_id', $subjectId))
             ->with('topic')
@@ -51,8 +54,9 @@ class ExamGenerationService
                 'content' => $question->content,
                 'used_count' => $question->used_count,
                 'last_used_at' => $question->last_used_at?->diffForHumans(),
+                'topic_id' => $question->topic_id,
                 'topic' => $question->topic?->name,
-                'type' => 'theory',
+                'type' => $question->type->value,
                 'marking_scheme' => $question->marking_scheme,
             ]);
 
@@ -117,7 +121,7 @@ class ExamGenerationService
 
         if ($data['theory_count'] > 0) {
             $theory = Question::query()
-                ->where('type', 'theory')
+                ->whereIn('type', self::WRITTEN_TYPES)
                 ->where('level', $data['level'])
                 ->whereHas('topic', fn ($query) => $query->where('subject_id', $data['subject_id']))
                 ->inRandomOrder()
@@ -166,7 +170,7 @@ class ExamGenerationService
     private function examPayloadFromQuestions(array $data, Collection $questions, string $fallbackSubject, QuestionLevel|string $fallbackLevel): array
     {
         $mcqs = $questions->where('type', 'multiple_choice')->values();
-        $theory = $questions->where('type', 'theory')->values();
+        $theory = $questions->filter(fn (Question $question) => in_array($question->type->value, self::WRITTEN_TYPES, true))->values();
 
         $subjectName = $mcqs->first()?->topic?->subject?->name
             ?? $theory->first()?->topic?->subject?->name

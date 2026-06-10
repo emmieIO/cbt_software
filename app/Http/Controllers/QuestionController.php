@@ -48,6 +48,8 @@ class QuestionController extends Controller
 
     public function create(): Response
     {
+        abort_unless(request()->user()?->canCreateQuestions(), 403);
+
         $subjects = Subject::query()->with('topics')->orderBy('name')->get();
 
         return Inertia::render('Questions/Create', [
@@ -63,6 +65,8 @@ class QuestionController extends Controller
 
     public function edit(Question $question): Response
     {
+        abort_unless(request()->user()?->canEditQuestions(), 403);
+
         $question->load(['topic.subject', 'options']);
 
         $subjects = Subject::query()->with('topics')->orderBy('name')->get();
@@ -81,6 +85,8 @@ class QuestionController extends Controller
 
     public function store(SaveQuestionRequest $request): RedirectResponse
     {
+        abort_unless($request->user()?->canCreateQuestions(), 403);
+
         $this->questionService->create($request->payload(), $request->user()->id);
 
         return to_route('questions.index')->with('success', 'Question created successfully.');
@@ -88,6 +94,8 @@ class QuestionController extends Controller
 
     public function bulkStore(BulkStoreQuestionRequest $request): RedirectResponse
     {
+        abort_unless($request->user()?->canCreateQuestions(), 403);
+
         $count = $this->questionService->bulkCreate($request->questions(), $request->user()->id);
 
         return to_route('questions.index')->with('success', $count.' questions created successfully.');
@@ -95,6 +103,8 @@ class QuestionController extends Controller
 
     public function update(SaveQuestionRequest $request, Question $question): RedirectResponse
     {
+        abort_unless($request->user()?->canEditQuestions(), 403);
+
         $this->questionService->update($question, $request->payload());
 
         return to_route('questions.index')->with('success', 'Question updated successfully.');
@@ -102,6 +112,8 @@ class QuestionController extends Controller
 
     public function destroy(Question $question): RedirectResponse
     {
+        abort_unless(request()->user()?->canEditQuestions(), 403);
+
         $question->delete();
 
         return to_route('questions.index')->with('success', 'Question deleted successfully.');

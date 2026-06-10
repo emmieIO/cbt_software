@@ -31,6 +31,7 @@ const form = ref({
     errors: {} as Record<string, string>,
 });
 
+const usesMarkingScheme = computed(() => ['short_answer', 'theory'].includes(form.value.type));
 const submitting = ref(false);
 const success = ref('');
 const imageFile = ref<File | null>(null);
@@ -107,7 +108,7 @@ const submit = () => {
         fd.append('image', imageFile.value);
     }
 
-    if (form.value.type === 'theory') {
+    if (usesMarkingScheme.value) {
         const scheme = form.value.marking_scheme.filter((s) => richText(s.point));
         if (scheme.length === 0) {
             form.value.errors.marking_scheme = 'Add at least one marking point.';
@@ -180,6 +181,20 @@ const submit = () => {
                             <div>
                                 <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">Multiple Choice</p>
                                 <p class="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">Four options with one correct answer</p>
+                            </div>
+                        </label>
+                        <label
+                            class="flex cursor-pointer items-center gap-3 rounded-lg border-2 p-4 transition-colors"
+                            :class="
+                                form.type === 'short_answer'
+                                    ? 'border-primary bg-primary/5'
+                                    : 'border-gray-200 hover:border-gray-300 dark:border-green-800/60 dark:border-green-900/60'
+                            "
+                        >
+                            <input v-model="form.type" type="radio" value="short_answer" class="text-primary" />
+                            <div>
+                                <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">Short Answer</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">Brief response with marking points</p>
                             </div>
                         </label>
                         <label
@@ -301,9 +316,9 @@ const submit = () => {
                     </div>
                 </div>
 
-                <!-- Theory Marking Scheme -->
+                <!-- Written Marking Scheme -->
                 <div
-                    v-if="form.type === 'theory'"
+                    v-if="usesMarkingScheme"
                     class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-green-900/60 dark:bg-green-950/60 dark:shadow-none"
                 >
                     <div class="flex items-center justify-between">

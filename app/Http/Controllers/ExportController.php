@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Exports\GenerateExportRequest;
 use App\Models\Exam;
+use App\Models\ExamTitle;
 use App\Models\Subject;
 use App\Services\ExamGenerationService;
 use Inertia\Inertia;
@@ -25,6 +26,10 @@ class ExportController extends Controller
                 ['value' => 'js', 'label' => 'Junior Secondary'],
                 ['value' => 'ss', 'label' => 'Senior Secondary'],
             ],
+            'examTitles' => ExamTitle::query()
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->pluck('name'),
         ]);
     }
 

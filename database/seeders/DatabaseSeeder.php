@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Models\ExamTitle;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -26,5 +27,18 @@ class DatabaseSeeder extends Seeder
                 'role' => User::ROLE_UPLOADER,
             ]);
         }
+
+        foreach ([
+            'First Term Examination',
+            'Second Term Examination',
+            'Third Term Examination',
+            'Mid-Term Examination',
+            'Mock Examination',
+            'Entrance Examination',
+        ] as $title) {
+            ExamTitle::query()->firstOrCreate(['name' => $title], ['is_active' => true]);
+        }
+
+        $this->call(ExamQuestionSeeder::class);
     }
 }

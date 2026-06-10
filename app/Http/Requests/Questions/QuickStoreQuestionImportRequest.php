@@ -22,7 +22,7 @@ class QuickStoreQuestionImportRequest extends FormRequest
             'rows' => ['required', 'array', 'min:1', 'max:100'],
             'rows.*.subject_name' => ['required', 'string'],
             'rows.*.topic_name' => ['required', 'string'],
-            'rows.*.type' => ['required', 'in:multiple_choice,theory'],
+            'rows.*.type' => ['required', 'in:multiple_choice,short_answer,theory'],
             'rows.*.content' => ['required', 'string'],
             'rows.*.image_url' => ['nullable', 'url'],
             'rows.*.explanation' => ['nullable', 'string'],
@@ -53,8 +53,8 @@ class QuickStoreQuestionImportRequest extends FormRequest
                     }
                 }
 
-                if ($type === 'theory' && $markingScheme === []) {
-                    $validator->errors()->add("rows.$index.marking_scheme", 'Theory imports must include at least one marking point.');
+                if (in_array($type, ['short_answer', 'theory'], true) && $markingScheme === []) {
+                    $validator->errors()->add("rows.$index.marking_scheme", 'Written imports must include at least one marking point.');
                 }
             }
         });

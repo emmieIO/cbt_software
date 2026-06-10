@@ -10,6 +10,7 @@ const props = defineProps<{
         topics: Array<{ id: string; name: string }>;
     }>;
     levels: Array<{ value: string; label: string }>;
+    examTitles: string[];
 }>();
 
 const form = ref({
@@ -55,7 +56,10 @@ const submit = () => {
                     <div class="mt-4 space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Exam Title</label>
-                            <input v-model="form.title" type="text" required class="mt-1" placeholder="e.g., First Term Examination" />
+                            <select v-model="form.title" required class="mt-1">
+                                <option value="" disabled>Select exam title</option>
+                                <option v-for="title in examTitles" :key="title" :value="title">{{ title }}</option>
+                            </select>
                             <p v-if="errors.title" class="mt-1 text-xs text-red-600">{{ errors.title }}</p>
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">

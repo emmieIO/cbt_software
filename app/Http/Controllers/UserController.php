@@ -18,12 +18,16 @@ class UserController extends Controller
         abort_unless(request()->user()?->isAdmin(), 403);
 
         $users = User::query()
-            ->select(['id', 'name', 'username', 'email', 'role', 'created_at'])
+            ->select(['id', 'name', 'username', 'email', 'role', 'permissions', 'created_at'])
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
         return Inertia::render('Users/Index', [
             'users' => $users,
+            'availablePermissions' => [
+                ['value' => User::PERMISSION_CREATE_QUESTIONS, 'label' => 'Create questions'],
+                ['value' => User::PERMISSION_EDIT_QUESTIONS, 'label' => 'Edit questions'],
+            ],
         ]);
     }
 

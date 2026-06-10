@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Exports;
 
+use App\Models\ExamTitle;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
@@ -36,6 +37,15 @@ class GenerateExportRequest extends FormRequest
 
             if (($mcqCount + $theoryCount) < 1) {
                 $validator->errors()->add('mcq_count', 'Select at least one question to generate an export.');
+            }
+
+            $titleExists = ExamTitle::query()
+                ->where('name', (string) $this->input('title'))
+                ->where('is_active', true)
+                ->exists();
+
+            if (! $titleExists) {
+                $validator->errors()->add('title', 'Select a valid exam title.');
             }
         });
     }

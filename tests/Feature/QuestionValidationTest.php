@@ -8,7 +8,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Queue;
 
 it('rejects multiple choice questions without exactly four options', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->create(['permissions' => [User::PERMISSION_CREATE_QUESTIONS]]);
     $topic = Topic::factory()->for(Subject::factory()->create(['level' => 'js']))->create();
 
     $response = $this
@@ -29,7 +29,7 @@ it('rejects multiple choice questions without exactly four options', function ()
 });
 
 it('rejects multiple choice questions with multiple correct answers', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->create(['permissions' => [User::PERMISSION_CREATE_QUESTIONS]]);
     $topic = Topic::factory()->for(Subject::factory()->create(['level' => 'js']))->create();
 
     $response = $this
@@ -52,7 +52,7 @@ it('rejects multiple choice questions with multiple correct answers', function (
 });
 
 it('rejects theory questions without a marking scheme', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->create(['permissions' => [User::PERMISSION_CREATE_QUESTIONS]]);
     $topic = Topic::factory()->for(Subject::factory()->create(['level' => 'js']))->create();
 
     $response = $this
@@ -69,10 +69,64 @@ it('rejects theory questions without a marking scheme', function () {
     expect(Question::query()->count())->toBe(0);
 });
 
+it('creates short answer questions with a marking scheme', function () {
+    $user = User::factory()->create(['permissions' => [User::PERMISSION_CREATE_QUESTIONS]]);
+    $topic = Topic::factory()->for(Subject::factory()->create(['level' => 'js']))->create();
+
+    $response = $this
+        ->actingAs($user)
+        ->post('/questions', [
+            'type' => 'short_answer',
+            'topic_id' => $topic->id,
+            'content' => 'State one property of matter.',
+            'level' => 'js',
+            'marking_scheme' => json_encode([
+                ['point' => 'Has mass and occupies space', 'weight' => 1],
+            ]),
+        ]);
+
+    $response->assertRedirect('/questions');
+
+    $question = Question::query()->firstOrFail();
+    expect($question->type->value)->toBe('short_answer')
+        ->and($question->marking_scheme)->toHaveCount(1)
+        ->and($question->options()->count())->toBe(0);
+});
+
+it('blocks question creation without permission', function () {
+    $user = User::factory()->create(['permissions' => []]);
+    $topic = Topic::factory()->for(Subject::factory()->create(['level' => 'js']))->create();
+
+    $this
+        ->actingAs($user)
+        ->post('/questions', [
+            'type' => 'short_answer',
+            'topic_id' => $topic->id,
+            'content' => 'State one property of matter.',
+            'level' => 'js',
+            'marking_scheme' => json_encode([
+                ['point' => 'Has mass and occupies space', 'weight' => 1],
+            ]),
+        ])
+        ->assertForbidden();
+
+    expect(Question::query()->count())->toBe(0);
+});
+
+it('blocks question editing without permission', function () {
+    $user = User::factory()->create(['permissions' => [User::PERMISSION_CREATE_QUESTIONS]]);
+    $question = Question::factory()->create();
+
+    $this
+        ->actingAs($user)
+        ->get("/questions/{$question->id}/edit")
+        ->assertForbidden();
+});
+
 it('queues question imports on confirm', function () {
     Queue::fake();
 
-    $user = User::factory()->create();
+    $user = User::factory()->create(['permissions' => [User::PERMISSION_CREATE_QUESTIONS]]);
 
     $previewRows = [[
         'subject_name' => 'Mathematics',

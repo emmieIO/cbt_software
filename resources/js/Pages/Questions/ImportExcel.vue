@@ -9,7 +9,7 @@ type PreviewRow = {
     errors: string[];
     subject_name: string;
     topic_name: string;
-    type: 'multiple_choice' | 'theory';
+    type: 'multiple_choice' | 'short_answer' | 'theory';
     content: string;
     image_url?: string | null;
     level?: 'lp' | 'hp' | 'js' | 'ss' | null;
@@ -226,6 +226,8 @@ const confirmImport = () => {
                                         :class="
                                             row.type === 'theory'
                                                 ? 'bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-200'
+                                                : row.type === 'short_answer'
+                                                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-200'
                                                 : 'bg-blue-100 text-blue-800 dark:bg-blue-500/15 dark:text-blue-200'
                                         "
                                     >

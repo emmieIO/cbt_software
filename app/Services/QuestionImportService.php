@@ -46,7 +46,7 @@ class QuestionImportService
                     'explanation' => $row['explanation'] ?? null,
                     'type' => $row['type'],
                     'level' => $level,
-                    'marking_scheme' => $row['type'] === 'theory' ? ($row['marking_scheme'] ?? []) : null,
+                    'marking_scheme' => in_array($row['type'], ['short_answer', 'theory'], true) ? ($row['marking_scheme'] ?? []) : null,
                     'created_by' => $createdBy,
                 ]);
 

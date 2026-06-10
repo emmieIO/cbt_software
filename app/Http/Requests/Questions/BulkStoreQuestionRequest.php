@@ -21,7 +21,7 @@ class BulkStoreQuestionRequest extends FormRequest
     {
         return [
             'questions' => ['required', 'array', 'min:1', 'max:100'],
-            'questions.*.type' => ['required', 'in:multiple_choice,theory'],
+            'questions.*.type' => ['required', 'in:multiple_choice,short_answer,theory'],
             'questions.*.topic_id' => ['required', 'exists:topics,id'],
             'questions.*.content' => ['required', 'string'],
             'questions.*.level' => ['required', 'in:lp,hp,js,ss'],
@@ -63,9 +63,9 @@ class BulkStoreQuestionRequest extends FormRequest
                     }
                 }
 
-                if ($type === 'theory') {
+                if (in_array($type, ['short_answer', 'theory'], true)) {
                     if ($markingScheme === []) {
-                        $validator->errors()->add("questions.$index.marking_scheme", 'Theory questions must include at least one marking point.');
+                        $validator->errors()->add("questions.$index.marking_scheme", 'Written questions must include at least one marking point.');
                     }
 
                     foreach ($markingScheme as $pointIndex => $item) {

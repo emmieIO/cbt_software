@@ -12,6 +12,7 @@ use Illuminate\Notifications\Notifiable;
  * @property string $id
  * @property string $name
  * @property string $role
+ * @property array<int, string>|null $permissions
  */
 class User extends Authenticatable
 {
@@ -22,12 +23,22 @@ class User extends Authenticatable
 
     const ROLE_UPLOADER = 'uploader';
 
+    const PERMISSION_CREATE_QUESTIONS = 'questions.create';
+
+    const PERMISSION_EDIT_QUESTIONS = 'questions.edit';
+
+    const QUESTION_PERMISSIONS = [
+        self::PERMISSION_CREATE_QUESTIONS,
+        self::PERMISSION_EDIT_QUESTIONS,
+    ];
+
     protected $fillable = [
         'name',
         'username',
         'email',
         'password',
         'role',
+        'permissions',
     ];
 
     protected $hidden = [
@@ -40,6 +51,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'permissions' => 'array',
         ];
     }
 
@@ -51,5 +63,20 @@ class User extends Authenticatable
     public function isUploader(): bool
     {
         return $this->role === self::ROLE_UPLOADER;
+    }
+
+    public function hasPermission(string $permission): bool
+    {
+        return $this->isAdmin() || in_array($permission, $this->permissions ?? [], true);
+    }
+
+    public function canCreateQuestions(): bool
+    {
+        return $this->hasPermission(self::PERMISSION_CREATE_QUESTIONS);
+    }
+
+    public function canEditQuestions(): bool
+    {
+        return $this->hasPermission(self::PERMISSION_EDIT_QUESTIONS);
     }
 }

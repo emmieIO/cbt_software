@@ -1,12 +1,15 @@
 {
     "agents": [
-        "gemini"
+        "codex"
     ],
+    "cloud": false,
     "guidelines": true,
-    "herd_mcp": false,
     "mcp": true,
+    "nightwatch": false,
     "sail": false,
     "skills": [
+        "developing-with-ai-sdk",
+        "laravel-best-practices",
         "wayfinder-development",
         "pest-testing",
         "inertia-vue-development",

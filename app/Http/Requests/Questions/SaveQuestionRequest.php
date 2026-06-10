@@ -20,7 +20,7 @@ class SaveQuestionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'type' => ['required', 'in:multiple_choice,theory'],
+            'type' => ['required', 'in:multiple_choice,short_answer,theory'],
             'topic_id' => ['required', 'exists:topics,id'],
             'content' => ['required', 'string'],
             'level' => ['required', 'in:lp,hp,js,ss'],
@@ -65,9 +65,9 @@ class SaveQuestionRequest extends FormRequest
                 }
             }
 
-            if ($type === 'theory') {
+            if (in_array($type, ['short_answer', 'theory'], true)) {
                 if ($markingScheme === []) {
-                    $validator->errors()->add('marking_scheme', 'Theory questions must include at least one marking point.');
+                    $validator->errors()->add('marking_scheme', 'Written questions must include at least one marking point.');
 
                     return;
                 }

@@ -105,7 +105,11 @@ class QuestionImportPreviewService
     {
         $subjectName = trim($cells[0] ?? '');
         $topicName = trim($cells[1] ?? '');
-        $type = trim($cells[2] ?? '') === 'theory' ? 'theory' : 'multiple_choice';
+        $type = match (strtolower(trim($cells[2] ?? ''))) {
+            'short_answer', 'short answer', 'short-answer' => 'short_answer',
+            'theory' => 'theory',
+            default => 'multiple_choice',
+        };
         $content = trim($cells[3] ?? '');
         $imageUrl = trim($cells[4] ?? '');
         $explanation = trim($cells[10] ?? '');
@@ -148,6 +152,11 @@ class QuestionImportPreviewService
             }
         }
 
+        $markingScheme = $this->buildMarkingScheme($cells);
+        if (in_array($type, ['short_answer', 'theory'], true) && $markingScheme === []) {
+            $errors[] = 'Written questions require at least one marking point.';
+        }
+
         return [
             'index' => $rowNumber,
             'valid' => $errors === [],
@@ -161,7 +170,7 @@ class QuestionImportPreviewService
             'level' => $level !== '' ? $level : null,
             'options' => $options,
             'correct_answer' => $correctAnswer,
-            'marking_scheme' => $this->buildMarkingScheme($cells),
+            'marking_scheme' => $markingScheme,
         ];
     }
 

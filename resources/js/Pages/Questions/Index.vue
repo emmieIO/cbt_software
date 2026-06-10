@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { debounce } from 'lodash';
 import { ref, computed, watch } from 'vue';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
@@ -48,6 +48,10 @@ const props = defineProps<{
     levels: Array<{ value: string; label: string }>;
 }>();
 
+const page = usePage();
+const authUser = computed(() => (page.props.auth as any)?.user);
+const canCreateQuestions = computed(() => Boolean(authUser.value?.can_create_questions));
+const canEditQuestions = computed(() => Boolean(authUser.value?.can_edit_questions));
 const search = ref(props.filters.search || '');
 const subjectId = ref(props.filters.subject_id || '');
 const level = ref(props.filters.level || '');
@@ -87,9 +91,11 @@ const questionTypeLabel = (type: Question['type'] | string) =>
     (typeof type === 'string' ? type : type?.label || type?.value || '').replace(/_/g, ' ');
 
 const questionTypeClass = (type: Question['type'] | string) =>
-    questionTypeValue(type) === 'theory'
-        ? 'bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-200'
-        : 'bg-blue-100 text-blue-800 dark:bg-blue-500/15 dark:text-blue-200';
+    ({
+        multiple_choice: 'bg-blue-100 text-blue-800 dark:bg-blue-500/15 dark:text-blue-200',
+        short_answer: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-200',
+        theory: 'bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-200',
+    })[questionTypeValue(type)] ?? 'bg-gray-100 text-gray-700 dark:bg-gray-700/40 dark:text-gray-200';
 
 const levelTag = (lvl: { value: string; label: string }) => {
     const value = typeof lvl === 'string' ? lvl : lvl?.value;
@@ -111,7 +117,7 @@ const markingTotal = (question: Question | null) => question?.marking_scheme?.re
                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500">Browse, create, and manage assessment questions.</p>
                 </div>
                 <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
-                    <Link href="/questions/import" class="btn-secondary">
+                    <Link v-if="canCreateQuestions" href="/questions/import" class="btn-secondary">
                         <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path
                                 stroke-linecap="round"
@@ -121,13 +127,14 @@ const markingTotal = (question: Question | null) => question?.marking_scheme?.re
                         </svg>
                         Import from Excel
                     </Link>
-                    <Link href="/questions/batch/create" class="btn-secondary">
+                    <Link v-if="canCreateQuestions" href="/questions/batch/create" class="btn-secondary">
                         <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                         </svg>
                         Batch Create
                     </Link>
                     <Link
+                        v-if="canCreateQuestions"
                         href="/questions/create"
                         class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-primary/90 dark:border-green-900/60 dark:shadow-none"
                     >
@@ -200,8 +207,8 @@ const markingTotal = (question: Question | null) => question?.marking_scheme?.re
                         </div>
                         <div class="flex items-center gap-4 text-xs font-medium">
                             <button @click="previewQuestion = q" class="text-primary hover:underline">View</button>
-                            <Link :href="`/questions/${q.id}/edit`" class="text-primary hover:underline">Edit</Link>
-                            <button @click="deleteTarget = q.id" class="text-red-600 hover:underline">Delete</button>
+                            <Link v-if="canEditQuestions" :href="`/questions/${q.id}/edit`" class="text-primary hover:underline">Edit</Link>
+                            <button v-if="canEditQuestions" @click="deleteTarget = q.id" class="text-red-600 hover:underline">Delete</button>
                         </div>
                     </div>
                     <div
@@ -209,7 +216,7 @@ const markingTotal = (question: Question | null) => question?.marking_scheme?.re
                         class="px-5 py-12 text-center text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500"
                     >
                         No questions found.
-                        <Link href="/questions/create" class="font-medium text-primary hover:underline">Create one</Link>.
+                        <Link v-if="canCreateQuestions" href="/questions/create" class="font-medium text-primary hover:underline">Create one</Link>.
                     </div>
                 </div>
 
@@ -285,15 +292,15 @@ const markingTotal = (question: Question | null) => question?.marking_scheme?.re
                                 <td class="px-5 py-4 text-right">
                                     <div class="flex items-center justify-end gap-2">
                                         <button @click="previewQuestion = q" class="text-xs font-medium text-primary hover:underline">View</button>
-                                        <Link :href="`/questions/${q.id}/edit`" class="text-xs font-medium text-primary hover:underline">Edit</Link>
-                                        <button @click="deleteTarget = q.id" class="text-xs font-medium text-red-600 hover:underline">Delete</button>
+                                        <Link v-if="canEditQuestions" :href="`/questions/${q.id}/edit`" class="text-xs font-medium text-primary hover:underline">Edit</Link>
+                                        <button v-if="canEditQuestions" @click="deleteTarget = q.id" class="text-xs font-medium text-red-600 hover:underline">Delete</button>
                                     </div>
                                 </td>
                             </tr>
                             <tr v-if="questions.data.length === 0">
                                 <td colspan="6" class="px-5 py-12 text-center text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500">
                                     No questions found.
-                                    <Link href="/questions/create" class="font-medium text-primary hover:underline">Create one</Link>.
+                                    <Link v-if="canCreateQuestions" href="/questions/create" class="font-medium text-primary hover:underline">Create one</Link>.
                                 </td>
                             </tr>
                         </tbody>
@@ -526,7 +533,7 @@ const markingTotal = (question: Question | null) => question?.marking_scheme?.re
                 class="flex flex-col-reverse gap-2 border-t border-gray-200 bg-gray-50 px-5 py-4 sm:flex-row sm:items-center sm:justify-end sm:px-6 dark:border-green-900/60 dark:bg-green-950/70"
             >
                 <button type="button" class="btn-secondary justify-center" @click="previewQuestion = null">Close</button>
-                <Link :href="`/questions/${previewQuestion.id}/edit`" class="btn-primary justify-center">Edit Question</Link>
+                    <Link v-if="canEditQuestions" :href="`/questions/${previewQuestion.id}/edit`" class="btn-primary justify-center">Edit Question</Link>
             </footer>
         </section>
     </div>

@@ -36,7 +36,7 @@ export type Question = {
     school_class_id: string;
     content: string;
     explanation: string | null;
-    type: 'multiple_choice' | 'true_false' | 'theory';
+    type: 'multiple_choice' | 'short_answer' | 'true_false' | 'theory';
     difficulty: 'easy' | 'medium' | 'hard';
     image_path: string | null;
     image_url: string | null;

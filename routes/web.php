@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExamController;
+use App\Http\Controllers\ExamTitleController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\QuestionController;
@@ -36,6 +37,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/export/generate', [ExportController::class, 'generate'])->name('export.generate');
 
     Route::get('/exams', [ExamController::class, 'index'])->name('exams.index');
+    Route::resource('exam-titles', ExamTitleController::class)->except(['show', 'create', 'edit']);
     Route::get('/exams/create', [ExamController::class, 'create'])->name('exams.create');
     Route::get('/exams/pool', [ExamController::class, 'pool'])->name('exams.pool');
     Route::post('/exams/generate', [ExamController::class, 'generate'])->name('exams.generate');

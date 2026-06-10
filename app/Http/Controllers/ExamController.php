@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Exams\ExamPoolRequest;
 use App\Http\Requests\Exams\SaveExamSelectionRequest;
 use App\Models\Exam;
+use App\Models\ExamTitle;
 use App\Models\Subject;
 use App\Services\ExamGenerationService;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -12,6 +13,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -54,6 +56,7 @@ class ExamController extends Controller
         return Inertia::render('Exam/Create', [
             'subjects' => $subjects,
             'levels' => $this->levelOptions(),
+            'examTitles' => $this->examTitleOptions(),
         ]);
     }
 
@@ -75,6 +78,7 @@ class ExamController extends Controller
         return Inertia::render('Exam/Create', [
             'subjects' => $subjects,
             'levels' => $this->levelOptions(),
+            'examTitles' => $this->examTitleOptions(),
             'exam' => [
                 'id' => $exam->id,
                 'title' => $exam->title,
@@ -111,6 +115,7 @@ class ExamController extends Controller
         return Inertia::render('Exam/Create', [
             'subjects' => $subjects,
             'levels' => $this->levelOptions(),
+            'examTitles' => $this->examTitleOptions(),
             'exam' => $this->examPayload($exam),
         ]);
     }
@@ -125,6 +130,7 @@ class ExamController extends Controller
         return Inertia::render('Exam/Create', [
             'subjects' => $subjects,
             'levels' => $this->levelOptions(),
+            'examTitles' => $this->examTitleOptions($exam->title),
             'exam' => [
                 ...$this->examPayload($exam),
                 'editable' => true,
@@ -252,18 +258,66 @@ class ExamController extends Controller
 
     private function pdfData(Exam $exam): array
     {
+        $mcqs = $exam->mcqs ?? collect();
+        $writtenQuestions = $exam->theoryQuestions ?? collect();
+        $shortAnswer = $writtenQuestions->filter(fn ($question) => $question->type->value === 'short_answer')->values();
+        $theory = $writtenQuestions->reject(fn ($question) => $question->type->value === 'short_answer')->values();
+
         return [
             'title' => $exam->title,
             'subject' => $exam->subject_name,
             'level' => strtoupper($exam->level instanceof \App\Enums\QuestionLevel ? $exam->level->value : $exam->level),
             'date' => $exam->created_at->format('F j, Y'),
             'instructions' => $exam->instructions,
-            'mcqs' => $exam->mcqs ?? collect(),
-            'theory' => $exam->theoryQuestions ?? collect(),
-            'mcqTotal' => ($exam->mcqs ?? collect())->count(),
-            'theoryTotal' => ($exam->theoryQuestions ?? collect())->sum(fn ($q) => collect($q->marking_scheme)->sum('weight')),
+            'mcqs' => $mcqs,
+            'shortAnswer' => $shortAnswer,
+            'theory' => $writtenQuestions,
+            'theoryOnly' => $theory,
+            'questionSections' => $this->questionSections($mcqs, $shortAnswer, $theory),
+            'mcqTotal' => $mcqs->count(),
+            'theoryTotal' => $writtenQuestions->sum(fn ($q) => collect($q->marking_scheme)->sum('weight')),
             'totalMarks' => $exam->total_marks,
         ];
+    }
+
+    /**
+     * @return Collection<int, array{label: string, title: string, note: string, questions: Collection<int, mixed>, type: string, start: int}>
+     */
+    private function questionSections(Collection $mcqs, Collection $shortAnswer, Collection $theory): Collection
+    {
+        $nextQuestionNumber = 1;
+        $nextSectionIndex = 0;
+
+        return collect([
+            [
+                'title' => 'Multiple Choice',
+                'note' => 'Choose the correct option from A to D for each question.',
+                'questions' => $mcqs,
+                'type' => 'mcq',
+            ],
+            [
+                'title' => 'Short Answer',
+                'note' => 'Answer each question briefly and clearly.',
+                'questions' => $shortAnswer,
+                'type' => 'short_answer',
+            ],
+            [
+                'title' => 'Theory',
+                'note' => 'Answer all questions clearly. Show all necessary workings.',
+                'questions' => $theory,
+                'type' => 'theory',
+            ],
+        ])
+            ->filter(fn (array $section) => $section['questions']->isNotEmpty())
+            ->values()
+            ->map(function (array $section) use (&$nextQuestionNumber, &$nextSectionIndex): array {
+                $section['label'] = 'Section '.chr(65 + $nextSectionIndex);
+                $section['start'] = $nextQuestionNumber;
+                $nextQuestionNumber += $section['questions']->count();
+                $nextSectionIndex++;
+
+                return $section;
+            });
     }
 
     private function levelOptions(): array
@@ -274,6 +328,24 @@ class ExamController extends Controller
             ['value' => 'js', 'label' => 'Junior Secondary'],
             ['value' => 'ss', 'label' => 'Senior Secondary'],
         ];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function examTitleOptions(?string $currentTitle = null): array
+    {
+        $titles = ExamTitle::query()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->pluck('name')
+            ->all();
+
+        if ($currentTitle && ! in_array($currentTitle, $titles, true)) {
+            array_unshift($titles, $currentTitle);
+        }
+
+        return $titles;
     }
 
     private function examPayload(Exam $exam): array
