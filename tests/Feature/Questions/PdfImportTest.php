@@ -44,7 +44,7 @@ test('it can preview questions from a pdf file', function () {
 
     $preview = session('import_preview');
     expect($preview['rows'])->toHaveCount(1);
-    expect($preview['rows'][0]['content'])->toBe('What is x if 2x = 4?');
+    expect($preview['rows'][0]['content'])->toBe('What is x if \(2x = 4\)?');
     expect($preview['rows'][0]['valid'])->toBeTrue();
 });
 
