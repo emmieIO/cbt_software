@@ -5,13 +5,11 @@ on:
     branches:
       - develop
       - main
-      - master
       - workos
   pull_request:
     branches:
       - develop
       - main
-      - master
       - workos
 
 jobs:
