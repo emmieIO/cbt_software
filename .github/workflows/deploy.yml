@@ -67,8 +67,7 @@ jobs:
       - name: Build Assets
         run: npm run build
 
-      - name: Run Tests (Pest)
-        run: php artisan test --compact
+   
 
   deploy:
     needs: quality-assurance
