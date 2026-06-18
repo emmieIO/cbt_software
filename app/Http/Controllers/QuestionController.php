@@ -7,6 +7,7 @@ use App\Http\Requests\Questions\SaveQuestionRequest;
 use App\Models\Question;
 use App\Models\Subject;
 use App\Services\QuestionService;
+use App\Support\AcademicLevels;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,7 +20,7 @@ class QuestionController extends Controller
 
     public function index(Request $request): Response
     {
-        $filters = $request->only(['search', 'subject_id', 'level', 'overused']);
+        $filters = $request->only(['search', 'subject_id', 'level', 'class_level', 'overused']);
         $perPage = (int) $request->input('per_page', 15);
 
         $questions = Question::query()
@@ -27,6 +28,7 @@ class QuestionController extends Controller
             ->when($filters['search'] ?? null, fn (Builder $q, $s) => $q->where('content', 'like', "%{$s}%"))
             ->when($filters['subject_id'] ?? null, fn (Builder $q, $id) => $q->whereHas('topic', fn ($t) => $t->where('subject_id', $id)))
             ->when($filters['level'] ?? null, fn (Builder $q, $l) => $q->where('level', $l))
+            ->when($filters['class_level'] ?? null, fn (Builder $q, $l) => $q->where('class_level', $l))
             ->when($filters['overused'] ?? null, fn (Builder $q) => $q->frequentlyUsed())
             ->orderBy('created_at', 'desc')
             ->paginate($perPage);
@@ -37,12 +39,8 @@ class QuestionController extends Controller
             'questions' => $questions,
             'subjects' => $subjects,
             'filters' => $filters,
-            'levels' => [
-                ['value' => 'lp', 'label' => 'Lower Primary'],
-                ['value' => 'hp', 'label' => 'Higher Primary'],
-                ['value' => 'js', 'label' => 'Junior Secondary'],
-                ['value' => 'ss', 'label' => 'Senior Secondary'],
-            ],
+            'levels' => AcademicLevels::levelOptions(),
+            'classLevels' => AcademicLevels::classOptions(),
         ]);
     }
 
@@ -54,12 +52,8 @@ class QuestionController extends Controller
 
         return Inertia::render('Questions/Create', [
             'subjects' => $subjects,
-            'levels' => [
-                ['value' => 'lp', 'label' => 'Lower Primary'],
-                ['value' => 'hp', 'label' => 'Higher Primary'],
-                ['value' => 'js', 'label' => 'Junior Secondary'],
-                ['value' => 'ss', 'label' => 'Senior Secondary'],
-            ],
+            'levels' => AcademicLevels::levelOptions(),
+            'classLevels' => AcademicLevels::classOptions(),
         ]);
     }
 
@@ -74,12 +68,8 @@ class QuestionController extends Controller
         return Inertia::render('Questions/Edit', [
             'question' => $question,
             'subjects' => $subjects,
-            'levels' => [
-                ['value' => 'lp', 'label' => 'Lower Primary'],
-                ['value' => 'hp', 'label' => 'Higher Primary'],
-                ['value' => 'js', 'label' => 'Junior Secondary'],
-                ['value' => 'ss', 'label' => 'Senior Secondary'],
-            ],
+            'levels' => AcademicLevels::levelOptions(),
+            'classLevels' => AcademicLevels::classOptions(),
         ]);
     }
 

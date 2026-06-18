@@ -16,6 +16,8 @@ class QuestionFactory extends Factory
             'content' => $this->faker->paragraph().'?',
             'explanation' => $this->faker->paragraph(),
             'type' => QuestionType::MULTIPLE_CHOICE,
+            'level' => 'js',
+            'class_level' => (string) $this->faker->numberBetween(7, 9),
             'created_by' => User::factory(),
         ];
     }

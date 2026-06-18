@@ -10,16 +10,21 @@ const props = defineProps<{
         id: string;
         name: string;
         level?: string;
-        topics: Array<{ id: string; name: string }>;
+        topics: Array<{ id: string; name: string; class_level?: string | null }>;
     }>;
     levels: Array<{ value: string; label: string }>;
+    classLevels: Record<string, Array<{ value: string; label: string }>>;
 }>();
+
+const questionLevel = props.question.level?.value || props.question.level || 'js';
+const defaultClassLevel = (level: string) => props.classLevels[level]?.[0]?.value ?? '';
 
 const form = ref({
     type: props.question.type?.value || props.question.type || 'multiple_choice',
     subject_id: props.question.topic?.subject?.id || '',
     topic_id: props.question.topic_id,
-    level: props.question.level?.value || props.question.level || 'js',
+    level: questionLevel,
+    class_level: props.question.class_level || props.question.topic?.class_level || defaultClassLevel(questionLevel),
     content: props.question.content || '',
     explanation: props.question.explanation || '',
     options: (props.question.options || []).length
@@ -68,11 +73,17 @@ const removeImage = () => {
 };
 
 const filteredSubjects = computed(() => props.subjects.filter((s: any) => !s.level || s.level === form.value.level));
+const classLevelOptions = computed(() => props.classLevels[form.value.level] || []);
 const selectedSubject = computed(() => filteredSubjects.value.find((s: any) => s.id === form.value.subject_id));
-const filteredTopics = computed(() => selectedSubject.value?.topics || []);
+const filteredTopics = computed(() => (selectedSubject.value?.topics || []).filter((topic: any) => !topic.class_level || topic.class_level === form.value.class_level));
 
 const onLevelChange = () => {
+    form.value.class_level = classLevelOptions.value[0]?.value || '';
     form.value.subject_id = '';
+    form.value.topic_id = '';
+};
+
+const onClassLevelChange = () => {
     form.value.topic_id = '';
 };
 
@@ -115,6 +126,7 @@ const submit = () => {
     fd.append('topic_id', form.value.topic_id);
     fd.append('content', form.value.content);
     fd.append('level', form.value.level);
+    fd.append('class_level', form.value.class_level);
     fd.append('explanation', form.value.explanation || '');
 
     if (imageFile.value) {
@@ -218,7 +230,7 @@ const submit = () => {
                 <!-- Classification -->
                 <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-green-900/60 dark:bg-green-950/60 dark:shadow-none">
                     <h2 class="text-sm font-bold text-gray-900 dark:text-gray-100">Classification</h2>
-                    <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Level</label>
                             <select v-model="form.level" class="mt-1" @change="onLevelChange">
@@ -226,11 +238,19 @@ const submit = () => {
                             </select>
                         </div>
                         <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Class Level</label>
+                            <select v-model="form.class_level" class="mt-1" @change="onClassLevelChange">
+                                <option v-for="classLevel in classLevelOptions" :key="classLevel.value" :value="classLevel.value">{{ classLevel.label }}</option>
+                            </select>
+                            <p v-if="form.errors.class_level" class="mt-1 text-xs text-red-600">{{ form.errors.class_level }}</p>
+                        </div>
+                        <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Subject</label>
                             <select v-model="form.subject_id" class="mt-1" @change="onSubjectChange">
                                 <option value="" disabled>Select subject</option>
                                 <option v-for="s in filteredSubjects" :key="s.id" :value="s.id">{{ s.name }}</option>
                             </select>
+                            <p v-if="form.errors.subject_id" class="mt-1 text-xs text-red-600">{{ form.errors.subject_id }}</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Topic</label>
@@ -238,6 +258,7 @@ const submit = () => {
                                 <option value="" disabled>Select topic</option>
                                 <option v-for="t in filteredTopics" :key="t.id" :value="t.id">{{ t.name }}</option>
                             </select>
+                            <p v-if="form.errors.topic_id" class="mt-1 text-xs text-red-600">{{ form.errors.topic_id }}</p>
                         </div>
                     </div>
                 </div>

@@ -13,8 +13,9 @@ interface Question {
     image_url?: string | null;
     type: { value: string; label: string };
     level: { value: string; label: string };
+    class_level?: string | null;
     used_count: number;
-    topic: { id: string; name: string; subject: { id: string; name: string } };
+    topic: { id: string; name: string; class_level?: string | null; subject: { id: string; name: string } };
     creator: { name: string };
     options: Array<{ id: string; content: string; is_correct: boolean }>;
     marking_scheme?: Array<{ point: string; weight: number }>;
@@ -43,9 +44,11 @@ const props = defineProps<{
         search?: string;
         subject_id?: string;
         level?: string;
+        class_level?: string;
         overused?: string;
     };
     levels: Array<{ value: string; label: string }>;
+    classLevels: Record<string, Array<{ value: string; label: string }>>;
 }>();
 
 const page = usePage();
@@ -55,10 +58,11 @@ const canEditQuestions = computed(() => Boolean(authUser.value?.can_edit_questio
 const search = ref(props.filters.search || '');
 const subjectId = ref(props.filters.subject_id || '');
 const level = ref(props.filters.level || '');
+const classLevel = ref(props.filters.class_level || '');
 const overused = ref(props.filters.overused || '');
 
 watch(
-    [search, subjectId, level, overused],
+    [search, subjectId, level, classLevel, overused],
     debounce(() => {
         router.get(
             '/questions',
@@ -66,6 +70,7 @@ watch(
                 search: search.value || undefined,
                 subject_id: subjectId.value || undefined,
                 level: level.value || undefined,
+                class_level: classLevel.value || undefined,
                 overused: overused.value || undefined,
             },
             { preserveState: true, replace: true },
@@ -74,6 +79,12 @@ watch(
 );
 
 const filteredSubjects = computed(() => props.subjects.filter((s) => !s.level || !level.value || s.level === level.value));
+const classLevelOptions = computed(() => props.classLevels[level.value] || []);
+
+watch(level, () => {
+    classLevel.value = '';
+    subjectId.value = '';
+});
 
 const deleteTarget = ref<string | null>(null);
 const previewQuestion = ref<Question | null>(null);
@@ -103,6 +114,13 @@ const levelTag = (lvl: { value: string; label: string }) => {
     return map[value] || value?.toUpperCase();
 };
 
+const classTag = (question: Question) => {
+    const value = question.class_level || question.topic?.class_level;
+    const questionLevel = typeof question.level === 'string' ? question.level : question.level?.value;
+
+    return value ? (props.classLevels[questionLevel]?.find((option) => option.value === value)?.label ?? value) : 'All classes';
+};
+
 const markingTotal = (question: Question | null) => question?.marking_scheme?.reduce((sum, item) => sum + Number(item.weight || 0), 0) ?? 0;
 </script>
 
@@ -126,6 +144,16 @@ const markingTotal = (question: Question | null) => question?.marking_scheme?.re
                             />
                         </svg>
                         Import from Excel
+                    </Link>
+                    <Link v-if="canCreateQuestions" href="/questions/import/pdf" class="btn-secondary">
+                        <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M9 12h6m-6 4h6M7 3h7l5 5v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z"
+                            />
+                        </svg>
+                        Import from PDF
                     </Link>
                     <Link v-if="canCreateQuestions" href="/questions/batch/create" class="btn-secondary">
                         <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -166,6 +194,10 @@ const markingTotal = (question: Question | null) => question?.marking_scheme?.re
                     <option value="">All Levels</option>
                     <option v-for="l in levels" :key="l.value" :value="l.value">{{ l.label }}</option>
                 </select>
+                <select v-model="classLevel" class="w-full sm:w-auto sm:min-w-[140px]" :disabled="!level">
+                    <option value="">All Classes</option>
+                    <option v-for="classOption in classLevelOptions" :key="classOption.value" :value="classOption.value">{{ classOption.label }}</option>
+                </select>
                 <select v-model="subjectId" class="w-full sm:w-auto sm:min-w-[160px]">
                     <option value="">All Subjects</option>
                     <option v-for="s in filteredSubjects" :key="s.id" :value="s.id">{{ s.name }}</option>
@@ -197,6 +229,9 @@ const markingTotal = (question: Question | null) => question?.marking_scheme?.re
                             </span>
                             <span class="inline-flex rounded-full bg-gray-100 px-2.5 py-1 text-gray-700 dark:text-gray-200">
                                 {{ q.topic?.subject?.name || '-' }}
+                            </span>
+                            <span class="inline-flex rounded-full bg-gray-100 px-2.5 py-1 text-gray-700 dark:text-gray-200">
+                                {{ classTag(q) }}
                             </span>
                             <span
                                 class="inline-flex rounded-full px-2.5 py-1"
@@ -245,6 +280,11 @@ const markingTotal = (question: Question | null) => question?.marking_scheme?.re
                                     Level
                                 </th>
                                 <th
+                                    class="px-5 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400 dark:text-gray-500"
+                                >
+                                    Class
+                                </th>
+                                <th
                                     class="px-5 py-3 text-center text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400 dark:text-gray-500"
                                 >
                                     Use Count
@@ -276,6 +316,7 @@ const markingTotal = (question: Question | null) => question?.marking_scheme?.re
                                         {{ levelTag(q.level) }}
                                     </span>
                                 </td>
+                                <td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-300">{{ classTag(q) }}</td>
                                 <td class="px-5 py-4 text-center">
                                     <span
                                         class="inline-flex items-center gap-1"
@@ -298,7 +339,7 @@ const markingTotal = (question: Question | null) => question?.marking_scheme?.re
                                 </td>
                             </tr>
                             <tr v-if="questions.data.length === 0">
-                                <td colspan="6" class="px-5 py-12 text-center text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500">
+                                <td colspan="7" class="px-5 py-12 text-center text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500">
                                     No questions found.
                                     <Link v-if="canCreateQuestions" href="/questions/create" class="font-medium text-primary hover:underline">Create one</Link>.
                                 </td>
@@ -385,6 +426,10 @@ const markingTotal = (question: Question | null) => question?.marking_scheme?.re
                         <span class="mt-1 inline-flex rounded-full bg-primary/10 px-2.5 py-1 font-semibold text-primary">
                             {{ levelTag(previewQuestion.level) }}
                         </span>
+                    </div>
+                    <div class="rounded-lg border border-gray-200 bg-white px-3 py-2 dark:border-green-900/60 dark:bg-green-950/55">
+                        <p class="font-semibold text-gray-400 uppercase">Class</p>
+                        <p class="mt-1 text-sm font-bold text-gray-800 dark:text-gray-100">{{ classTag(previewQuestion) }}</p>
                     </div>
                     <div class="rounded-lg border border-gray-200 bg-white px-3 py-2 dark:border-green-900/60 dark:bg-green-950/55">
                         <p class="font-semibold text-gray-400 uppercase">Usage</p>

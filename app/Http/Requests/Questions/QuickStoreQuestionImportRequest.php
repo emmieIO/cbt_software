@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests\Questions;
 
+use App\Support\AcademicLevels;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class QuickStoreQuestionImportRequest extends FormRequest
@@ -27,6 +29,7 @@ class QuickStoreQuestionImportRequest extends FormRequest
             'rows.*.image_url' => ['nullable', 'url'],
             'rows.*.explanation' => ['nullable', 'string'],
             'rows.*.level' => ['required', 'in:lp,hp,js,ss'],
+            'rows.*.class_level' => ['required', Rule::in(AcademicLevels::classValues())],
             'rows.*.options' => ['nullable', 'array', 'size:4'],
             'rows.*.options.*' => ['required_with:rows.*.options', 'string'],
             'rows.*.correct_answer' => ['nullable', 'in:A,B,C,D,a,b,c,d'],
@@ -42,6 +45,10 @@ class QuickStoreQuestionImportRequest extends FormRequest
                 $options = is_array($row['options'] ?? null) ? $row['options'] : [];
                 $markingScheme = is_array($row['marking_scheme'] ?? null) ? $row['marking_scheme'] : [];
                 $correctAnswer = strtolower((string) ($row['correct_answer'] ?? ''));
+
+                if (! AcademicLevels::classBelongsToLevel((string) ($row['class_level'] ?? ''), (string) ($row['level'] ?? ''))) {
+                    $validator->errors()->add("rows.$index.class_level", 'Select a class level that belongs to the selected school level.');
+                }
 
                 if ($type === 'multiple_choice') {
                     if (count($options) !== 4) {
@@ -76,6 +83,7 @@ class QuickStoreQuestionImportRequest extends FormRequest
             'image_url' => $row['image_url'] ?? null,
             'explanation' => $row['explanation'] ?? null,
             'level' => $row['level'],
+            'class_level' => $row['class_level'],
             'options' => $row['options'] ?? [],
             'correct_answer' => $row['correct_answer'] ?? '',
             'marking_scheme' => $row['marking_scheme'] ?? [],

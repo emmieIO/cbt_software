@@ -21,6 +21,7 @@ return [
     'default_for_transcription' => 'openai',
     'default_for_embeddings' => 'openai',
     'default_for_reranking' => 'cohere',
+    'question_parser_model' => env('QUESTION_PARSER_AI_MODEL', 'deepseek-chat'),
 
     /*
     |--------------------------------------------------------------------------

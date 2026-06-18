@@ -2,9 +2,12 @@
 
 namespace App\Http\Requests\Questions;
 
+use App\Models\Topic;
+use App\Support\AcademicLevels;
 use App\Support\RichContent;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class SaveQuestionRequest extends FormRequest
@@ -24,6 +27,7 @@ class SaveQuestionRequest extends FormRequest
             'topic_id' => ['required', 'exists:topics,id'],
             'content' => ['required', 'string'],
             'level' => ['required', 'in:lp,hp,js,ss'],
+            'class_level' => ['required', Rule::in(AcademicLevels::classValues())],
             'explanation' => ['nullable', 'string'],
             'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:2048'],
             'remove_image' => ['nullable', 'boolean'],
@@ -36,6 +40,21 @@ class SaveQuestionRequest extends FormRequest
             $type = $this->input('type');
             if (RichContent::text($this->input('content')) === '') {
                 $validator->errors()->add('content', 'Question content is required.');
+            }
+
+            if (! AcademicLevels::classBelongsToLevel((string) $this->input('class_level'), (string) $this->input('level'))) {
+                $validator->errors()->add('class_level', 'Select a class level that belongs to the selected school level.');
+            }
+
+            $topic = Topic::query()->with('subject')->find($this->input('topic_id'));
+            if ($topic) {
+                if ($topic->subject?->level && $topic->subject->level !== $this->input('level')) {
+                    $validator->errors()->add('topic_id', 'Select a topic that belongs to the selected school level.');
+                }
+
+                if ($topic->class_level && $topic->class_level !== $this->input('class_level')) {
+                    $validator->errors()->add('topic_id', 'Select a topic that belongs to the selected class level.');
+                }
             }
 
             $options = $this->decodedArrayInput('options');
@@ -121,7 +140,7 @@ class SaveQuestionRequest extends FormRequest
     }
 
     /**
-     * @param array<int, array<string, mixed>> $options
+     * @param  array<int, array<string, mixed>>  $options
      * @return array<int, array<string, mixed>>
      */
     private function sanitizeOptions(array $options): array
@@ -133,7 +152,7 @@ class SaveQuestionRequest extends FormRequest
     }
 
     /**
-     * @param array<int, array<string, mixed>> $items
+     * @param  array<int, array<string, mixed>>  $items
      * @return array<int, array<string, mixed>>
      */
     private function sanitizeMarkingScheme(array $items): array

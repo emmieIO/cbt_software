@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Subject;
 use App\Models\Topic;
+use App\Support\AcademicLevels;
 use Exception;
 use Illuminate\Http\UploadedFile;
 use OpenSpout\Reader\CSV\Reader as CsvReader;
@@ -53,19 +54,34 @@ class QuestionImportPreviewService
 
                 if (! empty($previewRow['subject_name'])) {
                     $level = $previewRow['level'] ?? 'js';
+                    $classLevel = $previewRow['class_level'] ?? AcademicLevels::defaultClassFor($level);
                     $subjectKeys[$previewRow['subject_name'].'::'.$level] = [
                         'name' => $previewRow['subject_name'],
                         'level' => $level,
                     ];
                 }
                 if (! empty($previewRow['topic_name'])) {
-                    $topicNames[$previewRow['topic_name']] = true;
+                    $topicNames[$previewRow['topic_name'].'::'.($previewRow['class_level'] ?? '')] = [
+                        'name' => $previewRow['topic_name'],
+                        'class_level' => $previewRow['class_level'] ?? null,
+                    ];
                 }
             }
         }
 
         $reader->close();
 
+        return $this->formatPreviewPayload($rows, $subjectKeys, $topicNames);
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $rows
+     * @param  array<string, array{name: string, level: string}>  $subjectKeys
+     * @param  array<string, array{name: string, class_level: string|null}>  $topicNames
+     * @return array<string, mixed>
+     */
+    public function formatPreviewPayload(array $rows, array $subjectKeys, array $topicNames): array
+    {
         $existingSubjects = $subjectKeys === []
             ? []
             : Subject::query()
@@ -79,10 +95,20 @@ class QuestionImportPreviewService
                 ->get(['name', 'level'])
                 ->map(fn (Subject $subject) => $subject->name.'::'.$subject->level)
                 ->all();
-        $existingTopics = Topic::query()
-            ->whereIn('name', array_keys($topicNames))
-            ->pluck('name')
-            ->toArray();
+
+        $existingTopics = $topicNames === []
+            ? []
+            : Topic::query()
+                ->where(function ($query) use ($topicNames) {
+                    foreach ($topicNames as $topic) {
+                        $query->orWhere(fn ($topicQuery) => $topicQuery
+                            ->where('name', $topic['name'])
+                            ->where('class_level', $topic['class_level']));
+                    }
+                })
+                ->get(['name', 'class_level'])
+                ->map(fn (Topic $topic) => $topic->name.'::'.$topic->class_level)
+                ->toArray();
 
         return [
             'rows' => $rows,
@@ -93,12 +119,15 @@ class QuestionImportPreviewService
                 fn (array $subject) => $subject['name'].' ('.strtoupper($subject['level']).')',
                 array_intersect_key($subjectKeys, array_flip(array_diff(array_keys($subjectKeys), $existingSubjects))),
             )),
-            'new_topics' => array_values(array_diff(array_keys($topicNames), $existingTopics)),
+            'new_topics' => array_values(array_map(
+                fn (array $topic) => $topic['name'].' ('.(AcademicLevels::classLabel($topic['class_level']) ?? $topic['class_level']).')',
+                array_intersect_key($topicNames, array_flip(array_diff(array_keys($topicNames), $existingTopics))),
+            )),
         ];
     }
 
     /**
-     * @param array<int, mixed> $cells
+     * @param  array<int, mixed>  $cells
      * @return array<string, mixed>
      */
     private function buildPreviewRow(array $cells, int $rowNumber): array
@@ -114,6 +143,7 @@ class QuestionImportPreviewService
         $imageUrl = trim($cells[4] ?? '');
         $explanation = trim($cells[10] ?? '');
         $level = strtolower(trim($cells[13] ?? ''));
+        $classLevel = trim((string) ($cells[14] ?? ''));
         $errors = [];
 
         if ($subjectName === '') {
@@ -130,6 +160,12 @@ class QuestionImportPreviewService
         }
         if ($level !== '' && ! in_array($level, ['lp', 'hp', 'js', 'ss'])) {
             $errors[] = 'Invalid level.';
+        }
+        if ($classLevel !== '' && ! in_array($classLevel, AcademicLevels::classValues(), true)) {
+            $errors[] = 'Invalid class level.';
+        }
+        if ($level !== '' && $classLevel !== '' && ! AcademicLevels::classBelongsToLevel($classLevel, $level)) {
+            $errors[] = 'Class level does not belong to selected level.';
         }
 
         $options = [];
@@ -168,6 +204,7 @@ class QuestionImportPreviewService
             'image_url' => $imageUrl !== '' ? $imageUrl : null,
             'explanation' => $explanation !== '' ? $explanation : null,
             'level' => $level !== '' ? $level : null,
+            'class_level' => $classLevel !== '' ? $classLevel : null,
             'options' => $options,
             'correct_answer' => $correctAnswer,
             'marking_scheme' => $markingScheme,
@@ -175,7 +212,7 @@ class QuestionImportPreviewService
     }
 
     /**
-     * @param array<int, mixed> $cells
+     * @param  array<int, mixed>  $cells
      * @return array<int, array{point: string, weight: int}>
      */
     private function buildMarkingScheme(array $cells): array

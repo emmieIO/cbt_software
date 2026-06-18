@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Hash;
 class UserManagementService
 {
     /**
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>  $data
      */
     public function create(array $data): User
     {
@@ -23,7 +23,7 @@ class UserManagementService
     }
 
     /**
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>  $data
      */
     public function update(User $user, array $data): void
     {
@@ -43,7 +43,7 @@ class UserManagementService
     }
 
     /**
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>  $data
      * @return array<int, string>
      */
     private function permissionsForRole(array $data): array

@@ -2,9 +2,10 @@
 import { computed, ref } from 'vue';
 import RichContentEditor from '@/components/Questions/RichContentEditor.vue';
 
-type TopicOption = { id: string; name: string };
+type TopicOption = { id: string; name: string; class_level?: string | null };
 type SubjectOption = { id: string; name: string; level?: string | null; topics: TopicOption[] };
 type LevelOption = { value: string; label: string };
+type ClassLevelOption = { value: string; label: string };
 type QuestionType = 'multiple_choice' | 'short_answer' | 'theory';
 type QuestionOption = { content: string; is_correct: boolean };
 type MarkingPoint = { point: string; weight: number };
@@ -14,15 +15,17 @@ type QuestionDraft = {
     subject_id: string;
     topic_id: string;
     level: string;
+    class_level: string;
     content: string;
     options: QuestionOption[];
     marking_scheme: MarkingPoint[];
 };
-type RowErrors = Partial<Record<'subject_id' | 'topic_id' | 'content' | 'options' | 'marking_scheme', string>>;
+type RowErrors = Partial<Record<'subject_id' | 'topic_id' | 'class_level' | 'content' | 'options' | 'marking_scheme', string>>;
 
 const props = defineProps<{
     index: number;
     levels: LevelOption[];
+    classLevels: Record<string, ClassLevelOption[]>;
     row: QuestionDraft;
     rowErrors?: RowErrors;
     subjects: SubjectOption[];
@@ -43,8 +46,9 @@ const optionLabels = ['A', 'B', 'C', 'D'] as const;
 const usesMarkingScheme = computed(() => ['short_answer', 'theory'].includes(props.row.type));
 
 const filteredSubjects = computed(() => props.subjects.filter((subject) => !subject.level || subject.level === props.row.level));
+const classLevelOptions = computed(() => props.classLevels[props.row.level] || []);
 const selectedSubject = computed(() => props.subjects.find((subject) => subject.id === props.row.subject_id));
-const filteredTopics = computed(() => selectedSubject.value?.topics ?? []);
+const filteredTopics = computed(() => (selectedSubject.value?.topics ?? []).filter((topic) => !topic.class_level || topic.class_level === props.row.class_level));
 
 const updateRow = (patch: Partial<QuestionDraft>) => {
     emit('updateRow', {
@@ -56,7 +60,15 @@ const updateRow = (patch: Partial<QuestionDraft>) => {
 const onLevelChange = (event: Event) => {
     updateRow({
         level: (event.target as HTMLSelectElement).value,
+        class_level: props.classLevels[(event.target as HTMLSelectElement).value]?.[0]?.value || '',
         subject_id: '',
+        topic_id: '',
+    });
+};
+
+const onClassLevelChange = (event: Event) => {
+    updateRow({
+        class_level: (event.target as HTMLSelectElement).value,
         topic_id: '',
     });
 };
@@ -197,12 +209,19 @@ const removeMarkingPoint = (index: number) => {
 
         <div class="mt-5 rounded-xl border border-gray-200 p-4 dark:border-green-900/60">
             <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">Classification</h3>
-            <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Level</label>
                     <select :value="row.level" class="mt-1" @change="onLevelChange">
                         <option v-for="levelOption in levels" :key="levelOption.value" :value="levelOption.value">{{ levelOption.label }}</option>
                     </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Class Level</label>
+                    <select :value="row.class_level" class="mt-1" @change="onClassLevelChange">
+                        <option v-for="classLevel in classLevelOptions" :key="classLevel.value" :value="classLevel.value">{{ classLevel.label }}</option>
+                    </select>
+                    <p v-if="rowErrors?.class_level" class="mt-1 text-xs text-red-600">{{ rowErrors.class_level }}</p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Subject</label>
@@ -215,7 +234,7 @@ const removeMarkingPoint = (index: number) => {
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Topic</label>
                     <select
-                        :key="`${row.level}-${row.subject_id}`"
+                        :key="`${row.level}-${row.class_level}-${row.subject_id}`"
                         :value="row.topic_id"
                         class="mt-1"
                         @change="updateRow({ topic_id: ($event.target as HTMLSelectElement).value })"

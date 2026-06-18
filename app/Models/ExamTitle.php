@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\ExamTitleFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class ExamTitle extends Model
 {
-    /** @use HasFactory<\Database\Factories\ExamTitleFactory> */
+    /** @use HasFactory<ExamTitleFactory> */
     use HasFactory, HasUlids;
 
     protected $fillable = [

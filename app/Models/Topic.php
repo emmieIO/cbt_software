@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\TopicFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,16 +12,18 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * @property string $id
  * @property string $subject_id
+ * @property string|null $class_level
  * @property string $name
  * @property Subject|null $subject
  */
 class Topic extends Model
 {
-    /** @use HasFactory<\Database\Factories\TopicFactory> */
+    /** @use HasFactory<TopicFactory> */
     use HasFactory, HasUlids;
 
     protected $fillable = [
         'subject_id',
+        'class_level',
         'name',
         'slug',
         'description',

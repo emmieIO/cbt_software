@@ -6,10 +6,11 @@ use App\Enums\QuestionLevel;
 use App\Enums\QuestionType;
 use App\Support\RichContent;
 use Carbon\Carbon;
+use Database\Factories\QuestionFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -24,6 +25,7 @@ use Illuminate\Support\Facades\Storage;
  * @property string|null $image_url
  * @property QuestionType|string $type
  * @property QuestionLevel|string|null $level
+ * @property string|null $class_level
  * @property array<int, array{point: string, weight: int}>|null $marking_scheme
  * @property int $used_count
  * @property Carbon|null $last_used_at
@@ -33,7 +35,7 @@ use Illuminate\Support\Facades\Storage;
  */
 class Question extends Model
 {
-    /** @use HasFactory<\Database\Factories\QuestionFactory> */
+    /** @use HasFactory<QuestionFactory> */
     use HasFactory, HasUlids, SoftDeletes;
 
     protected $appends = ['image_url'];
@@ -45,6 +47,7 @@ class Question extends Model
         'explanation',
         'type',
         'level',
+        'class_level',
         'marking_scheme',
         'used_count',
         'last_used_at',
@@ -114,6 +117,8 @@ class Question extends Model
             });
         })->when($filters['level'] ?? null, function ($query, $level) {
             $query->where('level', $level);
+        })->when($filters['class_level'] ?? null, function ($query, $classLevel) {
+            $query->where('class_level', $classLevel);
         });
     }
 

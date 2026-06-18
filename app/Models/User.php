@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\GeneratesApplicationId;
+use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -16,7 +17,7 @@ use Illuminate\Notifications\Notifiable;
  */
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
+    /** @use HasFactory<UserFactory> */
     use GeneratesApplicationId, HasFactory, HasUlids, Notifiable;
 
     const ROLE_ADMIN = 'admin';

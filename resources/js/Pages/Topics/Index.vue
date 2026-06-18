@@ -6,7 +6,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 
 const props = defineProps<{
     topics: {
-        data: Array<{ id: string; name: string; description: string; subject: { id: string; name: string }; questions_count: number }>;
+        data: Array<{ id: string; name: string; description: string; class_level?: string | null; subject: { id: string; name: string }; questions_count: number }>;
         current_page: number;
         last_page: number;
         prev_page_url: string | null;
@@ -14,8 +14,10 @@ const props = defineProps<{
     };
     subjects: Array<{ id: string; name: string; level: string }>;
     levels: Array<{ value: string; label: string }>;
+    classLevels: Record<string, Array<{ value: string; label: string }>>;
     filters: {
         level?: string;
+        class_level?: string;
     };
 }>();
 
@@ -23,14 +25,38 @@ const showForm = ref(false);
 const editing = ref<string | null>(null);
 const deleteTarget = ref<string | null>(null);
 const filterLevel = ref(props.filters.level || '');
+const filterClassLevel = ref(props.filters.class_level || '');
 const formSubjectId = ref('');
-const form = ref({ name: '', subject_id: '', description: '' });
+const form = ref({ name: '', subject_id: '', class_level: '', description: '' });
 
 const filteredSubjects = computed(() => props.subjects.filter(s => !filterLevel.value || s.level === filterLevel.value));
+const classLevelOptions = computed(() => props.classLevels[filterLevel.value] || []);
+const selectedFormSubject = computed(() => props.subjects.find((subject) => subject.id === formSubjectId.value));
+const formClassLevelOptions = computed(() => props.classLevels[selectedFormSubject.value?.level || filterLevel.value] || []);
+const classLevelLabel = (value?: string | null) =>
+    value ? (Object.values(props.classLevels).flat().find((option) => option.value === value)?.label ?? value) : 'All';
+
+const syncFormClassLevel = () => {
+    if (!formClassLevelOptions.value.some((option) => option.value === form.value.class_level)) {
+        form.value.class_level = formClassLevelOptions.value[0]?.value || '';
+    }
+};
 
 watch(filterLevel, (value) => {
+    filterClassLevel.value = '';
     router.get('/topics', {
         level: value || undefined,
+        class_level: undefined,
+    }, {
+        preserveState: true,
+        replace: true,
+    });
+});
+
+watch(filterClassLevel, (value) => {
+    router.get('/topics', {
+        level: filterLevel.value || undefined,
+        class_level: value || undefined,
     }, {
         preserveState: true,
         replace: true,
@@ -40,14 +66,18 @@ watch(filterLevel, (value) => {
 const openCreate = () => {
     editing.value = null;
     formSubjectId.value = filteredSubjects.value[0]?.id || '';
-    form.value = { name: '', subject_id: formSubjectId.value, description: '' };
+    form.value = { name: '', subject_id: formSubjectId.value, class_level: '', description: '' };
+    syncFormClassLevel();
     showForm.value = true;
 };
 
 const openEdit = (topic: any) => {
     editing.value = topic.id;
     formSubjectId.value = topic.subject.id;
-    form.value = { name: topic.name, subject_id: topic.subject.id, description: topic.description || '' };
+    const subject = props.subjects.find((item) => item.id === topic.subject.id);
+    filterLevel.value = subject?.level || filterLevel.value;
+    form.value = { name: topic.name, subject_id: topic.subject.id, class_level: topic.class_level || classLevelOptions.value[0]?.value || '', description: topic.description || '' };
+    syncFormClassLevel();
     showForm.value = true;
 };
 
@@ -93,6 +123,10 @@ const confirmDelete = () => {
                     <option value="">All Levels</option>
                     <option v-for="l in levels" :key="l.value" :value="l.value">{{ l.label }}</option>
                 </select>
+                <select v-model="filterClassLevel" class="w-full sm:w-auto sm:min-w-[140px]" :disabled="!filterLevel">
+                    <option value="">All Classes</option>
+                    <option v-for="classLevel in classLevelOptions" :key="classLevel.value" :value="classLevel.value">{{ classLevel.label }}</option>
+                </select>
                 <span class="text-xs text-gray-400 dark:text-gray-500">
                     {{ filteredSubjects.length }} subject{{ filteredSubjects.length !== 1 ? 's' : '' }}
                 </span>
@@ -105,8 +139,15 @@ const confirmDelete = () => {
                     <form @submit.prevent="save" class="mt-4 space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Subject</label>
-                            <select v-model="formSubjectId" required class="mt-1">
+                            <select v-model="formSubjectId" required class="mt-1" @change="syncFormClassLevel">
                                 <option v-for="s in filteredSubjects" :key="s.id" :value="s.id">{{ s.name }}</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Class Level</label>
+                            <select v-model="form.class_level" required class="mt-1">
+                                <option value="" disabled>Select class level</option>
+                                <option v-for="classLevel in formClassLevelOptions" :key="classLevel.value" :value="classLevel.value">{{ classLevel.label }}</option>
                             </select>
                         </div>
                         <div>
@@ -132,6 +173,7 @@ const confirmDelete = () => {
                         <tr>
                             <th class="px-5 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase">Topic</th>
                             <th class="px-5 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase">Subject</th>
+                            <th class="px-5 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase">Class</th>
                             <th class="px-5 py-3 text-center text-xs font-semibold tracking-wide text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase">Questions</th>
                             <th class="px-5 py-3 text-right text-xs font-semibold tracking-wide text-gray-500 dark:text-gray-400 dark:text-gray-500 uppercase">Actions</th>
                         </tr>
@@ -143,6 +185,7 @@ const confirmDelete = () => {
                                 <p v-if="topic.description" class="mt-0.5 text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 line-clamp-1">{{ topic.description }}</p>
                             </td>
                             <td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-300">{{ topic.subject.name }}</td>
+                            <td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-300">{{ classLevelLabel(topic.class_level) }}</td>
                             <td class="px-5 py-4 text-center text-sm text-gray-600 dark:text-gray-300">{{ topic.questions_count }}</td>
                             <td class="px-5 py-4 text-right">
                                 <div class="flex justify-end gap-2">
@@ -152,7 +195,7 @@ const confirmDelete = () => {
                             </td>
                         </tr>
                         <tr v-if="topics.data.length === 0">
-                            <td colspan="4" class="px-5 py-12 text-center text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500">No topics yet.</td>
+                            <td colspan="5" class="px-5 py-12 text-center text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500">No topics yet.</td>
                         </tr>
                     </tbody>
                 </table></div>

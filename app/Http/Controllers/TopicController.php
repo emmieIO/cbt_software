@@ -6,6 +6,7 @@ use App\Http\Requests\Topics\SaveTopicRequest;
 use App\Models\Subject;
 use App\Models\Topic;
 use App\Services\TopicService;
+use App\Support\AcademicLevels;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -17,12 +18,13 @@ class TopicController extends Controller
 
     public function index(Request $request): Response
     {
-        $filters = $request->only(['level']);
+        $filters = $request->only(['level', 'class_level']);
 
         $topics = Topic::query()
             ->with('subject')
             ->withCount('questions')
             ->when($filters['level'] ?? null, fn ($query, $level) => $query->whereHas('subject', fn ($subjectQuery) => $subjectQuery->where('level', $level)))
+            ->when($filters['class_level'] ?? null, fn ($query, $classLevel) => $query->where('class_level', $classLevel))
             ->orderBy('name')
             ->paginate(20);
 
@@ -32,12 +34,8 @@ class TopicController extends Controller
             'topics' => $topics,
             'subjects' => $subjects,
             'filters' => $filters,
-            'levels' => [
-                ['value' => 'lp', 'label' => 'Lower Primary'],
-                ['value' => 'hp', 'label' => 'Higher Primary'],
-                ['value' => 'js', 'label' => 'Junior Secondary'],
-                ['value' => 'ss', 'label' => 'Senior Secondary'],
-            ],
+            'levels' => AcademicLevels::levelOptions(),
+            'classLevels' => AcademicLevels::classOptions(),
         ]);
     }
 

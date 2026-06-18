@@ -13,6 +13,7 @@ type PreviewRow = {
     content: string;
     image_url?: string | null;
     level?: 'lp' | 'hp' | 'js' | 'ss' | null;
+    class_level?: string | null;
     options: string[];
     correct_answer: string | null;
     marking_scheme: Array<{ point: string; weight: number }>;
@@ -35,7 +36,22 @@ const dragOver = ref(false);
 const fallbackLevel = ref<'lp' | 'hp' | 'js' | 'ss'>('ss');
 const page = usePage();
 const preview = computed(() => (page.props.flash as { preview?: PreviewPayload })?.preview ?? null);
+const flashError = computed(() => (page.props.flash as { error?: string })?.error ?? null);
 const hasPreview = computed(() => Boolean(preview.value?.rows?.length));
+const hasEmptyPreview = computed(() => Boolean(preview.value && !preview.value.rows.length));
+
+const classLabels: Record<string, Record<string, string>> = {
+    lp: { '1': 'Primary 1', '2': 'Primary 2', '3': 'Primary 3' },
+    hp: { '4': 'Primary 4', '5': 'Primary 5', '6': 'Primary 6' },
+    js: { '7': 'JSS 1', '8': 'JSS 2', '9': 'JSS 3' },
+    ss: { '10': 'SS 1', '11': 'SS 2', '12': 'SS 3' },
+};
+
+const formatClassLevel = (row: PreviewRow) => {
+    if (!row.class_level) return 'Default';
+
+    return classLabels[row.level || fallbackLevel.value]?.[row.class_level] ?? row.class_level;
+};
 
 const handleFile = (selected: File | null) => {
     if (selected && (selected.name.endsWith('.xlsx') || selected.name.endsWith('.csv'))) {
@@ -115,6 +131,10 @@ const confirmImport = () => {
                 <h2 class="text-sm font-bold text-gray-900 dark:text-gray-100">Step 2: Upload file</h2>
                 <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Accepted formats: `.xlsx`, `.csv`.</p>
 
+                <div v-if="flashError" class="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-200">
+                    {{ flashError }}
+                </div>
+
                 <div
                     @drop.prevent="onDrop"
                     @dragover.prevent="dragOver = true"
@@ -150,7 +170,7 @@ const confirmImport = () => {
             </div>
 
             <div
-                v-if="hasPreview"
+                v-if="hasPreview || hasEmptyPreview"
                 class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-green-900/60 dark:bg-green-950/60 dark:shadow-none"
             >
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -170,6 +190,7 @@ const confirmImport = () => {
                         </div>
                     </div>
                     <button
+                        v-if="hasPreview"
                         @click="confirmImport"
                         :disabled="confirming || (preview?.errors ?? 0) > 0"
                         class="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50"
@@ -179,15 +200,19 @@ const confirmImport = () => {
                     </button>
                 </div>
 
+                <div v-if="hasEmptyPreview" class="mt-5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-5 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-200">
+                    No question rows were found in this file. Check that the template has question content in the content column.
+                </div>
+
                 <div
-                    v-if="preview?.new_subjects?.length || preview?.new_topics?.length"
+                    v-if="hasPreview && (preview?.new_subjects?.length || preview?.new_topics?.length)"
                     class="mt-4 rounded-lg bg-gray-50 p-4 text-xs text-gray-600 dark:bg-green-950/60 dark:text-gray-300"
                 >
                     <p v-if="preview?.new_subjects?.length">New subjects: {{ preview.new_subjects.join(', ') }}</p>
                     <p v-if="preview?.new_topics?.length" class="mt-1">New topics: {{ preview.new_topics.join(', ') }}</p>
                 </div>
 
-                <div class="mt-4 overflow-x-auto">
+                <div v-if="hasPreview" class="mt-4 overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200 text-left text-sm dark:divide-gray-700">
                         <thead class="bg-gray-50 dark:bg-green-950/60">
                             <tr>
@@ -196,6 +221,7 @@ const confirmImport = () => {
                                 <th class="px-3 py-2 font-semibold text-gray-700 dark:text-gray-200">Subject</th>
                                 <th class="px-3 py-2 font-semibold text-gray-700 dark:text-gray-200">Topic</th>
                                 <th class="px-3 py-2 font-semibold text-gray-700 dark:text-gray-200">Level</th>
+                                <th class="px-3 py-2 font-semibold text-gray-700 dark:text-gray-200">Class</th>
                                 <th class="px-3 py-2 font-semibold text-gray-700 dark:text-gray-200">Type</th>
                                 <th class="px-3 py-2 font-semibold text-gray-700 dark:text-gray-200">Content</th>
                                 <th class="px-3 py-2 font-semibold text-gray-700 dark:text-gray-200">Image</th>
@@ -220,6 +246,7 @@ const confirmImport = () => {
                                 <td class="px-3 py-2 text-gray-900 dark:text-gray-100">{{ row.subject_name }}</td>
                                 <td class="px-3 py-2 text-gray-900 dark:text-gray-100">{{ row.topic_name }}</td>
                                 <td class="px-3 py-2 text-gray-600 dark:text-gray-300">{{ (row.level || fallbackLevel).toUpperCase() }}</td>
+                                <td class="px-3 py-2 text-gray-600 dark:text-gray-300">{{ formatClassLevel(row) }}</td>
                                 <td class="px-3 py-2">
                                     <span
                                         class="inline-flex rounded-full px-2 py-1 text-xs font-semibold capitalize"

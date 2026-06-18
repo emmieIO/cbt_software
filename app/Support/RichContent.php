@@ -6,6 +6,7 @@ use DOMDocument;
 use DOMElement;
 use DOMNode;
 use DOMXPath;
+use Throwable;
 
 class RichContent
 {
@@ -18,6 +19,7 @@ class RichContent
     ];
 
     private const MATH_TAGS = ['span', 'div'];
+
     private const ALIGNABLE_TAGS = ['p', 'h3', 'h4'];
 
     public static function sanitize(?string $html): string
@@ -149,7 +151,7 @@ class RichContent
 
     private static function sanitizeNode(DOMNode $node): void
     {
-        for ($child = $node->firstChild; $child !== null; ) {
+        for ($child = $node->firstChild; $child !== null;) {
             $next = $child->nextSibling;
 
             if ($child instanceof DOMElement) {
@@ -179,7 +181,7 @@ class RichContent
     }
 
     /**
-     * @param array<string, array{latex: string, displayMode: bool}> $expressions
+     * @param  array<string, array{latex: string, displayMode: bool}>  $expressions
      * @return array<string, string>
      */
     private static function renderKatexBatch(array $expressions): array
@@ -228,7 +230,7 @@ class RichContent
     }
 
     /**
-     * @param array<string, array{latex: string, displayMode: bool}> $expressions
+     * @param  array<string, array{latex: string, displayMode: bool}>  $expressions
      * @return array<string, string>
      */
     private static function fallbackBatch(array $expressions): array
@@ -245,7 +247,7 @@ class RichContent
     {
         try {
             $basePath = function_exists('base_path') ? base_path() : getcwd();
-        } catch (\Throwable) {
+        } catch (Throwable) {
             $basePath = getcwd();
         }
 

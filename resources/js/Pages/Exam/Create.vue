@@ -5,19 +5,22 @@ import RichContentViewer from '@/components/Questions/RichContentViewer.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 
 const props = defineProps<{
-    subjects: Array<{ id: string; name: string; topics: Array<{ id: string; name: string }> }>;
+    subjects: Array<{ id: string; name: string; level?: string | null; topics: Array<{ id: string; name: string; class_level?: string | null }> }>;
     levels: Array<{ value: string; label: string }>;
+    classLevels: Record<string, Array<{ value: string; label: string }>>;
     examTitles: string[];
     exam?: any;
     initialForm?: {
         title: string;
         subject_id: string;
         level: string;
+        class_level: string;
         instructions: string;
     };
 }>();
 
-const form = ref(props.initialForm ?? { title: '', subject_id: '', level: 'js', instructions: 'Answer all questions carefully.' });
+const defaultClassLevel = (level: string) => props.classLevels[level]?.[0]?.value ?? '';
+const form = ref(props.initialForm ?? { title: '', subject_id: '', level: 'js', class_level: defaultClassLevel('js'), instructions: 'Answer all questions carefully.' });
 const totalQuestionCount = ref(12);
 const submitting = ref(false);
 const loadingPool = ref(false);
@@ -48,6 +51,7 @@ const previewTitle = ref('');
 const previewFrame = ref<HTMLIFrameElement | null>(null);
 
 const filteredSubjects = computed(() => props.subjects.filter((s: any) => !s.level || s.level === form.value.level));
+const classLevelOptions = computed(() => props.classLevels[form.value.level] || []);
 const examTitleOptions = computed(() =>
     form.value.title && !props.examTitles.includes(form.value.title)
         ? [form.value.title, ...props.examTitles]
@@ -55,11 +59,16 @@ const examTitleOptions = computed(() =>
 );
 
 const loadPool = async () => {
-    if (!form.value.subject_id || !form.value.level) return;
+    if (!form.value.subject_id || !form.value.level || !form.value.class_level) return;
     loadingPool.value = true;
     poolError.value = '';
     try {
-        const res = await fetch(`/exams/pool?subject_id=${form.value.subject_id}&level=${form.value.level}`);
+        const params = new URLSearchParams({
+            subject_id: form.value.subject_id,
+            level: form.value.level,
+            class_level: form.value.class_level,
+        });
+        const res = await fetch(`/exams/pool?${params.toString()}`);
         const data = await res.json();
         pool.value = data;
         initializeTopicQuestionCounts();
@@ -224,6 +233,7 @@ const generateExam = () => {
     const payload = {
         title: form.value.title,
         instructions: form.value.instructions,
+        class_level: form.value.class_level,
         question_ids: [...selectedIds.value],
     };
 
@@ -317,6 +327,10 @@ onMounted(async () => {
                     <div class="card p-4">
                         <p class="text-xs font-semibold text-gray-500 uppercase">Level</p>
                         <p class="mt-1 text-lg font-bold text-gray-900 dark:text-gray-100">{{ exam.level }}</p>
+                    </div>
+                    <div class="card p-4">
+                        <p class="text-xs font-semibold text-gray-500 uppercase">Class</p>
+                        <p class="mt-1 text-lg font-bold text-gray-900 dark:text-gray-100">{{ exam.class_level || 'All' }}</p>
                     </div>
                     <div class="card p-4">
                         <p class="text-xs font-semibold text-gray-500 uppercase">Questions</p>
@@ -522,12 +536,26 @@ onMounted(async () => {
                                 v-model="form.level"
                                 class="mt-1"
                                 @change="
+                                    form.class_level = defaultClassLevel(form.level);
                                     form.subject_id = '';
                                     pool = { mcqs: [], theory: [] };
                                     topicQuestionCounts = {};
                                 "
                             >
                                 <option v-for="l in levels" :key="l.value" :value="l.value">{{ l.label }}</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Class Level</label>
+                            <select
+                                v-model="form.class_level"
+                                class="mt-1"
+                                @change="
+                                    pool = { mcqs: [], theory: [] };
+                                    topicQuestionCounts = {};
+                                "
+                            >
+                                <option v-for="classLevel in classLevelOptions" :key="classLevel.value" :value="classLevel.value">{{ classLevel.label }}</option>
                             </select>
                         </div>
                         <div>
@@ -553,7 +581,7 @@ onMounted(async () => {
                 </div>
 
                 <!-- Pool browser -->
-                <div v-if="form.subject_id && form.level" class="card p-6">
+                <div v-if="form.subject_id && form.level && form.class_level" class="card p-6">
                     <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div class="flex items-start gap-3">
                             <div class="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">2</div>
@@ -793,7 +821,7 @@ onMounted(async () => {
                     </template>
 
                     <div v-else-if="!loadingPool" class="py-8 text-center text-sm text-gray-500">
-                        Click "Browse Question Pool" to see available questions for this subject and level.
+                        Click "Browse Question Pool" to see available questions for this subject, level, and class.
                     </div>
                 </div>
 

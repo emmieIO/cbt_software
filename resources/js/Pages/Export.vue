@@ -7,9 +7,11 @@ const props = defineProps<{
     subjects: Array<{
         id: string;
         name: string;
+        level?: string | null;
         topics: Array<{ id: string; name: string }>;
     }>;
     levels: Array<{ value: string; label: string }>;
+    classLevels: Record<string, Array<{ value: string; label: string }>>;
     examTitles: string[];
 }>();
 
@@ -17,6 +19,7 @@ const form = ref({
     title: '',
     subject_id: '',
     level: 'js',
+    class_level: props.classLevels.js?.[0]?.value ?? '7',
     mcq_count: 10,
     theory_count: 2,
     instructions: 'Answer all questions carefully.',
@@ -26,8 +29,12 @@ const submitting = ref(false);
 const errors = ref<Record<string, string>>({});
 
 const filteredSubjects = computed(() => props.subjects.filter(s => !s.level || s.level === form.value.level));
+const classLevelOptions = computed(() => props.classLevels[form.value.level] || []);
 
-const onLevelChange = () => { form.value.subject_id = ''; };
+const onLevelChange = () => {
+    form.value.class_level = classLevelOptions.value[0]?.value || '';
+    form.value.subject_id = '';
+};
 
 const submit = () => {
     submitting.value = true;
@@ -62,12 +69,19 @@ const submit = () => {
                             </select>
                             <p v-if="errors.title" class="mt-1 text-xs text-red-600">{{ errors.title }}</p>
                         </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Level</label>
                                 <select v-model="form.level" class="mt-1" @change="onLevelChange">
                                     <option v-for="l in levels" :key="l.value" :value="l.value">{{ l.label }}</option>
                                 </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Class Level</label>
+                                <select v-model="form.class_level" class="mt-1">
+                                    <option v-for="classLevel in classLevelOptions" :key="classLevel.value" :value="classLevel.value">{{ classLevel.label }}</option>
+                                </select>
+                                <p v-if="errors.class_level" class="mt-1 text-xs text-red-600">{{ errors.class_level }}</p>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Subject</label>

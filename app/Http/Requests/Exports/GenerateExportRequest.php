@@ -3,8 +3,10 @@
 namespace App\Http\Requests\Exports;
 
 use App\Models\ExamTitle;
+use App\Support\AcademicLevels;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class GenerateExportRequest extends FormRequest
@@ -23,6 +25,7 @@ class GenerateExportRequest extends FormRequest
             'title' => ['required', 'string', 'max:255'],
             'subject_id' => ['required', 'exists:subjects,id'],
             'level' => ['required', 'in:lp,hp,js,ss'],
+            'class_level' => ['required', Rule::in(AcademicLevels::classValues())],
             'instructions' => ['nullable', 'string'],
             'mcq_count' => ['required', 'integer', 'min:0', 'max:100'],
             'theory_count' => ['required', 'integer', 'min:0', 'max:20'],
@@ -37,6 +40,10 @@ class GenerateExportRequest extends FormRequest
 
             if (($mcqCount + $theoryCount) < 1) {
                 $validator->errors()->add('mcq_count', 'Select at least one question to generate an export.');
+            }
+
+            if (! AcademicLevels::classBelongsToLevel((string) $this->input('class_level'), (string) $this->input('level'))) {
+                $validator->errors()->add('class_level', 'Select a class level that belongs to the selected school level.');
             }
 
             $titleExists = ExamTitle::query()

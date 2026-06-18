@@ -30,19 +30,19 @@ class QuestionImportTemplateService
             [
                 'subject', 'topic', 'type', 'content', 'image_url', 'option_a', 'option_b',
                 'option_c', 'option_d', 'correct_answer', 'explanation',
-                'marking_points', 'marking_weights', 'level',
+                'marking_points', 'marking_weights', 'level', 'class_level',
             ],
             [
                 'Mathematics', 'Algebra', 'mcq', 'What is 2 + 2?', 'https://example.com/questions/addition.png', '3', '4', '5', '6', 'b', '',
-                '', '', 'js',
+                '', '', 'js', '7',
             ],
             [
                 'English', 'Composition', 'theory', 'Write a paragraph about your school.', '', '', '', '', '', '', '',
-                'Proper structure|Good grammar|Relevant content', '3|2|2', 'js',
+                'Proper structure|Good grammar|Relevant content', '3|2|2', 'js', '7',
             ],
             [
                 'Basic Science', 'Matter', 'short_answer', 'State one property of matter.', '', '', '', '', '', '', '',
-                'Has mass and occupies space', '1', 'js',
+                'Has mass and occupies space', '1', 'js', '7',
             ],
         ];
     }

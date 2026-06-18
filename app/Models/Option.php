@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\OptionFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Option extends Model
 {
-    /** @use HasFactory<\Database\Factories\OptionFactory> */
+    /** @use HasFactory<OptionFactory> */
     use HasFactory, HasUlids, SoftDeletes;
 
     protected $fillable = [

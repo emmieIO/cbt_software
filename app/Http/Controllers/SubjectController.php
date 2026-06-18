@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Subjects\SaveSubjectRequest;
 use App\Models\Subject;
 use App\Services\SubjectService;
+use App\Support\AcademicLevels;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -26,12 +27,7 @@ class SubjectController extends Controller
 
         return Inertia::render('Subjects/Index', [
             'subjects' => $subjects,
-            'levels' => [
-                ['value' => 'lp', 'label' => 'Lower Primary'],
-                ['value' => 'hp', 'label' => 'Higher Primary'],
-                ['value' => 'js', 'label' => 'Junior Secondary'],
-                ['value' => 'ss', 'label' => 'Senior Secondary'],
-            ],
+            'levels' => AcademicLevels::levelOptions(),
             'filters' => $filters,
         ]);
     }

@@ -3,11 +3,12 @@
 namespace Database\Factories;
 
 use App\Models\Subject;
+use App\Models\Topic;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Topic>
+ * @extends Factory<Topic>
  */
 class TopicFactory extends Factory
 {
@@ -22,6 +23,7 @@ class TopicFactory extends Factory
 
         return [
             'subject_id' => Subject::factory(),
+            'class_level' => (string) $this->faker->numberBetween(7, 9),
             'name' => $name,
             'slug' => Str::slug($name),
             'description' => $this->faker->paragraph(),

@@ -7,6 +7,7 @@ use App\Models\Question;
 use App\Models\Subject;
 use App\Models\Topic;
 use App\Models\User;
+use App\Support\AcademicLevels;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -40,10 +41,12 @@ class ExamQuestionSeeder extends Seeder
                 );
 
                 foreach ($subjectData['topics'] as $topicData) {
+                    $classLevel = $topicData['class_level'] ?? AcademicLevels::defaultClassFor($subjectData['level']);
                     $topic = Topic::query()->updateOrCreate(
                         ['slug' => Str::slug($subjectData['level'].'-'.$subjectData['name'].'-'.$topicData['name'])],
                         [
                             'subject_id' => $subject->id,
+                            'class_level' => $classLevel,
                             'name' => $topicData['name'],
                             'description' => $topicData['description'],
                         ],
@@ -59,6 +62,7 @@ class ExamQuestionSeeder extends Seeder
                             'content' => $questionData['content'],
                             'type' => $questionData['type'],
                             'level' => $subjectData['level'],
+                            'class_level' => $questionData['class_level'] ?? $classLevel,
                             'explanation' => $questionData['explanation'] ?? null,
                             'marking_scheme' => $questionData['marking_scheme'] ?? null,
                             'created_by' => $creator->id,

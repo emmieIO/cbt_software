@@ -16,11 +16,14 @@ class ExamGenerationService
     /**
      * @return array{mcqs: Collection<int, array<string, mixed>>, theory: Collection<int, array<string, mixed>>}
      */
-    public function pool(string $subjectId, string $level): array
+    public function pool(string $subjectId, string $level, string $classLevel): array
     {
         $mcqs = Question::query()
             ->where('type', 'multiple_choice')
             ->where('level', $level)
+            ->where(function ($query) use ($classLevel): void {
+                $query->where('class_level', $classLevel)->orWhereNull('class_level');
+            })
             ->whereHas('topic', fn ($query) => $query->where('subject_id', $subjectId))
             ->with(['options', 'topic'])
             ->orderBy('used_count')
@@ -44,6 +47,9 @@ class ExamGenerationService
         $theory = Question::query()
             ->whereIn('type', self::WRITTEN_TYPES)
             ->where('level', $level)
+            ->where(function ($query) use ($classLevel): void {
+                $query->where('class_level', $classLevel)->orWhereNull('class_level');
+            })
             ->whereHas('topic', fn ($query) => $query->where('subject_id', $subjectId))
             ->with('topic')
             ->orderBy('used_count')
@@ -64,7 +70,7 @@ class ExamGenerationService
     }
 
     /**
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>  $data
      */
     public function generateFromSelection(array $data, string $createdBy): Exam
     {
@@ -82,7 +88,7 @@ class ExamGenerationService
     }
 
     /**
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>  $data
      */
     public function updateSelection(Exam $exam, array $data): void
     {
@@ -92,7 +98,7 @@ class ExamGenerationService
             ->get();
 
         DB::transaction(function () use ($exam, $data, $questions): void {
-            [$payload, $mcqs, $theory] = $this->examPayloadFromQuestions($data, $questions, $exam->subject_name, $exam->level);
+            [$payload, $mcqs, $theory] = $this->examPayloadFromQuestions($data, $questions, $exam->subject_name, $exam->level, $exam->class_level);
 
             $exam->update($payload);
             $exam->questions()->sync($this->syncData($mcqs, $theory));
@@ -100,7 +106,7 @@ class ExamGenerationService
     }
 
     /**
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>  $data
      */
     public function generateRandom(array $data, string $createdBy): Exam
     {
@@ -112,6 +118,9 @@ class ExamGenerationService
             $mcqs = Question::query()
                 ->where('type', 'multiple_choice')
                 ->where('level', $data['level'])
+                ->where(function ($query) use ($data): void {
+                    $query->where('class_level', $data['class_level'])->orWhereNull('class_level');
+                })
                 ->whereHas('topic', fn ($query) => $query->where('subject_id', $data['subject_id']))
                 ->with('options')
                 ->inRandomOrder()
@@ -123,6 +132,9 @@ class ExamGenerationService
             $theory = Question::query()
                 ->whereIn('type', self::WRITTEN_TYPES)
                 ->where('level', $data['level'])
+                ->where(function ($query) use ($data): void {
+                    $query->where('class_level', $data['class_level'])->orWhereNull('class_level');
+                })
                 ->whereHas('topic', fn ($query) => $query->where('subject_id', $data['subject_id']))
                 ->inRandomOrder()
                 ->take($data['theory_count'])
@@ -134,6 +146,7 @@ class ExamGenerationService
                 'title' => $data['title'],
                 'subject_name' => $subject->name,
                 'level' => $data['level'],
+                'class_level' => $data['class_level'],
                 'instructions' => $data['instructions'] ?? 'Answer all questions carefully.',
                 'mcq_count' => $mcqs->count(),
                 'theory_count' => $theory->count(),
@@ -148,12 +161,12 @@ class ExamGenerationService
     }
 
     /**
-     * @param Collection<int, Question> $questions
+     * @param  Collection<int, Question>  $questions
      * @return array{0: Exam, 1: Collection<int, Question>, 2: Collection<int, Question>}
      */
     private function createExamRecord(array $data, string $createdBy, Collection $questions): array
     {
-        [$payload, $mcqs, $theory] = $this->examPayloadFromQuestions($data, $questions, 'General', 'js');
+        [$payload, $mcqs, $theory] = $this->examPayloadFromQuestions($data, $questions, 'General', 'js', null);
 
         $exam = Exam::query()->create([
             ...$payload,
@@ -164,10 +177,10 @@ class ExamGenerationService
     }
 
     /**
-     * @param Collection<int, Question> $questions
+     * @param  Collection<int, Question>  $questions
      * @return array{0: array<string, mixed>, 1: Collection<int, Question>, 2: Collection<int, Question>}
      */
-    private function examPayloadFromQuestions(array $data, Collection $questions, string $fallbackSubject, QuestionLevel|string $fallbackLevel): array
+    private function examPayloadFromQuestions(array $data, Collection $questions, string $fallbackSubject, QuestionLevel|string $fallbackLevel, ?string $fallbackClassLevel): array
     {
         $mcqs = $questions->where('type', 'multiple_choice')->values();
         $theory = $questions->filter(fn (Question $question) => in_array($question->type->value, self::WRITTEN_TYPES, true))->values();
@@ -181,11 +194,16 @@ class ExamGenerationService
             ?? $fallbackLevel;
 
         $levelValue = $level instanceof QuestionLevel ? $level->value : $level;
+        $classLevel = $mcqs->first()?->class_level
+            ?? $theory->first()?->class_level
+            ?? $data['class_level']
+            ?? $fallbackClassLevel;
 
         return [[
             'title' => $data['title'],
             'subject_name' => $subjectName,
             'level' => $levelValue,
+            'class_level' => $classLevel,
             'instructions' => $data['instructions'] ?? 'Answer all questions carefully.',
             'mcq_count' => $mcqs->count(),
             'theory_count' => $theory->count(),
@@ -194,8 +212,8 @@ class ExamGenerationService
     }
 
     /**
-     * @param Collection<int, Question> $mcqs
-     * @param Collection<int, Question> $theory
+     * @param  Collection<int, Question>  $mcqs
+     * @param  Collection<int, Question>  $theory
      */
     private function attachQuestions(Exam $exam, Collection $mcqs, Collection $theory, bool $markAsUsed): void
     {
@@ -215,8 +233,8 @@ class ExamGenerationService
     }
 
     /**
-     * @param Collection<int, Question> $mcqs
-     * @param Collection<int, Question> $theory
+     * @param  Collection<int, Question>  $mcqs
+     * @param  Collection<int, Question>  $theory
      * @return array<string, array{section: string, sort_order: int}>
      */
     private function syncData(Collection $mcqs, Collection $theory): array

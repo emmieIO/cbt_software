@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Exports\GenerateExportRequest;
-use App\Models\Exam;
 use App\Models\ExamTitle;
 use App\Models\Subject;
 use App\Services\ExamGenerationService;
+use App\Support\AcademicLevels;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -20,12 +20,8 @@ class ExportController extends Controller
 
         return Inertia::render('Export', [
             'subjects' => $subjects,
-            'levels' => [
-                ['value' => 'lp', 'label' => 'Lower Primary'],
-                ['value' => 'hp', 'label' => 'Higher Primary'],
-                ['value' => 'js', 'label' => 'Junior Secondary'],
-                ['value' => 'ss', 'label' => 'Senior Secondary'],
-            ],
+            'levels' => AcademicLevels::levelOptions(),
+            'classLevels' => AcademicLevels::classOptions(),
             'examTitles' => ExamTitle::query()
                 ->where('is_active', true)
                 ->orderBy('name')

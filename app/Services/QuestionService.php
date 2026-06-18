@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Storage;
 class QuestionService
 {
     /**
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>  $data
      */
     public function create(array $data, string $createdBy): Question
     {
@@ -20,6 +20,7 @@ class QuestionService
                 'content' => $data['content'],
                 'type' => $data['type'],
                 'level' => $data['level'],
+                'class_level' => $data['class_level'],
                 'explanation' => $data['explanation'] ?? null,
                 'image_path' => $this->storeImage($data['image'] ?? null),
                 'marking_scheme' => $this->usesMarkingScheme($data['type']) ? ($data['marking_scheme'] ?? []) : null,
@@ -33,7 +34,7 @@ class QuestionService
     }
 
     /**
-     * @param array<int, array<string, mixed>> $rows
+     * @param  array<int, array<string, mixed>>  $rows
      */
     public function bulkCreate(array $rows, string $createdBy): int
     {
@@ -44,6 +45,7 @@ class QuestionService
                     'content' => $row['content'],
                     'type' => $row['type'],
                     'level' => $row['level'],
+                    'class_level' => $row['class_level'],
                     'marking_scheme' => $this->usesMarkingScheme($row['type']) ? ($row['marking_scheme'] ?? []) : null,
                     'created_by' => $createdBy,
                 ]);
@@ -56,7 +58,7 @@ class QuestionService
     }
 
     /**
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>  $data
      */
     public function update(Question $question, array $data): void
     {
@@ -80,6 +82,7 @@ class QuestionService
                 'content' => $data['content'],
                 'type' => $data['type'],
                 'level' => $data['level'],
+                'class_level' => $data['class_level'],
                 'explanation' => $data['explanation'] ?? null,
                 'image_path' => $imagePath,
                 'marking_scheme' => $this->usesMarkingScheme($data['type']) ? ($data['marking_scheme'] ?? []) : null,
@@ -101,7 +104,7 @@ class QuestionService
     }
 
     /**
-     * @param array<int, array<string, mixed>> $options
+     * @param  array<int, array<string, mixed>>  $options
      */
     private function syncOptions(Question $question, string $type, array $options): void
     {

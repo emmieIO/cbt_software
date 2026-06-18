@@ -5,12 +5,13 @@ namespace App\Services;
 use App\Models\Question;
 use App\Models\Subject;
 use App\Models\Topic;
+use App\Support\AcademicLevels;
 use Illuminate\Support\Facades\DB;
 
 class QuestionImportService
 {
     /**
-     * @param array<int, array<string, mixed>> $rows
+     * @param  array<int, array<string, mixed>>  $rows
      */
     public function importRows(array $rows, string $defaultLevel, string $createdBy): int
     {
@@ -22,6 +23,7 @@ class QuestionImportService
 
             foreach ($rows as $row) {
                 $level = $this->effectiveLevel($row, $defaultLevel);
+                $classLevel = $this->effectiveClassLevel($row, $level);
                 $subjectKey = strtolower($row['subject_name']).'::'.$level;
 
                 if (! isset($subjectCache[$subjectKey])) {
@@ -31,11 +33,11 @@ class QuestionImportService
                     )->id;
                 }
 
-                $topicKey = $subjectKey.'::'.strtolower($row['topic_name']);
+                $topicKey = $subjectKey.'::'.$classLevel.'::'.strtolower($row['topic_name']);
                 if (! isset($topicCache[$topicKey])) {
                     $topicCache[$topicKey] = Topic::firstOrCreate(
-                        ['name' => $row['topic_name'], 'subject_id' => $subjectCache[$subjectKey]],
-                        ['slug' => str($row['topic_name'])->slug()]
+                        ['name' => $row['topic_name'], 'subject_id' => $subjectCache[$subjectKey], 'class_level' => $classLevel],
+                        ['slug' => str($row['topic_name'].'-'.$classLevel.'-'.$subjectCache[$subjectKey])->slug()]
                     )->id;
                 }
 
@@ -46,6 +48,7 @@ class QuestionImportService
                     'explanation' => $row['explanation'] ?? null,
                     'type' => $row['type'],
                     'level' => $level,
+                    'class_level' => $classLevel,
                     'marking_scheme' => in_array($row['type'], ['short_answer', 'theory'], true) ? ($row['marking_scheme'] ?? []) : null,
                     'created_by' => $createdBy,
                 ]);
@@ -62,7 +65,7 @@ class QuestionImportService
     }
 
     /**
-     * @param array<string, mixed> $row
+     * @param  array<string, mixed>  $row
      */
     private function effectiveLevel(array $row, string $defaultLevel): string
     {
@@ -72,7 +75,19 @@ class QuestionImportService
     }
 
     /**
-     * @param array<string, mixed> $row
+     * @param  array<string, mixed>  $row
+     */
+    private function effectiveClassLevel(array $row, string $level): string
+    {
+        $classLevel = trim((string) ($row['class_level'] ?? ''));
+
+        return AcademicLevels::classBelongsToLevel($classLevel, $level)
+            ? $classLevel
+            : AcademicLevels::defaultClassFor($level);
+    }
+
+    /**
+     * @param  array<string, mixed>  $row
      */
     private function createOptions(Question $question, array $row): void
     {

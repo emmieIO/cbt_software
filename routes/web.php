@@ -25,8 +25,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/questions/batch/create', [ImportController::class, 'batchCreate'])->name('questions.batch.create');
+    Route::get('/questions/import/pdf', [ImportController::class, 'importPdf'])->name('questions.import.pdf');
     Route::get('/questions/import', [ImportController::class, 'index'])->name('questions.import.index');
     Route::get('/questions/import/template', [ImportController::class, 'downloadTemplate'])->name('questions.import.template');
+    Route::get('/questions/import/pdf-template', [ImportController::class, 'downloadPdfTemplate'])->name('questions.import.pdf-template');
     Route::post('/questions/import/preview', [ImportController::class, 'preview'])->name('questions.import.preview');
     Route::post('/questions/import/confirm', [ImportController::class, 'confirm'])->name('questions.import.confirm');
     Route::post('/questions/import/quick', [ImportController::class, 'quickStore'])->name('questions.import.quick');

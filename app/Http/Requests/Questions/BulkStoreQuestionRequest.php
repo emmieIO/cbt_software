@@ -2,9 +2,12 @@
 
 namespace App\Http\Requests\Questions;
 
+use App\Models\Topic;
+use App\Support\AcademicLevels;
 use App\Support\RichContent;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class BulkStoreQuestionRequest extends FormRequest
@@ -25,6 +28,7 @@ class BulkStoreQuestionRequest extends FormRequest
             'questions.*.topic_id' => ['required', 'exists:topics,id'],
             'questions.*.content' => ['required', 'string'],
             'questions.*.level' => ['required', 'in:lp,hp,js,ss'],
+            'questions.*.class_level' => ['required', Rule::in(AcademicLevels::classValues())],
             'questions.*.options' => ['nullable', 'array'],
             'questions.*.options.*.content' => ['required_with:questions.*.options', 'string'],
             'questions.*.options.*.is_correct' => ['nullable', 'boolean'],
@@ -44,6 +48,21 @@ class BulkStoreQuestionRequest extends FormRequest
 
                 if (RichContent::text($question['content'] ?? '') === '') {
                     $validator->errors()->add("questions.$index.content", 'Question content is required.');
+                }
+
+                if (! AcademicLevels::classBelongsToLevel((string) ($question['class_level'] ?? ''), (string) ($question['level'] ?? ''))) {
+                    $validator->errors()->add("questions.$index.class_level", 'Select a class level that belongs to the selected school level.');
+                }
+
+                $topic = Topic::query()->with('subject')->find($question['topic_id'] ?? null);
+                if ($topic) {
+                    if ($topic->subject?->level && $topic->subject->level !== ($question['level'] ?? null)) {
+                        $validator->errors()->add("questions.$index.topic_id", 'Select a topic that belongs to the selected school level.');
+                    }
+
+                    if ($topic->class_level && $topic->class_level !== ($question['class_level'] ?? null)) {
+                        $validator->errors()->add("questions.$index.topic_id", 'Select a topic that belongs to the selected class level.');
+                    }
                 }
 
                 if ($type === 'multiple_choice') {

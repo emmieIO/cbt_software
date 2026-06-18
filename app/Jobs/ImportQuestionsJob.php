@@ -16,7 +16,7 @@ class ImportQuestionsJob implements ShouldQueue
     public int $timeout = 300;
 
     /**
-     * @param array<int, array<string, mixed>> $rows
+     * @param  array<int, array<string, mixed>>  $rows
      */
     public function __construct(
         public array $rows,

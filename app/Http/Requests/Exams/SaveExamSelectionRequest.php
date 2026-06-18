@@ -4,8 +4,10 @@ namespace App\Http\Requests\Exams;
 
 use App\Models\Exam;
 use App\Models\ExamTitle;
+use App\Support\AcademicLevels;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class SaveExamSelectionRequest extends FormRequest
@@ -23,6 +25,7 @@ class SaveExamSelectionRequest extends FormRequest
         return [
             'title' => ['required', 'string', 'max:255'],
             'instructions' => ['nullable', 'string'],
+            'class_level' => ['nullable', Rule::in(AcademicLevels::classValues())],
             'question_ids' => ['required', 'array', 'min:1'],
             'question_ids.*' => ['distinct', 'exists:questions,id'],
         ];

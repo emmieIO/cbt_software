@@ -4,9 +4,10 @@ import { computed, ref } from 'vue';
 import BatchQuestionRow from '@/components/Questions/BatchQuestionRow.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 
-type TopicOption = { id: string; name: string };
+type TopicOption = { id: string; name: string; class_level?: string | null };
 type SubjectOption = { id: string; name: string; level?: string | null; topics: TopicOption[] };
 type LevelOption = { value: string; label: string };
+type ClassLevelOption = { value: string; label: string };
 type QuestionType = 'multiple_choice' | 'short_answer' | 'theory';
 type QuestionOption = { content: string; is_correct: boolean };
 type MarkingPoint = { point: string; weight: number };
@@ -16,18 +17,21 @@ type QuestionDraft = {
     subject_id: string;
     topic_id: string;
     level: string;
+    class_level: string;
     content: string;
     options: QuestionOption[];
     marking_scheme: MarkingPoint[];
 };
-type RowErrors = Partial<Record<'subject_id' | 'topic_id' | 'content' | 'options' | 'marking_scheme', string>>;
+type RowErrors = Partial<Record<'subject_id' | 'topic_id' | 'class_level' | 'content' | 'options' | 'marking_scheme', string>>;
 
 const props = defineProps<{
     levels: LevelOption[];
+    classLevels: Record<string, ClassLevelOption[]>;
     subjects: SubjectOption[];
 }>();
 
 const defaultLevel = props.levels[0]?.value ?? '';
+const defaultClassLevel = props.classLevels[defaultLevel]?.[0]?.value ?? '';
 const nextId = ref(2);
 const submitting = ref(false);
 const rowErrors = ref<Record<number, RowErrors>>({});
@@ -38,6 +42,7 @@ const createQuestion = (overrides: Partial<QuestionDraft> = {}): QuestionDraft =
     subject_id: overrides.subject_id ?? '',
     topic_id: overrides.topic_id ?? '',
     level: overrides.level ?? defaultLevel,
+    class_level: overrides.class_level ?? defaultClassLevel,
     content: overrides.content ?? '',
     options: overrides.options
         ? overrides.options.map((option) => ({ ...option }))
@@ -87,6 +92,7 @@ const validateQuestion = (question: QuestionDraft): RowErrors => {
 
     if (!question.subject_id) errors.subject_id = 'Subject is required.';
     if (!question.topic_id) errors.topic_id = 'Topic is required.';
+    if (!question.class_level) errors.class_level = 'Class level is required.';
     if (!richText(question.content)) errors.content = 'Question text is required.';
 
     if (question.type === 'multiple_choice') {
@@ -117,6 +123,7 @@ const submit = () => {
             topic_id: question.topic_id,
             content: question.content,
             level: question.level,
+            class_level: question.class_level,
             options:
                 question.type === 'multiple_choice'
                     ? question.options.map((option) => ({
@@ -197,7 +204,7 @@ const submit = () => {
 
             <div class="space-y-4">
                 <BatchQuestionRow v-for="(question, index) in questions" :key="question.id" :index="index"
-                    :levels="levels" :row="question" :row-errors="rowErrors[question.id]" :subjects="subjects"
+                    :class-levels="classLevels" :levels="levels" :row="question" :row-errors="rowErrors[question.id]" :subjects="subjects"
                     @update-row="updateQuestion(index, $event)" @remove="removeQuestion(index)" />
             </div>
 

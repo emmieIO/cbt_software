@@ -2,17 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\QuestionLevel;
 use App\Http\Requests\Exams\ExamPoolRequest;
 use App\Http\Requests\Exams\SaveExamSelectionRequest;
 use App\Models\Exam;
 use App\Models\ExamTitle;
 use App\Models\Subject;
 use App\Services\ExamGenerationService;
+use App\Support\AcademicLevels;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -28,21 +29,26 @@ class ExamController extends Controller
             ->withCount('questions')
             ->orderBy('created_at', 'desc')
             ->paginate(20)
-            ->through(fn ($e) => (object) [
-                'id' => $e->id,
-                'title' => $e->title,
-                'subject_name' => $e->subject_name,
-                'level' => strtoupper($e->level instanceof \App\Enums\QuestionLevel ? $e->level->value : $e->level),
-                'total_marks' => $e->total_marks,
-                'questions_count' => $e->questions_count,
-                'created_at' => $e->created_at->format('M j, Y'),
-                'creator' => ['name' => $e->creator?->name],
-                'topics' => $e->questions
-                    ->map(fn ($question) => $question->topic?->name)
-                    ->filter()
-                    ->unique()
-                    ->values(),
-            ]);
+            ->through(function ($e): object {
+                $level = $e->level instanceof QuestionLevel ? $e->level->value : $e->level;
+
+                return (object) [
+                    'id' => $e->id,
+                    'title' => $e->title,
+                    'subject_name' => $e->subject_name,
+                    'level' => strtoupper($level),
+                    'class_level' => AcademicLevels::classLabel($e->class_level, $level),
+                    'total_marks' => $e->total_marks,
+                    'questions_count' => $e->questions_count,
+                    'created_at' => $e->created_at->format('M j, Y'),
+                    'creator' => ['name' => $e->creator?->name],
+                    'topics' => $e->questions
+                        ->map(fn ($question) => $question->topic?->name)
+                        ->filter()
+                        ->unique()
+                        ->values(),
+                ];
+            });
 
         return Inertia::render('Exam/Index', [
             'exams' => $exams,
@@ -56,6 +62,7 @@ class ExamController extends Controller
         return Inertia::render('Exam/Create', [
             'subjects' => $subjects,
             'levels' => $this->levelOptions(),
+            'classLevels' => AcademicLevels::classOptions(),
             'examTitles' => $this->examTitleOptions(),
         ]);
     }
@@ -65,6 +72,7 @@ class ExamController extends Controller
         return response()->json($this->examGenerationService->pool(
             (string) $request->input('subject_id'),
             (string) $request->input('level'),
+            (string) $request->input('class_level'),
         ));
     }
 
@@ -78,12 +86,14 @@ class ExamController extends Controller
         return Inertia::render('Exam/Create', [
             'subjects' => $subjects,
             'levels' => $this->levelOptions(),
+            'classLevels' => AcademicLevels::classOptions(),
             'examTitles' => $this->examTitleOptions(),
             'exam' => [
                 'id' => $exam->id,
                 'title' => $exam->title,
                 'subject' => $exam->subject_name,
-                'level' => strtoupper($exam->level instanceof \App\Enums\QuestionLevel ? $exam->level->value : $exam->level),
+                'level' => strtoupper($exam->level instanceof QuestionLevel ? $exam->level->value : $exam->level),
+                'class_level' => AcademicLevels::classLabel($exam->class_level, $exam->level instanceof QuestionLevel ? $exam->level->value : $exam->level),
                 'date' => $exam->created_at->format('F j, Y'),
                 'instructions' => $exam->instructions,
                 'mcq_count' => $mcqs->count(),
@@ -115,6 +125,7 @@ class ExamController extends Controller
         return Inertia::render('Exam/Create', [
             'subjects' => $subjects,
             'levels' => $this->levelOptions(),
+            'classLevels' => AcademicLevels::classOptions(),
             'examTitles' => $this->examTitleOptions(),
             'exam' => $this->examPayload($exam),
         ]);
@@ -125,11 +136,12 @@ class ExamController extends Controller
         $exam->load(['questions.topic.subject', 'mcqs.options', 'theoryQuestions']);
         $subjects = Subject::query()->with('topics')->orderBy('name')->get();
         $selectedSubjectId = optional($exam->questions->first()?->topic)->subject_id;
-        $level = $exam->level instanceof \App\Enums\QuestionLevel ? $exam->level->value : $exam->level;
+        $level = $exam->level instanceof QuestionLevel ? $exam->level->value : $exam->level;
 
         return Inertia::render('Exam/Create', [
             'subjects' => $subjects,
             'levels' => $this->levelOptions(),
+            'classLevels' => AcademicLevels::classOptions(),
             'examTitles' => $this->examTitleOptions($exam->title),
             'exam' => [
                 ...$this->examPayload($exam),
@@ -141,6 +153,7 @@ class ExamController extends Controller
                 'title' => $exam->title,
                 'subject_id' => $selectedSubjectId,
                 'level' => $level,
+                'class_level' => $exam->class_level ?? AcademicLevels::defaultClassFor($level),
                 'instructions' => $exam->instructions,
             ],
         ]);
@@ -266,7 +279,8 @@ class ExamController extends Controller
         return [
             'title' => $exam->title,
             'subject' => $exam->subject_name,
-            'level' => strtoupper($exam->level instanceof \App\Enums\QuestionLevel ? $exam->level->value : $exam->level),
+            'level' => strtoupper($exam->level instanceof QuestionLevel ? $exam->level->value : $exam->level),
+            'classLevel' => AcademicLevels::classLabel($exam->class_level, $exam->level instanceof QuestionLevel ? $exam->level->value : $exam->level),
             'date' => $exam->created_at->format('F j, Y'),
             'instructions' => $exam->instructions,
             'mcqs' => $mcqs,
@@ -354,7 +368,8 @@ class ExamController extends Controller
             'id' => $exam->id,
             'title' => $exam->title,
             'subject' => $exam->subject_name,
-            'level' => strtoupper($exam->level instanceof \App\Enums\QuestionLevel ? $exam->level->value : $exam->level),
+            'level' => strtoupper($exam->level instanceof QuestionLevel ? $exam->level->value : $exam->level),
+            'class_level' => AcademicLevels::classLabel($exam->class_level, $exam->level instanceof QuestionLevel ? $exam->level->value : $exam->level),
             'date' => $exam->created_at->format('F j, Y'),
             'instructions' => $exam->instructions,
             'mcq_count' => $exam->mcqs->count(),

@@ -2,10 +2,11 @@
 
 namespace App\Models;
 
+use App\Enums\QuestionLevel;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -14,7 +15,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property string $id
  * @property string $title
  * @property string $subject_name
- * @property string|\App\Enums\QuestionLevel $level
+ * @property string|QuestionLevel $level
+ * @property string|null $class_level
  * @property string|null $instructions
  * @property int $mcq_count
  * @property int $theory_count
@@ -33,6 +35,7 @@ class Exam extends Model
         'title',
         'subject_name',
         'level',
+        'class_level',
         'instructions',
         'mcq_count',
         'theory_count',

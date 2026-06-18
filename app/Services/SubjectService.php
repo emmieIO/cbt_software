@@ -7,7 +7,7 @@ use App\Models\Subject;
 class SubjectService
 {
     /**
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>  $data
      */
     public function create(array $data): Subject
     {
@@ -15,7 +15,7 @@ class SubjectService
     }
 
     /**
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>  $data
      */
     public function update(Subject $subject, array $data): void
     {
@@ -23,7 +23,7 @@ class SubjectService
     }
 
     /**
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */
     private function payload(array $data): array
