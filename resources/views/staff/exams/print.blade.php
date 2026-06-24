@@ -336,11 +336,13 @@
             border: 1px solid #8a8a8a;
             padding: 18pt 25.5pt;
             height: 248mm;
+            min-height: 248mm;
             position: relative;
             page-break-after: always;
             break-after: page;
             box-sizing: border-box;
             margin-bottom: 37.5pt;
+            display: block;
         }
         .cover-logo-area {
             position: absolute;
