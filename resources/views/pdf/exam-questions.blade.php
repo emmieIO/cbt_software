@@ -55,7 +55,7 @@
         /* Cover Page Styles */
         .cover-page {
             border: 1px solid #8a8a8a;
-            padding: 24px 34px;
+            padding: 18pt 25.5pt;
             height: 248mm;
             position: relative;
             page-break-after: always;
@@ -63,16 +63,16 @@
         }
         .cover-logo-area {
             position: absolute;
-            top: 20px;
-            left: 34px;
-            right: 34px;
+            top: 15pt;
+            left: 25.5pt;
+            right: 25.5pt;
             text-align: center;
             white-space: nowrap;
         }
         .cover-logo {
-            height: 41px;
+            height: 30.75pt;
             vertical-align: middle;
-            margin-right: 7px;
+            margin-right: 5.25pt;
         }
         .cover-school {
             font-family: 'DejaVu Sans', sans-serif;
@@ -85,9 +85,9 @@
         }
         .cover-unit {
             position: absolute;
-            top: 88px;
-            left: 34px;
-            right: 34px;
+            top: 66pt;
+            left: 25.5pt;
+            right: 25.5pt;
             text-align: center;
             font-size: 20pt;
             font-weight: 700;
@@ -97,9 +97,9 @@
         }
         .cover-test-title {
             position: absolute;
-            top: 190px;
-            left: 34px;
-            right: 34px;
+            top: 142.5pt;
+            left: 25.5pt;
+            right: 25.5pt;
             font-family: 'DejaVu Sans', sans-serif;
             text-align: center;
             font-size: 18pt;
@@ -109,9 +109,9 @@
         }
         .cover-session {
             position: absolute;
-            top: 228px;
-            left: 34px;
-            right: 34px;
+            top: 171pt;
+            left: 25.5pt;
+            right: 25.5pt;
             font-family: 'DejaVu Sans', sans-serif;
             text-align: center;
             font-size: 18pt;
@@ -124,48 +124,48 @@
         }
         .cover-detail-item {
             position: absolute;
-            left: 34px;
-            right: 34px;
+            left: 25.5pt;
+            right: 25.5pt;
             text-align: center;
             font-size: 15pt;
             font-weight: bold;
             margin: 0;
             color: #000;
         }
-        .cover-detail-item:nth-child(1) { top: 325px; }
-        .cover-detail-item:nth-child(2) { top: 405px; }
-        .cover-detail-item:nth-child(3) { top: 480px; }
-        .cover-detail-item:nth-child(4) { top: 555px; }
-        .cover-detail-item:nth-child(5) { top: 630px; }
-        .cover-detail-item:nth-child(6) { top: 700px; }
+        .cover-detail-item:nth-child(1) { top: 243.75pt; }
+        .cover-detail-item:nth-child(2) { top: 303.75pt; }
+        .cover-detail-item:nth-child(3) { top: 360pt; }
+        .cover-detail-item:nth-child(4) { top: 416.25pt; }
+        .cover-detail-item:nth-child(5) { top: 472.5pt; }
+        .cover-detail-item:nth-child(6) { top: 525pt; }
         .cover-line {
             display: inline-block;
             border-bottom: 1px solid #000;
             vertical-align: bottom;
-            margin-left: 3px;
+            margin-left: 2.25pt;
         }
         .cover-score {
             position: absolute;
-            right: 78px;
-            bottom: 45px;
-            width: 190px;
-            height: 82px;
+            right: 58.5pt;
+            bottom: 33.75pt;
+            width: 142.5pt;
+            height: 61.5pt;
         }
         .cover-score-label {
             position: absolute;
             left: 0;
-            top: 31px;
+            top: 23.25pt;
             font-size: 15pt;
             font-weight: bold;
             color: #000;
         }
         .cover-score-box {
             position: absolute;
-            top: 0;
             right: 0;
+            top: 0;
             border: 1px solid #777;
-            width: 110px;
-            height: 82px;
+            width: 82.5pt;
+            height: 61.5pt;
             background: #fff;
         }
     </style>
@@ -190,14 +190,14 @@
         <div class="cover-detail-item">SUBJECT: {{ strtoupper($subject) }}</div>
         <div class="cover-detail-item">LEVEL: {{ strtoupper($classLevel ?: $lbl) }}</div>
         <div class="cover-detail-item">
-            CLASS: <span class="cover-line" style="width: 92px;"></span>
+            CLASS: <span class="cover-line" style="width: 69pt;"></span>
         </div>
         <div class="cover-detail-item">DURATION: {{ strtoupper($duration ?: '_________________') }}</div>
         <div class="cover-detail-item">
-            DATE: <span class="cover-line" style="width: 320px;"></span>
+            DATE: <span class="cover-line" style="width: 240pt;"></span>
         </div>
         <div class="cover-detail-item">
-            NAME: <span class="cover-line" style="width: 420px;"></span>
+            NAME: <span class="cover-line" style="width: 315pt;"></span>
         </div>
     </div>
 
