@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Question Preview: {{ $title }}</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800;900&display=swap');
         {!! file_get_contents(base_path('node_modules/katex/dist/katex.min.css')) ?: '' !!}
         :root {
             color-scheme: light;
@@ -26,7 +27,7 @@
         html, body {
             margin: 0;
             min-height: 100%;
-            font-family: "Segoe UI", Arial, sans-serif;
+            font-family: 'Figtree', "Segoe UI", Arial, sans-serif;
             color: var(--ink);
             background:
                 radial-gradient(circle at top, rgba(15, 90, 43, 0.12), transparent 35%),
@@ -126,83 +127,96 @@
             border-radius: 18px;
         }
 
-        .header {
+        .paper-header {
+            margin-bottom: 5px;
             text-align: center;
-            margin-bottom: 10px;
         }
 
-        .logo {
-            max-height: 44px;
-            margin-bottom: 4px;
+        .paper-brand {
+            white-space: nowrap;
         }
 
-        .school {
-            font-size: 13pt;
+        .paper-logo {
+            height: 31px;
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+
+        .paper-school {
+            font-size: 19pt;
+            font-weight: 700;
+            vertical-align: middle;
+        }
+
+        .paper-title {
+            margin-top: 2px;
+            font-size: 10.5pt;
             font-weight: 700;
             text-transform: uppercase;
-            color: var(--brand);
-            letter-spacing: 1px;
         }
 
-        .exam-title {
-            font-size: 12pt;
+        .paper-session,
+        .paper-subject {
+            margin-top: 1px;
+            font-size: 10pt;
             font-weight: 700;
-            margin-top: 3px;
         }
 
-        .meta {
-            margin-top: 6px;
-            font-size: 8.5pt;
-            color: #4b5563;
+        .paper-subject {
+            text-transform: uppercase;
         }
 
-        .rule {
-            border-top: 1.5px solid var(--brand);
-            margin: 8px 0 10px;
-        }
-
-        .candidate-table {
+        .paper-meta {
             width: 100%;
+            margin-top: 2px;
             border-collapse: collapse;
-            margin-bottom: 10px;
-        }
-
-        .candidate-table td {
-            padding: 5px 6px;
-            font-size: 8.5pt;
-            border: 1px solid #6b7280;
-        }
-
-        .candidate-label {
-            width: 110px;
+            font-size: 9.5pt;
             font-weight: 700;
-            background: var(--panel);
+        }
+
+        .paper-meta td {
+            padding: 0;
+            border: none;
+        }
+
+        .paper-meta td:first-child {
+            text-align: left;
+        }
+
+        .paper-meta td:last-child {
+            text-align: right;
         }
 
         .instructions {
-            margin-bottom: 10px;
+            max-width: 94%;
+            margin: 3px auto 6px;
+            text-align: center;
             font-size: 8.5pt;
+            line-height: 1.3;
         }
 
         .instructions strong {
-            color: var(--brand);
+            color: var(--ink);
         }
 
         .section-title {
-            margin: 12px 0 4px;
+            margin: 6px 0 2px;
+            text-align: center;
             font-size: 10pt;
             font-weight: 700;
             text-transform: uppercase;
-            color: var(--brand);
+            color: var(--ink);
         }
 
         .section-note {
-            margin: 0 0 8px;
+            margin: 0 0 6px;
+            text-align: center;
             font-size: 8.5pt;
-            color: #4b5563;
+            font-weight: 700;
+            color: #1f2937;
         }
 
-        .theory-section.page-break {
+        .exam-section.page-break {
             page-break-before: always;
         }
 
@@ -212,7 +226,7 @@
         }
 
         .question-item {
-            margin: 0 0 9px;
+            margin: 0 0 7px;
             break-inside: avoid;
             page-break-inside: avoid;
         }
@@ -224,8 +238,8 @@
 
         .question-no {
             display: table-cell;
-            width: 22px;
-            font-weight: 700;
+            width: 19px;
+            font-weight: 400;
             vertical-align: top;
         }
 
@@ -250,23 +264,47 @@
             max-height: 280px;
         }
 
-        .options-table {
+        .objective-columns {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 5px;
-            margin-bottom: 6px;
             table-layout: fixed;
         }
 
-        .options-table td {
+        .objective-columns > tbody > tr > td {
             width: 50%;
-            padding: 2px 8px 2px 0;
+            padding: 0 10px;
+            vertical-align: top;
+        }
+
+        .objective-columns > tbody > tr > td:first-child {
+            padding-left: 0;
+            border-right: 1px solid #6b7280;
+        }
+
+        .objective-columns > tbody > tr > td:last-child {
+            padding-right: 0;
+        }
+
+        .objective-question {
+            font-size: 8.2pt;
+            line-height: 1.25;
+        }
+
+        .options-table {
+            width: 100%;
+            margin-top: 2px;
+            margin-bottom: 3px;
+            border-collapse: collapse;
+        }
+
+        .options-table td {
+            padding: 1px 0;
             vertical-align: top;
         }
 
         .option-line {
-            padding-left: 14px;
-            text-indent: -14px;
+            padding-left: 15px;
+            text-indent: -15px;
         }
 
         .option-label {
@@ -292,6 +330,137 @@
             font-size: 8pt;
             font-weight: 700;
             color: var(--brand);
+        }
+
+        /* Cover Page Styles */
+        .cover-page {
+            border: 1px solid #8a8a8a;
+            padding: 24px 34px;
+            height: 248mm;
+            position: relative;
+            page-break-after: always;
+            break-after: page;
+            box-sizing: border-box;
+            margin-bottom: 50px;
+        }
+        .cover-logo-area {
+            position: absolute;
+            top: 20px;
+            left: 34px;
+            right: 34px;
+            text-align: center;
+            white-space: nowrap;
+        }
+        .cover-logo {
+            height: 41px;
+            vertical-align: middle;
+            margin-right: 7px;
+        }
+        .cover-school {
+            font-family: 'Figtree', "Segoe UI", Arial, sans-serif;
+            font-size: 30pt;
+            font-weight: 800;
+            text-transform: uppercase;
+            vertical-align: middle;
+            letter-spacing: 0;
+            color: var(--ink);
+        }
+        .cover-unit {
+            position: absolute;
+            top: 88px;
+            left: 34px;
+            right: 34px;
+            text-align: center;
+            font-size: 20pt;
+            font-weight: 700;
+            line-height: 1.15;
+            letter-spacing: 0;
+            color: var(--ink);
+        }
+        .cover-test-title {
+            position: absolute;
+            top: 190px;
+            left: 34px;
+            right: 34px;
+            text-align: center;
+            font-size: 18pt;
+            font-weight: 700;
+            letter-spacing: 0;
+            color: var(--ink);
+        }
+        .cover-session {
+            position: absolute;
+            top: 228px;
+            left: 34px;
+            right: 34px;
+            text-align: center;
+            font-size: 18pt;
+            font-weight: 700;
+            letter-spacing: 0;
+            color: var(--ink);
+        }
+        .cover-details {
+            position: static;
+        }
+        .cover-detail-item {
+            position: absolute;
+            left: 34px;
+            right: 34px;
+            text-align: center;
+            font-size: 15pt;
+            font-weight: 700;
+            margin: 0;
+            color: var(--ink);
+        }
+        .cover-detail-item:nth-child(1) { top: 325px; }
+        .cover-detail-item:nth-child(2) { top: 405px; }
+        .cover-detail-item:nth-child(3) { top: 480px; }
+        .cover-detail-item:nth-child(4) { top: 555px; }
+        .cover-detail-item:nth-child(5) { top: 630px; }
+        .cover-detail-item:nth-child(6) { top: 700px; }
+        .cover-line {
+            display: inline-block;
+            border-bottom: 1px solid var(--ink);
+            vertical-align: bottom;
+            margin-left: 3px;
+        }
+        .cover-score {
+            position: absolute;
+            right: 78px;
+            bottom: 45px;
+            width: 190px;
+            height: 82px;
+        }
+        .cover-score-label {
+            position: absolute;
+            left: 0;
+            top: 31px;
+            font-size: 15pt;
+            font-weight: 700;
+            color: var(--ink);
+        }
+        .cover-score-box {
+            position: absolute;
+            top: 0;
+            right: 0;
+            border: 1px solid #777;
+            width: 110px;
+            height: 82px;
+            background: #fff;
+        }
+        @media print {
+            .cover-page {
+                border: 1px solid #8a8a8a;
+                padding: 24px 34px;
+                height: 248mm;
+                margin-bottom: 0;
+            }
+            .cover-line {
+                border-bottom: 1px solid #000;
+            }
+            .cover-score-box {
+                border: 1px solid #777;
+            }
         }
 
         @media (max-width: 768px) {
@@ -379,68 +548,127 @@
 
     <div class="preview-stage">
         <main class="paper">
-            <div class="header">
-                <img src="{{ asset('assets/img/chrisland-school-logo.png') }}" alt="Chrisland Schools" class="logo" />
-                <div class="school">Chrisland Schools</div>
-                <div class="exam-title">{{ $title }}</div>
-                <div class="meta">{{ $subject }} | {{ $lbl }} Level | {{ $totalMarks }} Marks | {{ $date }}</div>
+            <!-- Cover Page -->
+            <div class="cover-page">
+                <div class="cover-logo-area">
+                    <img src="{{ asset('assets/img/chrisland-school-logo.png') }}" alt="Chrisland Schools" class="cover-logo" />
+                    <span class="cover-school">CHRISLAND SCHOOLS</span>
+                </div>
+
+                <div class="cover-unit">TESTS, EXAMINATIONS AND<br>ACADEMIC RECORDS UNIT</div>
+
+                <div class="cover-test-title"><strong>{{ strtoupper($title) }}</strong></div>
+                <div class="cover-session"><strong>{{ $academicSession }} ACADEMIC SESSION</strong></div>
+
+                <div class="cover-details">
+                    <div class="cover-detail-item">SUBJECT: {{ strtoupper($subject) }}</div>
+                    <div class="cover-detail-item">LEVEL: {{ strtoupper($classLevel ?: $lbl) }}</div>
+                    <div class="cover-detail-item">
+                        CLASS: <span class="cover-line" style="width: 92px;"></span>
+                    </div>
+                    <div class="cover-detail-item">DURATION: {{ strtoupper($duration ?: '_________________') }}</div>
+                    <div class="cover-detail-item">
+                        DATE: <span class="cover-line" style="width: 320px;"></span>
+                    </div>
+                    <div class="cover-detail-item">
+                        NAME: <span class="cover-line" style="width: 420px;"></span>
+                    </div>
+                </div>
+
+                <div class="cover-score">
+                    <span class="cover-score-label">SCORE</span>
+                    <div class="cover-score-box"></div>
+                </div>
             </div>
 
-            <div class="rule"></div>
-
-            <table class="candidate-table">
-                <tr>
-                    <td class="candidate-label">Candidate Name</td>
-                    <td></td>
-                    <td class="candidate-label" style="width:70px;">Class</td>
-                    <td style="width:120px;"></td>
-                </tr>
-            </table>
+            <!-- Exam Content -->
+            <div class="paper-header">
+                <div class="paper-brand">
+                    <img src="{{ asset('assets/img/chrisland-school-logo.png') }}" alt="Chrisland Schools" class="paper-logo" />
+                    <span class="paper-school">CHRISLAND SCHOOLS</span>
+                </div>
+                <div class="paper-title">{{ strtoupper($title) }}</div>
+                <div class="paper-session">{{ $academicSession }} ACADEMIC SESSION</div>
+                <div class="paper-subject">SUBJECT: {{ strtoupper($subject) }}</div>
+                <table class="paper-meta">
+                    <tr>
+                        <td>CLASS: {{ strtoupper($classLevel ?: $lbl) }}</td>
+                        <td>DURATION: {{ strtoupper($duration ?: '_________________') }}</td>
+                    </tr>
+                </table>
+            </div>
 
             <div class="instructions">
-                <strong>Instructions:</strong> {{ $instructions }}
-                <br>Answer all questions. Write your answers neatly in the spaces or booklet provided by the invigilator.
+                {{ $instructions }}
             </div>
 
             @foreach($questionSections as $sectionIndex => $section)
                 <div class="exam-section {{ $sectionIndex > 0 ? 'page-break' : '' }}">
-                    <div class="section-title">{{ $section['label'] }}: {{ $section['title'] }}</div>
-                    <div class="section-note">{{ $section['note'] }}</div>
-                    <div class="question-list">
-                        @foreach($section['questions'] as $index => $q)
-                            @php $marks = $section['type'] === 'mcq' ? 1 : collect($q->marking_scheme)->sum('weight'); @endphp
-                            <div class="question-item">
-                                <div class="question-row">
-                                    <div class="question-no">{{ $section['start'] + $index }}.</div>
-                                    <div class="question-body">
-                                        {!! $q->printableHtml() !!}
-                                        <span class="marks">[{{ $marks }}]</span>
-                                        @if($src = $q->imageUrl)
-                                            <div class="question-image">
-                                                <img src="{{ $src }}" alt="Question image" />
-                                            </div>
-                                        @endif
-                                        @if($section['type'] === 'mcq')
-                                            <table class="options-table">
-                                                <tr>
-                                                    @foreach($q->options->values() as $oi => $opt)
-                                                        <td>
-                                                            <div class="option-line">
-                                                                <span class="option-label">{{ chr(65 + $oi) }}.</span> {!! \App\Support\RichContent::pdf($opt->content) !!}
-                                                            </div>
-                                                        </td>
-                                                        @if($oi % 2 === 1 && $oi !== $q->options->count() - 1)
-                                                            </tr><tr>
+                    <div class="section-title">{{ $section['label'] }} ({{ strtoupper($section['title']) }})</div>
+                    <div class="section-note">INSTRUCTION: {{ $section['note'] }}</div>
+                    @if($section['type'] === 'mcq')
+                        @php
+                            $objectiveQuestions = $section['questions']->values();
+                            $objectiveSplit = (int) ceil($objectiveQuestions->count() / 2);
+                            $objectiveColumns = [
+                                $objectiveQuestions->take($objectiveSplit)->values(),
+                                $objectiveQuestions->slice($objectiveSplit)->values(),
+                            ];
+                        @endphp
+                        <table class="objective-columns">
+                            <tr>
+                                @foreach($objectiveColumns as $columnQuestions)
+                                    <td>
+                                        @foreach($columnQuestions as $columnIndex => $q)
+                                            @php
+                                                $questionIndex = $loop->parent->index === 0 ? $columnIndex : $objectiveSplit + $columnIndex;
+                                            @endphp
+                                            <div class="question-item objective-question">
+                                                <div class="question-row">
+                                                    <div class="question-no">{{ $section['start'] + $questionIndex }}.</div>
+                                                    <div class="question-body">
+                                                        {!! $q->printableHtml() !!}
+                                                        @if($src = $q->imageUrl)
+                                                            <div class="question-image"><img src="{{ $src }}" alt="Question image" /></div>
                                                         @endif
-                                                    @endforeach
-                                                </tr>
-                                            </table>
-                                        @endif
+                                                        <table class="options-table">
+                                                            @foreach($q->options->values() as $oi => $opt)
+                                                                <tr>
+                                                                    <td>
+                                                                        <div class="option-line">
+                                                                            <span class="option-label">{{ chr(65 + $oi) }}.</span> {!! \App\Support\RichContent::pdf($opt->content) !!}
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            @endforeach
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </td>
+                                @endforeach
+                            </tr>
+                        </table>
+                    @else
+                        <div class="question-list">
+                            @foreach($section['questions'] as $index => $q)
+                                @php $marks = collect($q->marking_scheme)->sum('weight'); @endphp
+                                <div class="question-item">
+                                    <div class="question-row">
+                                        <div class="question-no">{{ $section['start'] + $index }}.</div>
+                                        <div class="question-body">
+                                            {!! $q->printableHtml() !!}
+                                            <span class="marks">[{{ $marks }}]</span>
+                                            @if($src = $q->imageUrl)
+                                                <div class="question-image"><img src="{{ $src }}" alt="Question image" /></div>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        @endforeach
-                    </div>
+                            @endforeach
+                        </div>
+                    @endif
                 </div>
             @endforeach
 

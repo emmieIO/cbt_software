@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Official Results: {{ $exam->title }}</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@400;600;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Figtree:wght@400;500;600;700;800;900&display=swap');
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Figtree', sans-serif;
             background-color: #fff;
             margin: 0;
             padding: 40px;

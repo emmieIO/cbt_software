@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Exports\GenerateExportRequest;
+use App\Models\AcademicSession;
 use App\Models\ExamTitle;
 use App\Models\Subject;
 use App\Services\ExamGenerationService;
@@ -26,6 +27,11 @@ class ExportController extends Controller
                 ->where('is_active', true)
                 ->orderBy('name')
                 ->pluck('name'),
+            'academicSessions' => AcademicSession::query()
+                ->where('is_active', true)
+                ->orderByDesc('starts_at')
+                ->get(['id', 'name']),
+            'activeAcademicSessionId' => AcademicSession::query()->where('is_active', true)->value('id'),
         ]);
     }
 

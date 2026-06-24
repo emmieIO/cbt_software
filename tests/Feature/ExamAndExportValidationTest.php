@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\AcademicSession;
 use App\Models\ExamTitle;
 use App\Models\Question;
 use App\Models\Subject;
@@ -8,6 +9,7 @@ use App\Models\User;
 
 it('rejects exam generation with duplicate question ids', function () {
     $user = User::factory()->create();
+    $academicSession = AcademicSession::factory()->active()->create();
     ExamTitle::factory()->create(['name' => 'Midterm']);
     $subject = Subject::factory()->create(['level' => 'js']);
     $topic = Topic::factory()->for($subject)->create();
@@ -20,6 +22,7 @@ it('rejects exam generation with duplicate question ids', function () {
         ->actingAs($user)
         ->post('/exams/generate', [
             'title' => 'Midterm',
+            'academic_session_id' => $academicSession->id,
             'instructions' => 'Answer all questions.',
             'question_ids' => [$question->id, $question->id],
         ]);
@@ -29,6 +32,7 @@ it('rejects exam generation with duplicate question ids', function () {
 
 it('rejects exam generation with a title that is not configured', function () {
     $user = User::factory()->create();
+    $academicSession = AcademicSession::factory()->active()->create();
     $subject = Subject::factory()->create(['level' => 'js']);
     $topic = Topic::factory()->for($subject)->create();
     $question = Question::factory()->for($topic)->for($user, 'creator')->create([
@@ -40,6 +44,7 @@ it('rejects exam generation with a title that is not configured', function () {
         ->actingAs($user)
         ->post('/exams/generate', [
             'title' => 'Unconfigured Exam',
+            'academic_session_id' => $academicSession->id,
             'instructions' => 'Answer all questions.',
             'question_ids' => [$question->id],
         ]);
@@ -47,8 +52,38 @@ it('rejects exam generation with a title that is not configured', function () {
     $response->assertSessionHasErrors(['title']);
 });
 
+it('persists the selected academic session when generating an exam', function () {
+    $user = User::factory()->create();
+    $academicSession = AcademicSession::factory()->active()->create();
+    ExamTitle::factory()->create(['name' => 'Session Test']);
+    $subject = Subject::factory()->create(['name' => 'Civic Education', 'level' => 'js']);
+    $topic = Topic::factory()->for($subject)->create();
+    $question = Question::factory()->for($topic)->for($user, 'creator')->create([
+        'level' => 'js',
+        'class_level' => '7',
+        'type' => 'multiple_choice',
+    ]);
+
+    $this
+        ->actingAs($user)
+        ->post('/exams/generate', [
+            'title' => 'Session Test',
+            'academic_session_id' => $academicSession->id,
+            'class_level' => '7',
+            'instructions' => 'Answer all questions.',
+            'question_ids' => [$question->id],
+        ])
+        ->assertSuccessful();
+
+    $this->assertDatabaseHas('exams', [
+        'title' => 'Session Test',
+        'academic_session_id' => $academicSession->id,
+    ]);
+});
+
 it('rejects export generation when no questions are requested', function () {
     $user = User::factory()->create();
+    $academicSession = AcademicSession::factory()->active()->create();
     ExamTitle::factory()->create(['name' => 'Mock Exam']);
     $subject = Subject::factory()->create(['level' => 'js']);
 
@@ -56,6 +91,7 @@ it('rejects export generation when no questions are requested', function () {
         ->actingAs($user)
         ->post('/export/generate', [
             'title' => 'Mock Exam',
+            'academic_session_id' => $academicSession->id,
             'subject_id' => $subject->id,
             'level' => 'js',
             'instructions' => 'Answer carefully.',

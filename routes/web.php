@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AcademicSessionController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExamController;
@@ -39,6 +40,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/export/generate', [ExportController::class, 'generate'])->name('export.generate');
 
     Route::get('/exams', [ExamController::class, 'index'])->name('exams.index');
+    Route::resource('academic-sessions', AcademicSessionController::class)->except(['show', 'create', 'edit']);
     Route::resource('exam-titles', ExamTitleController::class)->except(['show', 'create', 'edit']);
     Route::get('/exams/create', [ExamController::class, 'create'])->name('exams.create');
     Route::get('/exams/pool', [ExamController::class, 'pool'])->name('exams.pool');

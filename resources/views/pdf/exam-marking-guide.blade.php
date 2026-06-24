@@ -5,98 +5,273 @@
     <title>{{ $title }} - Marking Guide</title>
     <style>
         {!! file_get_contents(base_path('node_modules/katex/dist/katex.min.css')) ?: '' !!}
-        @page { margin: 18mm 16mm 18mm; }
-        body { font-family: 'DejaVu Sans', sans-serif; font-size: 10pt; color: #182118; line-height: 1.5; }
-        .confidential { text-align: center; font-size: 9pt; color: #b42318; font-weight: bold; border: 1.5px solid #b42318; padding: 5px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1.8px; }
-        .header { text-align: center; margin-bottom: 14px; }
-        .school { font-size: 13pt; font-weight: bold; color: #084117; text-transform: uppercase; }
-        .title { font-size: 11pt; font-weight: bold; margin-top: 4px; }
-        .meta { font-size: 8.5pt; color: #596459; margin-top: 3px; }
-        .summary { width: 100%; border-collapse: separate; border-spacing: 8px 0; margin: 12px 0; }
-        .summary td { border: 1px solid #d9e4da; background: #f7faf7; padding: 7px 8px; }
-        .summary .label { display: block; font-size: 7.5pt; text-transform: uppercase; color: #647064; margin-bottom: 2px; }
-        .summary .value { font-size: 10pt; font-weight: bold; color: #084117; }
-
-        .q-block { margin: 0 0 12px; padding: 10px 12px; border: 1px solid #dde7de; background: #fff; page-break-inside: avoid; }
-        .q-text { font-weight: bold; margin-bottom: 8px; }
-        .marks { color: #084117; }
-        .ms-table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 9pt; }
-        .ms-table th { background: #084117; color: #fff; padding: 6px 8px; text-align: left; font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.5px; }
-        .ms-table td { padding: 6px 8px; border-bottom: 1px solid #dbe4dc; vertical-align: top; }
-        .ms-table tr:nth-child(even) td { background: #f8fbf8; }
-        .weight { width: 72px; text-align: center; font-weight: bold; color: #084117; }
-        .total td { font-weight: bold; border-top: 1.5px solid #084117; background: #eef5ee !important; }
-        .footer { margin-top: 18px; padding-top: 6px; border-top: 1px solid #dbe4dc; text-align: center; font-size: 7.5pt; color: #7b857c; }
+        @page { margin: 10mm; }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: 'DejaVu Sans', sans-serif;
+            font-size: 9pt;
+            line-height: 1.4;
+            color: #111;
+        }
+        .sheet {
+            min-height: 260mm;
+            padding: 7mm 8mm;
+            border: 1px solid #777;
+        }
+        .confidential {
+            margin-bottom: 3mm;
+            text-align: center;
+            font-size: 8pt;
+            font-weight: bold;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+        }
+        .brand {
+            margin-bottom: 5mm;
+            text-align: center;
+            white-space: nowrap;
+        }
+        .brand-logo {
+            height: 39px;
+            margin-right: 7px;
+            vertical-align: middle;
+        }
+        .brand-name {
+            font-size: 25pt;
+            font-weight: bold;
+            vertical-align: middle;
+        }
+        .meta-table {
+            width: 100%;
+            margin-bottom: 4mm;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        .meta-table td {
+            height: 7mm;
+            padding: 1mm 2mm;
+            border: 1px solid #888;
+            font-size: 8.5pt;
+        }
+        .meta-label {
+            width: 19mm;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        .meta-value {
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .guide-title {
+            margin: 1mm 0 1mm;
+            text-align: center;
+            font-family: 'DejaVu Serif', serif;
+            font-size: 17pt;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .guide-note {
+            width: 86%;
+            margin: 0 auto 5mm;
+            text-align: center;
+            font-size: 7.5pt;
+        }
+        .question-block {
+            margin-bottom: 5mm;
+            page-break-inside: avoid;
+        }
+        .question-header {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        .question-header td {
+            padding: 2mm;
+            border: 1px solid #777;
+            vertical-align: top;
+        }
+        .question-number {
+            width: 15%;
+            font-weight: bold;
+            text-align: center;
+        }
+        .question-text {
+            width: 62%;
+            font-weight: bold;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+        .question-marks {
+            width: 23%;
+            font-weight: bold;
+            text-align: center;
+            white-space: nowrap;
+        }
+        .scheme-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        .scheme-table th,
+        .scheme-table td {
+            padding: 1.5mm 2mm;
+            border: 1px solid #888;
+            vertical-align: top;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+        .scheme-table th {
+            font-size: 8pt;
+            text-align: left;
+            text-transform: uppercase;
+        }
+        .scheme-index {
+            width: 8%;
+            text-align: center;
+        }
+        .scheme-point {
+            width: 77%;
+        }
+        .scheme-marks {
+            width: 15%;
+            font-weight: bold;
+            text-align: center;
+        }
+        .scheme-total td {
+            font-weight: bold;
+        }
+        .missing-scheme {
+            padding: 3mm;
+            border: 1px solid #888;
+            border-top: none;
+            font-size: 8pt;
+        }
+        .approval-table {
+            width: 100%;
+            margin-top: 7mm;
+            border-collapse: collapse;
+            table-layout: fixed;
+            page-break-inside: avoid;
+        }
+        .approval-table td {
+            width: 50%;
+            padding: 6mm 3mm 1mm;
+            border: 1px solid #888;
+            font-size: 8pt;
+            font-weight: bold;
+        }
+        .empty-state {
+            padding: 20mm 0;
+            text-align: center;
+            font-size: 10pt;
+        }
         .katex { font-size: 1em; }
-        .katex-display { margin: 4px 0; text-align: center; }
+        .katex-display { margin: 3px 0; text-align: center; }
         .pdf-math-fallback { font-family: 'DejaVu Sans Mono', monospace; }
     </style>
 </head>
 <body>
+@php
+    $logoPath = public_path('assets/img/chrisland-school-logo.png');
+    $logoSource = is_file($logoPath)
+        ? 'data:image/png;base64,'.base64_encode(file_get_contents($logoPath))
+        : null;
+@endphp
 
-@php $lm = ['SS'=>'Senior Secondary','JS'=>'Junior Secondary','HP'=>'Higher Primary','LP'=>'Lower Primary']; @endphp
+<div class="sheet">
+    <div class="confidential">Confidential - For Examiners Only</div>
 
-<div class="confidential">Confidential - For Examiners Only</div>
+    <div class="brand">
+        @if($logoSource)
+            <img src="{{ $logoSource }}" alt="Chrisland Schools" class="brand-logo" />
+        @endif
+        <span class="brand-name">CHRISLAND SCHOOLS</span>
+    </div>
 
-<div class="header">
-    <div class="school">Chrisland Schools</div>
-    <div class="title">{{ $title }} - Marking Guide</div>
-    <div class="meta">{{ $subject }} • {{ $lm[$level] ?? $level }} Level • {{ $date }}</div>
-</div>
+    <table class="meta-table">
+        <tr>
+            <td class="meta-label">EXAM:</td>
+            <td colspan="3" class="meta-value">{{ $title }}</td>
+        </tr>
+        <tr>
+            <td class="meta-label">SUBJECT:</td>
+            <td class="meta-value">{{ $subject }}</td>
+            <td class="meta-label">CLASS:</td>
+            <td class="meta-value">{{ $classLevel ?: $level }}</td>
+        </tr>
+        <tr>
+            <td class="meta-label">SESSION:</td>
+            <td class="meta-value">{{ $academicSession }}</td>
+            <td class="meta-label">TOTAL MARKS:</td>
+            <td class="meta-value">{{ $theoryTotal }}</td>
+        </tr>
+    </table>
 
-<table class="summary">
-    <tr>
-        <td>
-            <span class="label">Theory Questions</span>
-            <span class="value">{{ $theory->count() }}</span>
-        </td>
-        <td>
-            <span class="label">Theory Marks</span>
-            <span class="value">{{ $theoryTotal }}</span>
-        </td>
-        <td>
-            <span class="label">Paper Title</span>
-            <span class="value">{{ $title }}</span>
-        </td>
-    </tr>
-</table>
+    <div class="guide-title">Written Examination Marking Guide</div>
+    <div class="guide-note">
+        Award marks only for the expected points shown below. Accept equivalent wording where the required meaning is clearly demonstrated.
+    </div>
 
-@if($theory->isNotEmpty())
-    @foreach($theory as $index => $q)
-        @php $qm = collect($q->marking_scheme)->sum('weight'); @endphp
-        <div class="q-block">
-            <div class="q-text">
-                {{ $mcqs->count() + $index + 1 }}.
-                {!! $q->printableHtml() !!}
-                <span class="marks">[{{ $qm }} marks]</span>
-            </div>
-
-            @if($q->marking_scheme)
-                <table class="ms-table">
+    @if($theory->isNotEmpty())
+        @foreach($theory as $index => $question)
+            @php
+                $questionMarks = collect($question->marking_scheme)->sum('weight');
+                $questionNumber = $mcqs->count() + $index + 1;
+            @endphp
+            <div class="question-block">
+                <table class="question-header">
+                    <colgroup>
+                        <col style="width:15%;">
+                        <col style="width:62%;">
+                        <col style="width:23%;">
+                    </colgroup>
                     <tr>
-                        <th>Expected Points</th>
-                        <th class="weight">Marks</th>
-                    </tr>
-                    @foreach($q->marking_scheme as $point)
-                        <tr>
-                            <td>{!! \App\Support\RichContent::pdf($point['point'] ?? '') !!}</td>
-                            <td class="weight">{{ $point['weight'] }}</td>
-                        </tr>
-                    @endforeach
-                    <tr class="total">
-                        <td>Total</td>
-                        <td class="weight">{{ $qm }}</td>
+                        <td class="question-number">QUESTION {{ $questionNumber }}</td>
+                        <td class="question-text">{!! $question->printableHtml() !!}</td>
+                        <td class="question-marks">{{ $questionMarks }} MARKS</td>
                     </tr>
                 </table>
-            @else
-                <p style="color:#7b857c; font-size:9pt; margin:0;">No marking scheme provided.</p>
-            @endif
-        </div>
-    @endforeach
-@else
-    <p style="color:#7b857c;">No theory questions in this exam.</p>
-@endif
 
-<div class="footer">Confidential • Chrisland Schools • {{ $date }}</div>
+                @if($question->marking_scheme)
+                    <table class="scheme-table">
+                        <colgroup>
+                            <col style="width:8%;">
+                            <col style="width:77%;">
+                            <col style="width:15%;">
+                        </colgroup>
+                        <tr>
+                            <th class="scheme-index">No.</th>
+                            <th class="scheme-point">Expected Answer / Marking Point</th>
+                            <th class="scheme-marks">Marks</th>
+                        </tr>
+                        @foreach($question->marking_scheme as $pointIndex => $point)
+                            <tr>
+                                <td class="scheme-index">{{ $pointIndex + 1 }}</td>
+                                <td class="scheme-point">{!! \App\Support\RichContent::pdf($point['point'] ?? '') !!}</td>
+                                <td class="scheme-marks">{{ $point['weight'] ?? 0 }}</td>
+                            </tr>
+                        @endforeach
+                        <tr class="scheme-total">
+                            <td colspan="2">TOTAL</td>
+                            <td class="scheme-marks">{{ $questionMarks }}</td>
+                        </tr>
+                    </table>
+                @else
+                    <div class="missing-scheme">No marking scheme has been configured for this question.</div>
+                @endif
+            </div>
+        @endforeach
+    @else
+        <div class="empty-state">No written questions in this exam.</div>
+    @endif
+
+    <table class="approval-table">
+        <tr>
+            <td>Prepared by / Signature:</td>
+            <td>Verified by / Signature:</td>
+        </tr>
+    </table>
+</div>
 </body>
 </html>

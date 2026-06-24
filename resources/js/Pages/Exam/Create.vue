@@ -9,18 +9,34 @@ const props = defineProps<{
     levels: Array<{ value: string; label: string }>;
     classLevels: Record<string, Array<{ value: string; label: string }>>;
     examTitles: string[];
+    academicSessions: Array<{ id: string; name: string; is_active: boolean }>;
+    activeAcademicSessionId: string | null;
     exam?: any;
     initialForm?: {
         title: string;
+        academic_session_id: string;
         subject_id: string;
         level: string;
         class_level: string;
         instructions: string;
+        duration?: string;
     };
 }>();
 
 const defaultClassLevel = (level: string) => props.classLevels[level]?.[0]?.value ?? '';
-const form = ref(props.initialForm ?? { title: '', subject_id: '', level: 'js', class_level: defaultClassLevel('js'), instructions: 'Answer all questions carefully.' });
+const form = ref(
+    props.initialForm
+        ? { ...props.initialForm, duration: props.initialForm.duration ?? '' }
+        : {
+              title: '',
+              academic_session_id: props.activeAcademicSessionId ?? '',
+              subject_id: '',
+              level: 'js',
+              class_level: defaultClassLevel('js'),
+              instructions: 'Answer all questions carefully.',
+              duration: '',
+          },
+);
 const totalQuestionCount = ref(12);
 const submitting = ref(false);
 const loadingPool = ref(false);
@@ -232,7 +248,9 @@ const generateExam = () => {
     submitting.value = true;
     const payload = {
         title: form.value.title,
+        academic_session_id: form.value.academic_session_id,
         instructions: form.value.instructions,
+        duration: form.value.duration,
         class_level: form.value.class_level,
         question_ids: [...selectedIds.value],
     };
@@ -319,26 +337,114 @@ onMounted(async () => {
 
             <!-- Already generated exam view -->
             <template v-if="isReadOnlyExam">
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:grid-cols-4">
-                    <div class="card p-4">
-                        <p class="text-xs font-semibold text-gray-500 uppercase">Subject</p>
-                        <p class="mt-1 text-lg font-bold text-gray-900 dark:text-gray-100">{{ exam.subject }}</p>
+                <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                    <!-- Config details card -->
+                    <div class="card lg:col-span-2 p-6">
+                        <div class="flex items-center justify-between border-b border-gray-100 pb-4 dark:border-green-900/40">
+                            <h2 class="text-base font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                                <svg class="size-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                Examination Details
+                            </h2>
+                        </div>
+                        <div class="mt-6 grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
+                            <!-- Subject -->
+                            <div class="flex items-start gap-3.5">
+                                <div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
+                                    <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Subject</p>
+                                    <p class="mt-1 text-base font-bold text-gray-900 dark:text-gray-100 leading-relaxed">{{ exam.subject }}</p>
+                                </div>
+                            </div>
+
+                            <!-- Academic Session -->
+                            <div class="flex items-start gap-3.5">
+                                <div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400">
+                                    <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Academic Session</p>
+                                    <p class="mt-1 text-base font-bold text-gray-900 dark:text-gray-100">{{ exam.academic_session || 'N/A' }}</p>
+                                </div>
+                            </div>
+
+                            <!-- Level -->
+                            <div class="flex items-start gap-3.5">
+                                <div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-600 dark:bg-sky-500/10 dark:text-sky-400">
+                                    <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Exam Level</p>
+                                    <p class="mt-1 text-base font-bold text-gray-900 dark:text-gray-100">{{ exam.level }}</p>
+                                </div>
+                            </div>
+
+                            <!-- Class -->
+                            <div class="flex items-start gap-3.5">
+                                <div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
+                                    <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Class Level</p>
+                                    <p class="mt-1 text-base font-bold text-gray-900 dark:text-gray-100">{{ exam.class_level || 'All Classes' }}</p>
+                                </div>
+                            </div>
+
+                            <!-- Duration -->
+                            <div class="flex items-start gap-3.5">
+                                <div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-500/10 dark:text-purple-400">
+                                    <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Exam Duration</p>
+                                    <p class="mt-1 text-base font-bold text-gray-900 dark:text-gray-100">{{ exam.duration || 'N/A' }}</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="card p-4">
-                        <p class="text-xs font-semibold text-gray-500 uppercase">Level</p>
-                        <p class="mt-1 text-lg font-bold text-gray-900 dark:text-gray-100">{{ exam.level }}</p>
-                    </div>
-                    <div class="card p-4">
-                        <p class="text-xs font-semibold text-gray-500 uppercase">Class</p>
-                        <p class="mt-1 text-lg font-bold text-gray-900 dark:text-gray-100">{{ exam.class_level || 'All' }}</p>
-                    </div>
-                    <div class="card p-4">
-                        <p class="text-xs font-semibold text-gray-500 uppercase">Questions</p>
-                        <p class="mt-1 text-lg font-bold text-gray-900 dark:text-gray-100">{{ exam.mcq_count + exam.theory_count }}</p>
-                    </div>
-                    <div class="card p-4">
-                        <p class="text-xs font-semibold text-gray-500 uppercase">Marks</p>
-                        <p class="mt-1 text-lg font-bold text-primary">{{ exam.totalMarks }}</p>
+
+                    <!-- Summary Stats Card -->
+                    <div class="card p-6 flex flex-col justify-between">
+                        <div class="border-b border-gray-100 pb-4 dark:border-green-900/40">
+                            <h2 class="text-base font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                                <svg class="size-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+                                </svg>
+                                Structure & Weight
+                            </h2>
+                        </div>
+                        <div class="mt-6 grid grid-cols-2 gap-4 flex-1">
+                            <div class="rounded-xl bg-pink-50/50 p-4 dark:bg-pink-950/10 border border-pink-100/50 dark:border-pink-900/30 flex flex-col justify-between">
+                                <p class="text-xs font-bold text-pink-600 uppercase tracking-wider dark:text-pink-400">Total Questions</p>
+                                <div class="mt-2 flex items-baseline gap-2">
+                                    <span class="text-2xl font-black text-pink-700 dark:text-pink-300">{{ exam.mcq_count + exam.theory_count }}</span>
+                                    <span class="text-xs text-pink-500 font-medium">items</span>
+                                </div>
+                                <p class="mt-1 text-[10px] text-gray-500">{{ exam.mcq_count }} MCQ / {{ exam.theory_count }} Theory</p>
+                            </div>
+                            <div class="rounded-xl bg-rose-50/50 p-4 dark:bg-rose-950/10 border border-rose-100/50 dark:border-rose-900/30 flex flex-col justify-between">
+                                <p class="text-xs font-bold text-rose-600 uppercase tracking-wider dark:text-rose-400">Total Marks</p>
+                                <div class="mt-2 flex items-baseline gap-2">
+                                    <span class="text-2xl font-black text-rose-700 dark:text-rose-300">{{ exam.totalMarks }}</span>
+                                    <span class="text-xs text-rose-500 font-medium">pts</span>
+                                </div>
+                                <p class="mt-1 text-[10px] text-gray-500">Max exam score limit</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -530,6 +636,18 @@ onMounted(async () => {
                                 <option v-for="title in examTitleOptions" :key="title" :value="title">{{ title }}</option>
                             </select>
                         </div>
+                        <div class="col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Academic Session</label>
+                            <select v-model="form.academic_session_id" required class="mt-1">
+                                <option value="" disabled>Select academic session</option>
+                                <option v-for="session in academicSessions" :key="session.id" :value="session.id">
+                                    {{ session.name }}{{ session.is_active ? ' (Active)' : '' }}
+                                </option>
+                            </select>
+                            <p v-if="!academicSessions.length" class="mt-1 text-xs text-amber-600">
+                                No active academic session is configured. Ask an administrator to create one.
+                            </p>
+                        </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Level</label>
                             <select
@@ -572,6 +690,10 @@ onMounted(async () => {
                                 <option v-for="s in filteredSubjects" :key="s.id" :value="s.id">{{ s.name }}</option>
                             </select>
                             <p v-if="!filteredSubjects.length" class="mt-1 text-xs text-amber-600">No subjects for this level.</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Duration (e.g., 45 Minutes)</label>
+                            <input v-model="form.duration" type="text" class="mt-1" placeholder="e.g. 45 Minutes" />
                         </div>
                         <div class="col-span-2">
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Instructions</label>

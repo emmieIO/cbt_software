@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
+import { generate } from '@/actions/App/Http/Controllers/ExportController';
 import AppLayout from '@/layouts/AppLayout.vue';
 
 const props = defineProps<{
@@ -13,16 +14,20 @@ const props = defineProps<{
     levels: Array<{ value: string; label: string }>;
     classLevels: Record<string, Array<{ value: string; label: string }>>;
     examTitles: string[];
+    academicSessions: Array<{ id: string; name: string }>;
+    activeAcademicSessionId: string | null;
 }>();
 
 const form = ref({
     title: '',
+    academic_session_id: props.activeAcademicSessionId ?? '',
     subject_id: '',
     level: 'js',
     class_level: props.classLevels.js?.[0]?.value ?? '7',
     mcq_count: 10,
     theory_count: 2,
     instructions: 'Answer all questions carefully.',
+    duration: '',
 });
 
 const submitting = ref(false);
@@ -40,7 +45,7 @@ const submit = () => {
     submitting.value = true;
     errors.value = {};
 
-    router.post('/export/generate', form.value, {
+    router.post(generate.url(), form.value, {
         onFinish: () => { submitting.value = false; },
         onError: (err) => { errors.value = err as Record<string, string>; },
     });
@@ -68,6 +73,14 @@ const submit = () => {
                                 <option v-for="title in examTitles" :key="title" :value="title">{{ title }}</option>
                             </select>
                             <p v-if="errors.title" class="mt-1 text-xs text-red-600">{{ errors.title }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Academic Session</label>
+                            <select v-model="form.academic_session_id" required class="mt-1">
+                                <option value="" disabled>Select academic session</option>
+                                <option v-for="session in academicSessions" :key="session.id" :value="session.id">{{ session.name }}</option>
+                            </select>
+                            <p v-if="errors.academic_session_id" class="mt-1 text-xs text-red-600">{{ errors.academic_session_id }}</p>
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div>
@@ -114,9 +127,17 @@ const submit = () => {
                 </div>
 
                 <div class="rounded-xl border border-gray-200 dark:border-green-900/60 bg-white dark:bg-green-950/60 p-6 shadow-sm dark:shadow-none dark:border-green-900/60">
-                    <h2 class="text-sm font-bold text-gray-900 dark:text-gray-100">Instructions</h2>
-                    <div class="mt-4">
-                        <textarea v-model="form.instructions" rows="3" class="mt-1" placeholder="Instructions for the exam..." />
+                    <h2 class="text-sm font-bold text-gray-900 dark:text-gray-100">Instructions & Duration</h2>
+                    <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="sm:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Instructions</label>
+                            <textarea v-model="form.instructions" rows="2" class="mt-1" placeholder="Instructions for the exam..." />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Duration (e.g., 45 Minutes)</label>
+                            <input v-model="form.duration" type="text" class="mt-1" placeholder="e.g. 45 Minutes" />
+                            <p v-if="errors.duration" class="mt-1 text-xs text-red-600">{{ errors.duration }}</p>
+                        </div>
                     </div>
                 </div>
 

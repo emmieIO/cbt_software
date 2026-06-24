@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\QuestionLevel;
 use App\Http\Requests\Exams\ExamPoolRequest;
 use App\Http\Requests\Exams\SaveExamSelectionRequest;
+use App\Models\AcademicSession;
 use App\Models\Exam;
 use App\Models\ExamTitle;
 use App\Models\Subject;
@@ -25,7 +26,7 @@ class ExamController extends Controller
     public function index(): Response
     {
         $exams = Exam::query()
-            ->with(['creator', 'questions.topic'])
+            ->with(['academicSession', 'creator', 'questions.topic'])
             ->withCount('questions')
             ->orderBy('created_at', 'desc')
             ->paginate(20)
@@ -35,6 +36,7 @@ class ExamController extends Controller
                 return (object) [
                     'id' => $e->id,
                     'title' => $e->title,
+                    'academic_session' => $e->academicSession?->name,
                     'subject_name' => $e->subject_name,
                     'level' => strtoupper($level),
                     'class_level' => AcademicLevels::classLabel($e->class_level, $level),
@@ -64,6 +66,8 @@ class ExamController extends Controller
             'levels' => $this->levelOptions(),
             'classLevels' => AcademicLevels::classOptions(),
             'examTitles' => $this->examTitleOptions(),
+            'academicSessions' => $this->academicSessionOptions(),
+            'activeAcademicSessionId' => AcademicSession::query()->where('is_active', true)->value('id'),
         ]);
     }
 
@@ -88,14 +92,19 @@ class ExamController extends Controller
             'levels' => $this->levelOptions(),
             'classLevels' => AcademicLevels::classOptions(),
             'examTitles' => $this->examTitleOptions(),
+            'academicSessions' => $this->academicSessionOptions($exam->academic_session_id),
+            'activeAcademicSessionId' => AcademicSession::query()->where('is_active', true)->value('id'),
             'exam' => [
                 'id' => $exam->id,
                 'title' => $exam->title,
+                'academic_session_id' => $exam->academic_session_id,
+                'academic_session' => $exam->academicSession?->name,
                 'subject' => $exam->subject_name,
                 'level' => strtoupper($exam->level instanceof QuestionLevel ? $exam->level->value : $exam->level),
                 'class_level' => AcademicLevels::classLabel($exam->class_level, $exam->level instanceof QuestionLevel ? $exam->level->value : $exam->level),
                 'date' => $exam->created_at->format('F j, Y'),
                 'instructions' => $exam->instructions,
+                'duration' => $exam->duration,
                 'mcq_count' => $mcqs->count(),
                 'theory_count' => $theory->count(),
                 'totalMarks' => $exam->total_marks,
@@ -119,7 +128,7 @@ class ExamController extends Controller
 
     public function show(Exam $exam)
     {
-        $exam->load(['mcqs.options', 'theoryQuestions']);
+        $exam->load(['academicSession', 'mcqs.options', 'theoryQuestions']);
         $subjects = Subject::query()->with('topics')->orderBy('name')->get();
 
         return Inertia::render('Exam/Create', [
@@ -127,13 +136,15 @@ class ExamController extends Controller
             'levels' => $this->levelOptions(),
             'classLevels' => AcademicLevels::classOptions(),
             'examTitles' => $this->examTitleOptions(),
+            'academicSessions' => $this->academicSessionOptions($exam->academic_session_id),
+            'activeAcademicSessionId' => AcademicSession::query()->where('is_active', true)->value('id'),
             'exam' => $this->examPayload($exam),
         ]);
     }
 
     public function editQuestions(Exam $exam): Response
     {
-        $exam->load(['questions.topic.subject', 'mcqs.options', 'theoryQuestions']);
+        $exam->load(['academicSession', 'questions.topic.subject', 'mcqs.options', 'theoryQuestions']);
         $subjects = Subject::query()->with('topics')->orderBy('name')->get();
         $selectedSubjectId = optional($exam->questions->first()?->topic)->subject_id;
         $level = $exam->level instanceof QuestionLevel ? $exam->level->value : $exam->level;
@@ -143,6 +154,8 @@ class ExamController extends Controller
             'levels' => $this->levelOptions(),
             'classLevels' => AcademicLevels::classOptions(),
             'examTitles' => $this->examTitleOptions($exam->title),
+            'academicSessions' => $this->academicSessionOptions($exam->academic_session_id),
+            'activeAcademicSessionId' => AcademicSession::query()->where('is_active', true)->value('id'),
             'exam' => [
                 ...$this->examPayload($exam),
                 'editable' => true,
@@ -151,10 +164,12 @@ class ExamController extends Controller
             ],
             'initialForm' => [
                 'title' => $exam->title,
+                'academic_session_id' => $exam->academic_session_id,
                 'subject_id' => $selectedSubjectId,
                 'level' => $level,
                 'class_level' => $exam->class_level ?? AcademicLevels::defaultClassFor($level),
                 'instructions' => $exam->instructions,
+                'duration' => $exam->duration,
             ],
         ]);
     }
@@ -168,7 +183,7 @@ class ExamController extends Controller
 
     public function downloadQuestions(Exam $exam)
     {
-        $exam->load(['mcqs.options', 'theoryQuestions']);
+        $exam->load(['academicSession', 'mcqs.options', 'theoryQuestions']);
         $pdf = Pdf::loadView('pdf.exam-questions', $this->pdfData($exam));
         $pdf->setPaper('a4');
 
@@ -177,7 +192,7 @@ class ExamController extends Controller
 
     public function downloadAnswerKey(Exam $exam)
     {
-        $exam->load(['mcqs.options']);
+        $exam->load(['academicSession', 'mcqs.options']);
         $pdf = Pdf::loadView('pdf.exam-answer-key', $this->pdfData($exam));
         $pdf->setPaper('a4');
 
@@ -186,7 +201,7 @@ class ExamController extends Controller
 
     public function downloadAnswerSheet(Exam $exam)
     {
-        $exam->load(['mcqs.options']);
+        $exam->load(['academicSession', 'mcqs.options']);
         $pdf = Pdf::loadView('pdf.exam-answer-sheet', $this->pdfData($exam));
         $pdf->setPaper('a4');
 
@@ -195,7 +210,7 @@ class ExamController extends Controller
 
     public function downloadMarkingGuide(Exam $exam)
     {
-        $exam->load(['theoryQuestions']);
+        $exam->load(['academicSession', 'theoryQuestions']);
         $pdf = Pdf::loadView('pdf.exam-marking-guide', $this->pdfData($exam));
         $pdf->setPaper('a4');
 
@@ -204,7 +219,7 @@ class ExamController extends Controller
 
     public function previewQuestions(Exam $exam)
     {
-        $exam->load(['mcqs.options', 'theoryQuestions']);
+        $exam->load(['academicSession', 'mcqs.options', 'theoryQuestions']);
         $pdf = Pdf::loadView('pdf.exam-questions', $this->pdfData($exam));
         $pdf->setPaper('a4');
 
@@ -213,7 +228,7 @@ class ExamController extends Controller
 
     public function previewQuestionsHtml(Exam $exam): View
     {
-        $exam->load(['mcqs.options', 'theoryQuestions']);
+        $exam->load(['academicSession', 'mcqs.options', 'theoryQuestions']);
 
         return view('staff.exams.print', [
             ...$this->pdfData($exam),
@@ -223,7 +238,7 @@ class ExamController extends Controller
 
     public function previewAnswerKey(Exam $exam)
     {
-        $exam->load(['mcqs.options']);
+        $exam->load(['academicSession', 'mcqs.options']);
         $pdf = Pdf::loadView('pdf.exam-answer-key', $this->pdfData($exam));
         $pdf->setPaper('a4');
 
@@ -232,14 +247,14 @@ class ExamController extends Controller
 
     public function previewAnswerKeyHtml(Exam $exam): View
     {
-        $exam->load(['mcqs.options']);
+        $exam->load(['academicSession', 'mcqs.options']);
 
         return view('pdf.exam-answer-key', $this->pdfData($exam));
     }
 
     public function previewAnswerSheet(Exam $exam)
     {
-        $exam->load(['mcqs.options']);
+        $exam->load(['academicSession', 'mcqs.options']);
         $pdf = Pdf::loadView('pdf.exam-answer-sheet', $this->pdfData($exam));
         $pdf->setPaper('a4');
 
@@ -248,14 +263,14 @@ class ExamController extends Controller
 
     public function previewAnswerSheetHtml(Exam $exam): View
     {
-        $exam->load(['mcqs.options']);
+        $exam->load(['academicSession', 'mcqs.options']);
 
         return view('pdf.exam-answer-sheet', $this->pdfData($exam));
     }
 
     public function previewMarkingGuide(Exam $exam)
     {
-        $exam->load(['theoryQuestions']);
+        $exam->load(['academicSession', 'theoryQuestions']);
         $pdf = Pdf::loadView('pdf.exam-marking-guide', $this->pdfData($exam));
         $pdf->setPaper('a4');
 
@@ -264,7 +279,7 @@ class ExamController extends Controller
 
     public function previewMarkingGuideHtml(Exam $exam): View
     {
-        $exam->load(['theoryQuestions']);
+        $exam->load(['academicSession', 'theoryQuestions']);
 
         return view('pdf.exam-marking-guide', $this->pdfData($exam));
     }
@@ -283,6 +298,8 @@ class ExamController extends Controller
             'classLevel' => AcademicLevels::classLabel($exam->class_level, $exam->level instanceof QuestionLevel ? $exam->level->value : $exam->level),
             'date' => $exam->created_at->format('F j, Y'),
             'instructions' => $exam->instructions,
+            'duration' => $exam->duration,
+            'academicSession' => $exam->academicSession?->name ?? 'Not set',
             'mcqs' => $mcqs,
             'shortAnswer' => $shortAnswer,
             'theory' => $writtenQuestions,
@@ -362,16 +379,39 @@ class ExamController extends Controller
         return $titles;
     }
 
+    /**
+     * @return array<int, array{id: string, name: string, is_active: bool}>
+     */
+    private function academicSessionOptions(?string $currentSessionId = null): array
+    {
+        return AcademicSession::query()
+            ->where(function ($query) use ($currentSessionId): void {
+                $query->where('is_active', true)
+                    ->when($currentSessionId, fn ($query) => $query->orWhere('id', $currentSessionId));
+            })
+            ->orderByDesc('starts_at')
+            ->get(['id', 'name', 'is_active'])
+            ->map(fn (AcademicSession $session): array => [
+                'id' => $session->id,
+                'name' => $session->name,
+                'is_active' => $session->is_active,
+            ])
+            ->all();
+    }
+
     private function examPayload(Exam $exam): array
     {
         return [
             'id' => $exam->id,
             'title' => $exam->title,
+            'academic_session_id' => $exam->academic_session_id,
+            'academic_session' => $exam->academicSession?->name,
             'subject' => $exam->subject_name,
             'level' => strtoupper($exam->level instanceof QuestionLevel ? $exam->level->value : $exam->level),
             'class_level' => AcademicLevels::classLabel($exam->class_level, $exam->level instanceof QuestionLevel ? $exam->level->value : $exam->level),
             'date' => $exam->created_at->format('F j, Y'),
             'instructions' => $exam->instructions,
+            'duration' => $exam->duration,
             'mcq_count' => $exam->mcqs->count(),
             'theory_count' => $exam->theoryQuestions->count(),
             'totalMarks' => $exam->total_marks,

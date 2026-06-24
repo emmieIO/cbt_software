@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Exports;
 
+use App\Models\AcademicSession;
 use App\Models\ExamTitle;
 use App\Support\AcademicLevels;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -23,10 +24,12 @@ class GenerateExportRequest extends FormRequest
     {
         return [
             'title' => ['required', 'string', 'max:255'],
+            'academic_session_id' => ['required', 'string', 'exists:academic_sessions,id'],
             'subject_id' => ['required', 'exists:subjects,id'],
             'level' => ['required', 'in:lp,hp,js,ss'],
             'class_level' => ['required', Rule::in(AcademicLevels::classValues())],
             'instructions' => ['nullable', 'string'],
+            'duration' => ['nullable', 'string', 'max:255'],
             'mcq_count' => ['required', 'integer', 'min:0', 'max:100'],
             'theory_count' => ['required', 'integer', 'min:0', 'max:20'],
         ];
@@ -53,6 +56,15 @@ class GenerateExportRequest extends FormRequest
 
             if (! $titleExists) {
                 $validator->errors()->add('title', 'Select a valid exam title.');
+            }
+
+            $sessionIsActive = AcademicSession::query()
+                ->whereKey((string) $this->input('academic_session_id'))
+                ->where('is_active', true)
+                ->exists();
+
+            if (! $sessionIsActive) {
+                $validator->errors()->add('academic_session_id', 'Select an active academic session.');
             }
         });
     }

@@ -8,6 +8,7 @@ const props = defineProps<{
         data: Array<{
             id: string;
             title: string;
+            academic_session: string | null;
             subject_name: string;
             level: string;
             total_marks: number;
@@ -71,7 +72,9 @@ const closeTopicsModal = () => {
                         <tr v-for="exam in exams.data" :key="exam.id" class="hover:bg-gray-50 dark:hover:bg-slate-800/40">
                             <td class="px-5 py-4">
                                 <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ exam.title }}</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">by {{ exam.creator?.name }}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">
+                                    {{ exam.academic_session || 'Session not set' }} · by {{ exam.creator?.name }}
+                                </p>
                             </td>
                             <td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-300">{{ exam.subject_name }}</td>
                             <td class="px-5 py-4">

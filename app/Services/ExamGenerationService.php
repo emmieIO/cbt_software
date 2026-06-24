@@ -144,10 +144,12 @@ class ExamGenerationService
         return DB::transaction(function () use ($data, $createdBy, $subject, $mcqs, $theory) {
             $exam = Exam::query()->create([
                 'title' => $data['title'],
+                'academic_session_id' => $data['academic_session_id'],
                 'subject_name' => $subject->name,
                 'level' => $data['level'],
                 'class_level' => $data['class_level'],
                 'instructions' => $data['instructions'] ?? 'Answer all questions carefully.',
+                'duration' => $data['duration'] ?? null,
                 'mcq_count' => $mcqs->count(),
                 'theory_count' => $theory->count(),
                 'total_marks' => $mcqs->count() + $theory->sum(fn ($question) => collect($question->marking_scheme)->sum('weight')),
@@ -201,10 +203,12 @@ class ExamGenerationService
 
         return [[
             'title' => $data['title'],
+            'academic_session_id' => $data['academic_session_id'],
             'subject_name' => $subjectName,
             'level' => $levelValue,
             'class_level' => $classLevel,
             'instructions' => $data['instructions'] ?? 'Answer all questions carefully.',
+            'duration' => $data['duration'] ?? null,
             'mcq_count' => $mcqs->count(),
             'theory_count' => $theory->count(),
             'total_marks' => $mcqs->count() + $theory->sum(fn ($question) => collect($question->marking_scheme)->sum('weight')),
