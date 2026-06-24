@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Question Preview: {{ $title }}</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800;900&display=swap');
         {!! file_get_contents(base_path('node_modules/katex/dist/katex.min.css')) ?: '' !!}
         :root {
             color-scheme: light;
@@ -27,7 +26,7 @@
         html, body {
             margin: 0;
             min-height: 100%;
-            font-family: 'Figtree', "Segoe UI", Arial, sans-serif;
+            font-family: "Segoe UI", Arial, sans-serif;
             color: var(--ink);
             background:
                 radial-gradient(circle at top, rgba(15, 90, 43, 0.12), transparent 35%),
@@ -357,7 +356,7 @@
             margin-right: 7px;
         }
         .cover-school {
-            font-family: 'Figtree', "Segoe UI", Arial, sans-serif;
+            font-family: "Segoe UI", Arial, sans-serif;
             font-size: 30pt;
             font-weight: 800;
             text-transform: uppercase;
