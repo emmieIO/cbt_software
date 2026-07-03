@@ -6,11 +6,14 @@ use App\Ai\Agents\QuestionParserAgent;
 use App\Support\AcademicLevels;
 use App\Support\MathContent;
 use Illuminate\Http\UploadedFile;
-use RuntimeException;
 use Spatie\PdfToText\Pdf;
 
 class PdfImportService
 {
+    public function __construct(
+        private readonly PdfOcrService $pdfOcrService,
+    ) {}
+
     /**
      * Build a preview payload from an uploaded PDF file.
      *
@@ -27,8 +30,8 @@ class PdfImportService
     {
         $text = Pdf::getText($file->getRealPath(), options: ['layout']);
 
-        if (trim($text) === '') {
-            throw new RuntimeException('No readable text was found in this PDF. It may be scanned or image-only.');
+        if ($this->readableCharacterCount($text) < (int) config('services.pdf_ocr.minimum_text_characters', 10)) {
+            $text = $this->pdfOcrService->extract($file->getRealPath());
         }
 
         $response = QuestionParserAgent::make()->prompt(
@@ -82,6 +85,11 @@ class PdfImportService
         }
 
         return (new QuestionImportPreviewService)->formatPreviewPayload($rows, $subjectKeys, $topicNames);
+    }
+
+    private function readableCharacterCount(string $text): int
+    {
+        return mb_strlen(preg_replace('/[\s\p{P}\p{S}]+/u', '', $text) ?? '');
     }
 
     /**

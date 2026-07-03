@@ -19,7 +19,7 @@ class QuestionImportPreviewRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'file' => ['required', 'file', 'mimes:xlsx,csv,pdf'],
+            'file' => ['required', 'file', 'mimes:xlsx,csv,pdf', 'max:20480'],
         ];
     }
 

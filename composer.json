@@ -19,7 +19,8 @@
         "laravel/wayfinder": "^0.1.11",
         "openspout/openspout": "^4.24",
         "predis/predis": "^3.4",
-        "spatie/pdf-to-text": "^1.55"
+        "spatie/pdf-to-text": "^1.55",
+        "thiagoalessio/tesseract_ocr": "^2.13"
     },
     "require-dev": {
         "barryvdh/laravel-ide-helper": "^3.7",

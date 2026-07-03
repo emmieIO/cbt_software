@@ -40,4 +40,16 @@ return [
 
     ],
 
+    'pdf_ocr' => [
+        'enabled' => env('PDF_OCR_ENABLED', true),
+        'pdftoppm_binary' => env('PDF_OCR_PDFTOPPM_BINARY', 'pdftoppm'),
+        'tesseract_binary' => env('PDF_OCR_TESSERACT_BINARY', 'tesseract'),
+        'language' => env('PDF_OCR_LANGUAGE', 'eng'),
+        'dpi' => env('PDF_OCR_DPI', 250),
+        'max_pages' => env('PDF_OCR_MAX_PAGES', 25),
+        'minimum_text_characters' => env('PDF_OCR_MINIMUM_TEXT_CHARACTERS', 10),
+        'render_timeout' => env('PDF_OCR_RENDER_TIMEOUT', 180),
+        'page_timeout' => env('PDF_OCR_PAGE_TIMEOUT', 60),
+    ],
+
 ];
