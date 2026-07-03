@@ -230,9 +230,10 @@ class ExamController extends Controller
     {
         $exam->load(['academicSession', 'mcqs.options', 'theoryQuestions']);
 
-        return view('staff.exams.print', [
+        return view('pdf.exam-questions', [
             ...$this->pdfData($exam),
             'examId' => $exam->id,
+            'htmlPreview' => true,
         ]);
     }
 

@@ -17,10 +17,7 @@ export default defineConfig({
     },
     plugins: [
         laravel({
-            input: [
-                'resources/js/app.ts',
-                'resources/css/print-katex.css',
-            ],
+            input: ['resources/js/app.ts'],
             ssr: 'resources/js/ssr.ts',
             refresh: [
                 'app/Livewire/**',

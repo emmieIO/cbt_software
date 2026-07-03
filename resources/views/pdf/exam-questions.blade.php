@@ -51,6 +51,33 @@
 
         .footer { margin-top: 14px; padding-top: 6px; border-top: 1px solid #ccc; text-align: center; font-size: 7.5pt; color: #777; }
         .end { margin-top: 12px; text-align: center; font-size: 8pt; font-weight: bold; color: #084117; }
+        .preview-toolbar {
+            position: fixed;
+            top: 14px;
+            left: 14px;
+            z-index: 100;
+            display: flex;
+            gap: 8px;
+        }
+        .preview-action {
+            display: inline-block;
+            padding: 8px 12px;
+            border: 1px solid #0b4a25;
+            border-radius: 4px;
+            background: #0f5a2b;
+            color: #fff;
+            font-family: 'DejaVu Sans', sans-serif;
+            font-size: 9pt;
+            font-weight: bold;
+            line-height: 1;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .preview-action-secondary {
+            border-color: #555;
+            background: #fff;
+            color: #222;
+        }
 
         /* Cover Page Styles */
         .cover-page {
@@ -170,16 +197,35 @@
             height: 61.5pt;
             background: #fff;
         }
+        @media print {
+            .preview-toolbar { display: none; }
+        }
     </style>
 </head>
 <body>
 
-@php $lbl = ['SS'=>'Senior Secondary','JS'=>'Junior Secondary','HP'=>'Higher Primary','LP'=>'Lower Primary'][$level] ?? $level; @endphp
+@php
+    $lbl = ['SS'=>'Senior Secondary','JS'=>'Junior Secondary','HP'=>'Higher Primary','LP'=>'Lower Primary'][$level] ?? $level;
+    $htmlPreview = $htmlPreview ?? false;
+    $logoPath = public_path('assets/img/chrisland-school-logo.png');
+    $logoSource = is_file($logoPath)
+        ? 'data:image/png;base64,'.base64_encode(file_get_contents($logoPath))
+        : null;
+@endphp
+
+@if($htmlPreview)
+    <div class="preview-toolbar">
+        <a href="{{ route('exams.show', $examId) }}" class="preview-action preview-action-secondary">Back to Exam</a>
+        <button type="button" class="preview-action" onclick="window.print()">Print Question Paper</button>
+    </div>
+@endif
 
 <!-- Cover Page -->
 <div class="cover-page">
     <div class="cover-logo-area">
-        <img src="{{ public_path('assets/img/chrisland-school-logo.png') }}" alt="Chrisland Schools" class="cover-logo" />
+        @if($logoSource)
+            <img src="{{ $logoSource }}" alt="Chrisland Schools" class="cover-logo" />
+        @endif
         <span class="cover-school">CHRISLAND SCHOOLS</span>
     </div>
 
@@ -212,7 +258,9 @@
 <!-- Exam Content -->
 <div class="paper-header">
     <div class="paper-brand">
-        <img src="{{ public_path('assets/img/chrisland-school-logo.png') }}" alt="Chrisland Schools" class="paper-logo" />
+        @if($logoSource)
+            <img src="{{ $logoSource }}" alt="Chrisland Schools" class="paper-logo" />
+        @endif
         <span class="paper-school">CHRISLAND SCHOOLS</span>
     </div>
     <div class="paper-title">{{ strtoupper($title) }}</div>
@@ -256,7 +304,7 @@
                                         <div class="question-no">{{ $section['start'] + $questionIndex }}.</div>
                                         <div class="question-body">
                                             {!! $q->printableHtml() !!}
-                                            @if($src = $q->imagePdfSource())
+                                            @if($src = $htmlPreview ? $q->imageUrl : $q->imagePdfSource())
                                                 <div class="question-image"><img src="{{ $src }}" alt="Question image" /></div>
                                             @endif
                                             <table class="options-table">
@@ -288,7 +336,7 @@
                             <div class="question-body">
                                 {!! $q->printableHtml() !!}
                                 <span class="marks">[{{ $marks }}]</span>
-                                @if($src = $q->imagePdfSource())
+                        @if($src = $htmlPreview ? $q->imageUrl : $q->imagePdfSource())
                                     <div class="question-image"><img src="{{ $src }}" alt="Question image" /></div>
                                 @endif
                             </div>

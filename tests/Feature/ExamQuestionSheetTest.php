@@ -60,6 +60,10 @@ it('divides the question sheet into sections by question type', function () {
         ->get("/exams/{$exam->id}/preview-html/questions");
 
     $response->assertSuccessful();
+    $response->assertViewIs('pdf.exam-questions');
+    $response->assertSee('Back to Exam');
+    $response->assertSee('Print Question Paper');
+    $response->assertSee('data:image/png;base64,', false);
     $response->assertSee('CHRISLAND SCHOOLS');
     $response->assertSee('TESTS, EXAMINATIONS AND');
     $response->assertSee('ACADEMIC RECORDS UNIT');
@@ -71,9 +75,7 @@ it('divides the question sheet into sections by question type', function () {
     $response->assertSee('Section A (MULTIPLE CHOICE)');
     $response->assertSee('Section B (SHORT ANSWER)');
     $response->assertSee('Section C (THEORY)');
-    $response->assertSee('column-count: 2', false);
-    $response->assertSee('class="objective-columns"', false);
-    $response->assertDontSee('<table class="objective-columns"', false);
+    $response->assertSee('<table class="objective-columns">', false);
     $response->assertSee('1.');
     $response->assertSee('2.');
     $response->assertSee('3.');
