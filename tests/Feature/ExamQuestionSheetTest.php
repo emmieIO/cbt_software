@@ -64,6 +64,8 @@ it('divides the question sheet into sections by question type', function () {
     $response->assertSee('Back to Exam');
     $response->assertSee('Print Question Paper');
     $response->assertSee('data:image/png;base64,', false);
+    $response->assertSee('.question-body > p { margin: 0 0 2px; }', false);
+    $response->assertSee('.option-line > p { display: inline; margin: 0; padding: 0; }', false);
     $response->assertSee('CHRISLAND SCHOOLS');
     $response->assertSee('TESTS, EXAMINATIONS AND');
     $response->assertSee('ACADEMIC RECORDS UNIT');

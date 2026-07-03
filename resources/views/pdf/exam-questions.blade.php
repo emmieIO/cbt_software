@@ -28,10 +28,16 @@
         .exam-section.page-break { page-break-before: always; }
 
         .question-list { margin: 0; padding: 0; }
-        .question-item { margin: 0 0 7px; page-break-inside: avoid; }
+        .question-item { margin: 0 0 4px; page-break-inside: avoid; }
         .question-row { display: table; width: 100%; }
-        .question-no { display: table-cell; width: 19px; font-weight: normal; vertical-align: top; }
-        .question-body { display: table-cell; vertical-align: top; }
+        .question-no { display: table-cell; width: 19px; font-weight: normal; line-height: 1.25; vertical-align: top; }
+        .question-body { display: table-cell; line-height: 1.25; vertical-align: top; }
+        .question-body > p { margin: 0 0 2px; }
+        .question-body > p:first-child { margin-top: 0; }
+        .question-body > h3,
+        .question-body > h4 { margin: 0 0 2px; }
+        .question-body > ul,
+        .question-body > ol { margin: 2px 0; padding-left: 18px; }
         .marks { font-size: 8pt; color: #555; font-weight: bold; white-space: nowrap; }
         .question-image { margin: 4px 0 4px 0; }
         .question-image img { max-width: 320px; max-height: 180px; }
@@ -41,9 +47,10 @@
         .objective-columns > tbody > tr > td:first-child { padding-left: 0; border-right: 1px solid #777; }
         .objective-columns > tbody > tr > td:last-child { padding-right: 0; }
         .objective-question { font-size: 8.2pt; line-height: 1.25; }
-        .options-table { width: 100%; border-collapse: collapse; margin-top: 2px; margin-bottom: 3px; }
-        .options-table td { padding: 1px 0; vertical-align: top; }
-        .option-line { padding-left: 15px; text-indent: -15px; }
+        .options-table { width: 100%; border-collapse: collapse; margin-top: 1px; margin-bottom: 1px; line-height: 1.15; }
+        .options-table td { padding: 0; vertical-align: top; }
+        .option-line { margin: 0; padding-left: 15px; text-indent: -15px; }
+        .option-line > p { display: inline; margin: 0; padding: 0; }
         .option-label { font-weight: bold; }
         .katex { font-size: 1em; }
         .katex-display { margin: 4px 0; text-align: center; }
