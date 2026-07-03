@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Question Preview: {{ $title }}</title>
+    @vite('resources/css/print-katex.css')
     <style>
-        {!! file_get_contents(base_path('node_modules/katex/dist/katex.min.css')) ?: '' !!}
         :root {
             color-scheme: light;
             --page-padding-x: 14mm;
@@ -264,29 +264,18 @@
         }
 
         .objective-columns {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: fixed;
-        }
-
-        .objective-columns > tbody > tr > td {
-            width: 50%;
-            padding: 0 10px;
-            vertical-align: top;
-        }
-
-        .objective-columns > tbody > tr > td:first-child {
-            padding-left: 0;
-            border-right: 1px solid #6b7280;
-        }
-
-        .objective-columns > tbody > tr > td:last-child {
-            padding-right: 0;
+            column-count: 2;
+            column-gap: 20px;
+            column-rule: 1px solid #6b7280;
         }
 
         .objective-question {
+            display: inline-block;
+            width: 100%;
             font-size: 8.2pt;
             line-height: 1.25;
+            break-inside: avoid;
+            page-break-inside: avoid;
         }
 
         .options-table {
@@ -500,6 +489,11 @@
                 max-width: 100%;
                 height: auto;
             }
+
+            .objective-columns {
+                column-count: 1;
+                column-rule: 0;
+            }
         }
 
         @media print {
@@ -525,6 +519,11 @@
                 padding: 0;
                 box-shadow: none;
                 border-radius: 0;
+            }
+
+            .objective-columns {
+                column-count: 2;
+                column-rule: 1px solid #6b7280;
             }
         }
     </style>
@@ -608,49 +607,32 @@
                     <div class="section-title">{{ $section['label'] }} ({{ strtoupper($section['title']) }})</div>
                     <div class="section-note">INSTRUCTION: {{ $section['note'] }}</div>
                     @if($section['type'] === 'mcq')
-                        @php
-                            $objectiveQuestions = $section['questions']->values();
-                            $objectiveSplit = (int) ceil($objectiveQuestions->count() / 2);
-                            $objectiveColumns = [
-                                $objectiveQuestions->take($objectiveSplit)->values(),
-                                $objectiveQuestions->slice($objectiveSplit)->values(),
-                            ];
-                        @endphp
-                        <table class="objective-columns">
-                            <tr>
-                                @foreach($objectiveColumns as $columnQuestions)
-                                    <td>
-                                        @foreach($columnQuestions as $columnIndex => $q)
-                                            @php
-                                                $questionIndex = $loop->parent->index === 0 ? $columnIndex : $objectiveSplit + $columnIndex;
-                                            @endphp
-                                            <div class="question-item objective-question">
-                                                <div class="question-row">
-                                                    <div class="question-no">{{ $section['start'] + $questionIndex }}.</div>
-                                                    <div class="question-body">
-                                                        {!! $q->printableHtml() !!}
-                                                        @if($src = $q->imageUrl)
-                                                            <div class="question-image"><img src="{{ $src }}" alt="Question image" /></div>
-                                                        @endif
-                                                        <table class="options-table">
-                                                            @foreach($q->options->values() as $oi => $opt)
-                                                                <tr>
-                                                                    <td>
-                                                                        <div class="option-line">
-                                                                            <span class="option-label">{{ chr(65 + $oi) }}.</span> {!! \App\Support\RichContent::pdf($opt->content) !!}
-                                                                        </div>
-                                                                    </td>
-                                                                </tr>
-                                                            @endforeach
-                                                        </table>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        @endforeach
-                                    </td>
-                                @endforeach
-                            </tr>
-                        </table>
+                        <div class="objective-columns">
+                            @foreach($section['questions'] as $questionIndex => $q)
+                                <div class="question-item objective-question">
+                                    <div class="question-row">
+                                        <div class="question-no">{{ $section['start'] + $questionIndex }}.</div>
+                                        <div class="question-body">
+                                            {!! $q->printableHtml() !!}
+                                            @if($src = $q->imageUrl)
+                                                <div class="question-image"><img src="{{ $src }}" alt="Question image" /></div>
+                                            @endif
+                                            <table class="options-table">
+                                                @foreach($q->options->values() as $oi => $opt)
+                                                    <tr>
+                                                        <td>
+                                                            <div class="option-line">
+                                                                <span class="option-label">{{ chr(65 + $oi) }}.</span> {!! \App\Support\RichContent::pdf($opt->content) !!}
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
                     @else
                         <div class="question-list">
                             @foreach($section['questions'] as $index => $q)
