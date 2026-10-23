@@ -52,6 +52,7 @@ class Question extends Model
         'used_count',
         'last_used_at',
         'created_by',
+        'origin', 'difficulty', 'expected_answer', 'subtopic_id', 'generated_draft_id',
     ];
 
     /**
@@ -82,6 +83,18 @@ class Question extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /** @return HasMany<QuestionProvenance, $this> */
+    public function provenances(): HasMany
+    {
+        return $this->hasMany(QuestionProvenance::class);
+    }
+
+    /** @return BelongsTo<GeneratedQuestionDraft, $this> */
+    public function generatedDraft(): BelongsTo
+    {
+        return $this->belongsTo(GeneratedQuestionDraft::class, 'generated_draft_id');
     }
 
     /**

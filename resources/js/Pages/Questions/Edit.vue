@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
+import QuestionProvenance from '@/components/Questions/QuestionProvenance.vue';
 import RichContentEditor from '@/components/Questions/RichContentEditor.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 
 const props = defineProps<{
     question: any;
+    canViewProvenance?: boolean;
     subjects: Array<{
         id: string;
         name: string;
@@ -27,6 +29,8 @@ const form = ref({
     class_level: props.question.class_level || props.question.topic?.class_level || defaultClassLevel(questionLevel),
     content: props.question.content || '',
     explanation: props.question.explanation || '',
+    expected_answer: props.question.expected_answer || '',
+    difficulty: props.question.difficulty || '',
     options: (props.question.options || []).length
         ? props.question.options.map((o: any) => ({ id: o.id, content: o.content, is_correct: o.is_correct }))
         : [
@@ -75,7 +79,9 @@ const removeImage = () => {
 const filteredSubjects = computed(() => props.subjects.filter((s: any) => !s.level || s.level === form.value.level));
 const classLevelOptions = computed(() => props.classLevels[form.value.level] || []);
 const selectedSubject = computed(() => filteredSubjects.value.find((s: any) => s.id === form.value.subject_id));
-const filteredTopics = computed(() => (selectedSubject.value?.topics || []).filter((topic: any) => !topic.class_level || topic.class_level === form.value.class_level));
+const filteredTopics = computed(() =>
+    (selectedSubject.value?.topics || []).filter((topic: any) => !topic.class_level || topic.class_level === form.value.class_level),
+);
 
 const onLevelChange = () => {
     form.value.class_level = classLevelOptions.value[0]?.value || '';
@@ -128,6 +134,8 @@ const submit = () => {
     fd.append('level', form.value.level);
     fd.append('class_level', form.value.class_level);
     fd.append('explanation', form.value.explanation || '');
+    fd.append('expected_answer', form.value.expected_answer || '');
+    fd.append('difficulty', form.value.difficulty || '');
 
     if (imageFile.value) {
         fd.append('image', imageFile.value);
@@ -191,6 +199,17 @@ const submit = () => {
             <div v-if="success" class="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">{{ success }}</div>
 
             <form @submit.prevent="submit" class="space-y-6">
+                <QuestionProvenance v-if="canViewProvenance" :question-id="question.id" />
+                <label v-if="question.origin === 'ai_generated'" class="block text-sm font-semibold"
+                    >Difficulty<select v-model="form.difficulty" class="mt-2">
+                        <option value="easy">Easy</option>
+                        <option value="medium">Medium</option>
+                        <option value="hard">Hard</option>
+                    </select></label
+                >
+                <div v-if="usesMarkingScheme && question.origin === 'ai_generated'">
+                    <label class="text-sm font-semibold">Expected answer</label><RichContentEditor v-model="form.expected_answer" class="mt-2" />
+                </div>
                 <!-- Type selector -->
                 <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-green-900/60 dark:bg-green-950/60 dark:shadow-none">
                     <div class="flex flex-col gap-4 lg:flex-row">
@@ -240,7 +259,9 @@ const submit = () => {
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Class Level</label>
                             <select v-model="form.class_level" class="mt-1" @change="onClassLevelChange">
-                                <option v-for="classLevel in classLevelOptions" :key="classLevel.value" :value="classLevel.value">{{ classLevel.label }}</option>
+                                <option v-for="classLevel in classLevelOptions" :key="classLevel.value" :value="classLevel.value">
+                                    {{ classLevel.label }}
+                                </option>
                             </select>
                             <p v-if="form.errors.class_level" class="mt-1 text-xs text-red-600">{{ form.errors.class_level }}</p>
                         </div>

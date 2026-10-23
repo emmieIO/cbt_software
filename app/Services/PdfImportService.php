@@ -6,12 +6,11 @@ use App\Ai\Agents\QuestionParserAgent;
 use App\Support\AcademicLevels;
 use App\Support\MathContent;
 use Illuminate\Http\UploadedFile;
-use Spatie\PdfToText\Pdf;
 
 class PdfImportService
 {
     public function __construct(
-        private readonly PdfOcrService $pdfOcrService,
+        private readonly PdfTextExtractor $pdfTextExtractor,
     ) {}
 
     /**
@@ -28,11 +27,7 @@ class PdfImportService
      */
     public function buildPreview(UploadedFile $file): array
     {
-        $text = Pdf::getText($file->getRealPath(), options: ['layout']);
-
-        if ($this->readableCharacterCount($text) < (int) config('services.pdf_ocr.minimum_text_characters', 10)) {
-            $text = $this->pdfOcrService->extract($file->getRealPath());
-        }
+        $text = $this->pdfTextExtractor->extract($file->getRealPath())->text;
 
         $response = QuestionParserAgent::make()->prompt(
             "Extract questions from this PDF text:\n\n".$text,
@@ -85,11 +80,6 @@ class PdfImportService
         }
 
         return (new QuestionImportPreviewService)->formatPreviewPayload($rows, $subjectKeys, $topicNames);
-    }
-
-    private function readableCharacterCount(string $text): int
-    {
-        return mb_strlen(preg_replace('/[\s\p{P}\p{S}]+/u', '', $text) ?? '');
     }
 
     /**

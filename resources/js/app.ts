@@ -43,17 +43,19 @@ const extractFirstErrorMessage = (value: unknown): string | null => {
     return null;
 };
 
-// Handle flash messages, errors, and scroll restoration
-router.on('success', (event) => {
-    const page = event.detail?.page;
-    const flash = page?.props?.flash as any;
-    if (flash?.success) {
+router.on('flash', (event) => {
+    const flash = event.detail.flash;
+    if (typeof flash.success === 'string' && flash.success) {
         toastStore.add(flash.success, 'success');
     }
-    if (flash?.error) {
+    if (typeof flash.error === 'string' && flash.error) {
         toastStore.add(flash.error, 'error');
     }
+});
 
+// Handle errors and scroll restoration without replaying cached flash props.
+router.on('success', (event) => {
+    const page = event.detail?.page;
     // Show Inertia validation errors that weren't caught inline
     const errors = page?.props?.errors as Record<string, unknown> | undefined;
     if (errors && typeof errors === 'object' && Object.keys(errors).length > 0) {

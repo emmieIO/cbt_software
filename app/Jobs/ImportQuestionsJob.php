@@ -22,10 +22,11 @@ class ImportQuestionsJob implements ShouldQueue
         public array $rows,
         public string $defaultLevel,
         public string $createdBy,
+        public string $origin = 'file_import',
     ) {}
 
     public function handle(QuestionImportService $questionImportService): void
     {
-        $questionImportService->importRows($this->rows, $this->defaultLevel, $this->createdBy);
+        $questionImportService->importRows($this->rows, $this->defaultLevel, $this->createdBy, $this->origin);
     }
 }

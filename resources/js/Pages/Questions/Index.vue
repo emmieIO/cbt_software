@@ -2,11 +2,14 @@
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { debounce } from 'lodash';
 import { ref, computed, watch } from 'vue';
+import { index as questionIndex } from '@/actions/App/Http/Controllers/QuestionController';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
 import RichContentViewer from '@/components/Questions/RichContentViewer.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 
 interface Question {
+    origin?: string | null;
+    difficulty?: string | null;
     id: string;
     content: string;
     explanation?: string | null;
@@ -46,6 +49,7 @@ const props = defineProps<{
         level?: string;
         class_level?: string;
         overused?: string;
+        generation_run_id?: string;
     };
     levels: Array<{ value: string; label: string }>;
     classLevels: Record<string, Array<{ value: string; label: string }>>;
@@ -60,18 +64,32 @@ const subjectId = ref(props.filters.subject_id || '');
 const level = ref(props.filters.level || '');
 const classLevel = ref(props.filters.class_level || '');
 const overused = ref(props.filters.overused || '');
+const generationRunId = ref(props.filters.generation_run_id || '');
+const hasActiveFilters = computed(() =>
+    Boolean(search.value || subjectId.value || level.value || classLevel.value || overused.value || generationRunId.value),
+);
+
+const clearFilters = () => {
+    search.value = '';
+    subjectId.value = '';
+    level.value = '';
+    classLevel.value = '';
+    overused.value = '';
+    generationRunId.value = '';
+};
 
 watch(
-    [search, subjectId, level, classLevel, overused],
+    [search, subjectId, level, classLevel, overused, generationRunId],
     debounce(() => {
         router.get(
-            '/questions',
+            questionIndex.url(),
             {
                 search: search.value || undefined,
                 subject_id: subjectId.value || undefined,
                 level: level.value || undefined,
                 class_level: classLevel.value || undefined,
                 overused: overused.value || undefined,
+                generation_run_id: generationRunId.value || undefined,
             },
             { preserveState: true, replace: true },
         );
@@ -122,50 +140,53 @@ const classTag = (question: Question) => {
 };
 
 const markingTotal = (question: Question | null) => question?.marking_scheme?.reduce((sum, item) => sum + Number(item.weight || 0), 0) ?? 0;
+const addedDateFormatter = new Intl.DateTimeFormat('en-NG', { dateStyle: 'medium' });
+const addedTimestampFormatter = new Intl.DateTimeFormat('en-NG', { dateStyle: 'long', timeStyle: 'short' });
+const addedDate = (value: string) => addedDateFormatter.format(new Date(value));
+const addedTimestamp = (value: string) => addedTimestampFormatter.format(new Date(value));
 </script>
 
 <template>
     <AppLayout>
         <Head title="Questions" />
 
-        <div class="space-y-6">
+        <div class="mx-auto max-w-7xl space-y-6">
             <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
+                    <p class="text-xs font-semibold tracking-wide text-primary uppercase">Content library</p>
                     <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Question Bank</h1>
-                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500">Browse, create, and manage assessment questions.</p>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Browse, create, and manage assessment questions.</p>
                 </div>
-                <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
-                    <Link v-if="canCreateQuestions" href="/questions/import" class="btn-secondary">
-                        <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                            />
-                        </svg>
-                        Import from Excel
-                    </Link>
-                    <Link v-if="canCreateQuestions" href="/questions/import/pdf" class="btn-secondary">
-                        <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                d="M9 12h6m-6 4h6M7 3h7l5 5v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z"
-                            />
-                        </svg>
-                        Import from PDF
-                    </Link>
-                    <Link v-if="canCreateQuestions" href="/questions/batch/create" class="btn-secondary">
-                        <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                        </svg>
-                        Batch Create
-                    </Link>
-                    <Link
-                        v-if="canCreateQuestions"
-                        href="/questions/create"
-                        class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-primary/90 dark:border-green-900/60 dark:shadow-none"
-                    >
+                <div v-if="canCreateQuestions" class="flex flex-col-reverse gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
+                    <div class="flex flex-wrap gap-2">
+                        <Link href="/questions/import" class="btn-secondary px-3 py-2 text-xs">
+                            <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                                />
+                            </svg>
+                            Import from Excel
+                        </Link>
+                        <Link href="/questions/import/pdf" class="btn-secondary px-3 py-2 text-xs">
+                            <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M9 12h6m-6 4h6M7 3h7l5 5v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z"
+                                />
+                            </svg>
+                            Import from PDF
+                        </Link>
+                        <Link href="/questions/batch/create" class="btn-secondary px-3 py-2 text-xs">
+                            <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                            </svg>
+                            Batch Create
+                        </Link>
+                    </div>
+                    <Link href="/questions/create" class="btn-primary justify-center">
                         <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                         </svg>
@@ -174,43 +195,60 @@ const markingTotal = (question: Question | null) => question?.marking_scheme?.re
                 </div>
             </div>
 
-            <!-- Filters -->
-            <div
-                class="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 sm:flex-row sm:flex-wrap sm:items-center dark:border-green-900/60 dark:bg-green-950/60"
-            >
-                <div class="relative w-full sm:max-w-md sm:flex-1">
-                    <svg
-                        class="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-gray-400 dark:text-gray-500"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        stroke-width="2"
-                    >
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                    <input v-model="search" type="text" placeholder="Search questions..." class="w-full pl-9" />
+            <div class="rounded-lg border border-gray-200 bg-white p-4 dark:border-green-900/60 dark:bg-green-950/60">
+                <div class="mb-3 flex items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                            {{ generationRunId ? 'Imported batch' : 'Find questions' }}
+                        </h2>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">
+                            {{ questions.data.length }} result{{ questions.data.length === 1 ? '' : 's' }} on this page
+                        </p>
+                    </div>
+                    <button v-if="hasActiveFilters" type="button" class="text-xs font-semibold text-primary hover:underline" @click="clearFilters">
+                        Clear filters
+                    </button>
                 </div>
-                <select v-model="level" class="w-full sm:w-auto sm:min-w-[140px]">
-                    <option value="">All Levels</option>
-                    <option v-for="l in levels" :key="l.value" :value="l.value">{{ l.label }}</option>
-                </select>
-                <select v-model="classLevel" class="w-full sm:w-auto sm:min-w-[140px]" :disabled="!level">
-                    <option value="">All Classes</option>
-                    <option v-for="classOption in classLevelOptions" :key="classOption.value" :value="classOption.value">{{ classOption.label }}</option>
-                </select>
-                <select v-model="subjectId" class="w-full sm:w-auto sm:min-w-[160px]">
-                    <option value="">All Subjects</option>
-                    <option v-for="s in filteredSubjects" :key="s.id" :value="s.id">{{ s.name }}</option>
-                </select>
-                <label class="flex cursor-pointer items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300" title="Show only overused questions">
-                    <input type="checkbox" v-model="overused" true-value="1" false-value="" class="size-3.5" />
-                    Overused only
-                </label>
+                <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+                    <div class="relative w-full sm:max-w-md sm:flex-1">
+                        <svg
+                            class="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-gray-400 dark:text-gray-500"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        <input v-model="search" type="text" placeholder="Search questions..." class="w-full pl-9" />
+                    </div>
+                    <select v-model="level" class="w-full sm:w-auto sm:min-w-[140px]">
+                        <option value="">All Levels</option>
+                        <option v-for="l in levels" :key="l.value" :value="l.value">{{ l.label }}</option>
+                    </select>
+                    <select v-model="classLevel" class="w-full sm:w-auto sm:min-w-[140px]" :disabled="!level">
+                        <option value="">All Classes</option>
+                        <option v-for="classOption in classLevelOptions" :key="classOption.value" :value="classOption.value">
+                            {{ classOption.label }}
+                        </option>
+                    </select>
+                    <select v-model="subjectId" class="w-full sm:w-auto sm:min-w-[160px]">
+                        <option value="">All Subjects</option>
+                        <option v-for="s in filteredSubjects" :key="s.id" :value="s.id">{{ s.name }}</option>
+                    </select>
+                    <label
+                        class="flex cursor-pointer items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300"
+                        title="Show only overused questions"
+                    >
+                        <input type="checkbox" v-model="overused" true-value="1" false-value="" class="size-3.5" />
+                        Overused only
+                    </label>
+                </div>
             </div>
 
             <!-- Questions List -->
             <div
-                class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-green-900/60 dark:bg-green-950/60 dark:shadow-none"
+                class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-green-900/60 dark:bg-green-950/60 dark:shadow-none"
             >
                 <div class="divide-y divide-gray-100 sm:hidden">
                     <div v-for="q in questions.data" :key="q.id" class="space-y-3 p-4">
@@ -224,6 +262,15 @@ const markingTotal = (question: Question | null) => question?.marking_scheme?.re
                             </span>
                         </div>
                         <div class="flex flex-wrap gap-2 text-xs">
+                            <span v-if="q.origin" class="font-semibold text-gray-500">{{
+                                q.origin === 'ai_generated'
+                                    ? 'AI generated'
+                                    : q.origin === 'pdf_import'
+                                      ? 'PDF import'
+                                      : q.origin === 'manual'
+                                        ? 'Manual'
+                                        : 'File import'
+                            }}</span>
                             <span class="inline-flex rounded-full px-2.5 py-1 font-medium capitalize" :class="questionTypeClass(q.type)">
                                 {{ questionTypeLabel(q.type) }}
                             </span>
@@ -240,6 +287,9 @@ const markingTotal = (question: Question | null) => question?.marking_scheme?.re
                                 Used {{ q.used_count }}x
                             </span>
                         </div>
+                        <p v-if="q.created_at" class="text-xs text-gray-500 dark:text-gray-400">
+                            Added <time :datetime="q.created_at" :title="addedTimestamp(q.created_at)">{{ addedDate(q.created_at) }}</time>
+                        </p>
                         <div class="flex items-center gap-4 text-xs font-medium">
                             <button @click="previewQuestion = q" class="text-primary hover:underline">View</button>
                             <Link v-if="canEditQuestions" :href="`/questions/${q.id}/edit`" class="text-primary hover:underline">Edit</Link>
@@ -300,7 +350,22 @@ const markingTotal = (question: Question | null) => question?.marking_scheme?.re
                             <tr v-for="q in questions.data" :key="q.id" class="hover:bg-gray-50 dark:hover:bg-slate-800/40">
                                 <td class="max-w-xs px-5 py-4">
                                     <RichContentViewer :content="q.content" truncate />
+                                    <span v-if="q.origin" class="mt-1 block text-[11px] font-semibold text-gray-500"
+                                        >{{
+                                            q.origin === 'ai_generated'
+                                                ? 'AI generated'
+                                                : q.origin === 'pdf_import'
+                                                  ? 'PDF import'
+                                                  : q.origin === 'manual'
+                                                    ? 'Manual'
+                                                    : 'File import'
+                                        }}<span v-if="q.difficulty"> · {{ q.difficulty }}</span></span
+                                    >
                                     <p class="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">{{ q.creator?.name || 'Unknown' }}</p>
+                                    <p v-if="q.created_at" class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                        Added
+                                        <time :datetime="q.created_at" :title="addedTimestamp(q.created_at)">{{ addedDate(q.created_at) }}</time>
+                                    </p>
                                 </td>
                                 <td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-300">{{ q.topic?.subject?.name || '-' }}</td>
                                 <td class="px-5 py-4">
@@ -333,15 +398,28 @@ const markingTotal = (question: Question | null) => question?.marking_scheme?.re
                                 <td class="px-5 py-4 text-right">
                                     <div class="flex items-center justify-end gap-2">
                                         <button @click="previewQuestion = q" class="text-xs font-medium text-primary hover:underline">View</button>
-                                        <Link v-if="canEditQuestions" :href="`/questions/${q.id}/edit`" class="text-xs font-medium text-primary hover:underline">Edit</Link>
-                                        <button v-if="canEditQuestions" @click="deleteTarget = q.id" class="text-xs font-medium text-red-600 hover:underline">Delete</button>
+                                        <Link
+                                            v-if="canEditQuestions"
+                                            :href="`/questions/${q.id}/edit`"
+                                            class="text-xs font-medium text-primary hover:underline"
+                                            >Edit</Link
+                                        >
+                                        <button
+                                            v-if="canEditQuestions"
+                                            @click="deleteTarget = q.id"
+                                            class="text-xs font-medium text-red-600 hover:underline"
+                                        >
+                                            Delete
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
                             <tr v-if="questions.data.length === 0">
                                 <td colspan="7" class="px-5 py-12 text-center text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500">
                                     No questions found.
-                                    <Link v-if="canCreateQuestions" href="/questions/create" class="font-medium text-primary hover:underline">Create one</Link>.
+                                    <Link v-if="canCreateQuestions" href="/questions/create" class="font-medium text-primary hover:underline"
+                                        >Create one</Link
+                                    >.
                                 </td>
                             </tr>
                         </tbody>
@@ -578,7 +656,7 @@ const markingTotal = (question: Question | null) => question?.marking_scheme?.re
                 class="flex flex-col-reverse gap-2 border-t border-gray-200 bg-gray-50 px-5 py-4 sm:flex-row sm:items-center sm:justify-end sm:px-6 dark:border-green-900/60 dark:bg-green-950/70"
             >
                 <button type="button" class="btn-secondary justify-center" @click="previewQuestion = null">Close</button>
-                    <Link v-if="canEditQuestions" :href="`/questions/${previewQuestion.id}/edit`" class="btn-primary justify-center">Edit Question</Link>
+                <Link v-if="canEditQuestions" :href="`/questions/${previewQuestion.id}/edit`" class="btn-primary justify-center">Edit Question</Link>
             </footer>
         </section>
     </div>

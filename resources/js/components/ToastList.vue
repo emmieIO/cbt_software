@@ -6,16 +6,17 @@ import ToastItem from './ToastItem.vue';
 <template>
     <Teleport to="body">
         <div
-            class="pointer-events-none fixed top-0 right-0 z-[110] flex w-full flex-col items-center gap-3 p-4 sm:items-end sm:p-6 md:max-w-md lg:max-w-lg"
+            class="pointer-events-none fixed top-4 right-4 left-4 z-[110] flex flex-col gap-2 sm:left-auto sm:w-90"
+            aria-live="polite"
+            aria-relevant="additions"
         >
             <TransitionGroup
-                enter-active-class="transition duration-500 ease-out"
-                enter-from-class="translate-y-[-2rem] opacity-0 scale-95"
-                enter-to-class="translate-y-0 opacity-100 scale-100"
-                leave-active-class="transition duration-300 ease-in absolute"
-                leave-from-class="opacity-100 scale-100"
-                leave-to-class="opacity-0 scale-95"
-                move-class="transition duration-500 ease-in-out"
+                enter-active-class="transition duration-150 ease-out motion-reduce:transition-none"
+                enter-from-class="-translate-y-1 opacity-0"
+                enter-to-class="translate-y-0 opacity-100"
+                leave-active-class="transition duration-150 ease-in motion-reduce:transition-none"
+                leave-from-class="opacity-100"
+                leave-to-class="opacity-0"
             >
                 <ToastItem
                     v-for="toast in toastStore.items"

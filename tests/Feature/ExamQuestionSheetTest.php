@@ -10,7 +10,9 @@ use App\Models\User;
 
 it('divides the question sheet into sections by question type', function () {
     $user = User::factory()->create();
-    $academicSession = AcademicSession::query()->where('name', '2025/2026')->firstOrFail();
+    $academicSession = AcademicSession::factory()->active()->create([
+        'name' => '2025/2026',
+    ]);
     $subject = Subject::factory()->create(['name' => 'Physics', 'level' => 'ss']);
     $topic = Topic::factory()->for($subject)->create();
 
@@ -66,6 +68,9 @@ it('divides the question sheet into sections by question type', function () {
     $response->assertSee('data:image/png;base64,', false);
     $response->assertSee('.question-body > p { margin: 0 0 2px; }', false);
     $response->assertSee('.option-line > p { display: inline; margin: 0; padding: 0; }', false);
+    $response->assertSee("body { margin: 0; font-family: 'DejaVu Sans'", false);
+    $response->assertSee('height: 240mm;', false);
+    $response->assertSee('page-break-inside: avoid;', false);
     $response->assertSee('CHRISLAND SCHOOLS');
     $response->assertSee('TESTS, EXAMINATIONS AND');
     $response->assertSee('ACADEMIC RECORDS UNIT');

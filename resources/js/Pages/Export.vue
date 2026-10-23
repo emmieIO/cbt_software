@@ -33,7 +33,7 @@ const form = ref({
 const submitting = ref(false);
 const errors = ref<Record<string, string>>({});
 
-const filteredSubjects = computed(() => props.subjects.filter(s => !s.level || s.level === form.value.level));
+const filteredSubjects = computed(() => props.subjects.filter((s) => !s.level || s.level === form.value.level));
 const classLevelOptions = computed(() => props.classLevels[form.value.level] || []);
 
 const onLevelChange = () => {
@@ -46,8 +46,12 @@ const submit = () => {
     errors.value = {};
 
     router.post(generate.url(), form.value, {
-        onFinish: () => { submitting.value = false; },
-        onError: (err) => { errors.value = err as Record<string, string>; },
+        onFinish: () => {
+            submitting.value = false;
+        },
+        onError: (err) => {
+            errors.value = err as Record<string, string>;
+        },
     });
 };
 </script>
@@ -63,7 +67,7 @@ const submit = () => {
             </div>
 
             <form @submit.prevent="submit" class="space-y-6">
-                <div class="rounded-xl border border-gray-200 dark:border-green-900/60 bg-white dark:bg-green-950/60 p-6 shadow-sm dark:shadow-none dark:border-green-900/60">
+                <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-green-900/60 dark:bg-green-950/60 dark:shadow-none">
                     <h2 class="text-sm font-bold text-gray-900 dark:text-gray-100">Exam Details</h2>
                     <div class="mt-4 space-y-4">
                         <div>
@@ -82,7 +86,7 @@ const submit = () => {
                             </select>
                             <p v-if="errors.academic_session_id" class="mt-1 text-xs text-red-600">{{ errors.academic_session_id }}</p>
                         </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Level</label>
                                 <select v-model="form.level" class="mt-1" @change="onLevelChange">
@@ -92,7 +96,9 @@ const submit = () => {
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Class Level</label>
                                 <select v-model="form.class_level" class="mt-1">
-                                    <option v-for="classLevel in classLevelOptions" :key="classLevel.value" :value="classLevel.value">{{ classLevel.label }}</option>
+                                    <option v-for="classLevel in classLevelOptions" :key="classLevel.value" :value="classLevel.value">
+                                        {{ classLevel.label }}
+                                    </option>
                                 </select>
                                 <p v-if="errors.class_level" class="mt-1 text-xs text-red-600">{{ errors.class_level }}</p>
                             </div>
@@ -109,10 +115,12 @@ const submit = () => {
                     </div>
                 </div>
 
-                <div class="rounded-xl border border-gray-200 dark:border-green-900/60 bg-white dark:bg-green-950/60 p-6 shadow-sm dark:shadow-none dark:border-green-900/60">
+                <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-green-900/60 dark:bg-green-950/60 dark:shadow-none">
                     <h2 class="text-sm font-bold text-gray-900 dark:text-gray-100">Question Selection</h2>
-                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">Questions will be randomly selected from the question bank.</p>
-                    <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">
+                        Questions will be randomly selected from the question bank.
+                    </p>
+                    <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">MCQ Questions</label>
                             <input v-model.number="form.mcq_count" type="number" min="0" max="100" class="mt-1" />
@@ -126,9 +134,9 @@ const submit = () => {
                     </div>
                 </div>
 
-                <div class="rounded-xl border border-gray-200 dark:border-green-900/60 bg-white dark:bg-green-950/60 p-6 shadow-sm dark:shadow-none dark:border-green-900/60">
+                <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-green-900/60 dark:bg-green-950/60 dark:shadow-none">
                     <h2 class="text-sm font-bold text-gray-900 dark:text-gray-100">Instructions & Duration</h2>
-                    <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
                         <div class="sm:col-span-2">
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Instructions</label>
                             <textarea v-model="form.instructions" rows="2" class="mt-1" placeholder="Instructions for the exam..." />
@@ -143,10 +151,17 @@ const submit = () => {
 
                 <div class="flex items-center justify-end gap-3">
                     <Link href="/dashboard" class="btn-secondary dark:bg-green-950/45">Cancel</Link>
-                    <button type="submit" :disabled="submitting"
-                        class="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-semibold text-white shadow-sm dark:shadow-none dark:border-green-900/60 hover:bg-primary/90 disabled:opacity-50">
+                    <button
+                        type="submit"
+                        :disabled="submitting"
+                        class="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary/90 disabled:opacity-50 dark:border-green-900/60 dark:shadow-none"
+                    >
                         <svg v-if="!submitting" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                            />
                         </svg>
                         <span v-if="submitting" class="inline-block size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                         Generate PDF

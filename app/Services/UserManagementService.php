@@ -52,6 +52,6 @@ class UserManagementService
             return [];
         }
 
-        return array_values(array_intersect($data['permissions'] ?? [], User::QUESTION_PERMISSIONS));
+        return array_values(array_intersect($data['permissions'] ?? [], User::ASSIGNABLE_PERMISSIONS));
     }
 }

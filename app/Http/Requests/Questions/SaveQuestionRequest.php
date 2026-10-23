@@ -29,6 +29,8 @@ class SaveQuestionRequest extends FormRequest
             'level' => ['required', 'in:lp,hp,js,ss'],
             'class_level' => ['required', Rule::in(AcademicLevels::classValues())],
             'explanation' => ['nullable', 'string'],
+            'expected_answer' => ['nullable', 'string', 'max:20000'],
+            'difficulty' => ['nullable', 'in:easy,medium,hard'],
             'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:2048'],
             'remove_image' => ['nullable', 'boolean'],
         ];
@@ -116,6 +118,7 @@ class SaveQuestionRequest extends FormRequest
             ...$validated,
             'content' => RichContent::sanitize($validated['content'] ?? ''),
             'explanation' => RichContent::sanitize($validated['explanation'] ?? ''),
+            'expected_answer' => array_key_exists('expected_answer', $validated) ? RichContent::sanitize($validated['expected_answer'] ?? '') : null,
             'image' => $this->file('image'),
             'remove_image' => $this->boolean('remove_image'),
             'options' => $this->sanitizeOptions($this->decodedArrayInput('options')),

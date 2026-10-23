@@ -131,7 +131,10 @@ const confirmImport = () => {
                 <h2 class="text-sm font-bold text-gray-900 dark:text-gray-100">Step 2: Upload file</h2>
                 <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Accepted formats: `.xlsx`, `.csv`.</p>
 
-                <div v-if="flashError" class="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-200">
+                <div
+                    v-if="flashError"
+                    class="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-200"
+                >
                     {{ flashError }}
                 </div>
 
@@ -200,7 +203,10 @@ const confirmImport = () => {
                     </button>
                 </div>
 
-                <div v-if="hasEmptyPreview" class="mt-5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-5 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-200">
+                <div
+                    v-if="hasEmptyPreview"
+                    class="mt-5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-5 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-200"
+                >
                     No question rows were found in this file. Check that the template has question content in the content column.
                 </div>
 
@@ -255,7 +261,7 @@ const confirmImport = () => {
                                                 ? 'bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-200'
                                                 : row.type === 'short_answer'
                                                   ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-200'
-                                                : 'bg-blue-100 text-blue-800 dark:bg-blue-500/15 dark:text-blue-200'
+                                                  : 'bg-blue-100 text-blue-800 dark:bg-blue-500/15 dark:text-blue-200'
                                         "
                                     >
                                         {{ row.type.replace('_', ' ') }}

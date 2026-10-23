@@ -27,6 +27,10 @@ class UserController extends Controller
             'availablePermissions' => [
                 ['value' => User::PERMISSION_CREATE_QUESTIONS, 'label' => 'Create questions'],
                 ['value' => User::PERMISSION_EDIT_QUESTIONS, 'label' => 'Edit questions'],
+                ['value' => User::PERMISSION_GENERATE_QUESTIONS, 'label' => 'Generate question drafts with AI'],
+                ['value' => User::PERMISSION_MANAGE_KNOWLEDGE_BASE, 'label' => 'Manage knowledge base'],
+                ['value' => User::PERMISSION_APPROVE_KNOWLEDGE_DOCUMENTS, 'label' => 'Approve knowledge documents'],
+                ['value' => User::PERMISSION_REVIEW_CURRICULUM, 'label' => 'Review curriculum mappings'],
             ],
         ]);
     }

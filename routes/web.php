@@ -2,12 +2,18 @@
 
 use App\Http\Controllers\AcademicSessionController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CurriculumMappingController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExamController;
 use App\Http\Controllers\ExamTitleController;
 use App\Http\Controllers\ExportController;
+use App\Http\Controllers\GeneratedQuestionDraftController;
 use App\Http\Controllers\ImportController;
+use App\Http\Controllers\KnowledgeDocumentController;
+use App\Http\Controllers\KnowledgeSearchController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QuestionController;
+use App\Http\Controllers\QuestionGenerationController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\TopicController;
 use App\Http\Controllers\UserController;
@@ -24,6 +30,8 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'destroy'])->name('logout');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
     Route::get('/questions/batch/create', [ImportController::class, 'batchCreate'])->name('questions.batch.create');
     Route::get('/questions/import/pdf', [ImportController::class, 'importPdf'])->name('questions.import.pdf');
@@ -35,6 +43,37 @@ Route::middleware('auth')->group(function () {
     Route::post('/questions/import/quick', [ImportController::class, 'quickStore'])->name('questions.import.quick');
     Route::post('/questions/bulk-store', [QuestionController::class, 'bulkStore'])->name('questions.bulk-store');
     Route::resource('questions', QuestionController::class);
+    Route::get('/questions/{question}/provenance', [QuestionController::class, 'provenance'])->name('questions.provenance');
+
+    Route::get('/question-generations', [QuestionGenerationController::class, 'index'])
+        ->name('question-generations.index');
+    Route::get('/question-generations/sources', [QuestionGenerationController::class, 'sources'])->name('question-generations.sources');
+    Route::post('/question-generations', [QuestionGenerationController::class, 'store'])
+        ->name('question-generations.store');
+    Route::get('/question-generations/{question_generation_run}', [QuestionGenerationController::class, 'show'])
+        ->name('question-generations.show');
+    Route::post('/question-generations/{question_generation_run}/retry', [QuestionGenerationController::class, 'retry'])
+        ->name('question-generations.retry');
+    Route::post('/question-generations/{question_generation_run}/import', [QuestionGenerationController::class, 'importDrafts'])->name('question-generations.import-drafts');
+    Route::post('/generated-question-drafts/{generated_question_draft}/review', [GeneratedQuestionDraftController::class, 'review'])->name('generated-question-drafts.review');
+    Route::patch('/generated-question-drafts/{generated_question_draft}', [GeneratedQuestionDraftController::class, 'update'])
+        ->name('generated-question-drafts.update');
+
+    Route::resource('knowledge-documents', KnowledgeDocumentController::class)->only(['index', 'store', 'show']);
+    Route::post('/knowledge-documents/{knowledge_document}/curriculum/identify', [CurriculumMappingController::class, 'identify'])->name('curriculum.identify');
+    Route::post('/knowledge-documents/{knowledge_document}/curriculum/confirm-structure', [CurriculumMappingController::class, 'confirmStructure'])->name('curriculum.confirm-structure');
+    Route::post('/knowledge-documents/{knowledge_document}/curriculum', [CurriculumMappingController::class, 'store'])->name('curriculum.store');
+    Route::patch('/knowledge-documents/{knowledge_document}/curriculum/{curriculum_mapping}', [CurriculumMappingController::class, 'update'])->name('curriculum.update');
+    Route::post('/knowledge-documents/{knowledge_document}/retry', [KnowledgeDocumentController::class, 'retry'])
+        ->name('knowledge-documents.retry');
+    Route::post('/knowledge-documents/{knowledge_document}/reprocess', [KnowledgeDocumentController::class, 'reprocess'])
+        ->name('knowledge-documents.reprocess');
+    Route::post('/knowledge-documents/{knowledge_document}/approve', [KnowledgeDocumentController::class, 'approve'])
+        ->name('knowledge-documents.approve');
+    Route::post('/knowledge-documents/{knowledge_document}/retry-embedding', [KnowledgeDocumentController::class, 'retryEmbedding'])
+        ->name('knowledge-documents.retry-embedding');
+    Route::get('/knowledge-search', [KnowledgeSearchController::class, 'index'])->name('knowledge-search.index');
+    Route::post('/knowledge-search', [KnowledgeSearchController::class, 'search'])->name('knowledge-search.search');
 
     Route::get('/export', fn () => redirect()->route('exams.create'))->name('export.index');
     Route::post('/export/generate', [ExportController::class, 'generate'])->name('export.generate');

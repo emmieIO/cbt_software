@@ -24,12 +24,16 @@ const filterLevel = ref(props.filters.level || '');
 const form = ref({ name: '', description: '', level: 'lp' });
 
 watch(filterLevel, (value) => {
-    router.get('/subjects', {
-        level: value || undefined,
-    }, {
-        preserveState: true,
-        replace: true,
-    });
+    router.get(
+        '/subjects',
+        {
+            level: value || undefined,
+        },
+        {
+            preserveState: true,
+            replace: true,
+        },
+    );
 });
 
 const openCreate = () => {
@@ -46,9 +50,19 @@ const openEdit = (subject: any) => {
 
 const save = () => {
     if (editing.value) {
-        router.put(`/subjects/${editing.value}`, form.value, { preserveScroll: true, onSuccess: () => { showForm.value = false; } });
+        router.put(`/subjects/${editing.value}`, form.value, {
+            preserveScroll: true,
+            onSuccess: () => {
+                showForm.value = false;
+            },
+        });
     } else {
-        router.post('/subjects', form.value, { preserveScroll: true, onSuccess: () => { showForm.value = false; } });
+        router.post('/subjects', form.value, {
+            preserveScroll: true,
+            onSuccess: () => {
+                showForm.value = false;
+            },
+        });
     }
 };
 
@@ -72,7 +86,10 @@ const confirmDelete = () => {
                     <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Subjects</h1>
                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500">Manage academic subjects in the curriculum.</p>
                 </div>
-                <button @click="openCreate" class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary/90 dark:border-green-900/60 dark:shadow-none sm:w-auto">
+                <button
+                    @click="openCreate"
+                    class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary/90 sm:w-auto dark:border-green-900/60 dark:shadow-none"
+                >
                     <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                     </svg>
@@ -80,7 +97,9 @@ const confirmDelete = () => {
                 </button>
             </div>
 
-            <div class="flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 bg-white p-4 dark:border-green-900/60 dark:bg-green-950/60">
+            <div
+                class="flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 bg-white p-4 dark:border-green-900/60 dark:bg-green-950/60"
+            >
                 <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Level:</label>
                 <select v-model="filterLevel" class="w-full sm:w-auto sm:min-w-[160px]">
                     <option value="">All Levels</option>
@@ -118,25 +137,37 @@ const confirmDelete = () => {
                 </div>
             </div>
 
-            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-green-900/60 dark:bg-green-950/60 dark:shadow-none">
+            <div
+                class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-green-900/60 dark:bg-green-950/60 dark:shadow-none"
+            >
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                         <thead class="bg-gray-50 dark:bg-green-950/45">
                             <tr>
-                                <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Subject</th>
-                                <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Level</th>
-                                <th class="px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Topics</th>
-                                <th class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Actions</th>
+                                <th class="px-5 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
+                                    Subject
+                                </th>
+                                <th class="px-5 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
+                                    Level
+                                </th>
+                                <th class="px-5 py-3 text-center text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
+                                    Topics
+                                </th>
+                                <th class="px-5 py-3 text-right text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
+                                    Actions
+                                </th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                             <tr v-for="subject in subjects.data" :key="subject.id" class="hover:bg-gray-50 dark:hover:bg-green-950/55">
                                 <td class="px-5 py-4">
                                     <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ subject.name }}</p>
-                                    <p v-if="subject.description" class="mt-0.5 text-xs text-gray-500 dark:text-gray-400 line-clamp-1">{{ subject.description }}</p>
+                                    <p v-if="subject.description" class="mt-0.5 line-clamp-1 text-xs text-gray-500 dark:text-gray-400">
+                                        {{ subject.description }}
+                                    </p>
                                 </td>
                                 <td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-300">
-                                    <span class="inline-flex rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase text-primary">
+                                    <span class="inline-flex rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary uppercase">
                                         {{ subject.level }}
                                     </span>
                                 </td>
@@ -144,7 +175,9 @@ const confirmDelete = () => {
                                 <td class="px-5 py-4 text-right">
                                     <div class="flex justify-end gap-2">
                                         <button @click="openEdit(subject)" class="text-xs font-medium text-primary hover:underline">Edit</button>
-                                        <button @click="deleteTarget = subject.id" class="text-xs font-medium text-red-600 hover:underline">Delete</button>
+                                        <button @click="deleteTarget = subject.id" class="text-xs font-medium text-red-600 hover:underline">
+                                            Delete
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -161,8 +194,18 @@ const confirmDelete = () => {
             <div v-if="subjects.last_page > 1" class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <p class="text-sm text-gray-500 dark:text-gray-400">Page {{ subjects.current_page }} of {{ subjects.last_page }}</p>
                 <div class="flex gap-2">
-                    <Link v-if="subjects.prev_page_url" :href="subjects.prev_page_url" class="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:border-green-900/60 dark:bg-green-950/45 dark:text-gray-300">Previous</Link>
-                    <Link v-if="subjects.next_page_url" :href="subjects.next_page_url" class="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:border-green-900/60 dark:bg-green-950/45 dark:text-gray-300">Next</Link>
+                    <Link
+                        v-if="subjects.prev_page_url"
+                        :href="subjects.prev_page_url"
+                        class="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:border-green-900/60 dark:bg-green-950/45 dark:text-gray-300"
+                        >Previous</Link
+                    >
+                    <Link
+                        v-if="subjects.next_page_url"
+                        :href="subjects.next_page_url"
+                        class="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:border-green-900/60 dark:bg-green-950/45 dark:text-gray-300"
+                        >Next</Link
+                    >
                 </div>
             </div>
         </div>

@@ -9,6 +9,7 @@ use App\Models\Subject;
 use App\Services\QuestionService;
 use App\Support\AcademicLevels;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -20,18 +21,21 @@ class QuestionController extends Controller
 
     public function index(Request $request): Response
     {
-        $filters = $request->only(['search', 'subject_id', 'level', 'class_level', 'overused']);
+        $filters = $request->only(['search', 'subject_id', 'level', 'class_level', 'overused', 'question_id', 'generation_run_id']);
         $perPage = (int) $request->input('per_page', 15);
 
         $questions = Question::query()
             ->with(['topic.subject', 'creator', 'options'])
+            ->when($filters['question_id'] ?? null, fn ($query, $id) => $query->whereKey($id))
+            ->when($filters['generation_run_id'] ?? null, fn (Builder $query, $id) => $query
+                ->whereHas('generatedDraft', fn (Builder $draft) => $draft->where('question_generation_run_id', $id)))
             ->when($filters['search'] ?? null, fn (Builder $q, $s) => $q->where('content', 'like', "%{$s}%"))
             ->when($filters['subject_id'] ?? null, fn (Builder $q, $id) => $q->whereHas('topic', fn ($t) => $t->where('subject_id', $id)))
             ->when($filters['level'] ?? null, fn (Builder $q, $l) => $q->where('level', $l))
             ->when($filters['class_level'] ?? null, fn (Builder $q, $l) => $q->where('class_level', $l))
             ->when($filters['overused'] ?? null, fn (Builder $q) => $q->frequentlyUsed())
             ->orderBy('created_at', 'desc')
-            ->paginate($perPage);
+            ->paginate($perPage)->withQueryString();
 
         $subjects = Subject::query()->with('topics')->orderBy('name')->get();
 
@@ -67,10 +71,20 @@ class QuestionController extends Controller
 
         return Inertia::render('Questions/Edit', [
             'question' => $question,
+            'canViewProvenance' => (request()->user()?->canGenerateQuestions() ?? false)
+                && $question->generatedDraft()->whereHas('run', fn ($query) => $query->where('requested_by', request()->user()?->id))->exists(),
             'subjects' => $subjects,
             'levels' => AcademicLevels::levelOptions(),
             'classLevels' => AcademicLevels::classOptions(),
         ]);
+    }
+
+    public function provenance(Request $request, Question $question): JsonResponse
+    {
+        abort_unless(($request->user()?->canGenerateQuestions() ?? false)
+            && $question->generatedDraft()->whereHas('run', fn ($query) => $query->where('requested_by', $request->user()?->id))->exists(), 403);
+
+        return response()->json(['sources' => $question->provenances()->get()]);
     }
 
     public function store(SaveQuestionRequest $request): RedirectResponse

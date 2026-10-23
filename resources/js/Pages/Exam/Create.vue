@@ -69,9 +69,7 @@ const previewFrame = ref<HTMLIFrameElement | null>(null);
 const filteredSubjects = computed(() => props.subjects.filter((s: any) => !s.level || s.level === form.value.level));
 const classLevelOptions = computed(() => props.classLevels[form.value.level] || []);
 const examTitleOptions = computed(() =>
-    form.value.title && !props.examTitles.includes(form.value.title)
-        ? [form.value.title, ...props.examTitles]
-        : props.examTitles,
+    form.value.title && !props.examTitles.includes(form.value.title) ? [form.value.title, ...props.examTitles] : props.examTitles,
 );
 
 const loadPool = async () => {
@@ -325,91 +323,142 @@ onMounted(async () => {
         <Head :title="exam ? 'Exam: ' + exam.title : 'Create Exam'" />
 
         <div class="mx-auto max-w-7xl space-y-6">
-            <div class="flex items-center justify-between">
-                <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                    {{ exam ? exam.title : 'Examination Configuration' }}
-                </h1>
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                    <p class="text-xs font-semibold tracking-wide text-primary uppercase">Examinations</p>
+                    <h1 class="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">
+                        {{ exam ? exam.title : 'Build an Examination' }}
+                    </h1>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        {{
+                            exam
+                                ? 'Review the exam structure and prepare its documents.'
+                                : 'Set the exam details, shape topic coverage, and select questions.'
+                        }}
+                    </p>
+                </div>
                 <div class="flex items-center gap-2">
-                    <Link v-if="isReadOnlyExam" :href="`/exams/${exam.id}/edit-questions`" class="btn-secondary">Edit Questions</Link>
+                    <Link v-if="isReadOnlyExam" :href="`/exams/${exam.id}/edit-questions`" class="btn-primary">
+                        <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L8 18l-4 1 1-4L16.5 3.5z" />
+                        </svg>
+                        Edit questions
+                    </Link>
                     <button v-if="exam" @click="router.get('/exams/create')" class="btn-secondary">New Exam</button>
                 </div>
             </div>
 
             <!-- Already generated exam view -->
             <template v-if="isReadOnlyExam">
-                <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                <div class="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
                     <!-- Config details card -->
-                    <div class="card lg:col-span-2 p-6">
-                        <div class="flex items-center justify-between border-b border-gray-100 pb-4 dark:border-green-900/40">
-                            <h2 class="text-base font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                    <div class="card overflow-hidden lg:col-auto">
+                        <div class="flex items-center justify-between border-b border-gray-200 bg-gray-50/70 px-5 py-4 dark:border-green-900/40">
+                            <h2 class="flex items-center gap-2 text-base font-bold text-gray-900 dark:text-gray-100">
                                 <svg class="size-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                                    />
                                 </svg>
                                 Examination Details
                             </h2>
+                            <span
+                                class="inline-flex items-center gap-1.5 rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700"
+                            >
+                                <span class="size-1.5 rounded-full bg-emerald-500"></span>
+                                Ready
+                            </span>
                         </div>
-                        <div class="mt-6 grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
+                        <div class="grid grid-cols-1 gap-x-8 gap-y-6 p-5 sm:grid-cols-2">
                             <!-- Subject -->
                             <div class="flex items-start gap-3.5">
-                                <div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
+                                <div class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/8 text-primary">
                                     <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                                        />
                                     </svg>
                                 </div>
                                 <div>
-                                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Subject</p>
-                                    <p class="mt-1 text-base font-bold text-gray-900 dark:text-gray-100 leading-relaxed">{{ exam.subject }}</p>
+                                    <p class="text-xs font-bold tracking-wider text-gray-400 uppercase">Subject</p>
+                                    <p class="mt-1 text-base leading-relaxed font-bold text-gray-900 dark:text-gray-100">{{ exam.subject }}</p>
                                 </div>
                             </div>
 
                             <!-- Academic Session -->
                             <div class="flex items-start gap-3.5">
-                                <div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400">
+                                <div class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/8 text-primary">
                                     <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                        />
                                     </svg>
                                 </div>
                                 <div>
-                                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Academic Session</p>
+                                    <p class="text-xs font-bold tracking-wider text-gray-400 uppercase">Academic Session</p>
                                     <p class="mt-1 text-base font-bold text-gray-900 dark:text-gray-100">{{ exam.academic_session || 'N/A' }}</p>
                                 </div>
                             </div>
 
                             <!-- Level -->
                             <div class="flex items-start gap-3.5">
-                                <div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-600 dark:bg-sky-500/10 dark:text-sky-400">
+                                <div class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/8 text-primary">
                                     <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
+                                        />
                                     </svg>
                                 </div>
                                 <div>
-                                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Exam Level</p>
+                                    <p class="text-xs font-bold tracking-wider text-gray-400 uppercase">Exam Level</p>
                                     <p class="mt-1 text-base font-bold text-gray-900 dark:text-gray-100">{{ exam.level }}</p>
                                 </div>
                             </div>
 
                             <!-- Class -->
                             <div class="flex items-start gap-3.5">
-                                <div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
+                                <div class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/8 text-primary">
                                     <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                                        />
                                     </svg>
                                 </div>
                                 <div>
-                                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Class Level</p>
+                                    <p class="text-xs font-bold tracking-wider text-gray-400 uppercase">Class Level</p>
                                     <p class="mt-1 text-base font-bold text-gray-900 dark:text-gray-100">{{ exam.class_level || 'All Classes' }}</p>
                                 </div>
                             </div>
 
                             <!-- Duration -->
                             <div class="flex items-start gap-3.5">
-                                <div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-500/10 dark:text-purple-400">
+                                <div class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/8 text-primary">
                                     <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                        />
                                     </svg>
                                 </div>
                                 <div>
-                                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Exam Duration</p>
+                                    <p class="text-xs font-bold tracking-wider text-gray-400 uppercase">Exam Duration</p>
                                     <p class="mt-1 text-base font-bold text-gray-900 dark:text-gray-100">{{ exam.duration || 'N/A' }}</p>
                                 </div>
                             </div>
@@ -417,40 +466,53 @@ onMounted(async () => {
                     </div>
 
                     <!-- Summary Stats Card -->
-                    <div class="card p-6 flex flex-col justify-between">
-                        <div class="border-b border-gray-100 pb-4 dark:border-green-900/40">
-                            <h2 class="text-base font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                    <div class="card flex flex-col overflow-hidden">
+                        <div class="border-b border-gray-200 bg-gray-50/70 px-5 py-4 dark:border-green-900/40">
+                            <h2 class="flex items-center gap-2 text-base font-bold text-gray-900 dark:text-gray-100">
                                 <svg class="size-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"
+                                    />
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"
+                                    />
                                 </svg>
                                 Structure & Weight
                             </h2>
                         </div>
-                        <div class="mt-6 grid grid-cols-2 gap-4 flex-1">
-                            <div class="rounded-xl bg-pink-50/50 p-4 dark:bg-pink-950/10 border border-pink-100/50 dark:border-pink-900/30 flex flex-col justify-between">
-                                <p class="text-xs font-bold text-pink-600 uppercase tracking-wider dark:text-pink-400">Total Questions</p>
+                        <div class="grid flex-1 grid-cols-2 divide-x divide-gray-200 dark:divide-green-900/40">
+                            <div class="flex flex-col justify-center p-5">
+                                <p class="text-[11px] font-bold tracking-wide text-gray-400 uppercase">Total questions</p>
                                 <div class="mt-2 flex items-baseline gap-2">
-                                    <span class="text-2xl font-black text-pink-700 dark:text-pink-300">{{ exam.mcq_count + exam.theory_count }}</span>
-                                    <span class="text-xs text-pink-500 font-medium">items</span>
+                                    <span class="text-3xl font-extrabold text-gray-950">{{ exam.mcq_count + exam.theory_count }}</span>
+                                    <span class="text-xs font-medium text-gray-400">items</span>
                                 </div>
-                                <p class="mt-1 text-[10px] text-gray-500">{{ exam.mcq_count }} MCQ / {{ exam.theory_count }} Theory</p>
+                                <p class="mt-2 text-[10px] text-gray-500">{{ exam.mcq_count }} MCQ / {{ exam.theory_count }} written</p>
                             </div>
-                            <div class="rounded-xl bg-rose-50/50 p-4 dark:bg-rose-950/10 border border-rose-100/50 dark:border-rose-900/30 flex flex-col justify-between">
-                                <p class="text-xs font-bold text-rose-600 uppercase tracking-wider dark:text-rose-400">Total Marks</p>
+                            <div class="flex flex-col justify-center p-5">
+                                <p class="text-[11px] font-bold tracking-wide text-gray-400 uppercase">Total marks</p>
                                 <div class="mt-2 flex items-baseline gap-2">
-                                    <span class="text-2xl font-black text-rose-700 dark:text-rose-300">{{ exam.totalMarks }}</span>
-                                    <span class="text-xs text-rose-500 font-medium">pts</span>
+                                    <span class="text-3xl font-extrabold text-primary">{{ exam.totalMarks }}</span>
+                                    <span class="text-xs font-medium text-gray-400">points</span>
                                 </div>
-                                <p class="mt-1 text-[10px] text-gray-500">Max exam score limit</p>
+                                <p class="mt-2 text-[10px] text-gray-500">Maximum available score</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-green-900/60 dark:bg-green-950/60">
-                    <h2 class="mb-4 text-sm font-bold text-gray-900 dark:text-gray-100">Download Examination Papers</h2>
-                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <section class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-green-900/60 dark:bg-green-950/60">
+                    <header class="border-b border-gray-200 bg-gray-50/70 px-5 py-4">
+                        <h2 class="text-sm font-bold text-gray-950">Examination documents</h2>
+                        <p class="mt-1 text-xs text-gray-500">Preview or download the documents prepared for this examination.</p>
+                    </header>
+                    <div class="grid grid-cols-1 divide-y divide-gray-200 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
                         <div
                             v-for="item in [
                                 { id: 'questions', label: 'Question Paper', desc: 'For students' },
@@ -459,32 +521,50 @@ onMounted(async () => {
                                 { id: 'marking-guide', label: 'Marking Guide', desc: 'Theory marking scheme' },
                             ]"
                             :key="item.id"
-                            class="rounded-xl border-2 border-gray-200 bg-white p-6 text-center shadow-sm dark:border-green-900/60 dark:bg-green-950/60"
+                            class="flex items-center gap-3 px-4 py-4 sm:[&:nth-child(n+3)]:border-t sm:[&:nth-child(n+3)]:border-gray-200"
                         >
-                            <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">{{ item.label }}</h3>
-                            <p class="mt-1 text-xs text-gray-500">{{ item.desc }}</p>
-                            <div class="mt-3 flex justify-center gap-2">
+                            <span class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-500">
+                                <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 3h7l5 5v13H7a2 2 0 01-2-2V5a2 2 0 012-2Z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M14 3v6h5M9 13h6M9 17h4" />
+                                </svg>
+                            </span>
+                            <div class="min-w-0 flex-1">
+                                <h3 class="truncate text-sm font-bold text-gray-900">{{ item.label }}</h3>
+                                <p class="mt-0.5 truncate text-xs text-gray-500">{{ item.desc }}</p>
+                            </div>
+                            <div class="flex shrink-0 items-center gap-1.5">
                                 <button
                                     @click="preview(exam.id, item.id, item.label)"
-                                    class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50 dark:border-green-800/60 dark:bg-green-950/45 dark:text-gray-200 dark:hover:bg-green-950/70"
+                                    class="flex size-8 items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800"
+                                    :title="`Preview ${item.label}`"
                                 >
-                                    View
+                                    <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" />
+                                        <circle cx="12" cy="12" r="2.5" />
+                                    </svg>
                                 </button>
                                 <button
                                     @click="download(exam.id, item.id)"
-                                    class="rounded-lg bg-primary px-3 py-1.5 text-xs text-white hover:bg-primary/90"
+                                    class="flex size-8 items-center justify-center rounded-lg bg-primary text-white shadow-sm hover:bg-primary/90"
+                                    :title="`Download ${item.label}`"
                                 >
-                                    Download
+                                    <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14" />
+                                    </svg>
                                 </button>
                             </div>
                         </div>
                     </div>
-                </div>
+                </section>
 
                 <div class="card">
                     <div class="card-header flex items-center justify-between gap-3">
-                        <h2 class="text-sm font-bold text-gray-900 dark:text-gray-100">Selected Questions</h2>
-                        <span class="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                        <div>
+                            <h2 class="text-sm font-bold text-gray-950">Selected questions</h2>
+                            <p class="mt-1 text-xs text-gray-500">Review the content and answer configuration included in this exam.</p>
+                        </div>
+                        <span class="rounded-md border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-semibold text-gray-600">
                             {{ exam.mcq_count + exam.theory_count }} total
                         </span>
                     </div>
@@ -495,9 +575,7 @@ onMounted(async () => {
                                     <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Multiple Choice</h3>
                                     <p class="text-xs text-gray-500 dark:text-gray-400">Objective questions and answer options.</p>
                                 </div>
-                                <span
-                                    class="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-500/15 dark:text-blue-200"
-                                >
+                                <span class="rounded-md bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-600">
                                     {{ exam.mcqs.length }} questions
                                 </span>
                             </div>
@@ -505,11 +583,11 @@ onMounted(async () => {
                             <div
                                 v-for="(q, i) in exam.mcqs"
                                 :key="q.id"
-                                class="overflow-hidden rounded-xl border border-gray-200 bg-gray-50/80 shadow-sm dark:border-green-900/60 dark:bg-green-950/45"
+                                class="overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-green-900/60 dark:bg-green-950/45"
                             >
                                 <div class="flex items-start gap-4 p-4">
                                     <div
-                                        class="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white"
+                                        class="flex size-8 shrink-0 items-center justify-center rounded-md border border-gray-200 bg-gray-50 text-xs font-bold text-gray-600"
                                     >
                                         {{ i + 1 }}
                                     </div>
@@ -520,13 +598,13 @@ onMounted(async () => {
                                         >
                                             <span
                                                 v-if="parseQuestionLead(q.content).subject"
-                                                class="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary"
+                                                class="inline-flex items-center rounded-md bg-primary/8 px-2 py-1 text-[11px] font-semibold text-primary"
                                             >
                                                 {{ parseQuestionLead(q.content).subject }}
                                             </span>
                                             <span
                                                 v-if="parseQuestionLead(q.content).context"
-                                                class="inline-flex items-center rounded-full bg-gray-200 px-2.5 py-1 text-[11px] font-medium text-gray-700 dark:bg-green-900/70 dark:text-gray-200"
+                                                class="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-[11px] font-medium text-gray-600"
                                             >
                                                 {{ parseQuestionLead(q.content).context }}
                                             </span>
@@ -573,9 +651,7 @@ onMounted(async () => {
                                     <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Theory</h3>
                                     <p class="text-xs text-gray-500 dark:text-gray-400">Long-form questions for written responses.</p>
                                 </div>
-                                <span
-                                    class="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-500/15 dark:text-amber-200"
-                                >
+                                <span class="rounded-md bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-600">
                                     {{ exam.theory.length }} questions
                                 </span>
                             </div>
@@ -583,11 +659,11 @@ onMounted(async () => {
                             <div
                                 v-for="(q, i) in exam.theory"
                                 :key="q.id"
-                                class="rounded-xl border border-gray-200 bg-gray-50/80 p-4 shadow-sm dark:border-green-900/60 dark:bg-green-950/45"
+                                class="rounded-lg border border-gray-200 bg-white p-4 dark:border-green-900/60 dark:bg-green-950/45"
                             >
                                 <div class="flex items-start gap-4">
                                     <div
-                                        class="flex size-9 shrink-0 items-center justify-center rounded-full bg-amber-500 text-sm font-bold text-white"
+                                        class="flex size-8 shrink-0 items-center justify-center rounded-md border border-gray-200 bg-gray-50 text-xs font-bold text-gray-600"
                                     >
                                         {{ exam.mcqs.length + i + 1 }}
                                     </div>
@@ -598,13 +674,13 @@ onMounted(async () => {
                                         >
                                             <span
                                                 v-if="parseQuestionLead(q.content).subject"
-                                                class="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary"
+                                                class="inline-flex items-center rounded-md bg-primary/8 px-2 py-1 text-[11px] font-semibold text-primary"
                                             >
                                                 {{ parseQuestionLead(q.content).subject }}
                                             </span>
                                             <span
                                                 v-if="parseQuestionLead(q.content).context"
-                                                class="inline-flex items-center rounded-full bg-gray-200 px-2.5 py-1 text-[11px] font-medium text-gray-700 dark:bg-green-900/70 dark:text-gray-200"
+                                                class="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-[11px] font-medium text-gray-600"
                                             >
                                                 {{ parseQuestionLead(q.content).context }}
                                             </span>
@@ -620,6 +696,28 @@ onMounted(async () => {
 
             <!-- Configuration (when no exam yet) -->
             <template v-else>
+                <div
+                    class="grid grid-cols-3 overflow-hidden rounded-lg border border-gray-200 bg-white text-sm dark:border-green-900/60 dark:bg-green-950/60"
+                >
+                    <div class="flex items-center gap-3 border-r border-gray-200 px-4 py-3 dark:border-green-900/60">
+                        <span class="flex size-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">1</span>
+                        <span class="hidden font-semibold text-gray-900 sm:block dark:text-gray-100">Exam details</span>
+                    </div>
+                    <div class="flex items-center justify-center gap-3 border-r border-gray-200 px-4 py-3 dark:border-green-900/60">
+                        <span
+                            class="flex size-7 items-center justify-center rounded-full bg-gray-100 text-xs font-bold text-gray-500 dark:bg-green-900/60 dark:text-gray-300"
+                            >2</span
+                        >
+                        <span class="hidden font-medium text-gray-500 sm:block dark:text-gray-300">Question pool</span>
+                    </div>
+                    <div class="flex items-center justify-end gap-3 px-4 py-3">
+                        <span
+                            class="flex size-7 items-center justify-center rounded-full bg-gray-100 text-xs font-bold text-gray-500 dark:bg-green-900/60 dark:text-gray-300"
+                            >3</span
+                        >
+                        <span class="hidden font-medium text-gray-500 sm:block dark:text-gray-300">Generate</span>
+                    </div>
+                </div>
                 <div class="card p-6">
                     <div class="flex items-start gap-3">
                         <div class="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">1</div>
@@ -673,7 +771,9 @@ onMounted(async () => {
                                     topicQuestionCounts = {};
                                 "
                             >
-                                <option v-for="classLevel in classLevelOptions" :key="classLevel.value" :value="classLevel.value">{{ classLevel.label }}</option>
+                                <option v-for="classLevel in classLevelOptions" :key="classLevel.value" :value="classLevel.value">
+                                    {{ classLevel.label }}
+                                </option>
                             </select>
                         </div>
                         <div>
@@ -709,14 +809,12 @@ onMounted(async () => {
                             <div class="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">2</div>
                             <div>
                                 <h2 class="text-base font-bold text-gray-900 dark:text-gray-100">Question Pool</h2>
-                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Load questions, set topic coverage, then auto-select or pick manually.</p>
+                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                    Load questions, set topic coverage, then auto-select or pick manually.
+                                </p>
                             </div>
                         </div>
-                        <button
-                            @click="loadPool"
-                            :disabled="loadingPool"
-                            class="btn-primary justify-center px-4 py-2 text-xs"
-                        >
+                        <button @click="loadPool" :disabled="loadingPool" class="btn-primary justify-center px-4 py-2 text-xs">
                             {{ loadingPool ? 'Loading...' : 'Browse Question Pool' }}
                         </button>
                     </div>
@@ -725,7 +823,9 @@ onMounted(async () => {
                     <template v-if="pool.mcqs.length || pool.theory.length">
                         <div class="mb-4 space-y-4">
                             <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                                <div class="rounded-lg bg-primary/8 px-3 py-2 text-xs font-medium text-primary dark:bg-primary/10 dark:text-primary-light">
+                                <div
+                                    class="rounded-lg bg-primary/8 px-3 py-2 text-xs font-medium text-primary dark:bg-primary/10 dark:text-primary-light"
+                                >
                                     {{ pool.mcqs.length + pool.theory.length }} available questions
                                     <span class="text-primary/70">({{ pool.mcqs.length }} MCQ, {{ pool.theory.length }} Written)</span>
                                 </div>
@@ -749,16 +849,20 @@ onMounted(async () => {
                                 </div>
                             </div>
 
-                            <div class="overflow-hidden rounded-xl border border-gray-200 bg-gray-50/70 dark:border-green-900/60 dark:bg-green-950/45">
+                            <div
+                                class="overflow-hidden rounded-xl border border-gray-200 bg-gray-50/70 dark:border-green-900/60 dark:bg-green-950/45"
+                            >
                                 <button
                                     type="button"
-                                    class="group flex w-full cursor-pointer flex-col gap-3 px-4 py-3 text-left transition hover:bg-white dark:hover:bg-green-950/70 sm:flex-row sm:items-center sm:justify-between"
+                                    class="group flex w-full cursor-pointer flex-col gap-3 px-4 py-3 text-left transition hover:bg-white sm:flex-row sm:items-center sm:justify-between dark:hover:bg-green-950/70"
                                     @click="topicAllocationOpen = !topicAllocationOpen"
                                 >
                                     <div class="min-w-0">
                                         <div class="flex flex-wrap items-center gap-2">
                                             <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100">Topic Allocation</h3>
-                                            <span class="rounded-full bg-white px-2 py-0.5 text-[11px] font-semibold text-gray-500 ring-1 ring-gray-200 dark:bg-green-950/60 dark:ring-green-900/60">
+                                            <span
+                                                class="rounded-full bg-white px-2 py-0.5 text-[11px] font-semibold text-gray-500 ring-1 ring-gray-200 dark:bg-green-950/60 dark:ring-green-900/60"
+                                            >
                                                 Click to {{ topicAllocationOpen ? 'close' : 'edit' }}
                                             </span>
                                         </div>
@@ -794,9 +898,24 @@ onMounted(async () => {
                                 <div v-if="topicAllocationOpen" class="border-t border-gray-200 p-4 dark:border-green-900/60">
                                     <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                                         <div class="relative lg:max-w-xs lg:flex-1">
-                                            <input v-model="topicSearch" type="search" placeholder="Search topics..." class="w-full py-1.5 pl-8 text-xs" />
-                                            <svg class="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15z" />
+                                            <input
+                                                v-model="topicSearch"
+                                                type="search"
+                                                placeholder="Search topics..."
+                                                class="w-full py-1.5 pl-8 text-xs"
+                                            />
+                                            <svg
+                                                class="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-gray-400"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor"
+                                                stroke-width="2"
+                                            >
+                                                <path
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                    d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15z"
+                                                />
                                             </svg>
                                         </div>
                                         <div class="flex flex-wrap gap-2">
@@ -843,13 +962,23 @@ onMounted(async () => {
                                                     type="number"
                                                     min="0"
                                                     :max="topic.total_count"
-                                                    class="w-full pr-6 py-1 text-right text-xs"
-                                                    @input="setTopicQuestionCount(topic.id, Number(($event.target as HTMLInputElement).value), topic.total_count)"
+                                                    class="w-full py-1 pr-6 text-right text-xs"
+                                                    @input="
+                                                        setTopicQuestionCount(
+                                                            topic.id,
+                                                            Number(($event.target as HTMLInputElement).value),
+                                                            topic.total_count,
+                                                        )
+                                                    "
                                                 />
-                                                <span class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400">qs</span>
+                                                <span class="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 text-[10px] text-gray-400"
+                                                    >qs</span
+                                                >
                                             </div>
                                         </div>
-                                        <p v-if="filteredPoolTopics.length === 0" class="py-4 text-center text-xs text-gray-500 dark:text-gray-400">No topics match your search.</p>
+                                        <p v-if="filteredPoolTopics.length === 0" class="py-4 text-center text-xs text-gray-500 dark:text-gray-400">
+                                            No topics match your search.
+                                        </p>
                                     </div>
 
                                     <p v-if="allocationIssue" class="mt-2 text-xs text-amber-600 dark:text-amber-300">{{ allocationIssue }}</p>
@@ -908,7 +1037,11 @@ onMounted(async () => {
                             >
                                 <div
                                     class="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-md border transition"
-                                    :class="selectedIds.has(q.id) ? 'border-primary bg-primary text-white' : 'border-gray-300 bg-white group-hover:border-primary dark:bg-green-950/60'"
+                                    :class="
+                                        selectedIds.has(q.id)
+                                            ? 'border-primary bg-primary text-white'
+                                            : 'border-gray-300 bg-white group-hover:border-primary dark:bg-green-950/60'
+                                    "
                                 >
                                     <svg
                                         v-if="selectedIds.has(q.id)"
