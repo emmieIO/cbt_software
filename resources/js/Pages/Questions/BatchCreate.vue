@@ -47,11 +47,11 @@ const createQuestion = (overrides: Partial<QuestionDraft> = {}): QuestionDraft =
     options: overrides.options
         ? overrides.options.map((option) => ({ ...option }))
         : [
-            { content: '', is_correct: false },
-            { content: '', is_correct: false },
-            { content: '', is_correct: false },
-            { content: '', is_correct: false },
-        ],
+              { content: '', is_correct: false },
+              { content: '', is_correct: false },
+              { content: '', is_correct: false },
+              { content: '', is_correct: false },
+          ],
     marking_scheme: overrides.marking_scheme ? overrides.marking_scheme.map((item) => ({ ...item })) : [{ point: '', weight: 1 }],
 });
 
@@ -127,18 +127,18 @@ const submit = () => {
             options:
                 question.type === 'multiple_choice'
                     ? question.options.map((option) => ({
-                        content: option.content,
-                        is_correct: option.is_correct,
-                    }))
+                          content: option.content,
+                          is_correct: option.is_correct,
+                      }))
                     : [],
             marking_scheme:
                 question.type !== 'multiple_choice'
                     ? question.marking_scheme
-                        .filter((item) => richText(item.point))
-                        .map((item) => ({
-                            point: item.point,
-                            weight: Math.max(1, Number(item.weight) || 1),
-                        }))
+                          .filter((item) => richText(item.point))
+                          .map((item) => ({
+                              point: item.point,
+                              weight: Math.max(1, Number(item.weight) || 1),
+                          }))
                     : [],
         };
     });
@@ -164,7 +164,6 @@ const submit = () => {
 
 <template>
     <AppLayout>
-
         <Head title="Batch Create Questions" />
 
         <div class="mx-auto max-w-6xl space-y-6">
@@ -175,12 +174,12 @@ const submit = () => {
                         Add simple question forms, remove the ones you do not need, then submit everything at once.
                     </p>
                 </div>
-                <Link href="/questions" class="text-sm font-medium text-primary hover:underline">&larr; Back to
-                    questions</Link>
+                <Link href="/questions" class="text-sm font-medium text-primary hover:underline">&larr; Back to questions</Link>
             </div>
 
             <div
-                class="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between dark:border-green-900/60 dark:bg-green-950/60 dark:shadow-none">
+                class="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between dark:border-green-900/60 dark:bg-green-950/60 dark:shadow-none"
+            >
                 <div>
                     <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">
                         {{ questionCount }} {{ questionCount === 1 ? 'question' : 'questions' }}
@@ -188,26 +187,39 @@ const submit = () => {
                     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Each card is a normal question form.</p>
                 </div>
                 <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-                    <button type="button" @click="addQuestion"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 sm:w-auto dark:border-green-800/60 dark:text-gray-200 dark:hover:bg-green-950/55">
+                    <button
+                        type="button"
+                        @click="addQuestion"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 sm:w-auto dark:border-green-800/60 dark:text-gray-200 dark:hover:bg-green-950/55"
+                    >
                         + Add question
                     </button>
-                    <button type="button" @click="submit" :disabled="submitting"
-                        class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50 sm:w-auto">
-                        <span v-if="submitting"
-                            class="inline-block size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    <button
+                        type="button"
+                        @click="submit"
+                        :disabled="submitting"
+                        class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50 sm:w-auto"
+                    >
+                        <span v-if="submitting" class="inline-block size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                         Create Many
                     </button>
                 </div>
             </div>
 
-
             <div class="space-y-4">
-                <BatchQuestionRow v-for="(question, index) in questions" :key="question.id" :index="index"
-                    :class-levels="classLevels" :levels="levels" :row="question" :row-errors="rowErrors[question.id]" :subjects="subjects"
-                    @update-row="updateQuestion(index, $event)" @remove="removeQuestion(index)" />
+                <BatchQuestionRow
+                    v-for="(question, index) in questions"
+                    :key="question.id"
+                    :index="index"
+                    :class-levels="classLevels"
+                    :levels="levels"
+                    :row="question"
+                    :row-errors="rowErrors[question.id]"
+                    :subjects="subjects"
+                    @update-row="updateQuestion(index, $event)"
+                    @remove="removeQuestion(index)"
+                />
             </div>
-
         </div>
     </AppLayout>
 </template>

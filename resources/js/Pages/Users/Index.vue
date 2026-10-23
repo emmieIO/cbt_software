@@ -67,12 +67,16 @@ const save = () => {
     if (editing.value) {
         router.put(`/users/${editing.value}`, form.value, {
             preserveScroll: true,
-            onSuccess: () => { showForm.value = false; },
+            onSuccess: () => {
+                showForm.value = false;
+            },
         });
     } else {
         router.post('/users', form.value, {
             preserveScroll: true,
-            onSuccess: () => { showForm.value = false; },
+            onSuccess: () => {
+                showForm.value = false;
+            },
         });
     }
 };
@@ -101,6 +105,10 @@ const permissionLabel = (permission: string) =>
     ({
         'questions.create': 'Create questions',
         'questions.edit': 'Edit questions',
+        'questions.generate': 'Generate question drafts with AI',
+        'knowledge.manage': 'Manage knowledge base',
+        'knowledge.approve': 'Approve knowledge documents',
+        'curriculum.review': 'Review curriculum mappings',
     })[permission] ?? permission;
 </script>
 
@@ -114,7 +122,11 @@ const permissionLabel = (permission: string) =>
                     <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Users</h1>
                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Manage system users.</p>
                 </div>
-                <button v-if="isAdmin" @click="openCreate" class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary/90">
+                <button
+                    v-if="isAdmin"
+                    @click="openCreate"
+                    class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary/90"
+                >
                     <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                     </svg>
@@ -140,7 +152,9 @@ const permissionLabel = (permission: string) =>
                             <input v-model="form.email" type="email" required class="mt-1" />
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">{{ editing ? 'Password (leave blank to keep)' : 'Password' }}</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">{{
+                                editing ? 'Password (leave blank to keep)' : 'Password'
+                            }}</label>
                             <input v-model="form.password" type="password" :required="!editing" minlength="6" class="mt-1" />
                         </div>
                         <div>
@@ -179,65 +193,79 @@ const permissionLabel = (permission: string) =>
             </div>
 
             <!-- Users Table -->
-            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-green-900/60 dark:bg-green-950/60 dark:shadow-none">
-                <div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50 dark:bg-green-950/45">
-                        <tr>
-                            <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Name</th>
-                            <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Username</th>
-                            <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Role</th>
-                            <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Permissions</th>
-                            <th class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
-                        <tr v-for="user in users.data" :key="user.id" class="hover:bg-gray-50 dark:hover:bg-green-950/55">
-                            <td class="px-5 py-4">
-                                <div class="flex items-center gap-2">
-                                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ user.name }}</p>
-                                    <span v-if="user.id === currentUserId" class="inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600 dark:bg-green-900/70 dark:text-gray-200">
-                                        You
+            <div
+                class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-green-900/60 dark:bg-green-950/60 dark:shadow-none"
+            >
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50 dark:bg-green-950/45">
+                            <tr>
+                                <th class="px-5 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
+                                    Name
+                                </th>
+                                <th class="px-5 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
+                                    Username
+                                </th>
+                                <th class="px-5 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
+                                    Role
+                                </th>
+                                <th class="px-5 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
+                                    Permissions
+                                </th>
+                                <th class="px-5 py-3 text-right text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            <tr v-for="user in users.data" :key="user.id" class="hover:bg-gray-50 dark:hover:bg-green-950/55">
+                                <td class="px-5 py-4">
+                                    <div class="flex items-center gap-2">
+                                        <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ user.name }}</p>
+                                        <span
+                                            v-if="user.id === currentUserId"
+                                            class="inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600 dark:bg-green-900/70 dark:text-gray-200"
+                                        >
+                                            You
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ user.email }}</p>
+                                </td>
+                                <td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-300">{{ user.username }}</td>
+                                <td class="px-5 py-4">
+                                    <span class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium" :class="roleBadgeClass(user.role)">
+                                        {{ user.role }}
                                     </span>
-                                </div>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ user.email }}</p>
-                            </td>
-                            <td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-300">{{ user.username }}</td>
-                            <td class="px-5 py-4">
-                                <span
-                                    class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium"
-                                    :class="roleBadgeClass(user.role)"
-                                >
-                                    {{ user.role }}
-                                </span>
-                            </td>
-                            <td class="px-5 py-4">
-                                <div v-if="user.role === 'admin'" class="text-xs font-medium text-primary">All permissions</div>
-                                <div v-else-if="user.permissions?.length" class="flex flex-wrap gap-1.5">
-                                    <span
-                                        v-for="permission in user.permissions"
-                                        :key="permission"
-                                        class="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200"
-                                    >
-                                        {{ permissionLabel(permission) }}
-                                    </span>
-                                </div>
-                                <span v-else class="text-xs text-gray-400">None</span>
-                            </td>
-                            <td class="px-5 py-4 text-right">
-                                <div v-if="isAdmin" class="flex justify-end gap-2">
-                                    <button @click="openEdit(user)" class="text-xs font-medium text-primary hover:underline">Edit</button>
-                                    <button
-                                        v-if="canDeleteUser(user.id)"
-                                        @click="deleteTarget = user.id"
-                                        class="text-xs font-medium text-red-600 hover:underline"
-                                    >
-                                        Delete
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table></div>
+                                </td>
+                                <td class="px-5 py-4">
+                                    <div v-if="user.role === 'admin'" class="text-xs font-medium text-primary">All permissions</div>
+                                    <div v-else-if="user.permissions?.length" class="flex flex-wrap gap-1.5">
+                                        <span
+                                            v-for="permission in user.permissions"
+                                            :key="permission"
+                                            class="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200"
+                                        >
+                                            {{ permissionLabel(permission) }}
+                                        </span>
+                                    </div>
+                                    <span v-else class="text-xs text-gray-400">None</span>
+                                </td>
+                                <td class="px-5 py-4 text-right">
+                                    <div v-if="isAdmin" class="flex justify-end gap-2">
+                                        <button @click="openEdit(user)" class="text-xs font-medium text-primary hover:underline">Edit</button>
+                                        <button
+                                            v-if="canDeleteUser(user.id)"
+                                            @click="deleteTarget = user.id"
+                                            class="text-xs font-medium text-red-600 hover:underline"
+                                        >
+                                            Delete
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </AppLayout>

@@ -6,7 +6,7 @@
     <style>
         {!! file_get_contents(base_path('node_modules/katex/dist/katex.min.css')) ?: '' !!}
         @page { margin: 15mm 14mm 16mm; }
-        body { font-family: 'DejaVu Sans', sans-serif; font-size: 10pt; line-height: 1.45; color: #111; }
+        body { margin: 0; font-family: 'DejaVu Sans', sans-serif; font-size: 10pt; line-height: 1.45; color: #111; }
 
         .paper-header { text-align: center; margin-bottom: 5px; }
         .paper-brand { white-space: nowrap; }
@@ -90,12 +90,13 @@
         .cover-page {
             border: 1px solid #8a8a8a;
             padding: 18pt 25.5pt;
-            height: 248mm;
-            min-height: 248mm;
+            height: 240mm;
             position: relative;
             page-break-after: always;
+            page-break-inside: avoid;
             box-sizing: border-box;
             display: block;
+            overflow: hidden;
         }
         .cover-logo-area {
             position: absolute;

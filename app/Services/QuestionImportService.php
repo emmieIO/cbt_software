@@ -13,12 +13,12 @@ class QuestionImportService
     /**
      * @param  array<int, array<string, mixed>>  $rows
      */
-    public function importRows(array $rows, string $defaultLevel, string $createdBy): int
+    public function importRows(array $rows, string $defaultLevel, string $createdBy, string $origin = 'file_import'): int
     {
         $subjectCache = [];
         $topicCache = [];
 
-        return DB::transaction(function () use ($rows, $defaultLevel, $createdBy, &$subjectCache, &$topicCache) {
+        return DB::transaction(function () use ($rows, $defaultLevel, $createdBy, $origin, &$subjectCache, &$topicCache) {
             $created = 0;
 
             foreach ($rows as $row) {
@@ -41,26 +41,32 @@ class QuestionImportService
                     )->id;
                 }
 
-                $question = Question::query()->create([
-                    'topic_id' => $topicCache[$topicKey],
-                    'content' => $row['content'],
-                    'image_path' => $row['image_url'] ?? null,
-                    'explanation' => $row['explanation'] ?? null,
-                    'type' => $row['type'],
-                    'level' => $level,
-                    'class_level' => $classLevel,
-                    'marking_scheme' => in_array($row['type'], ['short_answer', 'theory'], true) ? ($row['marking_scheme'] ?? []) : null,
-                    'created_by' => $createdBy,
-                ]);
-
-                if ($row['type'] === 'multiple_choice') {
-                    $this->createOptions($question, $row);
-                }
+                $this->importResolvedRow($row, $topicCache[$topicKey], $level, $classLevel, $createdBy, $origin);
 
                 $created++;
             }
 
             return $created;
+        });
+    }
+
+    /** @param array<string, mixed> $row */
+    public function importResolvedRow(array $row, string $topicId, string $level, string $classLevel, string $createdBy, string $origin): Question
+    {
+        return DB::transaction(function () use ($row, $topicId, $level, $classLevel, $createdBy, $origin): Question {
+            $question = Question::query()->create([
+                'topic_id' => $topicId, 'content' => $row['content'], 'image_path' => $row['image_url'] ?? null,
+                'explanation' => $row['explanation'] ?? null, 'type' => $row['type'], 'level' => $level, 'class_level' => $classLevel,
+                'marking_scheme' => in_array($row['type'], ['short_answer', 'theory'], true) ? ($row['marking_scheme'] ?? []) : null,
+                'created_by' => $createdBy, 'origin' => $origin, 'difficulty' => $row['difficulty'] ?? null,
+                'expected_answer' => $row['expected_answer'] ?? null, 'subtopic_id' => $row['subtopic_id'] ?? null,
+                'generated_draft_id' => $row['generated_draft_id'] ?? null,
+            ]);
+            if ($row['type'] === 'multiple_choice') {
+                $this->createOptions($question, $row);
+            }
+
+            return $question;
         });
     }
 

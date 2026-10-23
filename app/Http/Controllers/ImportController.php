@@ -94,6 +94,7 @@ class ImportController extends Controller
         }
 
         session(['import_preview' => [
+            'origin' => strtolower($file->getClientOriginalExtension()) === 'pdf' ? 'pdf_import' : 'spreadsheet_import',
             'rows' => $preview['rows'],
             'new_subjects' => $preview['new_subjects'],
             'new_topics' => $preview['new_topics'],
@@ -117,20 +118,20 @@ class ImportController extends Controller
             return back()->with('error', 'Cannot import — some rows have errors. Fix and re-upload.');
         }
 
-        return $this->handleImport($rows, $request);
+        return $this->handleImport($rows, $request, $preview['origin'] ?? 'file_import');
     }
 
     public function quickStore(QuickStoreQuestionImportRequest $request)
     {
         abort_unless($request->user()?->canCreateQuestions(), 403);
 
-        return $this->handleImport($request->rows(), $request);
+        return $this->handleImport($request->rows(), $request, 'manual');
     }
 
     /**
      * @param  array<int, array<string, mixed>>  $rows
      */
-    private function handleImport(array $rows, Request $request)
+    private function handleImport(array $rows, Request $request, string $origin)
     {
         $level = strtolower(trim($request->input('level', 'js')));
         if (! in_array($level, ['lp', 'hp', 'js', 'ss'])) {
@@ -138,7 +139,7 @@ class ImportController extends Controller
         }
 
         try {
-            ImportQuestionsJob::dispatch($rows, $level, $request->user()->id);
+            ImportQuestionsJob::dispatch($rows, $level, $request->user()->id, $origin);
             session()->forget('import_preview');
 
             return to_route('questions.index')->with('success', count($rows).' questions queued for import.');

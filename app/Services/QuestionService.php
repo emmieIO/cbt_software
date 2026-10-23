@@ -22,9 +22,11 @@ class QuestionService
                 'level' => $data['level'],
                 'class_level' => $data['class_level'],
                 'explanation' => $data['explanation'] ?? null,
+                'expected_answer' => $data['expected_answer'] ?? null, 'difficulty' => $data['difficulty'] ?? null,
                 'image_path' => $this->storeImage($data['image'] ?? null),
                 'marking_scheme' => $this->usesMarkingScheme($data['type']) ? ($data['marking_scheme'] ?? []) : null,
                 'created_by' => $createdBy,
+                'origin' => 'manual',
             ]);
 
             $this->syncOptions($question, $data['type'], $data['options'] ?? []);
@@ -48,6 +50,7 @@ class QuestionService
                     'class_level' => $row['class_level'],
                     'marking_scheme' => $this->usesMarkingScheme($row['type']) ? ($row['marking_scheme'] ?? []) : null,
                     'created_by' => $createdBy,
+                    'origin' => 'manual',
                 ]);
 
                 $this->syncOptions($question, $row['type'], $row['options'] ?? []);
@@ -85,6 +88,7 @@ class QuestionService
                 'class_level' => $data['class_level'],
                 'explanation' => $data['explanation'] ?? null,
                 'image_path' => $imagePath,
+                'expected_answer' => $data['expected_answer'] ?? $question->expected_answer, 'difficulty' => $data['difficulty'] ?? $question->difficulty,
                 'marking_scheme' => $this->usesMarkingScheme($data['type']) ? ($data['marking_scheme'] ?? []) : null,
             ]);
 

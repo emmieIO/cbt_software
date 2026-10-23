@@ -58,6 +58,9 @@ class TopicController extends Controller
         if ($topic->questions()->exists()) {
             return back()->with('error', 'Cannot delete topic with existing questions.');
         }
+        if ($topic->subtopics()->exists()) {
+            return back()->with('error', 'Cannot delete topic with existing curriculum subtopics.');
+        }
 
         $topic->delete();
 

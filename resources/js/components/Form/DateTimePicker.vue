@@ -27,20 +27,11 @@ const parseModelValue = (value: string | null | undefined): Date | null => {
     if (!value) return null;
 
     const normalized = String(value).trim();
-    const localMatch = normalized.match(
-        /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?$/,
-    );
+    const localMatch = normalized.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?$/);
 
     if (localMatch) {
         const [, year, month, day, hour = '00', minute = '00', second = '00'] = localMatch;
-        return new Date(
-            Number(year),
-            Number(month) - 1,
-            Number(day),
-            Number(hour),
-            Number(minute),
-            Number(second),
-        );
+        return new Date(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute), Number(second));
     }
 
     const parsed = new Date(normalized);

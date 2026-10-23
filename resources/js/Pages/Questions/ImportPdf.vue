@@ -135,21 +135,54 @@ const closePreviewDialog = () => {
         <div class="mx-auto max-w-7xl space-y-6">
             <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">AI PDF Question Extraction</h1>
+                    <p class="text-xs font-semibold tracking-wide text-primary uppercase">Question import</p>
+                    <h1 class="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">Import from PDF</h1>
                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                        Upload a PDF document and our AI will automatically extract and structure the questions for you.
+                        Extract structured questions from text-based or scanned PDF documents.
                     </p>
                 </div>
-                <Link href="/questions" class="text-sm font-medium text-primary hover:underline">&larr; Back to questions</Link>
+                <Link href="/questions" class="btn-secondary justify-center px-3 py-2 text-xs">Back to questions</Link>
             </div>
 
-            <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-green-900/60 dark:bg-green-950/60 dark:shadow-none">
+            <div
+                class="grid grid-cols-3 overflow-hidden rounded-lg border border-gray-200 bg-white text-sm dark:border-green-900/60 dark:bg-green-950/60"
+            >
+                <div class="flex items-center gap-2 border-r border-gray-200 px-3 py-3 dark:border-green-900/60">
+                    <span class="flex size-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">1</span>
+                    <span class="hidden font-semibold text-gray-900 sm:block dark:text-gray-100">Upload PDF</span>
+                </div>
+                <div class="flex items-center justify-center gap-2 border-r border-gray-200 px-3 py-3 dark:border-green-900/60">
+                    <span
+                        class="flex size-7 items-center justify-center rounded-full text-xs font-bold"
+                        :class="
+                            hasPreview || hasEmptyPreview
+                                ? 'bg-primary text-white'
+                                : 'bg-gray-100 text-gray-500 dark:bg-green-900/60 dark:text-gray-300'
+                        "
+                        >2</span
+                    >
+                    <span class="hidden font-medium text-gray-600 sm:block dark:text-gray-300">Review</span>
+                </div>
+                <div class="flex items-center justify-end gap-2 px-3 py-3">
+                    <span
+                        class="flex size-7 items-center justify-center rounded-full bg-gray-100 text-xs font-bold text-gray-500 dark:bg-green-900/60 dark:text-gray-300"
+                        >3</span
+                    >
+                    <span class="hidden font-medium text-gray-600 sm:block dark:text-gray-300">Import</span>
+                </div>
+            </div>
+
+            <div
+                class="rounded-lg border border-gray-200 bg-white p-5 shadow-sm sm:p-6 dark:border-green-900/60 dark:bg-green-950/60 dark:shadow-none"
+            >
                 <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div>
                         <h2 class="text-sm font-bold text-gray-900 dark:text-gray-100">Upload PDF</h2>
                         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Accepted formats: `.pdf` only.</p>
                     </div>
-                    <div class="flex max-w-xl flex-col gap-3 rounded-lg bg-gray-50 px-4 py-3 text-xs text-gray-600 sm:flex-row sm:items-center sm:justify-between dark:bg-green-950/45 dark:text-gray-300">
+                    <div
+                        class="flex max-w-xl flex-col gap-3 rounded-lg bg-gray-50 px-4 py-3 text-xs text-gray-600 sm:flex-row sm:items-center sm:justify-between dark:bg-green-950/45 dark:text-gray-300"
+                    >
                         <span>Download a sample PDF showing the question layout the importer reads best.</span>
                         <a
                             href="/questions/import/pdf-template"
@@ -160,7 +193,10 @@ const closePreviewDialog = () => {
                     </div>
                 </div>
 
-                <div v-if="flashError" class="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-200">
+                <div
+                    v-if="flashError"
+                    class="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-200"
+                >
                     {{ flashError }}
                 </div>
 
@@ -169,14 +205,23 @@ const closePreviewDialog = () => {
                     @dragover.prevent="dragOver = true"
                     @dragleave.prevent="dragOver = false"
                     @click="openFilePicker"
-                    class="mt-4 flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed p-8 transition-colors"
+                    class="mt-5 flex min-h-52 cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-8 transition-colors"
                     :class="dragOver ? 'border-primary bg-primary/5' : 'border-gray-300 hover:border-gray-400 dark:border-green-800/60'"
                 >
                     <div v-if="!file" class="text-center">
-                        <p class="text-sm font-medium text-gray-600 dark:text-gray-300">
-                            Drop PDF here, or <span class="text-primary">browse</span>
+                        <div class="mx-auto mb-3 flex size-11 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                            <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M12 12v9m0-9-3 3m3-3 3 3"
+                                />
+                            </svg>
+                        </div>
+                        <p class="text-sm font-semibold text-gray-800 dark:text-gray-100">
+                            Drop a PDF here, or <span class="text-primary">browse files</span>
                         </p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">.pdf</p>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">PDF only · scanned pages will be processed with OCR</p>
                     </div>
                     <div v-else class="text-center">
                         <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ file.name }}</p>
@@ -187,11 +232,7 @@ const closePreviewDialog = () => {
                 </div>
 
                 <div class="mt-6 flex justify-stretch sm:justify-end">
-                    <button
-                        @click="upload"
-                        :disabled="!file || submitting"
-                        class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50 sm:w-auto"
-                    >
+                    <button @click="upload" :disabled="!file || submitting" class="btn-primary w-full justify-center disabled:opacity-50 sm:w-auto">
                         <span v-if="submitting" class="inline-block size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                         Extract Questions
                     </button>
@@ -200,18 +241,22 @@ const closePreviewDialog = () => {
 
             <section
                 v-if="hasPreview || hasEmptyPreview"
-                class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-green-900/60 dark:bg-green-950/60 dark:shadow-none"
+                class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-green-900/60 dark:bg-green-950/60 dark:shadow-none"
             >
                 <div class="border-b border-gray-200 bg-gray-50/70 px-6 py-5 dark:border-green-900/60 dark:bg-green-950/45">
                     <div class="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
                         <div>
-                            <p class="text-xs font-semibold uppercase tracking-wide text-primary">Preview</p>
+                            <p class="text-xs font-semibold tracking-wide text-primary uppercase">Preview</p>
                             <h2 class="mt-1 text-xl font-bold text-gray-900 dark:text-gray-100">Review Extracted Questions</h2>
-                            <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">Check the AI extraction before importing. Questions with errors must be fixed before confirmation.</p>
+                            <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">
+                                Check the AI extraction before importing. Questions with errors must be fixed before confirmation.
+                            </p>
                         </div>
                         <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end xl:justify-end">
                             <div class="w-full sm:w-64">
-                                <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300">Fallback level for rows without level</label>
+                                <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300"
+                                    >Fallback level for rows without level</label
+                                >
                                 <select v-model="fallbackLevel" class="mt-1">
                                     <option value="lp">Lower Primary</option>
                                     <option value="hp">Higher Primary</option>
@@ -225,7 +270,10 @@ const closePreviewDialog = () => {
                                 :disabled="confirming || (preview?.errors ?? 0) > 0"
                                 class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50 sm:w-auto"
                             >
-                                <span v-if="confirming" class="inline-block size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                                <span
+                                    v-if="confirming"
+                                    class="inline-block size-4 animate-spin rounded-full border-2 border-white border-t-transparent"
+                                />
                                 Confirm Import
                             </button>
                         </div>
@@ -233,29 +281,35 @@ const closePreviewDialog = () => {
                 </div>
 
                 <div class="p-6">
-                    <div v-if="hasEmptyPreview" class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-5 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-200">
+                    <div
+                        v-if="hasEmptyPreview"
+                        class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-5 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-200"
+                    >
                         No questions were found in this PDF. Try a clearer text-based PDF, or use the Excel import template for this document.
                     </div>
 
-                    <div v-if="hasPreview" class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                        <div class="rounded-lg border border-gray-200 bg-white px-4 py-3 dark:border-green-900/60 dark:bg-green-950/35">
+                    <div v-if="hasPreview" class="grid grid-cols-3 overflow-hidden rounded-lg border border-gray-200 dark:border-green-900/60">
+                        <div class="border-r border-gray-200 px-4 py-3 dark:border-green-900/60">
                             <p class="text-xs font-semibold text-gray-500 dark:text-gray-400">Total Extracted</p>
                             <p class="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">{{ preview?.total ?? 0 }}</p>
                         </div>
-                        <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-500/20 dark:bg-emerald-500/10">
+                        <div class="border-r border-gray-200 px-4 py-3 dark:border-green-900/60">
                             <p class="text-xs font-semibold text-emerald-700 dark:text-emerald-200">Ready To Import</p>
                             <p class="mt-1 text-2xl font-bold text-emerald-900 dark:text-emerald-100">{{ validRows.length }}</p>
                         </div>
-                        <div
-                            class="rounded-lg border px-4 py-3"
-                            :class="
-                                errorRows.length
-                                    ? 'border-red-200 bg-red-50 dark:border-red-500/20 dark:bg-red-500/10'
-                                    : 'border-emerald-200 bg-emerald-50 dark:border-emerald-500/20 dark:bg-emerald-500/10'
-                            "
-                        >
-                            <p class="text-xs font-semibold" :class="errorRows.length ? 'text-red-700 dark:text-red-200' : 'text-emerald-700 dark:text-emerald-200'">Needs Attention</p>
-                            <p class="mt-1 text-2xl font-bold" :class="errorRows.length ? 'text-red-900 dark:text-red-100' : 'text-emerald-900 dark:text-emerald-100'">{{ errorRows.length }}</p>
+                        <div class="px-4 py-3">
+                            <p
+                                class="text-xs font-semibold"
+                                :class="errorRows.length ? 'text-red-700 dark:text-red-200' : 'text-emerald-700 dark:text-emerald-200'"
+                            >
+                                Needs Attention
+                            </p>
+                            <p
+                                class="mt-1 text-2xl font-bold"
+                                :class="errorRows.length ? 'text-red-900 dark:text-red-100' : 'text-emerald-900 dark:text-emerald-100'"
+                            >
+                                {{ errorRows.length }}
+                            </p>
                         </div>
                     </div>
 
@@ -268,19 +322,40 @@ const closePreviewDialog = () => {
                         <p v-if="preview?.new_topics?.length" class="mt-1">Topics: {{ preview.new_topics.join(', ') }}</p>
                     </div>
 
-                    <div v-if="hasPreview" class="mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-green-900/60 dark:bg-green-950/35">
+                    <div
+                        v-if="hasPreview"
+                        class="mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-green-900/60 dark:bg-green-950/35"
+                    >
                         <div class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200 text-sm dark:divide-green-900/60">
                                 <thead class="bg-gray-50 dark:bg-green-950/45">
                                     <tr>
-                                        <th class="px-4 py-3 text-left text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400">No.</th>
-                                        <th class="min-w-[280px] px-4 py-3 text-left text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400">Question</th>
-                                        <th class="px-4 py-3 text-left text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400">Type</th>
-                                        <th class="px-4 py-3 text-left text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400">Subject</th>
-                                        <th class="px-4 py-3 text-left text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400">Topic</th>
-                                        <th class="px-4 py-3 text-left text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400">Class</th>
-                                        <th class="px-4 py-3 text-left text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400">Status</th>
-                                        <th class="px-4 py-3 text-right text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400">Action</th>
+                                        <th class="px-4 py-3 text-left text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400">
+                                            No.
+                                        </th>
+                                        <th
+                                            class="min-w-[280px] px-4 py-3 text-left text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400"
+                                        >
+                                            Question
+                                        </th>
+                                        <th class="px-4 py-3 text-left text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400">
+                                            Type
+                                        </th>
+                                        <th class="px-4 py-3 text-left text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400">
+                                            Subject
+                                        </th>
+                                        <th class="px-4 py-3 text-left text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400">
+                                            Topic
+                                        </th>
+                                        <th class="px-4 py-3 text-left text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400">
+                                            Class
+                                        </th>
+                                        <th class="px-4 py-3 text-left text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400">
+                                            Status
+                                        </th>
+                                        <th class="px-4 py-3 text-right text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400">
+                                            Action
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-100 dark:divide-green-900/50">
@@ -291,17 +366,26 @@ const closePreviewDialog = () => {
                                     >
                                         <td class="px-4 py-4 text-sm font-semibold text-gray-500 dark:text-gray-400">{{ row.index }}</td>
                                         <td class="max-w-md px-4 py-4">
-                                            <RichContentViewer class="line-clamp-2 text-sm font-medium text-gray-900 dark:text-gray-100" :content="row.content || 'Question content missing'" truncate />
-                                            <p v-if="row.errors.length" class="mt-1 text-xs font-medium text-red-600 dark:text-red-300">{{ row.errors.length }} issue(s)</p>
+                                            <RichContentViewer
+                                                class="line-clamp-2 text-sm font-medium text-gray-900 dark:text-gray-100"
+                                                :content="row.content || 'Question content missing'"
+                                                truncate
+                                            />
+                                            <p v-if="row.errors.length" class="mt-1 text-xs font-medium text-red-600 dark:text-red-300">
+                                                {{ row.errors.length }} issue(s)
+                                            </p>
                                         </td>
                                         <td class="px-4 py-4">
-                                            <span class="inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold whitespace-nowrap" :class="typeClasses[row.type]">
+                                            <span
+                                                class="inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold whitespace-nowrap"
+                                                :class="typeClasses[row.type]"
+                                            >
                                                 {{ formatType(row.type) }}
                                             </span>
                                         </td>
                                         <td class="px-4 py-4 text-gray-700 dark:text-gray-200">{{ row.subject_name || '-' }}</td>
                                         <td class="px-4 py-4 text-gray-700 dark:text-gray-200">{{ row.topic_name || '-' }}</td>
-                                        <td class="px-4 py-4 text-gray-700 whitespace-nowrap dark:text-gray-200">{{ formatClassLevel(row) }}</td>
+                                        <td class="px-4 py-4 whitespace-nowrap text-gray-700 dark:text-gray-200">{{ formatClassLevel(row) }}</td>
                                         <td class="px-4 py-4">
                                             <span
                                                 class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap"
@@ -358,7 +442,10 @@ const closePreviewDialog = () => {
                         <div class="mt-4 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
                             <div class="rounded-lg border border-gray-200 bg-white px-3 py-2 dark:border-green-900/60 dark:bg-green-950/55">
                                 <p class="font-semibold text-gray-400 uppercase">Type</p>
-                                <span class="mt-1 inline-flex rounded-full border px-2.5 py-1 font-semibold" :class="typeClasses[selectedPreviewRow.type]">
+                                <span
+                                    class="mt-1 inline-flex rounded-full border px-2.5 py-1 font-semibold"
+                                    :class="typeClasses[selectedPreviewRow.type]"
+                                >
                                     {{ formatType(selectedPreviewRow.type) }}
                                 </span>
                             </div>
@@ -372,7 +459,10 @@ const closePreviewDialog = () => {
                             </div>
                             <div class="rounded-lg border border-gray-200 bg-white px-3 py-2 dark:border-green-900/60 dark:bg-green-950/55">
                                 <p class="font-semibold text-gray-400 uppercase">Status</p>
-                                <p class="mt-1 font-bold" :class="selectedPreviewRow.valid ? 'text-emerald-700 dark:text-emerald-300' : 'text-red-700 dark:text-red-300'">
+                                <p
+                                    class="mt-1 font-bold"
+                                    :class="selectedPreviewRow.valid ? 'text-emerald-700 dark:text-emerald-300' : 'text-red-700 dark:text-red-300'"
+                                >
                                     {{ selectedPreviewRow.valid ? 'Ready' : 'Needs review' }}
                                 </p>
                             </div>
@@ -412,7 +502,9 @@ const closePreviewDialog = () => {
                                             :key="`${selectedPreviewRow.index}-option-${optionIndex}`"
                                             class="flex gap-3 rounded-lg border border-gray-200 bg-white p-3 dark:border-green-900/60 dark:bg-green-950/55"
                                         >
-                                            <span class="flex size-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-bold text-gray-600 dark:bg-green-900/70 dark:text-gray-200">
+                                            <span
+                                                class="flex size-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-bold text-gray-600 dark:bg-green-900/70 dark:text-gray-200"
+                                            >
                                                 {{ ['A', 'B', 'C', 'D'][optionIndex] }}
                                             </span>
                                             <div class="min-w-0 flex-1">
@@ -437,7 +529,9 @@ const closePreviewDialog = () => {
                                         >
                                             <div class="mb-2 flex items-center justify-between gap-3">
                                                 <span class="text-xs font-bold text-gray-400">Point {{ pointIndex + 1 }}</span>
-                                                <span class="shrink-0 rounded-full bg-primary/10 px-2 py-1 text-xs font-semibold text-primary">{{ point.weight }} mark(s)</span>
+                                                <span class="shrink-0 rounded-full bg-primary/10 px-2 py-1 text-xs font-semibold text-primary"
+                                                    >{{ point.weight }} mark(s)</span
+                                                >
                                             </div>
                                             <RichContentViewer :content="point.point" />
                                         </div>
@@ -446,9 +540,14 @@ const closePreviewDialog = () => {
                             </main>
 
                             <aside class="space-y-5">
-                                <section class="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm dark:border-green-900/60 dark:bg-green-950/55">
+                                <section
+                                    class="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm dark:border-green-900/60 dark:bg-green-950/55"
+                                >
                                     <h3 class="text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-gray-400">Answer</h3>
-                                    <RichContentViewer class="mt-3 font-semibold text-gray-900 dark:text-gray-100" :content="selectedPreviewRow.correct_answer || 'Not provided'" />
+                                    <RichContentViewer
+                                        class="mt-3 font-semibold text-gray-900 dark:text-gray-100"
+                                        :content="selectedPreviewRow.correct_answer || 'Not provided'"
+                                    />
                                 </section>
 
                                 <section
@@ -457,7 +556,9 @@ const closePreviewDialog = () => {
                                 >
                                     <h3 class="text-xs font-bold tracking-wide uppercase">Errors</h3>
                                     <ul class="mt-3 space-y-1">
-                                        <li v-for="error in selectedPreviewRow.errors" :key="`${selectedPreviewRow.index}-${error}`">- {{ error }}</li>
+                                        <li v-for="error in selectedPreviewRow.errors" :key="`${selectedPreviewRow.index}-${error}`">
+                                            - {{ error }}
+                                        </li>
                                     </ul>
                                 </section>
                             </aside>

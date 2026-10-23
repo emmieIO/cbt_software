@@ -28,9 +28,25 @@ class User extends Authenticatable
 
     const PERMISSION_EDIT_QUESTIONS = 'questions.edit';
 
+    const PERMISSION_GENERATE_QUESTIONS = 'questions.generate';
+
+    const PERMISSION_MANAGE_KNOWLEDGE_BASE = 'knowledge.manage';
+
+    const PERMISSION_APPROVE_KNOWLEDGE_DOCUMENTS = 'knowledge.approve';
+
+    const PERMISSION_REVIEW_CURRICULUM = 'curriculum.review';
+
     const QUESTION_PERMISSIONS = [
         self::PERMISSION_CREATE_QUESTIONS,
         self::PERMISSION_EDIT_QUESTIONS,
+        self::PERMISSION_GENERATE_QUESTIONS,
+    ];
+
+    const ASSIGNABLE_PERMISSIONS = [
+        ...self::QUESTION_PERMISSIONS,
+        self::PERMISSION_MANAGE_KNOWLEDGE_BASE,
+        self::PERMISSION_APPROVE_KNOWLEDGE_DOCUMENTS,
+        self::PERMISSION_REVIEW_CURRICULUM,
     ];
 
     protected $fillable = [
@@ -79,5 +95,30 @@ class User extends Authenticatable
     public function canEditQuestions(): bool
     {
         return $this->hasPermission(self::PERMISSION_EDIT_QUESTIONS);
+    }
+
+    public function canGenerateQuestions(): bool
+    {
+        return $this->hasPermission(self::PERMISSION_GENERATE_QUESTIONS);
+    }
+
+    public function canManageKnowledgeBase(): bool
+    {
+        return $this->hasPermission(self::PERMISSION_MANAGE_KNOWLEDGE_BASE);
+    }
+
+    public function canAccessKnowledgeBase(): bool
+    {
+        return $this->canManageKnowledgeBase() || $this->canApproveKnowledgeDocuments() || $this->canReviewCurriculum();
+    }
+
+    public function canReviewCurriculum(): bool
+    {
+        return $this->hasPermission(self::PERMISSION_REVIEW_CURRICULUM);
+    }
+
+    public function canApproveKnowledgeDocuments(): bool
+    {
+        return $this->hasPermission(self::PERMISSION_APPROVE_KNOWLEDGE_DOCUMENTS);
     }
 }

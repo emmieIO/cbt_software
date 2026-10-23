@@ -10,6 +10,11 @@ export type User = {
     permissions: string[];
     can_create_questions: boolean;
     can_edit_questions: boolean;
+    can_generate_questions: boolean;
+    can_review_curriculum: boolean;
+    can_manage_knowledge_base: boolean;
+    can_access_knowledge_base: boolean;
+    can_approve_knowledge_documents: boolean;
     [key: string]: unknown;
 };
 

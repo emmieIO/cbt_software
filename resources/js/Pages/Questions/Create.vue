@@ -60,7 +60,9 @@ const removeImage = () => {
 const filteredSubjects = computed(() => props.subjects.filter((s) => !s.level || s.level === form.value.level));
 const classLevelOptions = computed(() => props.classLevels[form.value.level] || []);
 const selectedSubject = computed(() => filteredSubjects.value.find((s) => s.id === form.value.subject_id));
-const filteredTopics = computed(() => (selectedSubject.value?.topics || []).filter((topic) => !topic.class_level || topic.class_level === form.value.class_level));
+const filteredTopics = computed(() =>
+    (selectedSubject.value?.topics || []).filter((topic) => !topic.class_level || topic.class_level === form.value.class_level),
+);
 
 const onLevelChange = () => {
     form.value.class_level = classLevelOptions.value[0]?.value || '';
@@ -238,7 +240,9 @@ const submit = () => {
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Class Level</label>
                             <select v-model="form.class_level" class="mt-1" @change="onClassLevelChange">
-                                <option v-for="classLevel in classLevelOptions" :key="classLevel.value" :value="classLevel.value">{{ classLevel.label }}</option>
+                                <option v-for="classLevel in classLevelOptions" :key="classLevel.value" :value="classLevel.value">
+                                    {{ classLevel.label }}
+                                </option>
                             </select>
                             <p v-if="form.errors.class_level" class="mt-1 text-xs text-red-600">{{ form.errors.class_level }}</p>
                         </div>

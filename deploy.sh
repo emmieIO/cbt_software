@@ -26,9 +26,6 @@ npm run build
 # 3. Laravel Housekeeping
 php artisan migrate --force
 
-# Seed default data if needed
-php artisan db:seed --force
-
 # Ensure public storage link exists for image uploads
 php artisan storage:link || true
 

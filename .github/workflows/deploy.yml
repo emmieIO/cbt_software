@@ -67,7 +67,14 @@ jobs:
       - name: Build Assets
         run: npm run build
 
-   
+      - name: Check Frontend Types
+        run: npx vue-tsc --noEmit
+
+      - name: Run Application Tests
+        run: php artisan test --compact
+
+      - name: Run Frontend Tests
+        run: node --test tests/Frontend/*.test.ts
 
   deploy:
     needs: quality-assurance
@@ -111,7 +118,6 @@ jobs:
               php artisan optimize:clear
               
               php artisan migrate --force
-              php artisan db:seed --force
               
               rm -rf resources/js/actions
               php artisan wayfinder:generate --with-form

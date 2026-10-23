@@ -91,9 +91,7 @@ const confirmDelete = () => {
                     <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Academic Sessions</h1>
                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Manage the sessions available when creating examinations.</p>
                 </div>
-                <button type="button" class="btn-primary w-full cursor-pointer justify-center sm:w-auto" @click="openCreate">
-                    Add Session
-                </button>
+                <button type="button" class="btn-primary w-full cursor-pointer justify-center sm:w-auto" @click="openCreate">Add Session</button>
             </div>
 
             <div v-if="showForm" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" @click.self="showForm = false">
@@ -105,7 +103,13 @@ const confirmDelete = () => {
                             </h2>
                             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Only one session can be active at a time.</p>
                         </div>
-                        <button type="button" class="cursor-pointer text-xl text-gray-500 hover:text-gray-800 dark:text-gray-300" @click="showForm = false">×</button>
+                        <button
+                            type="button"
+                            class="cursor-pointer text-xl text-gray-500 hover:text-gray-800 dark:text-gray-300"
+                            @click="showForm = false"
+                        >
+                            ×
+                        </button>
                     </div>
 
                     <form class="mt-5 space-y-4" @submit.prevent="save">
@@ -138,16 +142,28 @@ const confirmDelete = () => {
                 </div>
             </div>
 
-            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-green-900/60 dark:bg-green-950/60 dark:shadow-none">
+            <div
+                class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-green-900/60 dark:bg-green-950/60 dark:shadow-none"
+            >
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-green-900/60">
                         <thead class="bg-gray-50 dark:bg-green-950/45">
                             <tr>
-                                <th class="px-5 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">Session</th>
-                                <th class="px-5 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">Date Range</th>
-                                <th class="px-5 py-3 text-center text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">Exams</th>
-                                <th class="px-5 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">Status</th>
-                                <th class="px-5 py-3 text-right text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">Actions</th>
+                                <th class="px-5 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
+                                    Session
+                                </th>
+                                <th class="px-5 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
+                                    Date Range
+                                </th>
+                                <th class="px-5 py-3 text-center text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
+                                    Exams
+                                </th>
+                                <th class="px-5 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
+                                    Status
+                                </th>
+                                <th class="px-5 py-3 text-right text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
+                                    Actions
+                                </th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 dark:divide-green-900/50">
@@ -169,7 +185,13 @@ const confirmDelete = () => {
                                 </td>
                                 <td class="px-5 py-4 text-right">
                                     <div class="flex justify-end gap-3">
-                                        <button type="button" class="cursor-pointer text-xs font-medium text-primary hover:underline" @click="openEdit(session)">Edit</button>
+                                        <button
+                                            type="button"
+                                            class="cursor-pointer text-xs font-medium text-primary hover:underline"
+                                            @click="openEdit(session)"
+                                        >
+                                            Edit
+                                        </button>
                                         <button
                                             type="button"
                                             class="cursor-pointer text-xs font-medium text-red-600 hover:underline disabled:cursor-not-allowed disabled:text-gray-400 disabled:no-underline"

@@ -15,6 +15,16 @@ class PdfOcrService
      */
     public function extract(string $pdfPath): string
     {
+        return collect($this->extractPages($pdfPath))
+            ->map(fn (array $page): string => '--- Page '.$page['number']." ---\n".$page['text'])
+            ->implode("\n\n");
+    }
+
+    /**
+     * @return array<int, array{number: int, text: string}>
+     */
+    public function extractPages(string $pdfPath): array
+    {
         if (! config('services.pdf_ocr.enabled', true)) {
             throw new RuntimeException('No readable text was found in this PDF. OCR is disabled.');
         }
@@ -30,7 +40,7 @@ class PdfOcrService
                 $text = $this->recognizePage($image);
 
                 if ($text !== '') {
-                    $pages[] = '--- Page '.($index + 1)." ---\n".$text;
+                    $pages[] = ['number' => $index + 1, 'text' => $text];
                 }
             }
 
@@ -38,7 +48,7 @@ class PdfOcrService
                 throw new RuntimeException('OCR could not find readable text in this PDF.');
             }
 
-            return implode("\n\n", $pages);
+            return $pages;
         } finally {
             File::deleteDirectory($directory);
         }
@@ -49,6 +59,15 @@ class PdfOcrService
      */
     private function renderPages(string $pdfPath, string $directory): array
     {
+        $configuredMaxPages = config('services.pdf_ocr.max_pages', 25);
+        $maxPages = is_int($configuredMaxPages) || is_string($configuredMaxPages)
+            ? filter_var($configuredMaxPages, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => PHP_INT_MAX - 1]])
+            : false;
+
+        if ($maxPages === false) {
+            throw new RuntimeException('PDF_OCR_MAX_PAGES must be a positive integer less than PHP_INT_MAX.');
+        }
+
         try {
             $result = Process::timeout((int) config('services.pdf_ocr.render_timeout', 180))
                 ->run([
@@ -59,7 +78,7 @@ class PdfOcrService
                     '-f',
                     '1',
                     '-l',
-                    (string) config('services.pdf_ocr.max_pages', 25),
+                    (string) ($maxPages + 1),
                     $pdfPath,
                     $directory.'/page',
                 ]);
@@ -76,6 +95,10 @@ class PdfOcrService
 
         if ($images === []) {
             throw new RuntimeException('OCR could not render any pages from this PDF.');
+        }
+
+        if (count($images) > $maxPages) {
+            throw new RuntimeException("This PDF exceeds the OCR limit of {$maxPages} pages. Split the PDF into smaller documents and try again.");
         }
 
         return array_values($images);

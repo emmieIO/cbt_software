@@ -44,4 +44,10 @@ class Topic extends Model
     {
         return $this->hasMany(Question::class);
     }
+
+    /** @return HasMany<Subtopic, $this> */
+    public function subtopics(): HasMany
+    {
+        return $this->hasMany(Subtopic::class);
+    }
 }

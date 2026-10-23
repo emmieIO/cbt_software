@@ -107,14 +107,22 @@ const confirmDelete = () => {
                 </div>
             </div>
 
-            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-green-900/60 dark:bg-green-950/60 dark:shadow-none">
+            <div
+                class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-green-900/60 dark:bg-green-950/60 dark:shadow-none"
+            >
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                         <thead class="bg-gray-50 dark:bg-green-950/45">
                             <tr>
-                                <th class="px-5 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">Title</th>
-                                <th class="px-5 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">Status</th>
-                                <th class="px-5 py-3 text-right text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">Actions</th>
+                                <th class="px-5 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
+                                    Title
+                                </th>
+                                <th class="px-5 py-3 text-left text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
+                                    Status
+                                </th>
+                                <th class="px-5 py-3 text-right text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
+                                    Actions
+                                </th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
@@ -135,14 +143,14 @@ const confirmDelete = () => {
                                 <td class="px-5 py-4 text-right">
                                     <div class="flex justify-end gap-2">
                                         <button @click="openEdit(examTitle)" class="text-xs font-medium text-primary hover:underline">Edit</button>
-                                        <button @click="deleteTarget = examTitle.id" class="text-xs font-medium text-red-600 hover:underline">Delete</button>
+                                        <button @click="deleteTarget = examTitle.id" class="text-xs font-medium text-red-600 hover:underline">
+                                            Delete
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
                             <tr v-if="examTitles.data.length === 0">
-                                <td colspan="3" class="px-5 py-12 text-center text-sm text-gray-500 dark:text-gray-400">
-                                    No exam titles yet.
-                                </td>
+                                <td colspan="3" class="px-5 py-12 text-center text-sm text-gray-500 dark:text-gray-400">No exam titles yet.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -152,8 +160,18 @@ const confirmDelete = () => {
             <div v-if="examTitles.last_page > 1" class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <p class="text-sm text-gray-500 dark:text-gray-400">Page {{ examTitles.current_page }} of {{ examTitles.last_page }}</p>
                 <div class="flex gap-2">
-                    <Link v-if="examTitles.prev_page_url" :href="examTitles.prev_page_url" class="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:border-green-900/60 dark:bg-green-950/45 dark:text-gray-300">Previous</Link>
-                    <Link v-if="examTitles.next_page_url" :href="examTitles.next_page_url" class="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:border-green-900/60 dark:bg-green-950/45 dark:text-gray-300">Next</Link>
+                    <Link
+                        v-if="examTitles.prev_page_url"
+                        :href="examTitles.prev_page_url"
+                        class="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:border-green-900/60 dark:bg-green-950/45 dark:text-gray-300"
+                        >Previous</Link
+                    >
+                    <Link
+                        v-if="examTitles.next_page_url"
+                        :href="examTitles.next_page_url"
+                        class="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:border-green-900/60 dark:bg-green-950/45 dark:text-gray-300"
+                        >Next</Link
+                    >
                 </div>
             </div>
         </div>
