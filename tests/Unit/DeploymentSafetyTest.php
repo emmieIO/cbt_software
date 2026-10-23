@@ -22,3 +22,13 @@ test('production deployment gates include application frontend and type checks',
         ->toContain('node --test tests/Frontend/*.test.ts')
         ->toContain('npx vue-tsc --noEmit');
 });
+
+test('CI installs the real PDF extractor before running application tests', function () {
+    $workflow = file_get_contents(dirname(__DIR__, 2).'/.github/workflows/deploy.yml');
+
+    expect($workflow)->toContain('sudo apt-get install -y poppler-utils')
+        ->toContain('test -x /usr/bin/pdftotext');
+
+    expect(strpos($workflow, 'sudo apt-get install -y poppler-utils'))
+        ->toBeLessThan(strpos($workflow, 'php artisan test --compact'));
+});

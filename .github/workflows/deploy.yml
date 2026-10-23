@@ -16,6 +16,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Install PDF extraction dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y poppler-utils
+          test -x /usr/bin/pdftotext
+
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
