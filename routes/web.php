@@ -42,6 +42,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/questions/import/confirm', [ImportController::class, 'confirm'])->name('questions.import.confirm');
     Route::post('/questions/import/quick', [ImportController::class, 'quickStore'])->name('questions.import.quick');
     Route::post('/questions/bulk-store', [QuestionController::class, 'bulkStore'])->name('questions.bulk-store');
+    Route::patch('/questions/{question}/retire', [QuestionController::class, 'retire'])->name('questions.retire');
+    Route::patch('/questions/{question}/restore', [QuestionController::class, 'restore'])->name('questions.restore');
     Route::resource('questions', QuestionController::class);
     Route::get('/questions/{question}/provenance', [QuestionController::class, 'provenance'])->name('questions.provenance');
 

@@ -7,6 +7,7 @@ use App\Models\KnowledgeDocument;
 use App\Models\KnowledgeDocumentChunk;
 use App\Models\Question;
 use App\Models\QuestionGenerationRun;
+use App\Models\Subject;
 use App\Models\User;
 use App\Support\AcademicLevels;
 use App\Support\RichContent;
@@ -17,7 +18,7 @@ use Throwable;
 
 class GeneratedQuestionReviewService
 {
-    public function __construct(private readonly CurriculumMappingService $curriculum, private readonly QuestionImportService $importer) {}
+    public function __construct(private readonly CurriculumMappingService $curriculum, private readonly QuestionImportService $importer, private readonly QuestionDuplicateService $duplicates) {}
 
     public function authorize(User $user, QuestionGenerationRun $run, bool $import = false): void
     {
@@ -90,6 +91,9 @@ class GeneratedQuestionReviewService
             }
         }
         $run = $draft->run()->with(['topic.subject', 'subtopic'])->firstOrFail();
+        if ($this->duplicates->findMatch($draft->attributesToArray(), $this->duplicates->history($run, $draft->id))) {
+            $errors[] = 'This question duplicates an existing bank question or another valid draft. Change the assessment task before approval or import.';
+        }
         if (! $run->topic || $run->topic->subject_id !== $run->subject_id || $run->topic->class_level !== $run->class_level
             || $run->topic->subject?->level !== $run->level || ! AcademicLevels::classBelongsToLevel($run->class_level, $run->level)
             || ($run->subtopic_id && $run->subtopic?->topic_id !== $run->topic_id) || ($run->subtopic_name && ! $run->subtopic_id)) {
@@ -140,18 +144,13 @@ class GeneratedQuestionReviewService
     }
 
     /** @return array<int, array{id: string, content: string}> */
-    public function duplicateWarnings(GeneratedQuestionDraft $draft): array
+    public function duplicateWarnings(GeneratedQuestionDraft $draft, ?array $history = null): array
     {
-        $key = mb_strtolower($this->curriculum->normalizeText(RichContent::text($draft->content)));
-
-        return Question::query()->where('topic_id', $draft->run->topic_id)->where('class_level', $draft->run->class_level)
-            ->where('type', $draft->type)->when($draft->question_id, fn ($q) => $q->whereKeyNot($draft->question_id))->latest()->limit(500)->get(['id', 'content'])
-            ->filter(function (Question $question) use ($key): bool {
-                $candidate = mb_strtolower($this->curriculum->normalizeText(RichContent::text($question->content)));
-                similar_text($key, $candidate, $similarity);
-
-                return $key === $candidate || $similarity >= 92;
-            })->map(fn (Question $question): array => ['id' => $question->id, 'content' => mb_substr(RichContent::text($question->content), 0, 180)])->values()->all();
+        return collect($history ?? $this->duplicates->history($draft->run, $draft->id))
+            ->filter(fn (array $question): bool => $question['kind'] === 'question'
+                && $question['id'] !== $draft->question_id && $this->duplicates->matches($draft->attributesToArray(), $question))
+            ->take(5)->map(fn (array $question): array => ['id' => $question['id'], 'content' => mb_substr(RichContent::text($question['content']), 0, 180)])
+            ->values()->all();
     }
 
     /** @param array<int, string> $ids @return array<string, mixed> */
@@ -164,6 +163,7 @@ class GeneratedQuestionReviewService
         foreach ($ids as $id) {
             try {
                 $result = DB::transaction(function () use ($run, $user, $id): array {
+                    Subject::query()->whereKey($run->subject_id)->lockForUpdate()->firstOrFail();
                     $lockedRun = QuestionGenerationRun::query()->lockForUpdate()->findOrFail($run->id);
                     $this->authorize($user, $lockedRun, true);
                     $draft = $lockedRun->drafts()->lockForUpdate()->findOrFail($id);

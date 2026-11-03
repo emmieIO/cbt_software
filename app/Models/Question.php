@@ -7,6 +7,7 @@ use App\Enums\QuestionType;
 use App\Support\RichContent;
 use Carbon\Carbon;
 use Database\Factories\QuestionFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
@@ -29,6 +30,8 @@ use Illuminate\Support\Facades\Storage;
  * @property array<int, array{point: string, weight: int}>|null $marking_scheme
  * @property int $used_count
  * @property Carbon|null $last_used_at
+ * @property Carbon|null $retired_at
+ * @property string|null $retired_by
  * @property Topic|null $topic
  * @property User|null $creator
  * @property Collection<int, Option> $options
@@ -51,6 +54,8 @@ class Question extends Model
         'marking_scheme',
         'used_count',
         'last_used_at',
+        'retired_at',
+        'retired_by',
         'created_by',
         'origin', 'difficulty', 'expected_answer', 'subtopic_id', 'generated_draft_id',
     ];
@@ -108,7 +113,9 @@ class Question extends Model
             'type' => QuestionType::class,
             'level' => QuestionLevel::class,
             'marking_scheme' => 'array',
+            'used_count' => 'integer',
             'last_used_at' => 'datetime',
+            'retired_at' => 'datetime',
         ];
     }
 
@@ -135,12 +142,16 @@ class Question extends Model
         });
     }
 
-    /**
-     * Scope to flag frequently used questions above a threshold.
-     */
-    public function scopeFrequentlyUsed($query, int $threshold = 3): void
+    /** @param Builder<Question> $query */
+    public function scopeActive(Builder $query): void
     {
-        $query->where('used_count', '>=', $threshold);
+        $query->whereNull('retired_at');
+    }
+
+    /** @param Builder<Question> $query */
+    public function scopeRetired(Builder $query): void
+    {
+        $query->whereNotNull('retired_at');
     }
 
     /**
@@ -148,8 +159,7 @@ class Question extends Model
      */
     public function markAsUsed(): void
     {
-        $this->increment('used_count');
-        $this->update(['last_used_at' => now()]);
+        $this->increment('used_count', 1, ['last_used_at' => now()]);
     }
 
     public function imagePdfSource(): ?string

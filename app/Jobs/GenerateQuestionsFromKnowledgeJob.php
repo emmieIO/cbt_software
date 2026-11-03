@@ -3,7 +3,9 @@
 namespace App\Jobs;
 
 use App\Models\QuestionGenerationRun;
+use App\Models\Subject;
 use App\Services\GeneratedQuestionValidator;
+use App\Services\QuestionDuplicateService;
 use App\Services\QuestionGenerationContextService;
 use App\Services\QuestionGenerationService;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
@@ -103,6 +105,7 @@ class GenerateQuestionsFromKnowledgeJob implements ShouldBeUnique, ShouldQueue
 
             $response = $generationService->generate($run, $retrieval);
             $result = $validator->validate($run, $response['questions'], $retrieval['sources']);
+            $result['warnings'] = array_merge($result['warnings'], $response['warnings'] ?? []);
             $validCount = collect($result['drafts'])->where('is_valid', true)->count();
 
             $status = match (true) {
@@ -112,12 +115,25 @@ class GenerateQuestionsFromKnowledgeJob implements ShouldBeUnique, ShouldQueue
             };
 
             DB::transaction(function () use ($run, $result, $status): void {
+                Subject::query()->whereKey($run->subject_id)->lockForUpdate()->firstOrFail();
                 $locked = QuestionGenerationRun::query()->lockForUpdate()->findOrFail($run->id);
                 if ($locked->queue_job_id !== $this->queueJobId || $locked->generation_attempt !== $this->attemptVersion || $locked->drafts()->exists()) {
                     return;
                 }
+                $duplicates = app(QuestionDuplicateService::class);
+                $history = $duplicates->history($run);
                 foreach ($result['drafts'] as $draft) {
+                    if ($draft['is_valid'] && $duplicates->findMatch($draft, $history)) {
+                        $draft['is_valid'] = false;
+                        $draft['validation_errors'][] = 'This question duplicates a question saved while generation was running. Edit it before approval.';
+                        $result['errors'][] = 'A concurrent generation or import saved a matching question. Review the flagged draft.';
+                    }
                     $run->drafts()->create($draft);
+                }
+
+                if ($result['errors'] !== []) {
+                    $status = $run->drafts()->where('is_valid', true)->exists()
+                        ? QuestionGenerationRun::STATUS_PARTIAL : QuestionGenerationRun::STATUS_FAILED;
                 }
 
                 $run->update([

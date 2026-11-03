@@ -11,6 +11,7 @@ use App\Models\Subtopic;
 use App\Models\Topic;
 use App\Services\CurriculumMappingService;
 use App\Services\GeneratedQuestionReviewService;
+use App\Services\QuestionDuplicateService;
 use App\Services\QuestionGenerationService;
 use App\Support\AcademicLevels;
 use Illuminate\Http\JsonResponse;
@@ -129,9 +130,10 @@ class QuestionGenerationController extends Controller
     {
         $this->authorizeOwner($request, $questionGenerationRun);
         $questionGenerationRun->load(['subject:id,name', 'topic:id,name', 'drafts.editor:id,name', 'drafts.reviewer:id,name', 'drafts.importer:id,name']);
+        $history = app(QuestionDuplicateService::class)->history($questionGenerationRun);
         foreach ($questionGenerationRun->drafts as $draft) {
             $draft->setRelation('run', $questionGenerationRun);
-            $draft->setAttribute('duplicate_warnings', $service->duplicateWarnings($draft));
+            $draft->setAttribute('duplicate_warnings', $service->duplicateWarnings($draft, $history));
             $draft->unsetRelation('run');
         }
 

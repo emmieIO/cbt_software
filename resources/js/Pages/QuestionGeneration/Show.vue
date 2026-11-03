@@ -259,6 +259,12 @@ const pageRange = (source: Source) =>
                 </button>
                 <p v-for="(error, key) in importForm.errors" :key="key" class="w-full text-sm text-red-700">{{ error }}</p>
             </div>
+            <div
+                v-if="run.warnings?.length"
+                class="border-l-4 border-amber-500 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:bg-amber-950/30 dark:text-amber-200"
+            >
+                <p v-for="warning in run.warnings" :key="warning">{{ warning }}</p>
+            </div>
             <div v-if="run.validation_errors?.length" class="border-l-4 border-amber-500 bg-amber-50 px-4 py-4 text-sm text-amber-800">
                 <p class="font-semibold">The result needs review</p>
                 <ul class="mt-2 list-disc space-y-1 pl-5">

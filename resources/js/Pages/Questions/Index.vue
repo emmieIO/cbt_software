@@ -2,7 +2,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { debounce } from 'lodash';
 import { ref, computed, watch } from 'vue';
-import { index as questionIndex } from '@/actions/App/Http/Controllers/QuestionController';
+import { index as questionIndex, retire, restore } from '@/actions/App/Http/Controllers/QuestionController';
 import ConfirmationModal from '@/components/ConfirmationModal.vue';
 import RichContentViewer from '@/components/Questions/RichContentViewer.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -18,6 +18,8 @@ interface Question {
     level: { value: string; label: string };
     class_level?: string | null;
     used_count: number;
+    last_used_at?: string | null;
+    retired_at?: string | null;
     topic: { id: string; name: string; class_level?: string | null; subject: { id: string; name: string } };
     creator: { name: string };
     options: Array<{ id: string; content: string; is_correct: boolean }>;
@@ -48,7 +50,7 @@ const props = defineProps<{
         subject_id?: string;
         level?: string;
         class_level?: string;
-        overused?: string;
+        status?: 'active' | 'retired' | 'all';
         generation_run_id?: string;
     };
     levels: Array<{ value: string; label: string }>;
@@ -63,10 +65,10 @@ const search = ref(props.filters.search || '');
 const subjectId = ref(props.filters.subject_id || '');
 const level = ref(props.filters.level || '');
 const classLevel = ref(props.filters.class_level || '');
-const overused = ref(props.filters.overused || '');
+const status = ref(props.filters.status || 'active');
 const generationRunId = ref(props.filters.generation_run_id || '');
 const hasActiveFilters = computed(() =>
-    Boolean(search.value || subjectId.value || level.value || classLevel.value || overused.value || generationRunId.value),
+    Boolean(search.value || subjectId.value || level.value || classLevel.value || status.value !== 'active' || generationRunId.value),
 );
 
 const clearFilters = () => {
@@ -74,12 +76,12 @@ const clearFilters = () => {
     subjectId.value = '';
     level.value = '';
     classLevel.value = '';
-    overused.value = '';
+    status.value = 'active';
     generationRunId.value = '';
 };
 
 watch(
-    [search, subjectId, level, classLevel, overused, generationRunId],
+    [search, subjectId, level, classLevel, status, generationRunId],
     debounce(() => {
         router.get(
             questionIndex.url(),
@@ -88,7 +90,7 @@ watch(
                 subject_id: subjectId.value || undefined,
                 level: level.value || undefined,
                 class_level: classLevel.value || undefined,
-                overused: overused.value || undefined,
+                status: status.value,
                 generation_run_id: generationRunId.value || undefined,
             },
             { preserveState: true, replace: true },
@@ -106,6 +108,27 @@ watch(level, () => {
 
 const deleteTarget = ref<string | null>(null);
 const previewQuestion = ref<Question | null>(null);
+const retirementTarget = ref<Question | null>(null);
+const changingRetirement = ref(false);
+const confirmRetirement = () => {
+    const question = retirementTarget.value;
+    if (!question || changingRetirement.value) return;
+    changingRetirement.value = true;
+    router.patch(
+        question.retired_at ? restore.url(question.id) : retire.url(question.id),
+        {},
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                retirementTarget.value = null;
+                previewQuestion.value = null;
+            },
+            onFinish: () => {
+                changingRetirement.value = false;
+            },
+        },
+    );
+};
 
 const confirmDelete = () => {
     if (deleteTarget.value) {
@@ -236,13 +259,11 @@ const addedTimestamp = (value: string) => addedTimestampFormatter.format(new Dat
                         <option value="">All Subjects</option>
                         <option v-for="s in filteredSubjects" :key="s.id" :value="s.id">{{ s.name }}</option>
                     </select>
-                    <label
-                        class="flex cursor-pointer items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300"
-                        title="Show only overused questions"
-                    >
-                        <input type="checkbox" v-model="overused" true-value="1" false-value="" class="size-3.5" />
-                        Overused only
-                    </label>
+                    <select v-model="status" aria-label="Question status" class="w-full sm:w-auto sm:min-w-[140px]">
+                        <option value="active">Active questions</option>
+                        <option value="retired">Retired questions</option>
+                        <option value="all">All statuses</option>
+                    </select>
                 </div>
             </div>
 
@@ -280,12 +301,14 @@ const addedTimestamp = (value: string) => addedTimestampFormatter.format(new Dat
                             <span class="inline-flex rounded-full bg-gray-100 px-2.5 py-1 text-gray-700 dark:text-gray-200">
                                 {{ classTag(q) }}
                             </span>
-                            <span
-                                class="inline-flex rounded-full px-2.5 py-1"
-                                :class="q.used_count >= 3 ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700 dark:text-gray-200'"
-                            >
-                                Used {{ q.used_count }}x
+                            <span class="inline-flex rounded bg-gray-100 px-2 py-1 text-gray-700 dark:bg-green-900/50 dark:text-gray-200">
+                                {{ q.used_count }} exam uses
                             </span>
+                            <span
+                                v-if="q.retired_at"
+                                class="rounded bg-amber-50 px-2 py-1 font-semibold text-amber-800 dark:bg-amber-950/40 dark:text-amber-200"
+                                >Retired</span
+                            >
                         </div>
                         <p v-if="q.created_at" class="text-xs text-gray-500 dark:text-gray-400">
                             Added <time :datetime="q.created_at" :title="addedTimestamp(q.created_at)">{{ addedDate(q.created_at) }}</time>
@@ -293,6 +316,13 @@ const addedTimestamp = (value: string) => addedTimestampFormatter.format(new Dat
                         <div class="flex items-center gap-4 text-xs font-medium">
                             <button @click="previewQuestion = q" class="text-primary hover:underline">View</button>
                             <Link v-if="canEditQuestions" :href="`/questions/${q.id}/edit`" class="text-primary hover:underline">Edit</Link>
+                            <button
+                                v-if="canEditQuestions"
+                                @click="retirementTarget = q"
+                                class="cursor-pointer text-amber-700 hover:underline dark:text-amber-300"
+                            >
+                                {{ q.retired_at ? 'Restore' : 'Retire' }}
+                            </button>
                             <button v-if="canEditQuestions" @click="deleteTarget = q.id" class="text-red-600 hover:underline">Delete</button>
                         </div>
                     </div>
@@ -350,6 +380,11 @@ const addedTimestamp = (value: string) => addedTimestampFormatter.format(new Dat
                             <tr v-for="q in questions.data" :key="q.id" class="hover:bg-gray-50 dark:hover:bg-slate-800/40">
                                 <td class="max-w-xs px-5 py-4">
                                     <RichContentViewer :content="q.content" truncate />
+                                    <span
+                                        v-if="q.retired_at"
+                                        class="mt-1 inline-block rounded bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-800 dark:bg-amber-950/40 dark:text-amber-200"
+                                        >Retired</span
+                                    >
                                     <span v-if="q.origin" class="mt-1 block text-[11px] font-semibold text-gray-500"
                                         >{{
                                             q.origin === 'ai_generated'
@@ -383,17 +418,14 @@ const addedTimestamp = (value: string) => addedTimestampFormatter.format(new Dat
                                 </td>
                                 <td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-300">{{ classTag(q) }}</td>
                                 <td class="px-5 py-4 text-center">
-                                    <span
-                                        class="inline-flex items-center gap-1"
-                                        :class="q.used_count >= 3 ? 'font-bold text-red-600' : 'text-gray-600 dark:text-gray-300'"
+                                    <span class="text-sm font-semibold text-gray-700 tabular-nums dark:text-gray-200">{{ q.used_count }}</span>
+                                    <p
+                                        v-if="q.last_used_at"
+                                        class="mt-1 text-xs whitespace-nowrap text-gray-500"
+                                        :title="addedTimestamp(q.last_used_at)"
                                     >
-                                        {{ q.used_count }}
-                                        <span
-                                            v-if="q.used_count >= 3"
-                                            class="inline-flex items-center rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-700"
-                                            >Overused</span
-                                        >
-                                    </span>
+                                        Last {{ addedDate(q.last_used_at) }}
+                                    </p>
                                 </td>
                                 <td class="px-5 py-4 text-right">
                                     <div class="flex items-center justify-end gap-2">
@@ -404,6 +436,13 @@ const addedTimestamp = (value: string) => addedTimestampFormatter.format(new Dat
                                             class="text-xs font-medium text-primary hover:underline"
                                             >Edit</Link
                                         >
+                                        <button
+                                            v-if="canEditQuestions"
+                                            @click="retirementTarget = q"
+                                            class="cursor-pointer text-xs font-medium text-amber-700 hover:underline dark:text-amber-300"
+                                        >
+                                            {{ q.retired_at ? 'Restore' : 'Retire' }}
+                                        </button>
                                         <button
                                             v-if="canEditQuestions"
                                             @click="deleteTarget = q.id"
@@ -451,6 +490,20 @@ const addedTimestamp = (value: string) => addedTimestampFormatter.format(new Dat
                 </div>
             </div>
         </div>
+        <ConfirmationModal
+            :show="Boolean(retirementTarget)"
+            :title="retirementTarget?.retired_at ? 'Restore Question' : 'Retire Question'"
+            :message="
+                retirementTarget?.retired_at
+                    ? 'This question will become available for new exams again.'
+                    : 'This question will no longer be available for new exams. Existing exam papers and usage history will be preserved.'
+            "
+            :confirm-label="retirementTarget?.retired_at ? 'Restore Question' : 'Retire Question'"
+            variant="warning"
+            :loading="changingRetirement"
+            @close="retirementTarget = null"
+            @confirm="confirmRetirement"
+        />
     </AppLayout>
 
     <ConfirmationModal

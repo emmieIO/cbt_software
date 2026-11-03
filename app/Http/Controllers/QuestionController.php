@@ -21,11 +21,15 @@ class QuestionController extends Controller
 
     public function index(Request $request): Response
     {
-        $filters = $request->only(['search', 'subject_id', 'level', 'class_level', 'overused', 'question_id', 'generation_run_id']);
+        $filters = $request->only(['search', 'subject_id', 'level', 'class_level', 'question_id', 'generation_run_id']);
+        $status = $request->input('status', 'active');
+        $filters['status'] = in_array($status, ['active', 'retired', 'all'], true) ? $status : 'active';
         $perPage = (int) $request->input('per_page', 15);
 
         $questions = Question::query()
             ->with(['topic.subject', 'creator', 'options'])
+            ->when($filters['status'] === 'active', fn (Builder $query) => $query->active())
+            ->when($filters['status'] === 'retired', fn (Builder $query) => $query->retired())
             ->when($filters['question_id'] ?? null, fn ($query, $id) => $query->whereKey($id))
             ->when($filters['generation_run_id'] ?? null, fn (Builder $query, $id) => $query
                 ->whereHas('generatedDraft', fn (Builder $draft) => $draft->where('question_generation_run_id', $id)))
@@ -33,7 +37,6 @@ class QuestionController extends Controller
             ->when($filters['subject_id'] ?? null, fn (Builder $q, $id) => $q->whereHas('topic', fn ($t) => $t->where('subject_id', $id)))
             ->when($filters['level'] ?? null, fn (Builder $q, $l) => $q->where('level', $l))
             ->when($filters['class_level'] ?? null, fn (Builder $q, $l) => $q->where('class_level', $l))
-            ->when($filters['overused'] ?? null, fn (Builder $q) => $q->frequentlyUsed())
             ->orderBy('created_at', 'desc')
             ->paginate($perPage)->withQueryString();
 
@@ -121,5 +124,26 @@ class QuestionController extends Controller
         $question->delete();
 
         return to_route('questions.index')->with('success', 'Question deleted successfully.');
+    }
+
+    public function retire(Request $request, Question $question): RedirectResponse
+    {
+        abort_unless($request->user()?->canEditQuestions(), 403);
+
+        Question::query()->whereKey($question->id)->active()->update([
+            'retired_at' => now(),
+            'retired_by' => $request->user()->id,
+        ]);
+
+        return back()->with('success', 'Question retired successfully.');
+    }
+
+    public function restore(Request $request, Question $question): RedirectResponse
+    {
+        abort_unless($request->user()?->canEditQuestions(), 403);
+
+        $question->update(['retired_at' => null, 'retired_by' => null]);
+
+        return back()->with('success', 'Question restored successfully.');
     }
 }
