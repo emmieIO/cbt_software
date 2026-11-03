@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, computed, onMounted } from 'vue';
+import { pool as examPool } from '@/actions/App/Http/Controllers/ExamController';
 import RichContentViewer from '@/components/Questions/RichContentViewer.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 
@@ -50,6 +51,7 @@ interface PoolQ {
     topic: string;
     type: string;
     last_used_at: string | null;
+    retired_at?: string | null;
     options?: Array<{ id: string; content: string; is_correct: boolean }>;
     marking_scheme?: Array<{ point: string; weight: number }>;
 }
@@ -60,6 +62,7 @@ const topicQuestionCounts = ref<Record<string, number>>({});
 const topicAllocationOpen = ref(false);
 const topicSearch = ref('');
 const poolTab = ref<'all' | 'mcq' | 'theory'>('all');
+const usageOrder = ref<'least' | 'most'>('least');
 const isEditMode = computed(() => !!props.exam?.editable);
 const isReadOnlyExam = computed(() => !!props.exam && !props.exam?.editable);
 const previewUrl = ref<string | null>(null);
@@ -77,12 +80,14 @@ const loadPool = async () => {
     loadingPool.value = true;
     poolError.value = '';
     try {
-        const params = new URLSearchParams({
+        const query = {
             subject_id: form.value.subject_id,
             level: form.value.level,
             class_level: form.value.class_level,
-        });
-        const res = await fetch(`/exams/pool?${params.toString()}`);
+            exam_id: isEditMode.value ? props.exam.id : undefined,
+        };
+        const res = await fetch(examPool.url({ query }));
+        if (!res.ok) throw new Error('Question pool request failed.');
         const data = await res.json();
         pool.value = data;
         initializeTopicQuestionCounts();
@@ -224,7 +229,7 @@ const leastUsed = (questions: PoolQ[]) =>
 
 const autoSelect = () => {
     selectedIds.value = new Set();
-    selectByTopicUsageCounts([...pool.value.mcqs, ...pool.value.theory]).forEach((q) => selectedIds.value.add(q.id));
+    selectByTopicUsageCounts([...pool.value.mcqs, ...pool.value.theory].filter((q) => !q.retired_at)).forEach((q) => selectedIds.value.add(q.id));
 };
 
 const toggleQuestion = (id: string) => {
@@ -235,10 +240,11 @@ const toggleQuestion = (id: string) => {
 };
 
 const allPoolQ = computed(() => {
-    const items = [...pool.value.mcqs, ...pool.value.theory];
-    if (poolTab.value === 'mcq') return pool.value.mcqs;
-    if (poolTab.value === 'theory') return pool.value.theory;
-    return items;
+    const items =
+        poolTab.value === 'mcq' ? pool.value.mcqs : poolTab.value === 'theory' ? pool.value.theory : [...pool.value.mcqs, ...pool.value.theory];
+    return [...items].sort(
+        (a, b) => (usageOrder.value === 'least' ? a.used_count - b.used_count : b.used_count - a.used_count) || a.topic.localeCompare(b.topic),
+    );
 });
 
 const generateExam = () => {
@@ -986,7 +992,7 @@ onMounted(async () => {
                             </div>
                         </div>
 
-                        <div class="mb-3 flex gap-2">
+                        <div class="mb-3 flex flex-wrap items-center gap-2">
                             <button
                                 @click="poolTab = 'all'"
                                 class="rounded-lg border px-3 py-2 text-xs font-semibold transition-colors"
@@ -1020,7 +1026,11 @@ onMounted(async () => {
                             >
                                 Theory ({{ pool.theory.length }})
                             </button>
-                            <span class="ml-auto text-xs font-semibold text-gray-600 dark:text-gray-300">{{ selectedIds.size }} selected</span>
+                            <select v-model="usageOrder" aria-label="Sort questions by usage" class="ml-auto max-w-full text-xs">
+                                <option value="least">Least used first</option>
+                                <option value="most">Most used first</option>
+                            </select>
+                            <span class="text-xs font-semibold text-gray-600 dark:text-gray-300">{{ selectedIds.size }} selected</span>
                         </div>
 
                         <div class="grid max-h-96 grid-cols-1 gap-2 overflow-y-auto">
@@ -1064,11 +1074,16 @@ onMounted(async () => {
                                             q.type.replace('_', ' ')
                                         }}</span>
                                         <span
-                                            class="rounded px-1.5 py-0.5"
-                                            :class="q.used_count >= 3 ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-500 dark:bg-green-900/70'"
+                                            class="rounded bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-700 tabular-nums dark:bg-green-900/70 dark:text-gray-200"
                                         >
-                                            Used {{ q.used_count }}x
+                                            {{ q.used_count }} exam uses
                                         </span>
+                                        <span v-if="q.last_used_at" class="py-0.5 text-xs">Last used {{ q.last_used_at }}</span>
+                                        <span
+                                            v-if="q.retired_at"
+                                            class="rounded bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-800 dark:bg-amber-950/40 dark:text-amber-200"
+                                            >Retired · existing exam only</span
+                                        >
                                     </div>
                                 </div>
                             </div>

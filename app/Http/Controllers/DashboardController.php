@@ -19,7 +19,7 @@ class DashboardController extends Controller
                 'totalSubjects' => Subject::query()->count(),
                 'totalTopics' => Topic::query()->count(),
                 'totalUsers' => User::query()->count(),
-                'flaggedQuestions' => Question::query()->frequentlyUsed()->count(),
+                'retiredQuestions' => Question::query()->retired()->count(),
             ],
             'recentQuestions' => Question::query()
                 ->with(['topic.subject', 'creator'])

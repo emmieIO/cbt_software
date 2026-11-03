@@ -187,15 +187,30 @@ test('a partial batch can resume after persistence failure without orphan option
     $this->assertDatabaseCount('options', 8);
 });
 
-test('likely question bank duplicates warn but do not silently merge legitimate questions', function () {
+test('question bank duplicates are flagged and cannot be approved or imported', function () {
     [$user, $run, $drafts] = giFixture();
     $draft = $drafts->sole();
-    Question::factory()->create(['topic_id' => $run->topic_id, 'class_level' => '11', 'type' => 'multiple_choice', 'content' => $draft->content]);
+    Question::factory()->create(['topic_id' => $run->topic_id, 'level' => 'ss', 'class_level' => '11', 'type' => 'multiple_choice', 'content' => $draft->content]);
     expect(app(GeneratedQuestionReviewService::class)->duplicateWarnings($draft))->toHaveCount(1);
     $this->actingAs($user);
-    giApprove($draft);
+    $this->post(route('generated-question-drafts.review', $draft), ['action' => 'approve', 'revision' => $draft->revision, 'answers_verified' => true])->assertSessionHasErrors('draft');
     $this->post(route('question-generations.import-drafts', $run), ['draft_ids' => [$draft->id]])->assertRedirect();
-    expect(Question::query()->count())->toBe(2);
+    expect(Question::query()->count())->toBe(1)->and($draft->fresh()->review_status)->toBe('draft');
+});
+
+test('import rechecks duplicates added after teacher approval without changing the question bank', function () {
+    [$user, $run, $drafts] = giFixture();
+    $draft = $drafts->sole();
+    $this->actingAs($user);
+    giApprove($draft);
+    Question::factory()->create(['topic_id' => $run->topic_id, 'class_level' => '11', 'level' => 'ss', 'content' => $draft->content]);
+
+    $this->post(route('question-generations.import-drafts', $run), ['draft_ids' => [$draft->id]])->assertRedirect();
+
+    expect(Question::query()->count())->toBe(1)
+        ->and($draft->fresh()->question_id)->toBeNull()
+        ->and($run->fresh()->last_import_summary['failed'])->toBe(1)
+        ->and(implode(' ', $draft->fresh()->import_errors))->toContain('duplicates an existing bank question');
 });
 
 test('provenance survives chunk deletion and private source history is owner restricted', function () {
@@ -231,6 +246,10 @@ function giFixture(int $count = 1, string $type = 'multiple_choice', bool $subto
     $topic = Topic::factory()->for($subject)->create(['name' => 'Quadratic Equations', 'class_level' => '11']);
     $document = KnowledgeDocument::factory()->create(['title' => 'SS2 Mathematics — Quadratic Equations', 'approval_status' => 'approved', 'processing_status' => 'completed', 'embedding_status' => 'completed', 'embedding_provider' => config('knowledge.embeddings.provider'), 'embedding_model' => config('knowledge.embeddings.model'), 'embedding_dimensions' => config('knowledge.embeddings.dimensions')]);
     $content = 'Factorization expresses a quadratic as a product of linear factors. For x² - 5x + 6 = 0, (x - 2)(x - 3) = 0, so x = 2 or x = 3.';
+    for ($index = 2; $index <= $count; $index++) {
+        $root = $index + 2;
+        $content .= ' For x² - '.($root + 2).'x + '.(2 * $root).' = 0, the factors are (x - 2)(x - '.$root.'), giving roots 2 and '.$root.'.';
+    }
     $hash = hash('sha256', $content);
     $chunk = KnowledgeDocumentChunk::factory()->create(['knowledge_document_id' => $document->id, 'sequence' => 1, 'content' => $content, 'content_hash' => $hash, 'embedded_content_hash' => $hash, 'embedding' => [1.0, ...array_fill(0, (int) config('knowledge.embeddings.dimensions') - 1, 0.0)], 'embedding_provider' => config('knowledge.embeddings.provider'), 'embedding_model' => config('knowledge.embeddings.model'), 'embedding_dimensions' => config('knowledge.embeddings.dimensions')]);
     $payload = ['action' => 'confirm', 'topic_id' => $topic->id, 'subject_id' => $subject->id, 'class_level' => '11', 'evidence' => [['chunk_id' => $chunk->id, 'excerpt' => $content]]];
@@ -239,9 +258,10 @@ function giFixture(int $count = 1, string $type = 'multiple_choice', bool $subto
     $source = ['chunk_id' => $chunk->id, 'chunk_version' => 1, 'content_hash' => $hash, 'document_id' => $document->id, 'document_title' => $document->title, 'page_start' => 1, 'page_end' => 1, 'similarity' => 0.85, 'content' => $content];
     $run = QuestionGenerationRun::factory()->create(['requested_by' => $user->id, 'subject_id' => $subject->id, 'topic_id' => $topic->id, 'level' => 'ss', 'class_level' => '11', 'status' => 'completed', 'requested_count' => $count, 'difficulty' => 'medium', 'source_references' => [$source], 'subtopic_id' => $child?->subtopic_id, 'subtopic_name' => $child?->detected_topic]);
     for ($index = 1; $index <= $count; $index++) {
-        $run->drafts()->create(['sequence' => $index, 'type' => $type, 'difficulty' => 'medium', 'content' => 'Question '.$index.': Solve x² - 5x + 6 = 0 by factorization.', 'explanation' => 'Factor as (x - 2)(x - 3).',
-            'options' => $type === 'multiple_choice' ? [['content' => '2 and 3', 'is_correct' => true], ['content' => '-2 and -3', 'is_correct' => false], ['content' => '1 and 6', 'is_correct' => false], ['content' => '0 and 5', 'is_correct' => false]] : null,
-            'expected_answer' => $type !== 'multiple_choice' ? 'x = 2 or x = 3' : null, 'marking_scheme' => $type !== 'multiple_choice' ? [['point' => 'Factor correctly', 'weight' => 2], ['point' => 'State both roots', 'weight' => 1]] : null,
+        $root = $index + 2;
+        $run->drafts()->create(['sequence' => $index, 'type' => $type, 'difficulty' => 'medium', 'content' => 'Question '.$index.': Solve x² - '.($root + 2).'x + '.(2 * $root).' = 0 by factorization.', 'explanation' => 'Factor as (x - 2)(x - '.$root.').',
+            'options' => $type === 'multiple_choice' ? [['content' => '2 and '.$root, 'is_correct' => true], ['content' => '-2 and -'.$root, 'is_correct' => false], ['content' => '1 and '.(2 * $root), 'is_correct' => false], ['content' => '0 and '.($root + 2), 'is_correct' => false]] : null,
+            'expected_answer' => $type !== 'multiple_choice' ? 'x = 2 or x = '.$root : null, 'marking_scheme' => $type !== 'multiple_choice' ? [['point' => 'Factor correctly', 'weight' => 2], ['point' => 'State both roots', 'weight' => 1]] : null,
             'source_references' => [$source], 'is_valid' => true]);
     }
 

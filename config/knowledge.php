@@ -29,6 +29,8 @@ return [
         'context_token_budget' => (int) env('QUESTION_GENERATOR_CONTEXT_TOKEN_BUDGET', 6000),
         'minimum_similarity' => (float) env('QUESTION_GENERATOR_MINIMUM_SIMILARITY', 0.65),
         'timeout' => (int) env('QUESTION_GENERATOR_TIMEOUT', 180),
+        'duplicate_attempts' => 2,
+        'duplicate_context_characters' => 16000,
         'max_instruction_length' => (int) env('QUESTION_GENERATOR_MAX_INSTRUCTION_LENGTH', 1000),
     ],
 ];

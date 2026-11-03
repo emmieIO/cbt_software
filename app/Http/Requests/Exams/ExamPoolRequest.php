@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Exams;
 
+use App\Models\Exam;
 use App\Support\AcademicLevels;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -21,6 +22,7 @@ class ExamPoolRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'exam_id' => ['nullable', 'string', Rule::exists(Exam::class, 'id')],
             'subject_id' => ['required', 'exists:subjects,id'],
             'level' => ['required', 'in:lp,hp,js,ss'],
             'class_level' => ['required', Rule::in(AcademicLevels::classValues())],
@@ -34,5 +36,12 @@ class ExamPoolRequest extends FormRequest
                 $validator->errors()->add('class_level', 'Select a class level that belongs to the selected school level.');
             }
         });
+    }
+
+    public function exam(): ?Exam
+    {
+        $examId = $this->validated('exam_id');
+
+        return $examId ? Exam::query()->findOrFail($examId) : null;
     }
 }

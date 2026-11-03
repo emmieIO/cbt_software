@@ -77,6 +77,7 @@ class ExamController extends Controller
             (string) $request->input('subject_id'),
             (string) $request->input('level'),
             (string) $request->input('class_level'),
+            $request->exam(),
         ));
     }
 

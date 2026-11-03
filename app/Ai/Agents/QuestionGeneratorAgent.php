@@ -36,6 +36,8 @@ Requirements:
 - When a subtopic is selected, every question must stay within that subtopic. Never broaden to sibling subtopics or the parent topic to fill the requested quantity.
 - Do not invent source IDs, facts, or curriculum content.
 - Avoid duplicate or trivially reworded questions.
+- Existing questions are supplied only as an exclusion list, never as knowledge evidence. Do not repeat their task and answer with different wording, reordered options, or a different question type. Create a distinct assessment task supported by the source excerpts instead.
+- For replacement requests, return only the remaining type counts. Never fill a quota by repeating a question or inventing unsupported content.
 - Match the requested class and difficulty. For mixed difficulty, assign an appropriate difficulty to each question.
 - Multiple-choice questions must have exactly four options and exactly one correct option.
 - Short-answer and theory questions must include an expected answer and a practical marking scheme with positive integer weights.

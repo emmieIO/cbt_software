@@ -5,8 +5,10 @@ namespace App\Http\Requests\Exams;
 use App\Models\AcademicSession;
 use App\Models\Exam;
 use App\Models\ExamTitle;
+use App\Models\Question;
 use App\Support\AcademicLevels;
 use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -23,6 +25,9 @@ class SaveExamSelectionRequest extends FormRequest
      */
     public function rules(): array
     {
+        $exam = $this->route('exam');
+        $retainedQuestionIds = $exam instanceof Exam ? $exam->questions()->pluck('questions.id')->all() : [];
+
         return [
             'title' => ['required', 'string', 'max:255'],
             'academic_session_id' => ['required', 'string', 'exists:academic_sessions,id'],
@@ -30,7 +35,13 @@ class SaveExamSelectionRequest extends FormRequest
             'duration' => ['nullable', 'string', 'max:255'],
             'class_level' => ['nullable', Rule::in(AcademicLevels::classValues())],
             'question_ids' => ['required', 'array', 'min:1'],
-            'question_ids.*' => ['distinct', 'exists:questions,id'],
+            'question_ids.*' => [
+                'string',
+                'distinct',
+                Rule::exists(Question::class, 'id')->withoutTrashed()->where(fn (Builder $query) => $query
+                    ->whereNull('retired_at')
+                    ->orWhereIn('id', $retainedQuestionIds)),
+            ],
         ];
     }
 

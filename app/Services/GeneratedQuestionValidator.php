@@ -8,6 +8,8 @@ use App\Support\RichContent;
 
 class GeneratedQuestionValidator
 {
+    public function __construct(private readonly QuestionDuplicateService $duplicates = new QuestionDuplicateService) {}
+
     private const TYPES = ['multiple_choice', 'short_answer', 'theory'];
 
     private const DIFFICULTIES = ['easy', 'medium', 'hard'];
@@ -50,12 +52,6 @@ class GeneratedQuestionValidator
             if ($content === '') {
                 $draftErrors[] = 'Question content is required.';
             }
-
-            $duplicateKey = mb_strtolower(preg_replace('/[^\pL\pN]+/u', '', RichContent::text($content)) ?? '');
-            if ($duplicateKey !== '' && $this->isDuplicate($duplicateKey, $seen)) {
-                $draftErrors[] = 'Question duplicates another generated draft.';
-            }
-            $seen[] = $duplicateKey;
 
             $options = $this->cleanOptions($question['options'] ?? []);
             $markingScheme = $this->cleanMarkingScheme($question['marking_scheme'] ?? []);
@@ -104,6 +100,12 @@ class GeneratedQuestionValidator
             if ($this->containsMath($content, $expectedAnswer, $options, $markingScheme)) {
                 $draftWarnings[] = 'Mathematical content requires teacher verification for notation and correctness.';
             }
+
+            $candidate = ['content' => $content, 'options' => $options];
+            if ($this->duplicates->findMatch($candidate, $seen)) {
+                $draftErrors[] = 'Question duplicates another generated draft.';
+            }
+            $seen[] = $candidate;
 
             $drafts[] = [
                 'sequence' => $index + 1,
@@ -181,22 +183,5 @@ class GeneratedQuestionValidator
         ]);
 
         return preg_match('/(data-latex|\\\\\(|\\\\\[|[=±×÷√]|\b\d+[a-z]\b|\^\{?\d)/iu', $text) === 1;
-    }
-
-    /** @param array<int, string> $seen */
-    private function isDuplicate(string $candidate, array $seen): bool
-    {
-        foreach ($seen as $existing) {
-            if ($candidate === $existing) {
-                return true;
-            }
-
-            similar_text($candidate, $existing, $similarity);
-            if ($similarity >= 92.0) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }

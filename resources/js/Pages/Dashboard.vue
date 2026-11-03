@@ -10,7 +10,7 @@ const props = defineProps<{
         totalSubjects: number;
         totalTopics: number;
         totalUsers: number;
-        flaggedQuestions: number;
+        retiredQuestions: number;
     };
     recentQuestions: Array<{
         id: string;
@@ -31,7 +31,7 @@ const kpis = [
     { label: 'Total Questions', value: props.stats.totalQuestions, color: 'bg-primary' },
     { label: 'Subjects', value: props.stats.totalSubjects, color: 'bg-blue-500' },
     { label: 'Topics', value: props.stats.totalTopics, color: 'bg-amber-500' },
-    { label: 'Overused', value: props.stats.flaggedQuestions, color: 'bg-red-500' },
+    { label: 'Retired', value: props.stats.retiredQuestions, color: 'bg-amber-500' },
 ];
 
 const questionTypeClass = (type: string) =>
